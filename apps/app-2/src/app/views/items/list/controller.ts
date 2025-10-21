@@ -1,5 +1,5 @@
 import type { App2Service } from '#service';
-import type { AsyncRequestHandler } from '@pins/service-name-lib/util/async-handler.ts';
+import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 
 export function buildListItems(service: App2Service): AsyncRequestHandler {
 	const { db, logger } = service;

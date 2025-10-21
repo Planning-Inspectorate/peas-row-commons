@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@pins/service-name-database/src/client/client.ts';
+import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 
 export async function seedStaticData(dbClient: PrismaClient) {
 	// TODO: add static seed data

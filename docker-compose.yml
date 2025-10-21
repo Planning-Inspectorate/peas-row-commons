@@ -2,7 +2,7 @@ version: '3.7'
 services:
   mssql:
     image: mcr.microsoft.com/azure-sql-edge:latest
-    container_name: service-name-mssql
+    container_name: peas-row-commons-mssql
     cap_add: ['SYS_PTRACE']
     user: root
     init: true

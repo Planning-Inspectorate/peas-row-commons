@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { assertRenders404Page } from '@pins/service-name-lib/testing/custom-asserts.ts';
+import { assertRenders404Page } from '@pins/peas-row-commons-lib/testing/custom-asserts.ts';
 import { notFoundHandler } from '../middleware/errors.ts';
 
 describe('custom-assert', () => {

@@ -1,7 +1,7 @@
 import { buildRouter } from './router.ts';
 import { configureNunjucks } from './nunjucks.ts';
 import { addLocalsConfiguration } from '#util/config-middleware.ts';
-import { createBaseApp } from '@pins/service-name-lib/app/app.ts';
+import { createBaseApp } from '@pins/peas-row-commons-lib/app/app.ts';
 import type { Express } from 'express';
 import type { App2Service } from '#service';
 

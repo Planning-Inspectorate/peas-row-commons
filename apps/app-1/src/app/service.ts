@@ -1,4 +1,4 @@
-import { BaseService } from '@pins/service-name-lib/app/base-service.ts';
+import { BaseService } from '@pins/peas-row-commons-lib/app/base-service.ts';
 import type { Config } from './config.ts';
 
 /**

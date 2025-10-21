@@ -31,9 +31,9 @@ extends:
       - name: Prod
         dependsOn:
           - Training
-    serviceConnectionPrefix: Azure DevOps Pipelines - <service-name> - Infrastructure
-    storageAccountName: pinssttfstateuks<service-name>
+    serviceConnectionPrefix: Azure DevOps Pipelines - <peas-row-commons> - Infrastructure
+    storageAccountName: pinssttfstateuks<peas-row-commons>
     resourceGroupName: pins-rg-shared-terraform-uks
-    containerPrefix: terraform-state-<service-name>-
+    containerPrefix: terraform-state-<peas-row-commons>-
     workingDirectory: $(Build.Repository.LocalPath)/infrastructure
     environmentVarFilePath: $(Build.Repository.LocalPath)/infrastructure/environments

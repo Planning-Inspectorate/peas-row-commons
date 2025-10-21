@@ -1,5 +1,5 @@
 {
-  "name": "service-name-app-1",
+  "name": "peas-row-commons-app-1",
   "version": "0.0.0",
   "private": true,
   "main": "index.ts",
@@ -12,8 +12,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@pins/service-name-database": "^0.0.0",
-    "@pins/service-name-lib": "^0.0.0",
+    "@pins/peas-row-commons-database": "^0.0.0",
+    "@pins/peas-row-commons-lib": "^0.0.0",
     "body-parser": "*",
     "connect-redis": "*",
     "dotenv": "*",

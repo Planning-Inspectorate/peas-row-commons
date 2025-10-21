@@ -4,7 +4,7 @@ import { buildMsalConfig } from '#util/auth.ts';
 import type { Config } from '../config.ts';
 import type { AccountInfo, AuthenticationResult, Configuration } from '@azure/msal-node';
 import type { Logger } from 'pino';
-import type { RedisClient } from '@pins/service-name-lib/redis/redis-client.ts';
+import type { RedisClient } from '@pins/peas-row-commons-lib/redis/redis-client.ts';
 import type { RequestHandler } from 'express';
 
 type AuthenticationResultWithNonce = AuthenticationResult & {

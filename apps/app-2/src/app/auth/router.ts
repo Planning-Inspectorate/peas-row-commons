@@ -1,5 +1,5 @@
 import { Router as createRouter } from 'express';
-import { asyncHandler } from '@pins/service-name-lib/util/async-handler.ts';
+import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { buildCompleteMsalAuthentication, buildHandleSignout, buildStartMsalAuthentication } from './controller.ts';
 import { assertIsUnauthenticated, buildAssertGroupAccess, buildAssertIsAuthenticated } from './guards.ts';
 import { AuthService, clearAuthenticationData, registerAuthLocals } from './auth-service.ts';
