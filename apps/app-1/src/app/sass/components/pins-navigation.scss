@@ -1,7 +1,0 @@
-@use 'node_modules/govuk-frontend/dist/govuk/index' as govuk;
-
-.pins-navigation {
-	box-shadow: 0 0 0 100vmax govuk.govuk-colour('light-grey');
-	clip-path: inset(0 -100vmax);
-	border-bottom: none;
-}
