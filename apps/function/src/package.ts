@@ -26,8 +26,8 @@ async function replaceLocalPackages() {
 	const srcFiles = files.filter(isSourceFile);
 	for (const srcFile of srcFiles) {
 		await replaceInFile(srcFile, [
-			{ replace: '@pins/service-name-lib', with: '#pins/service-name-lib' },
-			{ replace: '@pins/service-name-database', with: '#pins/service-name-database' }
+			{ replace: '@pins/peas-row-commons-lib', with: '#pins/peas-row-commons-lib' },
+			{ replace: '@pins/peas-row-commons-database', with: '#pins/peas-row-commons-database' }
 		]);
 	}
 }

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
-import { mockLogger } from '@pins/service-name-lib/testing/mock-logger.ts';
+import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 import { buildAssertGroupAccess, buildAssertIsAuthenticated } from './guards.ts';
 
 const mockRes = () => {

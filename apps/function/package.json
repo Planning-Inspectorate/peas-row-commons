@@ -1,5 +1,5 @@
 {
-  "name": "service-name-function",
+  "name": "peas-row-commons-function",
   "version": "1.0.0",
   "description": "Function app for handling integrations",
   "main": "src/functions/*.ts",
@@ -12,13 +12,13 @@
   "private": true,
   "dependencies": {
     "@azure/functions": "*",
-    "@pins/service-name-database": "^0.0.0",
-    "@pins/service-name-lib": "^0.0.0",
+    "@pins/peas-row-commons-database": "^0.0.0",
+    "@pins/peas-row-commons-lib": "^0.0.0",
     "dotenv": "*"
   },
   "imports": {
-    "#pins/service-name-lib/*": "./src/packages/service-name-lib/*",
-    "#pins/service-name-database": "./src/packages/service-name-database/src/index.ts",
-    "#pins/service-name-database/*": "./src/packages/service-name-database/*"
+    "#pins/peas-row-commons-lib/*": "./src/packages/peas-row-commons-lib/*",
+    "#pins/peas-row-commons-database": "./src/packages/peas-row-commons-database/src/index.ts",
+    "#pins/peas-row-commons-database/*": "./src/packages/peas-row-commons-database/*"
   }
 }

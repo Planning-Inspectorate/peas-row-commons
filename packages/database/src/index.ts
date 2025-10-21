@@ -1,8 +1,8 @@
-import { PrismaClient } from '@pins/service-name-database/src/client/client.ts';
+import { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { PrismaMssql } from '@prisma/adapter-mssql';
-import type { Prisma } from '@pins/service-name-database/src/client/client.d.ts';
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.d.ts';
 import type { Logger } from 'pino';
-import type { DatabaseConfig } from '@pins/service-name-lib/app/config-types.js';
+import type { DatabaseConfig } from '@pins/peas-row-commons-lib/app/config-types.js';
 
 export function initDatabaseClient(
 	config: { database: DatabaseConfig; NODE_ENV: string },

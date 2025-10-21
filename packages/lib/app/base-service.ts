@@ -1,9 +1,9 @@
-import { initDatabaseClient } from '@pins/service-name-database';
+import { initDatabaseClient } from '@pins/peas-row-commons-database';
 import { initLogger } from '../util/logger.ts';
 import { initRedis } from '../redis/index.ts';
 import type { BaseConfig } from './config-types.d.ts';
 import type { Logger } from 'pino';
-import type { PrismaClient } from '@pins/service-name-database/src/client/client.ts';
+import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { RedisClient } from '../redis/redis-client.ts';
 
 /**
@@ -30,7 +30,7 @@ export class BaseService {
 	/**
 	 * Alias of dbClient
 	 *
-	 * @returns {import('@pins/service-name-database/src/client/client.ts').PrismaClient}
+	 * @returns {import('@pins/peas-row-commons-database/src/client/client.ts').PrismaClient}
 	 */
 	get db() {
 		return this.dbClient;

@@ -1,5 +1,5 @@
 {
-  "name": "@pins/service-name-database",
+  "name": "@pins/peas-row-commons-database",
   "version": "0.0.0",
   "description": "Common sql database access",
   "private": true,

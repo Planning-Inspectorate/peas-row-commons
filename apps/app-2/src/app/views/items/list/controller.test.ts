@@ -2,7 +2,7 @@ import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
 import { buildListItems } from './controller.ts';
 import { configureNunjucks } from '../../../nunjucks.ts';
-import { mockLogger } from '@pins/service-name-lib/testing/mock-logger.ts';
+import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 
 describe('list items', () => {
 	it('should render without error', async () => {

@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
-import type { BaseConfig } from '@pins/service-name-lib/app/config-types.d.ts';
+import type { BaseConfig } from '@pins/peas-row-commons-lib/app/config-types.d.ts';
 
 export type Config = BaseConfig;
 

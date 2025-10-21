@@ -3,8 +3,8 @@ import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
 import express from 'express';
 import { createRoutesAndGuards } from './router.ts';
-import { mockLogger } from '@pins/service-name-lib/testing/mock-logger.ts';
-import { TestServer } from '@pins/service-name-lib/testing/test-server.ts';
+import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
+import { TestServer } from '@pins/peas-row-commons-lib/testing/test-server.ts';
 
 describe('auth', () => {
 	describe('authentication', () => {

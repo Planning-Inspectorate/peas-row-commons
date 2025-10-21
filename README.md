@@ -11,7 +11,7 @@ A template repository for creating new services. This repository includes a basi
 
 Generally this repo can be copied/cloned for a new project, and a few find+replace runs will get things started:
 
-* Replace 'service-name' with the new service name in the codebase.
+* Replace 'peas-row-commons' with the new service name in the codebase.
 * Replace `app-1` with the app name, e.g. `api`
 * Replace `app-2` with the app name, e.g. `web`
 

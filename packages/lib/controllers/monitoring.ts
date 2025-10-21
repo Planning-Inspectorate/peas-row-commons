@@ -2,7 +2,7 @@ import { Router as createRouter } from 'express';
 import { asyncHandler } from '../util/async-handler.ts';
 import { cacheNoStoreMiddleware } from '../middleware/cache.ts';
 import type { BaseLogger } from 'pino';
-import type { PrismaClient } from '@pins/service-name-database/src/client/client.ts';
+import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { IRouter, Response, Request } from 'express';
 import type { AsyncRequestHandler } from '../util/async-handler.ts';
 
