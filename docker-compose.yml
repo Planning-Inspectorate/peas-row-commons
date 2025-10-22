@@ -1,8 +1,8 @@
-version: '3.7'
 services:
   mssql:
     image: mcr.microsoft.com/azure-sql-edge:latest
     container_name: peas-row-commons-mssql
+    platform: linux/amd64 # force platform, so ARM machines to use emulation
     cap_add: ['SYS_PTRACE']
     user: root
     init: true
