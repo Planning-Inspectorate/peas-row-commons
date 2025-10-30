@@ -25,7 +25,7 @@ locals {
     }
   )
 
-  # tech_emails = [for rec in azurerm_monitor_action_group.peas_tech.email_receiver : rec.email_address]
+  tech_emails = [for rec in azurerm_monitor_action_group.peas_tech.email_receiver : rec.email_address]
   action_group_ids = {
     tech            = azurerm_monitor_action_group.peas_tech.id
     service_manager = azurerm_monitor_action_group.peas_service_manager.id

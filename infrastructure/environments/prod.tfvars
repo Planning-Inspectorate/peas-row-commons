@@ -1,11 +1,16 @@
-# apps_config = {
+#########################################################
+############ VALUES BASED FROM CROWN PROD ###############
+#########################################################
+
+
+#apps_config = {
 #   app_service_plan = {
-#     sku                      = "P0v3"
-#     per_site_scaling_enabled = false
-#     worker_count             = 1
-#     zone_balancing_enabled   = false
+#     sku                      = "P1v3"
+#     per_site_scaling_enabled = true
+#     worker_count             = 3
+#     zone_balancing_enabled   = true
 #   }
-#   node_environment         = "prod"
+#   node_environment         = "production"
 #   private_endpoint_enabled = true
 
 #   functions_node_version = 22
@@ -15,9 +20,9 @@
 #   }
 
 #   redis = {
-#     capacity = 0
+#     capacity = 1
 #     family   = "C"
-#     sku_name = "Basic"
+#     sku_name = "Standard"
 #   }
 # }
 
@@ -33,7 +38,8 @@
 # environment = "prod"
 
 # monitoring_config = {
-#   app_insights_web_test_enabled = false
+#   app_insights_web_test_enabled = true
+#   log_daily_cap                 = 0.5
 # }
 
 # sql_config = {
@@ -41,8 +47,8 @@
 #     login_username = "pins-peas-sql-prod"
 #     object_id      = "0a9c0370-0675-4216-b80b-1125ac2e8c80"
 #   }
-#   sku_name    = "Basic"
-#   max_size_gb = 2
+#   sku_name    = "S3"
+#   max_size_gb = 100
 #   retention = {
 #     audit_days             = 7
 #     short_term_days        = 7
@@ -51,6 +57,7 @@
 #     long_term_yearly       = "P1Y"
 #     long_term_week_of_year = 1
 #   }
+#   public_network_access_enabled = false
 # }
 
 # vnet_config = {
