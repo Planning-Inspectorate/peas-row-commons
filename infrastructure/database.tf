@@ -1,9 +1,7 @@
 resource "azurerm_mssql_server" "primary" { # create pins-odt-sql-<env>-scheduling
-
   # checkov:skip=CKV2_AZURE_2: ADD REASON
   # checkov:skip=CKV_AZURE_23: Auditing to be added later
   # checkov:skip=CKV_AZURE_24: Auditing to be added later
-
   name                          = "${local.org}-sql-${local.service_name}-primary-${var.environment}"
   resource_group_name           = azurerm_resource_group.primary.name
   location                      = module.primary_region.location
@@ -47,10 +45,8 @@ resource "azurerm_private_endpoint" "sql_primary" {
 }
 
 resource "azurerm_mssql_database" "primary" {
-
   # checkov:skip=CKV_AZURE_229: ADD REASON
   # checkov:skip=CKV_AZURE_224: TODO: Ensure that the Ledger feature is enabled on database that requires cryptographic proof and nonrepudiation of data integrity
-
   name        = "${local.org}-sqldb-${local.resource_suffix}"
   server_id   = azurerm_mssql_server.primary.id
   collation   = "SQL_Latin1_General_CP1_CI_AS"
@@ -72,9 +68,7 @@ resource "azurerm_mssql_database" "primary" {
 }
 
 resource "azurerm_key_vault_secret" "sql_admin_connection_string" {
-
   # checkov:skip=CKV_AZURE_41: TODO: Secret rotation
-
   key_vault_id = azurerm_key_vault.main.id
   name         = "${local.service_name}-sql-admin-connection-string"
   value = join(
@@ -93,9 +87,7 @@ resource "azurerm_key_vault_secret" "sql_admin_connection_string" {
 }
 
 resource "azurerm_key_vault_secret" "sql_app_connection_string" {
-
   # checkov:skip=CKV_AZURE_41: TODO: Secret rotation
-
   key_vault_id = azurerm_key_vault.main.id
   name         = "${local.service_name}-sql-app-connection-string"
   value = join(
