@@ -1,4 +1,4 @@
-module "app_web" {
+module "app_manage" {
   #checkov:skip=CKV_TF_1: Use of commit hash are not required for our Terraform modules
   source = "github.com/Planning-Inspectorate/infrastructure-modules.git//modules/node-app-service?ref=1.49"
 
@@ -6,7 +6,7 @@ module "app_web" {
   location            = module.primary_region.location
 
   # naming
-  app_name        = "app"
+  app_name        = "manage"
   resource_suffix = var.environment
   service_name    = local.service_name
   tags            = local.tags
@@ -75,14 +75,14 @@ module "app_web" {
 resource "azurerm_role_assignment" "app_secrets_user" {
   scope                = azurerm_key_vault.main.id
   role_definition_name = "Key Vault Secrets User"
-  principal_id         = module.app_web.principal_id
+  principal_id         = module.app_manage.principal_id
 }
 
 ## RBAC for secrets (staging slot)
 resource "azurerm_role_assignment" "app_web_staging_secrets_user" {
   scope                = azurerm_key_vault.main.id
   role_definition_name = "Key Vault Secrets User"
-  principal_id         = module.app_web.staging_principal_id
+  principal_id         = module.app_manage.staging_principal_id
 }
 
 ## sessions

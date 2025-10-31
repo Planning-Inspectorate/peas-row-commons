@@ -49,6 +49,16 @@ variable "environment" {
   type        = string
 }
 
+variable "front_door_config" {
+  description = "Config for the frontdoor in tooling subscription"
+  type = object({
+    name        = string
+    rg          = string
+    ep_name     = string
+    use_tooling = bool
+  })
+}
+
 variable "health_check_eviction_time_in_min" {
   description = "The eviction time in minutes for the health check"
   type        = number
@@ -104,9 +114,18 @@ variable "vnet_config" {
   })
 }
 
-# variable "web_domains" {
-#   description = "value for web domain"
-#   type = object({
-#     web = string
-#   })
-# }
+variable "waf_rate_limits" {
+  description = "Config for Service Bus"
+  type = object({
+    enabled             = bool
+    duration_in_minutes = number
+    threshold           = number
+  })
+}
+
+variable "web_domains" {
+  description = "value for manage domain"
+  type = object({
+    manage = string
+  })
+}

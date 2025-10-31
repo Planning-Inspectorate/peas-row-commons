@@ -12,7 +12,6 @@ resource "azurerm_resource_group" "secondary" {
   tags = local.tags
 }
 
-
 resource "azurerm_key_vault" "main" {
   # checkov:skip=CKV_AZURE_189: Consider moving to VPN; requires RBAC
   # checkov:skip=CKV_AZURE_109: Route traffic via a VNet; Private Endpoint consideration
@@ -32,9 +31,7 @@ resource "azurerm_key_vault" "main" {
 
 # secrets to be manually populated
 resource "azurerm_key_vault_secret" "manual_secrets" {
-
   #checkov:skip=CKV_AZURE_41: expiration not valid
-
   for_each = toset(local.secrets)
 
   key_vault_id = azurerm_key_vault.main.id
