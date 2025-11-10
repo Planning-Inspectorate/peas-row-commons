@@ -11,14 +11,14 @@ COPY package.json .
 COPY package-lock.json .
 
 COPY packages ./packages
-COPY apps/app-2 ./apps/app-2
+COPY apps/manage ./apps/manage
 
-RUN npm ci --loglevel notice --workspace=peas-row-commons-app-2 --ignore-scripts
+RUN npm ci --loglevel notice --workspace=peas-row-commons-manage --ignore-scripts
 
 ENV NODE_ENV=production
 ENV GIT_SHA=$GIT_SHA
 
-RUN npm run build --workspace=peas-row-commons-app-2
+RUN npm run build --workspace=peas-row-commons-manage
 RUN npm run db-generate
 
 # --------------------------------
@@ -28,7 +28,7 @@ FROM base
 
 ARG GIT_SHA
 
-WORKDIR /usr/src/app/apps/app-2
+WORKDIR /usr/src/app/apps/manage
 
 ENV NODE_ENV=production
 ENV GIT_SHA=$GIT_SHA
