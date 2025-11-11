@@ -18,6 +18,18 @@ variable "apps_config" {
     node_environment         = string
     private_endpoint_enabled = bool
 
+    auth = object({
+      client_id                = string
+      group_application_access = string
+    })
+
+    entra = object({
+      group_ids = object({
+        case_officers = string
+        inspectors    = string
+      })
+    })
+
     functions_node_version = number
 
     logging = object({
@@ -47,6 +59,16 @@ variable "common_config" {
 variable "environment" {
   description = "The name of the environment in which resources will be deployed"
   type        = string
+}
+
+variable "front_door_config" {
+  description = "Config for the frontdoor in tooling subscription"
+  type = object({
+    name        = string
+    rg          = string
+    ep_name     = string
+    use_tooling = bool
+  })
 }
 
 variable "health_check_eviction_time_in_min" {
@@ -104,9 +126,18 @@ variable "vnet_config" {
   })
 }
 
-# variable "web_domains" {
-#   description = "value for web domain"
-#   type = object({
-#     web = string
-#   })
-# }
+variable "waf_rate_limits" {
+  description = "Config for Service Bus"
+  type = object({
+    enabled             = bool
+    duration_in_minutes = number
+    threshold           = number
+  })
+}
+
+variable "web_domains" {
+  description = "value for manage domain"
+  type = object({
+    manage = string
+  })
+}

@@ -63,5 +63,5 @@ vnet_config = {
 }
 
 # web_domains = {
-#   web = "https://<tbc>-manage-test.planninginspectorate.gov.uk"
+#   web = "peas-row-manage-test.planninginspectorate.gov.uk"
 # }

@@ -1,4 +1,4 @@
-module "app_web" {
+module "app_manage" {
   #checkov:skip=CKV_TF_1: Use of commit hash are not required for our Terraform modules
   source = "github.com/Planning-Inspectorate/infrastructure-modules.git//modules/node-app-service?ref=1.53"
 
@@ -6,7 +6,7 @@ module "app_web" {
   location            = module.primary_region.location
 
   # naming
-  app_name        = "app"
+  app_name        = "manage"
   resource_suffix = var.environment
   service_name    = local.service_name
   tags            = local.tags
@@ -44,6 +44,15 @@ module "app_web" {
     NODE_ENV                                   = var.apps_config.node_environment
     ENVIRONMENT                                = var.environment
 
+    APP_HOSTNAME                  = var.web_domains.manage
+    PORTAL_HOSTNAME               = "https://${var.web_domains.manage}"
+    AUTH_CLIENT_ID                = var.apps_config.auth.client_id
+    AUTH_CLIENT_SECRET            = local.key_vault_refs["peas-client-secret"]
+    AUTH_GROUP_APPLICATION_ACCESS = var.apps_config.auth.group_application_access
+    AUTH_TENANT_ID                = data.azurerm_client_config.current.tenant_id
+    ENTRA_GROUP_ID_CASE_OFFICERS  = var.apps_config.entra.group_ids.case_officers
+    ENTRA_GROUP_ID_INSPECTORS     = var.apps_config.entra.group_ids.inspectors
+
     # logging
     LOG_LEVEL = var.apps_config.logging.level
 
@@ -56,13 +65,16 @@ module "app_web" {
     # https://github.com/sindresorhus/got/blob/main/documentation/7-retry.md
     RETRY_STATUS_CODES = "408,413,429,500,502,503,504,521,522,524"
 
+    # sessions
+    REDIS_CONNECTION_STRING = local.key_vault_refs["redis-connection-string"]
+    SESSION_SECRET          = local.key_vault_refs["session-secret-web"]
+
     #Auth
     MICROSOFT_PROVIDER_AUTHENTICATION_SECRET = local.key_vault_refs["microsoft-provider-authentication-secret"]
     WEBSITE_AUTH_AAD_ALLOWED_TENANTS         = data.azurerm_client_config.current.tenant_id
 
-    # sessions
-    REDIS_CONNECTION_STRING = local.key_vault_refs["redis-connection-string"]
-    SESSION_SECRET          = local.key_vault_refs["session-secret-web"]
+    # gov notify
+    GOV_NOTIFY_API_KEY = local.key_vault_refs["peas-gov-notify-api-key"]
   }
 
   providers = {
@@ -75,14 +87,14 @@ module "app_web" {
 resource "azurerm_role_assignment" "app_secrets_user" {
   scope                = azurerm_key_vault.main.id
   role_definition_name = "Key Vault Secrets User"
-  principal_id         = module.app_web.principal_id
+  principal_id         = module.app_manage.principal_id
 }
 
 ## RBAC for secrets (staging slot)
 resource "azurerm_role_assignment" "app_web_staging_secrets_user" {
   scope                = azurerm_key_vault.main.id
   role_definition_name = "Key Vault Secrets User"
-  principal_id         = module.app_web.staging_principal_id
+  principal_id         = module.app_manage.staging_principal_id
 }
 
 ## sessions
