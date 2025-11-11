@@ -1,17 +1,17 @@
 data "azurerm_client_config" "current" {}
 
-# data "azurerm_cdn_frontdoor_profile" "shared" {
-#   name                = var.front_door_config.name
-#   resource_group_name = var.front_door_config.rg
-#   provider            = azurerm.front_door
-# }
+data "azurerm_cdn_frontdoor_profile" "shared" {
+  name                = var.front_door_config.name
+  resource_group_name = var.front_door_config.rg
+  provider            = azurerm.front_door
+}
 
-# data "azurerm_cdn_frontdoor_endpoint" "shared" {
-#   name                = var.front_door_config.ep_name
-#   resource_group_name = var.front_door_config.rg
-#   profile_name        = var.front_door_config.name
-#   provider            = azurerm.front_door
-# }
+data "azurerm_cdn_frontdoor_endpoint" "shared" {
+  name                = var.front_door_config.ep_name
+  resource_group_name = var.front_door_config.rg
+  profile_name        = var.front_door_config.name
+  provider            = azurerm.front_door
+}
 
 data "azurerm_monitor_action_group" "common" {
   for_each = tomap(var.common_config.action_group_names)

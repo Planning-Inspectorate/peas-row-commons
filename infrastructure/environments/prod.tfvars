@@ -69,6 +69,6 @@
 #   secondary_subnet_address_space      = "10.32.29.0/24"
 # }
 
-# # web_domains = {
-# #   web = "https://<tbc>-manage-prod.planninginspectorate.gov.uk"
-# # }
+# web_domains = {
+#   web = "peas-row-manage-prod.planninginspectorate.gov.uk"
+# }
