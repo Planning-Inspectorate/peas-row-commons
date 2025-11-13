@@ -14,7 +14,7 @@
   },
   "scripts": {
     "check-types": "npx tsc",
-    "commitlint": "commitlint --from=$(git cherry origin/main | head -n 1 | cut -c 3-)",
+    "commitlint": "commitlint --from=$(git rev-parse $(git cherry origin/main | head -n 1 | cut -c 3-)^1)",
     "db-migrate-dev": "npm run migrate-dev --workspace @pins/peas-row-commons-database",
     "db-migrate-prod": "npm run migrate-prod --workspace @pins/peas-row-commons-database",
     "db-generate": "npm run generate --workspace @pins/peas-row-commons-database",
