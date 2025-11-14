@@ -8,6 +8,19 @@ apps_config = {
   node_environment         = "production"
   private_endpoint_enabled = true
 
+  auth = {
+    client_id                = "085639e9-5584-42dd-ac00-3537ae8c38a6"
+    group_application_access = "f744d05a-df06-4b67-b5f9-2ea4b85fb490"
+  }
+
+  entra = {
+    group_ids = {
+      # use app access group for now
+      case_officers = "f744d05a-df06-4b67-b5f9-2ea4b85fb490"
+      inspectors    = "f744d05a-df06-4b67-b5f9-2ea4b85fb490"
+    }
+  }
+
   functions_node_version = 22
 
   logging = {
@@ -31,6 +44,13 @@ common_config = {
 }
 
 environment = "test"
+
+front_door_config = {
+  name        = "pins-fd-common-tooling"
+  rg          = "pins-rg-common-tooling"
+  ep_name     = "pins-fde-peas"
+  use_tooling = true
+}
 
 monitoring_config = {
   app_insights_web_test_enabled = false
@@ -62,6 +82,12 @@ vnet_config = {
   secondary_subnet_address_space      = "10.32.21.0/24"
 }
 
-# web_domains = {
-#   web = "peas-row-manage-test.planninginspectorate.gov.uk"
-# }
+waf_rate_limits = {
+  enabled             = true
+  duration_in_minutes = 5
+  threshold           = 1500
+}
+
+web_domains = {
+  manage = "peas-row-manage-test.planninginspectorate.gov.uk"
+}
