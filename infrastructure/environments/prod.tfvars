@@ -70,5 +70,5 @@
 # }
 
 # web_domains = {
-#   web = "peas-row-manage-prod.planninginspectorate.gov.uk"
+#   manage = "peas-row-manage-prod.planninginspectorate.gov.uk"
 # }

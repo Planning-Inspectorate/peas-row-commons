@@ -89,5 +89,5 @@ waf_rate_limits = {
 }
 
 web_domains = {
-  web = "peas-row-manage-test.planninginspectorate.gov.uk"
+  manage = "peas-row-manage-test.planninginspectorate.gov.uk"
 }
