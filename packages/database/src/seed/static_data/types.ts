@@ -1,0 +1,54 @@
+import { CASE_TYPES_ID, CASEWORK_AREAS_ID } from './ids/index.ts';
+
+const PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES = [
+	{
+		id: CASE_TYPES_ID.DROUGHT,
+		displayName: 'Drought',
+		caseworkAreaId: CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS
+	},
+	{
+		id: CASE_TYPES_ID.WAYLEAVES,
+		displayName: 'Wayleaves',
+		caseworkAreaId: CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS
+	},
+	{
+		id: CASE_TYPES_ID.HOUSING_PLANNING_CPOS,
+		displayName: 'Housing and Planning CPOs',
+		caseworkAreaId: CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS
+	},
+	{
+		id: CASE_TYPES_ID.OTHER_SOS_CASEWORK,
+		displayName: 'Other Secretary of State casework',
+		caseworkAreaId: CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS
+	},
+	{
+		id: CASE_TYPES_ID.PURCHASE_NOTICES,
+		displayName: 'Purchase Notices',
+		caseworkAreaId: CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS
+	},
+	{
+		id: CASE_TYPES_ID.CALL_INS,
+		displayName: 'Call Ins',
+		caseworkAreaId: CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS
+	}
+];
+
+const RIGHTS_OF_WAY_COMMON_LAND_TYPES = [
+	{
+		id: CASE_TYPES_ID.COASTAL_ACCESS,
+		displayName: 'Coastal Access',
+		caseworkAreaId: CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND
+	},
+	{
+		id: CASE_TYPES_ID.COMMON_LAND,
+		displayName: 'Common Land',
+		caseworkAreaId: CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND
+	},
+	{
+		id: CASE_TYPES_ID.RIGHTS_OF_WAY,
+		displayName: 'Rights of Way',
+		caseworkAreaId: CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND
+	}
+];
+
+export const CASE_TYPES = [...PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES, ...RIGHTS_OF_WAY_COMMON_LAND_TYPES];
