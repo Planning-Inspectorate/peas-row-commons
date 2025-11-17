@@ -22,4 +22,78 @@ datasource db {
 // while we don't rely on that for security, it adds an extra layer
 // not everything needs this, but easier to make them all consistent and the increase in size (vs int) is negligible
 
-// TODO: add models here!
+/// Case represents a case in the system
+model Case {
+  /// internal identifier
+  id            String         @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  createdDate   DateTime       @default(now())
+  updatedDate   DateTime?
+  receivedDate  DateTime
+  /// type of case
+  typeId        String
+  Type          CaseType       @relation(fields: [typeId], references: [id])
+  /// subtype of case
+  subTypeId     String
+  SubType       CaseSubType    @relation(fields: [subTypeId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  /// external identifier, shown to users as a unique reference
+  reference     String         @unique
+  name          String
+  applicant     String?
+  siteAddressId String?        @db.UniqueIdentifier
+  SiteAddress   Address?       @relation(fields: [siteAddressId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  authority     String?
+  area          String?
+  /// Entra ID
+  caseOfficerId String
+  procedureId   String?
+  Procedure     CaseProcedure? @relation(fields: [procedureId], references: [id])
+  linkedCases   String?
+}
+
+model CaseworkArea {
+  /// unique machine-readable name, not generated
+  id          String     @id
+  displayName String?
+  caseTypes   CaseType[]
+}
+
+/// CaseType represents types of cases we receive
+model CaseType {
+  /// unique machine-readable name, not generated
+  id             String        @id
+  displayName    String?
+  Case           Case[]
+  SubTypes       CaseSubType[]
+  caseworkAreaId String
+  CaseworkArea   CaseworkArea  @relation(fields: [caseworkAreaId], references: [id], onDelete: NoAction)
+}
+
+/// CaseSubType represents subtypes of cases we receive
+model CaseSubType {
+  /// unique machine-readable name, not generated
+  id           String   @id
+  displayName  String?
+  Case         Case[]
+  parentTypeId String
+  ParentType   CaseType @relation(fields: [parentTypeId], references: [id])
+}
+
+/// CaseProcedure represents the procedure type a case will follow
+model CaseProcedure {
+  /// unique machine-readable name, not generated, e.g. "inquiry"
+  id          String  @id
+  displayName String?
+  Case        Case[]
+}
+
+/// Address represents an address of a property or place
+model Address {
+  /// internal identifier
+  id       String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  line1    String?
+  line2    String?
+  townCity String?
+  county   String?
+  postcode String?
+  Case     Case[]
+}
