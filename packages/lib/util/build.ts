@@ -21,11 +21,11 @@ interface SassOptions {
  *
  * @see https://sass-lang.com/documentation/js-api/#md:usage
  */
-async function compileSass({ staticDir, srcDir, govUkRoot, localsFile }: SassOptions): Promise<void> {
+async function compileSass({ staticDir, srcDir, govUkRoot, localsFile, mojRoot }: SassOptions): Promise<void> {
 	const styleFile = path.join(srcDir, 'app', 'sass/style.scss');
 	const out = sass.compile(styleFile, {
 		// ensure scss can find the govuk-frontend folders
-		loadPaths: [govUkRoot],
+		loadPaths: [govUkRoot, mojRoot],
 		style: 'compressed',
 		// don't show depreciate warnings for govuk
 		// see https://frontend.design-system.service.gov.uk/importing-css-assets-and-javascript/#silence-deprecation-warnings-from-dependencies-in-dart-sass
