@@ -1,35 +1,95 @@
 import { CASE_SUBTYPES_ID, CASE_TYPES_ID } from './ids/index.ts';
 
 const DROUGHT_SUBTYPES = [
-	{ id: CASE_SUBTYPES_ID.DROUGHT_PERMITS, displayName: 'Drought Permits', parentTypeId: CASE_TYPES_ID.DROUGHT },
-	{ id: CASE_SUBTYPES_ID.DROUGHT_ORDERS, displayName: 'Drought Orders', parentTypeId: CASE_TYPES_ID.DROUGHT }
+	{
+		id: CASE_SUBTYPES_ID.DROUGHT_PERMITS,
+		displayName: 'Drought Permits',
+		parentTypeId: CASE_TYPES_ID.DROUGHT
+	},
+	{
+		id: CASE_SUBTYPES_ID.DROUGHT_ORDERS,
+		displayName: 'Drought Orders',
+		parentTypeId: CASE_TYPES_ID.DROUGHT
+	}
 ];
 
 const WAYLEAVES_SUBTYPES = [
-	{ id: CASE_SUBTYPES_ID.NEW_LINES, displayName: 'New lines', parentTypeId: CASE_TYPES_ID.WAYLEAVES },
-	{ id: CASE_SUBTYPES_ID.TREE_LOPPING, displayName: 'Tree lopping', parentTypeId: CASE_TYPES_ID.WAYLEAVES },
-	{ id: CASE_SUBTYPES_ID.WAYLEAVES_GENERIC, displayName: 'Wayleaves', parentTypeId: CASE_TYPES_ID.WAYLEAVES }
+	{
+		id: CASE_SUBTYPES_ID.NEW_LINES,
+		displayName: 'New lines',
+		parentTypeId: CASE_TYPES_ID.WAYLEAVES
+	},
+	{
+		id: CASE_SUBTYPES_ID.TREE_LOPPING,
+		displayName: 'Tree lopping',
+		parentTypeId: CASE_TYPES_ID.WAYLEAVES
+	},
+	{
+		id: CASE_SUBTYPES_ID.WAYLEAVES_GENERIC,
+		displayName: 'Wayleaves',
+		parentTypeId: CASE_TYPES_ID.WAYLEAVES
+	}
 ];
 
 const HOUSING_PLANNING_CPOS_SUBTYPES = [
-	{ id: CASE_SUBTYPES_ID.HOUSING, displayName: 'Housing', parentTypeId: CASE_TYPES_ID.HOUSING_PLANNING_CPOS },
-	{ id: CASE_SUBTYPES_ID.PLANNING_SUB, displayName: 'Planning', parentTypeId: CASE_TYPES_ID.HOUSING_PLANNING_CPOS },
-	{ id: CASE_SUBTYPES_ID.ADHOC, displayName: 'Adhoc', parentTypeId: CASE_TYPES_ID.HOUSING_PLANNING_CPOS }
+	{
+		id: CASE_SUBTYPES_ID.HOUSING,
+		displayName: 'Housing',
+		parentTypeId: CASE_TYPES_ID.HOUSING_PLANNING_CPOS
+	},
+	{
+		id: CASE_SUBTYPES_ID.PLANNING_SUB,
+		displayName: 'Planning',
+		parentTypeId: CASE_TYPES_ID.HOUSING_PLANNING_CPOS
+	},
+	{
+		id: CASE_SUBTYPES_ID.ADHOC,
+		displayName: 'Adhoc',
+		parentTypeId: CASE_TYPES_ID.HOUSING_PLANNING_CPOS
+	}
 ];
 
 const OTHER_SOS_CASEWORK_SUBTYPES = [
-	{ id: CASE_SUBTYPES_ID.DEFRA_CPO, displayName: 'DEFRA CPO', parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK },
-	{ id: CASE_SUBTYPES_ID.DESNZ_CPO, displayName: 'DESNZ CPO', parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK },
-	{ id: CASE_SUBTYPES_ID.DFT_CPO, displayName: 'DfT CPO', parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK },
-	{ id: CASE_SUBTYPES_ID.ADHOC_CPO, displayName: 'Ad hoc CPO', parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK },
-	{ id: CASE_SUBTYPES_ID.SSSI, displayName: 'SSSI', parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK },
-	{ id: CASE_SUBTYPES_ID.ADVERT, displayName: 'Advert', parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK },
+	{
+		id: CASE_SUBTYPES_ID.DEFRA_CPO,
+		displayName: 'DEFRA CPO',
+		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
+	},
+	{
+		id: CASE_SUBTYPES_ID.DESNZ_CPO,
+		displayName: 'DESNZ CPO',
+		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
+	},
+	{
+		id: CASE_SUBTYPES_ID.DFT_CPO,
+		displayName: 'DfT CPO',
+		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
+	},
+	{
+		id: CASE_SUBTYPES_ID.ADHOC_CPO,
+		displayName: 'Ad hoc CPO',
+		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
+	},
+	{
+		id: CASE_SUBTYPES_ID.SSSI,
+		displayName: 'SSSI',
+		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
+	},
+	{
+		id: CASE_SUBTYPES_ID.ADVERT,
+		displayName: 'Advert',
+		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
+	},
 	{
 		id: CASE_SUBTYPES_ID.DISCONTINUANCE_NOTICE,
 		displayName: 'Discontinuance notice',
 		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
 	},
-	{ id: CASE_SUBTYPES_ID.REVOCATION, displayName: 'Revocation', parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK },
+	{
+		id: CASE_SUBTYPES_ID.REVOCATION,
+		displayName: 'Revocation',
+		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
+	},
 	{
 		id: CASE_SUBTYPES_ID.COMPLETION_NOTICE,
 		displayName: 'Completion notice',
@@ -48,13 +108,21 @@ const OTHER_SOS_CASEWORK_SUBTYPES = [
 ];
 
 const COASTAL_ACCESS_SUBTYPES = [
-	{ id: CASE_SUBTYPES_ID.NOTICE_APPEAL, displayName: 'Notice appeal', parentTypeId: CASE_TYPES_ID.COASTAL_ACCESS },
+	{
+		id: CASE_SUBTYPES_ID.NOTICE_APPEAL,
+		displayName: 'Notice appeal',
+		parentTypeId: CASE_TYPES_ID.COASTAL_ACCESS
+	},
 	{
 		id: CASE_SUBTYPES_ID.COASTAL_ACCESS_APPEAL,
 		displayName: 'Coastal access appeal',
 		parentTypeId: CASE_TYPES_ID.COASTAL_ACCESS
 	},
-	{ id: CASE_SUBTYPES_ID.OBJECTION, displayName: 'Objection', parentTypeId: CASE_TYPES_ID.COASTAL_ACCESS },
+	{
+		id: CASE_SUBTYPES_ID.OBJECTION,
+		displayName: 'Objection',
+		parentTypeId: CASE_TYPES_ID.COASTAL_ACCESS
+	},
 	{
 		id: CASE_SUBTYPES_ID.RESTRICTION_APPEAL,
 		displayName: 'Restriction appeal (access land)',
@@ -88,13 +156,21 @@ const COMMON_LAND_SUBTYPES = [
 		displayName: 'Deregistration & Exchange',
 		parentTypeId: CASE_TYPES_ID.COMMON_LAND
 	},
-	{ id: CASE_SUBTYPES_ID.INCLOSURE, displayName: 'Inclosure', parentTypeId: CASE_TYPES_ID.COMMON_LAND },
+	{
+		id: CASE_SUBTYPES_ID.INCLOSURE,
+		displayName: 'Inclosure',
+		parentTypeId: CASE_TYPES_ID.COMMON_LAND
+	},
 	{
 		id: CASE_SUBTYPES_ID.INCLOSURE_OBSOLESCENT,
 		displayName: 'Inclosure : obsolescent functions',
 		parentTypeId: CASE_TYPES_ID.COMMON_LAND
 	},
-	{ id: CASE_SUBTYPES_ID.LAND_EXCHANGE, displayName: 'Land Exchange', parentTypeId: CASE_TYPES_ID.COMMON_LAND },
+	{
+		id: CASE_SUBTYPES_ID.LAND_EXCHANGE,
+		displayName: 'Land Exchange',
+		parentTypeId: CASE_TYPES_ID.COMMON_LAND
+	},
 	{
 		id: CASE_SUBTYPES_ID.LOCAL_ACTS,
 		displayName: 'Local Acts and Provisional Order Confirmation Acts',
@@ -110,7 +186,11 @@ const COMMON_LAND_SUBTYPES = [
 		displayName: 'Scheme of Management',
 		parentTypeId: CASE_TYPES_ID.COMMON_LAND
 	},
-	{ id: CASE_SUBTYPES_ID.STINT_RATES, displayName: 'Stint Rates', parentTypeId: CASE_TYPES_ID.COMMON_LAND },
+	{
+		id: CASE_SUBTYPES_ID.STINT_RATES,
+		displayName: 'Stint Rates',
+		parentTypeId: CASE_TYPES_ID.COMMON_LAND
+	},
 	{
 		id: CASE_SUBTYPES_ID.WORKS_COMMON_LAND,
 		displayName: 'Works on Common Land',
