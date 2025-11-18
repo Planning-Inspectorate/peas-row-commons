@@ -12,6 +12,8 @@ async function run(): Promise<void> {
 	const govUkRoot = path.resolve(require.resolve('govuk-frontend'), '../../../../..');
 	// resolves to <root>/node_modules/accessible-autocomplete/dist/*.js than maps to `dist`
 	const accessibleAutocompleteRoot = path.resolve(require.resolve('accessible-autocomplete'), '..');
+	// resolves to <root>/node_modules/@ministryofjustice/frontend/moj/all.bundle.js than maps to `<root>`
+	const mojRoot = path.resolve(require.resolve('@ministryofjustice/frontend'), '../../../../..');
 
 	const config = loadBuildConfig();
 	const localsFile = path.join(config.srcDir, 'util', 'config-middleware.ts');
@@ -20,7 +22,8 @@ async function run(): Promise<void> {
 		srcDir: config.srcDir,
 		govUkRoot,
 		accessibleAutocompleteRoot,
-		localsFile
+		localsFile,
+		mojRoot
 	});
 }
 
