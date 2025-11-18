@@ -45,5 +45,17 @@ export function buildRouter(service: App2Service): IRouter {
 	router.use('/create-case', caseRoutes);
 	router.use('/error', createErrorRoutes(service));
 
+// 	router.get('/pea-page', (req, res) => {
+//     res.render('views/case-types/case-type/view.njk', {
+//         pageTitle: 'Planning, Environment and Applications'
+//     });
+// });
+
+// router.get('/rwc-page', (req, res) => {
+//     res.render('views/rwc-page/view.njk', {
+//         pageTitle: 'Right of Way Cases'
+//     });
+// });
+
 	return router;
 }
