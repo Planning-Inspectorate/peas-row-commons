@@ -16,6 +16,7 @@
     "@microsoft/microsoft-graph-client": "*",
     "@pins/peas-row-commons-database": "^0.0.0",
     "@pins/peas-row-commons-lib": "^0.0.0",
+    "@ministryofjustice/frontend": "*",
     "accessible-autocomplete": "*",
     "body-parser": "*",
     "connect-redis": "*",
