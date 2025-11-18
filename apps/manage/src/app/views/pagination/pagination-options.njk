@@ -1,0 +1,23 @@
+{% macro renderPagination(selectedItemsPerPage, totalRepresentations, pageNumber, searchValue, filtersValue) %}
+    {% if totalRepresentations > 25 %}
+        <span><strong>Results per page</strong></span>&nbsp;&nbsp;&nbsp;&nbsp;
+
+        {% set pageSizes = [25, 50, 100] %}
+
+        {% for size in pageSizes %}
+            {% if size == selectedItemsPerPage %}
+                <span class="govuk-body">{{ size }}</span>
+            {% elif searchValue and filtersValue %}
+                <a class="govuk-link--no-visited-state" href="{{ currentUrl }}?itemsPerPage={{ size }}&searchCriteria={{ searchValue | replace(" ", "+") }}{{ filtersValue }}" data-pagination="{{ size }}">{{ size }}</a>
+            {% elif searchValue %}
+                <a class="govuk-link--no-visited-state" href="{{ currentUrl }}?itemsPerPage={{ size }}&searchCriteria={{ searchValue | replace(" ", "+") }}" data-pagination="{{ size }}">{{ size }}</a>
+            {% elif filtersValue %}
+                <a class="govuk-link--no-visited-state" href="{{ currentUrl }}?itemsPerPage={{ size }}{{ filtersValue }}" data-pagination="{{ size }}">{{ size }}</a>
+            {% else %}
+                <a class="govuk-link--no-visited-state" href="{{ currentUrl }}?itemsPerPage={{ size }}" data-pagination="{{ size }}">{{ size }}</a>
+            {% endif %}
+
+            {% if not loop.last %}&nbsp;&nbsp;|&nbsp;&nbsp;{% endif %}
+        {% endfor %}
+    {% endif %}
+{% endmacro %}

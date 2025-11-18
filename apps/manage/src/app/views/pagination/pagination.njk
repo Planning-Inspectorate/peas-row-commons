@@ -1,0 +1,51 @@
+{% from "govuk/components/pagination/macro.njk" import govukPagination %}
+
+{% macro renderPagination(currentPage, totalPages, currentUrl) %}
+    {% set paginationItems = [] %}
+    {% set queryParametersPopulated = currentUrl.indexOf("?itemsPerPage=") > -1 %}
+
+    {# Always include the first page #}
+    {% if totalPages > 1 %}
+        {% set _ = paginationItems.push({
+            "number": 1,
+            "href": currentUrl | replace("&page=" + currentPage, "") + "&page=1" if queryParametersPopulated else "?page=1",
+            "current": currentPage == 1
+        }) %}
+    {% endif %}
+
+    {# Add elipses if there's a gap between first page and current range #}
+    {% if currentPage > 3 %}
+        {% set _ = paginationItems.push({ "ellipsis": true }) %}
+    {% endif %}
+
+    {# Generate up to 3 surrounding pages dynamically #}
+    {% for i in range(currentPage - 1, currentPage + 2) %}
+        {% if i > 1 and i < totalPages %}
+            {% set _ = paginationItems.push({
+                "number": i,
+                "href": currentUrl | replace("&page=" + currentPage, "") + "&page=" ~ i if queryParametersPopulated else "?page=" ~ i,
+                "current": i == currentPage
+            }) %}
+        {% endif %}
+    {% endfor %}
+
+    {# Add elipses if there's a gap before the last page #}
+    {% if currentPage < totalPages - 2 %}
+        {% set _ = paginationItems.push({ "ellipsis": true }) %}
+    {% endif %}
+
+    {# Always include the last page #}
+    {% if totalPages > 1 and totalPages != 1 %}
+        {% set _ = paginationItems.push({
+            "number": totalPages,
+            "href": currentUrl | replace("&page=" + currentPage, "") + "&page=" ~ totalPages if queryParametersPopulated else "?page=" ~ totalPages,
+            "current": currentPage == totalPages
+        }) %}
+    {% endif %}
+
+    {{ govukPagination({
+        "previous": { "href": currentUrl | replace("&page=" + currentPage, "") + "&page=" ~ (currentPage - 1) if queryParametersPopulated else "?page=" ~ (currentPage - 1) } if currentPage > 1 else {},
+        "next": { "href": currentUrl | replace("&page=" + currentPage, "") + "&page=" ~ (currentPage + 1) if queryParametersPopulated else "?page=" ~ (currentPage + 1) } if currentPage < totalPages else {},
+        "items": paginationItems
+    }) }}
+{% endmacro %}
