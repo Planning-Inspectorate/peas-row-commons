@@ -31,7 +31,15 @@
                 }
             },
             {
-                text: case.createdDate,
+                text: case.Type.displayName,
+                classes: 'pins-white-space-pre-wrap'
+            },
+            {
+                text: case.receivedDate,
+                classes: 'pins-white-space-pre-wrap'
+            },
+            {
+                text: case.name,
                 classes: 'pins-white-space-pre-wrap'
             }
         ]), cases) %}
@@ -45,7 +53,19 @@
             }
         },
         {
-            text: 'Created On',
+            text: 'Case type',
+            attributes: {
+            "aria-sort": "descending"
+            }
+        },
+        {
+            text: 'Received on',
+            attributes: {
+            "aria-sort": "descending"
+            }
+        },
+        {
+            text: 'Case name',
             attributes: {
             "aria-sort": "descending"
             }

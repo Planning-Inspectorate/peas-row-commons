@@ -6,12 +6,17 @@ export function buildListCases(service: ManageService): AsyncRequestHandler {
 	return async (req, res) => {
 		logger.info('list cases');
 
-		const [cases] = await Promise.all([
-			db.case.findMany({
-				orderBy: { createdDate: 'desc' },
-				take: 1000
-			})
-		]);
+		const cases = await db.case.findMany({
+			orderBy: { receivedDate: 'desc' },
+			take: 1000,
+			include: {
+				Type: {
+					select: {
+						displayName: true
+					}
+				}
+			}
+		});
 
 		return res.render('views/cases/list/view.njk', {
 			pageHeading: 'Case list',
