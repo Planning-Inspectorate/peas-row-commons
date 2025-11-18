@@ -39,7 +39,7 @@
 
 # sql_config = {
 #   admin = {
-#     login_username = "pins-peas-sql-training"
+#     login_username = "pins-peas-row-commons-sql-training"
 #     object_id      = "9bec1244-784a-4939-b816-b2337eda971d"
 #   }
 #   sku_name    = "Basic"
@@ -63,6 +63,6 @@
 #   secondary_subnet_address_space      = "10.32.25.0/24"
 # }
 
-# # web_domains = {
-# #   web = "peas-row-manage-training.planninginspectorate.gov.uk"
-# # }
+# web_domains = {
+#   manage = "peas-row-manage-training.planninginspectorate.gov.uk"
+# }

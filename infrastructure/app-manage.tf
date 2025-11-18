@@ -50,8 +50,6 @@ module "app_manage" {
     AUTH_CLIENT_SECRET            = local.key_vault_refs["peas-client-secret"]
     AUTH_GROUP_APPLICATION_ACCESS = var.apps_config.auth.group_application_access
     AUTH_TENANT_ID                = data.azurerm_client_config.current.tenant_id
-    ENTRA_GROUP_ID_CASE_OFFICERS  = var.apps_config.entra.group_ids.case_officers
-    ENTRA_GROUP_ID_INSPECTORS     = var.apps_config.entra.group_ids.inspectors
 
     # logging
     LOG_LEVEL = var.apps_config.logging.level
