@@ -1,6 +1,6 @@
 import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
-import { buildListItems } from './controller.ts';
+import { buildListCases } from './controller.ts';
 import { configureNunjucks } from '../../../nunjucks.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 
@@ -14,11 +14,11 @@ describe('list items', () => {
 		const mockDb = {
 			$queryRaw: mock.fn()
 		};
-		const listItems = buildListItems({ db: mockDb, logger: mockLogger() });
+		const listItems = buildListCases({ db: mockDb, logger: mockLogger() });
 		await assert.doesNotReject(() => listItems({}, mockRes));
 		assert.strictEqual(mockRes.render.mock.callCount(), 1);
 		assert.strictEqual(mockRes.render.mock.calls[0].arguments.length, 2);
-		assert.strictEqual(mockRes.render.mock.calls[0].arguments[0], 'views/items/list/view.njk');
+		assert.strictEqual(mockRes.render.mock.calls[0].arguments[0], 'views/cases/list/view.njk');
 		assert.strictEqual(mockRes.render.mock.calls[0].arguments[1].pageHeading, 'Some Service Name');
 	});
 });
