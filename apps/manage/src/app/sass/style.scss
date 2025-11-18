@@ -6,6 +6,7 @@ $font-family: arial, helvetica, sans-serif;
 	// https://www.gov.uk/service-manual/design/making-your-service-look-like-govuk#if-your-service-isnt-on-govuk
 	$govuk-font-family: $font-family
 );
+@forward 'node_modules/@ministryofjustice/frontend/moj/all';
 @use './header';
 
 // set font-family for any autocomplete menu items

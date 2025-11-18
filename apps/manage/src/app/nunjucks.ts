@@ -13,12 +13,14 @@ export function configureNunjucks(): nunjucks.Environment {
 	const require = createRequire(import.meta.url);
 	// get the path to the govuk-frontend folder, in node_modules, using the node require resolution
 	const govukFrontendRoot = path.resolve(require.resolve('govuk-frontend'), '../..');
+	// get the path to the moj frontend folder in node_modules, using the node require resolution
+	const mojFrontendRoot = path.resolve(require.resolve('@ministryofjustice/frontend'), '../..');
 	const appDir = path.join(config.srcDir, 'app');
 
 	// configure nunjucks
 	return nunjucks.configure(
 		// ensure nunjucks templates can use govuk-frontend components, and templates we've defined in `web/src/app`
-		[govukFrontendRoot, appDir],
+		[govukFrontendRoot, appDir, mojFrontendRoot],
 		{
 			// output with dangerous characters are escaped automatically
 			autoescape: true,
