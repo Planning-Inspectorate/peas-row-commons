@@ -36,7 +36,10 @@
             },
             {
                 text: case.receivedDate,
-                classes: 'pins-white-space-pre-wrap'
+                classes: 'pins-white-space-pre-wrap',
+                attributes: {
+                    "data-sort-value": case.receivedDateSortable
+                }
             },
             {
                 text: case.name,
@@ -49,25 +52,25 @@
         {
             text: 'Reference',
             attributes: {
-            "aria-sort": "descending"
+                "aria-sort": "none"
             }
         },
         {
             text: 'Case type',
             attributes: {
-            "aria-sort": "descending"
+                "aria-sort": "none"
             }
         },
         {
             text: 'Received on',
             attributes: {
-            "aria-sort": "descending"
+                "aria-sort": "descending"
             }
         },
         {
             text: 'Case name',
             attributes: {
-            "aria-sort": "descending"
+                "aria-sort": "none"
             }
         }
     ] %}
