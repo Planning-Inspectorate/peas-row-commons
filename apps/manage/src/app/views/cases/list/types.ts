@@ -15,7 +15,7 @@ export type CaseListFields = Prisma.CaseGetPayload<{ select: typeof caseListSele
 export interface CaseListViewModel {
 	id: string;
 	reference: string;
-	receivedDate: Date;
+	receivedDate: string;
 	name: string;
 	Type: { displayName: string | null };
 	receivedDateSortable: number;
