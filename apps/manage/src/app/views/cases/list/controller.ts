@@ -14,7 +14,7 @@ export function buildListCases(service: ManageService): AsyncRequestHandler {
 		]);
 
 		return res.render('views/cases/list/view.njk', {
-			pageHeading: 'All Cases',
+			pageHeading: 'Case list',
 			cases
 		});
 	};
