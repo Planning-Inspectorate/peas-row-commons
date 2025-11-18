@@ -4,6 +4,9 @@
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/tag/macro.njk" import govukTag %}
 
+{% import "views/pagination/pagination.njk" as pagination %}
+{% import "views/pagination/pagination-options.njk" as paginationOptions %}
+
 
 {% block pageTitle %}
     Case list - All Cases - Manage a Case
@@ -11,12 +14,29 @@
 
 {% block pageContent %}
     <div class="govuk-grid-row">
-        {% if cases|length == 0 %}
-            <p class="govuk-body">No results were found.</p>
-        {% else %}
-            {{ casesTable(cases) }}
-        {% endif %}
+        <div id="pagination" class="govuk-body">
+            <p class="govuk-body govuk-clearfix">
+                <p class="govuk-body">
+                    Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalCases > paginationParams.resultsEndNumber else paginationParams.totalCases }}</strong>
+                    of <strong>{{ paginationParams.totalCases }}</strong> results
+                </p>
+                <p class="pins-pagination-options">
+                    {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalCases, paginationParams.pageNumber, paginationParams.searchValue) }}
+                </p>
+            </p>
+            <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+
+            {% if cases|length == 0 %}
+                <p class="govuk-body">No results were found.</p>
+            {% else %}
+                {{ casesTable(cases) }}
+            {% endif %}
+        </div>
+
+        {# if pageNumber and totalPages values are both 1 then pagination options not shown #}
+        {{ pagination.renderPagination(paginationParams.pageNumber, paginationParams.totalPages, currentUrl) }}
     </div>
+
 {% endblock %}
 
 {% macro casesTable(caseRows) %}
