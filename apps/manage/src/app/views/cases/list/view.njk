@@ -50,19 +50,16 @@
                 }
             },
             {
-                text: case.Type.displayName,
-                classes: 'pins-white-space-pre-wrap'
+                text: case.Type.displayName
             },
             {
                 text: case.receivedDate,
-                classes: 'pins-white-space-pre-wrap',
                 attributes: {
                     "data-sort-value": case.receivedDateSortable
                 }
             },
             {
-                text: case.name,
-                classes: 'pins-white-space-pre-wrap'
+                text: case.name
             }
         ]), cases) %}
     {% endfor %}
@@ -70,24 +67,28 @@
     {% set headers = [
         {
             text: 'Reference',
+            classes: "govuk-!-width-one-fifth",
             attributes: {
                 "aria-sort": "none"
             }
         },
         {
             text: 'Case type',
+            classes: "govuk-!-width-one-quarter",
             attributes: {
                 "aria-sort": "none"
             }
         },
         {
             text: 'Received on',
+            classes: "govuk-!-width-one-quarter",
             attributes: {
                 "aria-sort": "descending"
             }
         },
         {
             text: 'Case name',
+            classes: "govuk-!-width-one-quarter",
             attributes: {
                 "aria-sort": "none"
             }
