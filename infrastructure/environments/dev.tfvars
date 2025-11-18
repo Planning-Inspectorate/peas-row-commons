@@ -13,14 +13,6 @@ apps_config = {
     group_application_access = "a472644a-44ec-42fe-92fb-0dd95e5f2159"
   }
 
-  entra = {
-    group_ids = {
-      # use app access group for now
-      case_officers = "a472644a-44ec-42fe-92fb-0dd95e5f2159"
-      inspectors    = "a472644a-44ec-42fe-92fb-0dd95e5f2159"
-    }
-  }
-
   functions_node_version = 22
 
   logging = {
@@ -58,7 +50,7 @@ monitoring_config = {
 
 sql_config = {
   admin = {
-    login_username = "pins-peas-sql-dev"
+    login_username = "pins-peas-row-commons-sql-dev"
     object_id      = "13356659-79b6-41ca-91a0-4a16b126c306"
   }
   sku_name    = "Basic"

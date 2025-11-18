@@ -44,7 +44,7 @@
 
 # sql_config = {
 #   admin = {
-#     login_username = "pins-peas-sql-prod"
+#     login_username = "pins-peas-row-commons-sql-prod"
 #     object_id      = "0a9c0370-0675-4216-b80b-1125ac2e8c80"
 #   }
 #   sku_name    = "S3"
@@ -70,5 +70,5 @@
 # }
 
 # web_domains = {
-#   web = "peas-row-manage-prod.planninginspectorate.gov.uk"
+#   manage = "peas-row-manage-prod.planninginspectorate.gov.uk"
 # }
