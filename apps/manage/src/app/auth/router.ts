@@ -3,7 +3,7 @@ import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { buildCompleteMsalAuthentication, buildHandleSignout, buildStartMsalAuthentication } from './controller.ts';
 import { assertIsUnauthenticated, buildAssertGroupAccess, buildAssertIsAuthenticated } from './guards.ts';
 import { AuthService, clearAuthenticationData, registerAuthLocals } from './auth-service.ts';
-import type { App2Service } from '#service';
+import type { ManageService } from '#service';
 import type { IRouter, Handler } from 'express';
 
 export interface AuthRoutesAndGuards {
@@ -18,7 +18,7 @@ export interface AuthRoutesAndGuards {
  * @param service
  * @param authService - for testing
  */
-export function createRoutesAndGuards(service: App2Service, authService?: AuthService): AuthRoutesAndGuards {
+export function createRoutesAndGuards(service: ManageService, authService?: AuthService): AuthRoutesAndGuards {
 	const router = createRouter();
 	if (!authService) {
 		authService = new AuthService({

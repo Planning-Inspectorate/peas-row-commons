@@ -4,7 +4,7 @@ import type { Config } from './config.ts';
 /**
  * This class encapsulates all the services and clients for the application
  */
-export class App2Service extends BaseService {
+export class ManageService extends BaseService {
 	/**
 	 * @private
 	 */
