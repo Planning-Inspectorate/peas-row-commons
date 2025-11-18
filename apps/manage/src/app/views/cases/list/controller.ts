@@ -1,5 +1,6 @@
 import type { ManageService } from '#service';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
+import type { CaseListFields, CaseListViewModel } from './types.ts';
 
 export function buildListCases(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
@@ -20,7 +21,15 @@ export function buildListCases(service: ManageService): AsyncRequestHandler {
 
 		return res.render('views/cases/list/view.njk', {
 			pageHeading: 'Case list',
-			cases
+			cases: cases.map(caseToViewModel)
 		});
 	};
+}
+
+export function caseToViewModel(caseRow: CaseListFields): CaseListViewModel {
+	const viewModel = {
+		...caseRow,
+		receivedDateSortable: new Date(caseRow.receivedDate)?.getTime()
+	};
+	return viewModel;
 }
