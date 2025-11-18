@@ -6,6 +6,7 @@ import { createErrorRoutes } from './views/static/error/index.ts';
 import { cacheNoCacheMiddleware } from '@pins/peas-row-commons-lib/middleware/cache.ts';
 import type { App2Service } from '#service';
 import type { IRouter } from 'express';
+import { createCaseRoutes } from './views/case-types/index.ts';
 
 /**
  * Main app router
@@ -15,6 +16,7 @@ export function buildRouter(service: App2Service): IRouter {
 	const monitoringRoutes = createMonitoringRoutes(service);
 	const { router: authRoutes, guards: authGuards } = createAuthRoutesAndGuards(service);
 	const itemsRoutes = createItemRoutes(service);
+	const caseRoutes = createCaseRoutes(service);
 
 	router.use('/', monitoringRoutes);
 
@@ -40,6 +42,7 @@ export function buildRouter(service: App2Service): IRouter {
 
 	router.get('/', (req, res) => res.redirect('/items'));
 	router.use('/items', itemsRoutes);
+	router.use('/create-case', caseRoutes);
 	router.use('/error', createErrorRoutes(service));
 
 	return router;
