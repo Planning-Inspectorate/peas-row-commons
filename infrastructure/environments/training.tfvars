@@ -33,7 +33,8 @@
 # environment = "training"
 
 # monitoring_config = {
-#   app_insights_web_test_enabled = false
+#   manage_app_insights_web_test_enabled = false
+#   log_daily_cap                        = 0.1
 # }
 
 # sql_config = {
