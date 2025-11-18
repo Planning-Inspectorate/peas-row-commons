@@ -1,8 +1,22 @@
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { CASEWORK_AREAS, CASE_TYPES, CASE_SUBTYPES } from './static_data/index.ts';
 
-// TODO: under no circumstances should you commit this ghastly typing
-async function upsertReferenceData({ delegate, input }: any) {
+type ReferenceDataInput = {
+	id: string;
+	[key: string]: any;
+};
+
+interface PrismaDelegate<T> {
+	upsert: (args: { where: { id: string }; create: T; update: T }) => Promise<unknown>;
+}
+
+async function upsertReferenceData<T extends ReferenceDataInput>({
+	delegate,
+	input
+}: {
+	delegate: PrismaDelegate<T>;
+	input: T;
+}) {
 	return delegate.upsert({
 		create: input,
 		update: input,
