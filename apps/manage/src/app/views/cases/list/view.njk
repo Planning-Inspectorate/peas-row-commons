@@ -1,0 +1,62 @@
+{% extends "views/layouts/main.njk" %}
+
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/tag/macro.njk" import govukTag %}
+
+
+{% block pageTitle %}
+    Case list - All Cases - Manage a Case
+{% endblock %}
+
+{% block pageContent %}
+    <div class="govuk-grid-row">
+        {% if cases|length == 0 %}
+            <p class="govuk-body">No results were found.</p>
+        {% else %}
+            {{ casesTable(cases) }}
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% macro casesTable(caseRows) %}
+    {% set cases = [] %}
+
+    {% for case in caseRows %}
+        {% set cases = (cases.push([
+            {
+                html: "<a class='govuk-link' href='/cases/" +  case.id +"'>" + case.reference + "</a>",
+                attributes: {
+                    "data-sort-value": case.reference
+                }
+            },
+            {
+                text: case.createdDate,
+                classes: 'pins-white-space-pre-wrap'
+            }
+        ]), cases) %}
+    {% endfor %}
+
+    {% set headers = [
+        {
+            text: 'Reference',
+            attributes: {
+            "aria-sort": "descending"
+            }
+        },
+        {
+            text: 'Created On',
+            attributes: {
+            "aria-sort": "descending"
+            }
+        }
+    ] %}
+
+    {{ govukTable({
+        attributes: {
+            "data-module": "moj-sortable-table"
+        },
+        head: headers,
+        rows: cases
+    }) }}
+{% endmacro %}
