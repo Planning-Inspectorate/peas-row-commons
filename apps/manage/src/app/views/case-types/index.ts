@@ -2,6 +2,7 @@ import { Router as createRouter } from 'express';
 import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { buildListItems, handleCaseTypeSelection } from './cases/controller.ts';
 import { peabuildListItems, peahandleCaseTypeSelection } from './case-type/pea/controller.ts';
+import { rwcbuildListItems, rwchandleCaseTypeSelection } from './case-type/rwc/controller.ts';
 import type { App2Service } from '#service';
 import type { IRouter } from 'express';
 
@@ -13,6 +14,9 @@ export function createCaseRoutes(service: App2Service): IRouter {
 		const peacaseTypes = peabuildListItems(service);
 	const peahandleCasetypeSelection = peahandleCaseTypeSelection(service);
 
+		const rwccaseTypes = rwcbuildListItems(service);
+	const rwchandleCasetypeSelection = rwchandleCaseTypeSelection(service);
+
 	router.get('/', asyncHandler(caseTypes));
 
 	router.post('/', asyncHandler(handleCasetypeSelection));
@@ -20,6 +24,10 @@ export function createCaseRoutes(service: App2Service): IRouter {
 	router.get('/pea-page', asyncHandler(peacaseTypes));
 
 	router.post('/pea-page', asyncHandler(peahandleCasetypeSelection));
+
+		router.get('/rwc-page', asyncHandler(rwccaseTypes));
+
+	router.post('/rwc-page', asyncHandler(rwchandleCasetypeSelection));
 
 	buildListItems
 	return router;
