@@ -29,7 +29,8 @@
     "nunjucks": "*",
     "pino": "*",
     "pino-pretty": "*",
-    "redis": "*"
+    "redis": "*",
+    "date-fns-tz": "*"
   },
   "devDependencies": {
     "nodemon": "*",
