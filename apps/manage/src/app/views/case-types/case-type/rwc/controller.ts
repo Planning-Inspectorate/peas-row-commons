@@ -49,7 +49,7 @@ export function rwchandleCaseTypeSelection(service: App2Service): AsyncRequestHa
         logger.info(`Selected case type: ${caseType}`);
 
         // Redirect based on selected case type
-        if (caseType === 'PEA') {
+        if (caseType === 'Coastal Access') {
             return res.redirect('/create-case/rwc/pea-page');
         } else if (caseType === 'RWC') {
             return res.redirect('/create-case/rwc-page');
