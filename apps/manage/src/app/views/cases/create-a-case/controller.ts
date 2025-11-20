@@ -47,7 +47,7 @@ export function postCreateCaseWorkArea(service: App2Service): AsyncRequestHandle
 
 		// Redirect based on selected case type
 		if (caseType === 'PEA') {
-			return res.redirect('/cases/create-a-case/questions/peas-type-of-case');
+			return res.redirect('/create-a-case/questions/peas-type-of-case');
 		} else if (caseType === 'RWC') {
 			return res.redirect('/create-a-case/questions/row-type-of-case');
 		} else {

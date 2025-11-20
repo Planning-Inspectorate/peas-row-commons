@@ -90,7 +90,7 @@ describe('Create Case Work Area Controller', () => {
 
 			// Verify redirect was called with correct path
 			assert.strictEqual(mockRes.redirect.mock.callCount(), 1);
-			assert.strictEqual(mockRes.redirect.mock.calls[0].arguments[0], '/create-case/pea-page');
+			assert.strictEqual(mockRes.redirect.mock.calls[0].arguments[0], '/create-a-case/questions/peas-type-of-case');
 		});
 
 		it('should redirect to RWC page when RWC case type is selected', async () => {
@@ -112,7 +112,7 @@ describe('Create Case Work Area Controller', () => {
 			await handler(mockReq as any, mockRes as any);
 
 			assert.strictEqual(mockRes.redirect.mock.callCount(), 1);
-			assert.strictEqual(mockRes.redirect.mock.calls[0].arguments[0], '/create-case/rwc-page');
+			assert.strictEqual(mockRes.redirect.mock.calls[0].arguments[0], '/create-a-case/questions/row-type-of-case');
 		});
 
 		it('should render with error when no case type is selected', async () => {
