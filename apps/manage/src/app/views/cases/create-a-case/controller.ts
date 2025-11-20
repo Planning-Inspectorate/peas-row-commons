@@ -37,7 +37,7 @@ export function getCreateCaseWorkArea(service: App2Service): AsyncRequestHandler
 export function postCreateCaseWorkArea(service: App2Service): AsyncRequestHandler {
 	const { logger } = service;
 	return async (req, res) => {
-		const { caseType } = req.body;
+		const { caseType } = req.body || {}; // Add null check here
 		logger.info(`Selected case type: ${caseType}`);
 
 		if (!caseType) {
@@ -47,9 +47,9 @@ export function postCreateCaseWorkArea(service: App2Service): AsyncRequestHandle
 
 		// Redirect based on selected case type
 		if (caseType === 'PEA') {
-			return res.redirect('/create-case/pea-page');
+			return res.redirect('/cases/create-a-case/questions/peas-type-of-case');
 		} else if (caseType === 'RWC') {
-			return res.redirect('/create-case/rwc-page');
+			return res.redirect('/create-a-case/questions/row-type-of-case');
 		} else {
 			// If no selection, redirect back with error
 			return res.redirect('/case-types');
