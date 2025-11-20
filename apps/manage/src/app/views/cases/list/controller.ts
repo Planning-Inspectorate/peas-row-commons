@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import type { ManageService } from '#service';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import type { CaseListFields, CaseListViewModel } from './types.ts';
@@ -74,7 +74,7 @@ export function buildListCases(service: ManageService): AsyncRequestHandler {
 export function caseToViewModel(caseRow: CaseListFields): CaseListViewModel {
 	const viewModel = {
 		...caseRow,
-		receivedDate: format(caseRow.receivedDate, 'dd MMM yyyy'),
+		receivedDate: formatInTimeZone(caseRow.receivedDate, 'Europe/London', 'dd MMM yyyy'),
 		receivedDateSortable: new Date(caseRow.receivedDate)?.getTime()
 	};
 	return viewModel;
