@@ -1,8 +1,9 @@
-import type { App2Service } from '#service';
+import type { ManageService } from '#service';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
+import type { Response } from 'express';
 import { createCaseWorkAreaConstant } from './constant.ts';
 
-function renderCaseWorkArea(res, options: { errorMessage?: string; selected?: string }) {
+function renderCaseWorkArea(res: Response, options: { errorMessage?: string; selected?: string }) {
 	return res.render('views/cases/create-a-case/view.njk', {
 		pageTitle: 'What area does this new case relate to?',
 		radioData: {
@@ -22,7 +23,7 @@ function renderCaseWorkArea(res, options: { errorMessage?: string; selected?: st
 	});
 }
 
-export function getCreateCaseWorkArea(service: App2Service): AsyncRequestHandler {
+export function getCreateCaseWorkArea(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
 	return async (req, res) => {
 		logger.info('list items');
@@ -34,7 +35,7 @@ export function getCreateCaseWorkArea(service: App2Service): AsyncRequestHandler
 	};
 }
 
-export function postCreateCaseWorkArea(service: App2Service): AsyncRequestHandler {
+export function postCreateCaseWorkArea(service: ManageService): AsyncRequestHandler {
 	const { logger } = service;
 	return async (req, res) => {
 		const { caseType } = req.body || {}; // Add null check here
