@@ -5,6 +5,11 @@ import type { CaseListFields, CaseListViewModel } from './types.ts';
 import { getPageData, getPaginationParams } from '../../pagination/pagination-utils.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
+import {
+	generateFilters,
+	createFilterWhereClause,
+	type FilterViewModel
+} from '@pins/peas-row-commons-lib/util/filter-generator.ts';
 
 export function buildListCases(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
@@ -12,6 +17,11 @@ export function buildListCases(service: ManageService): AsyncRequestHandler {
 		logger.info('list cases');
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
+
+		const baseUrl = req.baseUrl;
+		const filters: FilterViewModel = generateFilters(req.query, baseUrl);
+
+		const typeFilterWhereClause = createFilterWhereClause(req.query);
 
 		let cases, totalCases;
 
@@ -27,9 +37,12 @@ export function buildListCases(service: ManageService): AsyncRequestHandler {
 						}
 					},
 					skip: skipSize,
-					take: pageSize
+					take: pageSize,
+					where: typeFilterWhereClause
 				}),
-				db.case.count()
+				db.case.count({
+					where: typeFilterWhereClause
+				})
 			]);
 		} catch (error: any) {
 			wrapPrismaError({
@@ -66,7 +79,8 @@ export function buildListCases(service: ManageService): AsyncRequestHandler {
 			pageHeading: 'Case list',
 			cases: caseViewModels,
 			currentUrl: req.originalUrl,
-			paginationParams
+			paginationParams,
+			filters
 		});
 	};
 }
