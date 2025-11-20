@@ -1,0 +1,50 @@
+{% from "moj/components/filter/macro.njk" import mojFilter %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+
+{% macro filterComponent(checkboxGroups, selectedCategories) %}
+    {% set filterOptionsHtml %}
+
+    {% for group in checkboxGroups %}
+        {{ govukCheckboxes({
+            idPrefix: group.idPrefix,
+            name: group.name,
+            classes: "govuk-checkboxes--small",
+            fieldset: {
+                legend: {
+                    text: group.legend,
+                    classes: "govuk-fieldset__legend--m"
+                }
+            },
+            items: group.items
+        }) }}
+    {% endfor %}
+    {% endset -%}
+
+    {{ mojFilter({
+    heading: {
+        text: "Filter"
+    },
+
+    submit: {
+        attributes: {
+            "data-test-id": "submit-button"
+        }
+    },
+
+    selectedFilters: {
+
+        heading: {
+            text: "Selected filters"
+        },
+
+        clearLink: {
+            text: "Clear filters",
+            href: selectedCategories.clearLinkHref or "#"
+        },
+
+        categories: selectedCategories.categories or []
+    },
+    optionsHtml: filterOptionsHtml
+    }) }}
+{% endmacro %}
