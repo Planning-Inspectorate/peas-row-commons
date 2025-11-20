@@ -5,11 +5,19 @@ import type { CaseListFields, CaseListViewModel } from './types.ts';
 import { getPageData, getPaginationParams } from '../../pagination/pagination-utils.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
-import {
-	generateFilters,
-	createFilterWhereClause,
-	type FilterViewModel
-} from '@pins/peas-row-commons-lib/util/filter-generator.ts';
+import { FilterGenerator, type FilterViewModel } from '@pins/peas-row-commons-lib/util/filter-generator.ts';
+
+const FILTER_KEYS = {
+	AREA: 'area',
+	TYPE: 'type',
+	SUBTYPE: 'subtype'
+};
+
+const FILTER_LABELS = {
+	AREA_SUFFIX: 'casework area',
+	TYPE_SUFFIX: 'case type',
+	SUBTYPE_SUFFIX: 'subtype'
+};
 
 export function buildListCases(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
@@ -19,9 +27,15 @@ export function buildListCases(service: ManageService): AsyncRequestHandler {
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
 		const baseUrl = req.baseUrl;
-		const filters: FilterViewModel = generateFilters(req.query, baseUrl);
 
-		const typeFilterWhereClause = createFilterWhereClause(req.query);
+		const filterGenerator = new FilterGenerator({
+			keys: FILTER_KEYS,
+			labels: FILTER_LABELS
+		});
+
+		const filters: FilterViewModel = filterGenerator.generateFilters(req.query, baseUrl);
+
+		const typeFilterWhereClause = filterGenerator.createFilterWhereClause(req.query);
 
 		let cases, totalCases;
 
