@@ -13,7 +13,7 @@
             fieldset: {
                 legend: {
                     text: group.legend,
-                    classes: "govuk-fieldset__legend--m"
+                    classes: "govuk-fieldset__legend--s"
                 }
             },
             items: group.items
@@ -33,16 +33,13 @@
     },
 
     selectedFilters: {
-
         heading: {
             text: "Selected filters"
         },
-
         clearLink: {
             text: "Clear filters",
             href: selectedCategories.clearLinkHref or "#"
         },
-
         categories: selectedCategories.categories or []
     },
     optionsHtml: filterOptionsHtml
