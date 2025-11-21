@@ -72,6 +72,16 @@ const createMockCases = (count: number) => {
 };
 
 describe('Case Controller', () => {
+	class MockFilterGenerator {
+		constructor(options: any) {}
+		generateFilters() {
+			return [];
+		}
+		createFilterWhereClause() {
+			return {};
+		}
+	}
+
 	describe('caseToViewModel', () => {
 		it('should format receivedDate and create a sortable timestamp', () => {
 			const input = {
@@ -123,7 +133,7 @@ describe('Case Controller', () => {
 				}
 			};
 
-			const listCases = buildListCases({ db: mockDb, logger: mockLogger() } as any);
+			const listCases = buildListCases({ db: mockDb, logger: mockLogger() } as any, MockFilterGenerator as any);
 
 			await assert.doesNotReject(() => listCases(mockReq as any, mockRes as any));
 
@@ -166,7 +176,7 @@ describe('Case Controller', () => {
 					}
 				};
 
-				const listCases = buildListCases({ db: mockDb, logger: mockLogger() } as any);
+				const listCases = buildListCases({ db: mockDb, logger: mockLogger() } as any, MockFilterGenerator as any);
 				await assert.doesNotReject(() => listCases(mockReq as any, mockRes as any));
 
 				assert.strictEqual(mockRes.render.mock.callCount(), 1);
@@ -175,6 +185,7 @@ describe('Case Controller', () => {
 					...mockRes.render.mock.calls[0].arguments[1]
 				};
 				delete onlyRelevantKeys.cases;
+				delete onlyRelevantKeys.filters;
 
 				assert.deepStrictEqual(onlyRelevantKeys, {
 					pageHeading: 'Case list',
