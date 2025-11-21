@@ -14,7 +14,7 @@ const FILTER_KEYS = {
 };
 
 const FILTER_LABELS = {
-	AREA_SUFFIX: 'casework area',
+	AREA_SUFFIX: 'case work area',
 	TYPE_SUFFIX: 'case type',
 	SUBTYPE_SUFFIX: 'subtype'
 };
