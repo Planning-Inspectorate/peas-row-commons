@@ -18,11 +18,6 @@ $pins-colours-mhclg-green: map.get(
 	'colour'
 );
 
-// /* Active */
-header#pins-header nav.pins-header-navigation li.govuk-header__navigation-item--active > a.govuk-header__link {
-	color: $pins-colours-green-200 !important;
-}
-
 .pins-width-container {
 	@include width-container.govuk-width-container();
 }
@@ -48,7 +43,7 @@ header#pins-header nav.pins-header-navigation li.govuk-header__navigation-item--
 			}
 
 			&--active .govuk-header__link {
-				color: $pins-colours-mhclg-green;
+				color: $pins-colours-green-200;
 			}
 		}
 	}
