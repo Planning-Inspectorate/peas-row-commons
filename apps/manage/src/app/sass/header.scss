@@ -43,7 +43,7 @@ $pins-colours-mhclg-green: map.get(
 			}
 
 			&--active .govuk-header__link {
-				color: $pins-colours-mhclg-green;
+				color: $pins-colours-green-200;
 			}
 		}
 	}
@@ -55,7 +55,7 @@ $pins-colours-mhclg-green: map.get(
 	display: inline-block;
 	width: 100%;
 	padding: 1rem 0;
-	border-bottom: 0.5rem solid $pins-colours-mhclg-green;
+	border-bottom: 0.5rem solid $pins-colours-green-200;
 
 	.pins-row {
 		width: 100%;
@@ -65,7 +65,7 @@ $pins-colours-mhclg-green: map.get(
 	.pins-column {
 		&--left {
 			height: 5.5rem;
-			border-left: 2px solid $pins-colours-mhclg-green;
+			border-left: 2px solid $pins-colours-green-200;
 			padding-left: 7px;
 			width: 25%;
 
