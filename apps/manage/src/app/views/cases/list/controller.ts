@@ -19,7 +19,7 @@ const FILTER_LABELS = {
 	SUBTYPE_SUFFIX: 'subtype'
 };
 
-export function buildListCases(service: ManageService): AsyncRequestHandler {
+export function buildListCases(service: ManageService, FilterGeneratorClass = FilterGenerator): AsyncRequestHandler {
 	const { db, logger } = service;
 	return async (req, res) => {
 		logger.info('list cases');
@@ -28,7 +28,7 @@ export function buildListCases(service: ManageService): AsyncRequestHandler {
 
 		const baseUrl = req.baseUrl;
 
-		const filterGenerator = new FilterGenerator({
+		const filterGenerator = new FilterGeneratorClass({
 			keys: FILTER_KEYS,
 			labels: FILTER_LABELS
 		});
