@@ -5,13 +5,37 @@ import type { CaseListFields, CaseListViewModel } from './types.ts';
 import { getPageData, getPaginationParams } from '../../pagination/pagination-utils.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
+import { FilterGenerator, type FilterViewModel } from '@pins/peas-row-commons-lib/util/filter-generator.ts';
 
-export function buildListCases(service: ManageService): AsyncRequestHandler {
+const FILTER_KEYS = {
+	AREA: 'area',
+	TYPE: 'type',
+	SUBTYPE: 'subtype'
+};
+
+const FILTER_LABELS = {
+	AREA_SUFFIX: 'case work area',
+	TYPE_SUFFIX: 'case type',
+	SUBTYPE_SUFFIX: 'subtype'
+};
+
+export function buildListCases(service: ManageService, FilterGeneratorClass = FilterGenerator): AsyncRequestHandler {
 	const { db, logger } = service;
 	return async (req, res) => {
 		logger.info('list cases');
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
+
+		const baseUrl = req.baseUrl;
+
+		const filterGenerator = new FilterGeneratorClass({
+			keys: FILTER_KEYS,
+			labels: FILTER_LABELS
+		});
+
+		const filters: FilterViewModel = filterGenerator.generateFilters(req.query, baseUrl);
+
+		const typeFilterWhereClause = filterGenerator.createFilterWhereClause(req.query);
 
 		let cases, totalCases;
 
@@ -27,9 +51,12 @@ export function buildListCases(service: ManageService): AsyncRequestHandler {
 						}
 					},
 					skip: skipSize,
-					take: pageSize
+					take: pageSize,
+					where: typeFilterWhereClause
 				}),
-				db.case.count()
+				db.case.count({
+					where: typeFilterWhereClause
+				})
 			]);
 		} catch (error: any) {
 			wrapPrismaError({
@@ -66,7 +93,8 @@ export function buildListCases(service: ManageService): AsyncRequestHandler {
 			pageHeading: 'Case list',
 			cases: caseViewModels,
 			currentUrl: req.originalUrl,
-			paginationParams
+			paginationParams,
+			filters
 		});
 	};
 }

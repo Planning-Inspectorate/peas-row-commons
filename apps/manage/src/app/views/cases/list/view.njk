@@ -3,6 +3,7 @@
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/tag/macro.njk" import govukTag %}
+{% from "views/layouts/components/filter.njk" import filterComponent %}
 
 {% import "views/pagination/pagination.njk" as pagination %}
 {% import "views/pagination/pagination-options.njk" as paginationOptions %}
@@ -14,26 +15,36 @@
 
 {% block pageContent %}
     <div class="govuk-grid-row">
-        <div id="pagination" class="govuk-body">
-            <p class="govuk-body govuk-clearfix">
-                <p class="govuk-body">
-                    Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalCases > paginationParams.resultsEndNumber else paginationParams.totalCases }}</strong>
-                    of <strong>{{ paginationParams.totalCases }}</strong> results
-                </p>
-                <p class="pins-pagination-options">
-                    {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalCases, paginationParams.pageNumber, paginationParams.searchValue) }}
-                </p>
-            </p>
-
-            {% if cases|length == 0 %}
-                <p class="govuk-body">No results were found.</p>
-            {% else %}
-                {{ casesTable(cases) }}
-            {% endif %}
+        <div class="govuk-grid-column-one-third">
+            <form method="GET" action="{{ currentPath }}">
+                {{ filterComponent(
+                    filters.checkboxGroups,
+                    filters.selectedCategories
+                ) }}
+            </form>
         </div>
+        <div class="govuk-grid-column-two-thirds">
+            <div id="pagination" class="govuk-body">
+                <p class="govuk-body govuk-clearfix">
+                    <p class="govuk-body">
+                        Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalCases > paginationParams.resultsEndNumber else paginationParams.totalCases }}</strong>
+                        of <strong>{{ paginationParams.totalCases }}</strong> results
+                    </p>
+                    <p class="pins-pagination-options">
+                        {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalCases, paginationParams.pageNumber, paginationParams.searchValue) }}
+                    </p>
+                </p>
 
-        {# if pageNumber and totalPages values are both 1 then pagination options not shown #}
-        {{ pagination.renderPagination(paginationParams.pageNumber, paginationParams.totalPages, currentUrl) }}
+                {% if cases|length == 0 %}
+                    <p class="govuk-body">No results were found.</p>
+                {% else %}
+                    {{ casesTable(cases) }}
+                {% endif %}
+            </div>
+
+            {# if pageNumber and totalPages values are both 1 then pagination options not shown #}
+            {{ pagination.renderPagination(paginationParams.pageNumber, paginationParams.totalPages, currentUrl) }}
+        </div>
     </div>
 
 {% endblock %}

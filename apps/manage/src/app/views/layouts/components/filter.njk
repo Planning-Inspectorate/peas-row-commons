@@ -1,0 +1,54 @@
+{% from "moj/components/filter/macro.njk" import mojFilter %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+
+{% macro filterComponent(checkboxGroups, selectedCategories) %}
+    {% set filterOptionsHtml %}
+
+    {# We nest the checkbox groups so that we can insert a "line-break" between the sections #}
+    {% for groups in checkboxGroups %}
+        {% for group in groups %}
+            {{ govukCheckboxes({
+                idPrefix: group.idPrefix,
+                name: group.name,
+                classes: "govuk-checkboxes--small",
+                fieldset: {
+                    legend: {
+                        text: group.legend,
+                        classes: "govuk-fieldset__legend--s"
+                    }
+                },
+                items: group.items
+            }) }}
+        {% endfor %}
+        {%- if not loop.last -%}
+            <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+            <hr class="govuk-section-break govuk-section-break--m">
+        {%- endif -%}
+    {% endfor %}
+    {% endset -%}
+
+    {{ mojFilter({
+    heading: {
+        text: "Filter"
+    },
+
+    submit: {
+        attributes: {
+            "data-test-id": "submit-button"
+        }
+    },
+
+    selectedFilters: {
+        heading: {
+            text: "Selected filters"
+        },
+        clearLink: {
+            text: "Clear filters",
+            href: selectedCategories.clearLinkHref or "#"
+        },
+        categories: selectedCategories.categories or []
+    },
+    optionsHtml: filterOptionsHtml
+    }) }}
+{% endmacro %}
