@@ -16,12 +16,14 @@ interface SelectedFilterItem {
 }
 
 export interface FilterViewModel {
-	checkboxGroups: Array<{
-		idPrefix: string;
-		name: string;
-		legend: string;
-		items: FilterItem[];
-	}>;
+	checkboxGroups: Array<
+		Array<{
+			idPrefix: string;
+			name: string;
+			legend: string;
+			items: FilterItem[];
+		}>
+	>;
 	selectedCategories: {
 		clearLinkHref: string;
 		categories: Array<{
@@ -71,16 +73,13 @@ export class FilterGenerator {
 	}
 
 	public createFilterWhereClause(query: Record<string, any>) {
-		const { keys } = this.config;
-		const selectedAreas = this.getSelectedValues(query, keys.AREA);
-		const selectedTypes = this.getSelectedValues(query, keys.TYPE);
-		const selectedSubTypes = this.getSelectedValues(query, keys.SUBTYPE);
+		const [selectedAreas, selectedTypes, selectedSubTypes] = this.getAllSelectedValues(query);
 
 		if (selectedAreas.length === 0 && selectedTypes.length === 0 && selectedSubTypes.length === 0) {
 			return undefined;
 		}
 
-		const where: any = {
+		const where: Record<string, any> = {
 			AND: []
 		};
 
@@ -166,14 +165,20 @@ export class FilterGenerator {
 			checked: selectedAreas.includes(area.id)
 		}));
 
-		checkboxGroups.push({
-			idPrefix: `${keys.AREA}-root`,
-			name: keys.AREA,
-			legend: 'Select case work area',
-			items: areaItems
-		});
+		checkboxGroups.push([
+			{
+				idPrefix: `${keys.AREA}-root`,
+				name: keys.AREA,
+				legend: 'Select case work area',
+				items: areaItems
+			}
+		]);
 
 		CASEWORK_AREAS.forEach((area) => {
+			// We want to nest this data inside of an array so we have arrays of arrays,
+			// this is used later for sectioning the groups and styling purposes.
+			const grouping = [];
+
 			const typeGroupsForArea = this.createGenericCheckboxGroups(
 				[area],
 				CASE_TYPES,
@@ -183,9 +188,9 @@ export class FilterGenerator {
 				selectedTypes
 			);
 
-			checkboxGroups.push(...typeGroupsForArea);
+			grouping.push(...typeGroupsForArea);
 
-			const typesInArea = CASE_TYPES.filter((t) => t.caseworkAreaId === area.id);
+			const typesInArea = CASE_TYPES.filter((type) => type.caseworkAreaId === area.id);
 			const subTypeGroupsForArea = this.createGenericCheckboxGroups(
 				typesInArea,
 				CASE_SUBTYPES,
@@ -195,7 +200,9 @@ export class FilterGenerator {
 				selectedSubTypes
 			);
 
-			checkboxGroups.push(...subTypeGroupsForArea);
+			grouping.push(...subTypeGroupsForArea);
+
+			checkboxGroups.push(grouping);
 		});
 
 		return checkboxGroups;

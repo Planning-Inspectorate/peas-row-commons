@@ -5,19 +5,26 @@
 {% macro filterComponent(checkboxGroups, selectedCategories) %}
     {% set filterOptionsHtml %}
 
-    {% for group in checkboxGroups %}
-        {{ govukCheckboxes({
-            idPrefix: group.idPrefix,
-            name: group.name,
-            classes: "govuk-checkboxes--small",
-            fieldset: {
-                legend: {
-                    text: group.legend,
-                    classes: "govuk-fieldset__legend--s"
-                }
-            },
-            items: group.items
-        }) }}
+    {# We nest the checkbox groups so that we can insert a "line-break" between the sections #}
+    {% for groups in checkboxGroups %}
+        {% for group in groups %}
+            {{ govukCheckboxes({
+                idPrefix: group.idPrefix,
+                name: group.name,
+                classes: "govuk-checkboxes--small",
+                fieldset: {
+                    legend: {
+                        text: group.legend,
+                        classes: "govuk-fieldset__legend--s"
+                    }
+                },
+                items: group.items
+            }) }}
+        {% endfor %}
+        {%- if not loop.last -%}
+            <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+            <hr class="govuk-section-break govuk-section-break--m">
+        {%- endif -%}
     {% endfor %}
     {% endset -%}
 
