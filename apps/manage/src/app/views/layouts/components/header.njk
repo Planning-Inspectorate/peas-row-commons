@@ -1,35 +1,35 @@
-{% macro header(serviceName) %}
-    <header class="govuk-header" id="pins-header" role="banner" data-module="govuk-header">
-        <div class="pins-width-container">
-            <div class="pins-row">
-                <div class="pins-column--left">
-                    <div class="pins-header__logo">
-                        <i class="pins-header__logo-crown"> </i>
-                    </div>
-                    <span>Planning Inspectorate</span>
+{% macro header(serviceName, currentPage) %}
+<header class="govuk-header" id="pins-header" role="banner" data-module="govuk-header">
+    <div class="pins-width-container">
+        <div class="pins-row">
+            <div class="pins-column--left">
+                <div class="pins-header__logo">
+                    <i class="pins-header__logo-crown"> </i>
                 </div>
-                <div class="pins-column--central">
-                    <p class="pins-header-peas-row-commons govuk-!-margin-top-1">
-                        {{ serviceName }}
-                    </p>
-                    <nav class="govuk-header__navigation pins-header-navigation" aria-label="Menu">
-                        <ul class="govuk-header__navigation-list">
-                            <li class="govuk-header__navigation-item">
-                                <a class="govuk-header__link" href="/">All cases</a>
-                            </li>
-                               <li class="govuk-header__navigation-item">
-                                <a class="govuk-header__link" href="/cases/create-a-case/questions/casework-area">Create a case</a>
-                            </li>
-                            <li class="govuk-header__navigation-item">
-                                <a class="govuk-header__link" href="/auth/signout">Sign out</a>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
+                <span>Planning Inspectorate</span>
+            </div>
+            <div class="pins-column--central">
+                <p class="pins-header-peas-row-commons govuk-!-margin-top-1">
+                    {{ serviceName }}
+                </p>
+                <nav class="govuk-header__navigation pins-header-navigation" aria-label="Menu">
+                    <ul class="govuk-header__navigation-list">
+                        <li class="govuk-header__navigation-item{% if currentPage == 'all-cases' %} govuk-header__navigation-item--active{% endif %}">
+                            <a class="govuk-header__link" href="/">All cases</a>
+                        </li>
+                        <li class="govuk-header__navigation-item{% if currentPage == 'create-case' %} govuk-header__navigation-item--active{% endif %}">
+                            <a class="govuk-header__link" href="/cases/create-a-case/questions/casework-area">Create a case</a>
+                        </li>
+                        <li class="govuk-header__navigation-item{% if currentPage == 'sign-out' %} govuk-header__navigation-item--active{% endif %}">
+                            <a class="govuk-header__link" href="/auth/signout">Sign out</a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
-    </header>
-    <div class="pins-width-container">
-        {% include "views/layouts/components/banner.njk" %}
     </div>
+</header>
+<div class="pins-width-container">
+    {% include "views/layouts/components/banner.njk" %}
+</div>
 {% endmacro %}

@@ -91,6 +91,7 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 
 		return res.render('views/cases/list/view.njk', {
 			pageHeading: 'Case list',
+			currentPage: 'all-cases',
 			cases: caseViewModels,
 			currentUrl: req.originalUrl,
 			paginationParams,
