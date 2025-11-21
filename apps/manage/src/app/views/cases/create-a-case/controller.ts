@@ -1,7 +1,7 @@
 import type { ManageService } from '#service';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import type { Response } from 'express';
-import { createCaseWorkAreaConstant } from './constant.ts';
+import { CREATE_CASE_WORK_AREA_CONSTANTS } from './constant.ts';
 
 function renderCaseWorkArea(res: Response, options: { errorMessage?: string; selected?: string }) {
 	return res.render('views/cases/create-a-case/view.njk', {
@@ -15,7 +15,7 @@ function renderCaseWorkArea(res: Response, options: { errorMessage?: string; sel
 					classes: 'govuk-fieldset__legend--l'
 				}
 			},
-			items: createCaseWorkAreaConstant,
+			items: CREATE_CASE_WORK_AREA_CONSTANTS,
 			selected: options.selected // keep previous selection if any
 		},
 

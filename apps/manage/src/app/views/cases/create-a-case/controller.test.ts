@@ -2,7 +2,7 @@ import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
 import { getCreateCaseWorkArea, postCreateCaseWorkArea } from './controller.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
-import { createCaseWorkAreaConstant } from './constant.ts';
+import { CREATE_CASE_WORK_AREA_CONSTANTS } from './constant.ts';
 
 describe('Create Case Work Area Controller', () => {
 	describe('getCreateCaseWorkArea', () => {
@@ -40,7 +40,7 @@ describe('Create Case Work Area Controller', () => {
 			assert.strictEqual(radioData.fieldset.legend.text, 'What area does this new case relate to?');
 			assert.strictEqual(radioData.fieldset.legend.isPageHeading, true);
 			assert.strictEqual(radioData.fieldset.legend.classes, 'govuk-fieldset__legend--l');
-			assert.deepStrictEqual(radioData.items, createCaseWorkAreaConstant);
+			assert.deepStrictEqual(radioData.items, CREATE_CASE_WORK_AREA_CONSTANTS);
 			assert.strictEqual(radioData.selected, undefined);
 
 			assert.strictEqual(renderArgs[1].errorMessage, undefined);

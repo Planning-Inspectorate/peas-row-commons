@@ -1,4 +1,4 @@
-export const createCaseWorkAreaConstant = [
+export const CREATE_CASE_WORK_AREA_CONSTANTS = [
 	{
 		value: 'PEA',
 		text: 'Planning,Environmental and Applications'
