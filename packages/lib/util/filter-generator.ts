@@ -122,7 +122,7 @@ export class FilterGenerator {
 		const { keys, labels } = this.config;
 
 		const selectedAreaCategories = this.createGroupedSelectedCategories(
-			[{ id: 'root', displayName: 'Select' }],
+			[{ id: 'root', displayName: '' }],
 			CASEWORK_AREAS.map((area) => ({ ...area, rootId: 'root' })),
 			'rootId',
 			keys.AREA,
@@ -271,12 +271,12 @@ export class FilterGenerator {
 					Object.keys(query).forEach((key) => {
 						if (key !== queryParamKey) {
 							const vals = this.getSelectedValues(query, key);
-							vals.forEach((v) => params.append(key, v));
+							vals.forEach((value) => params.append(key, value));
 						}
 					});
 
-					const valuesToKeep = selectedValues.filter((v) => v !== item.id);
-					valuesToKeep.forEach((v) => params.append(queryParamKey, v));
+					const valuesToKeep = selectedValues.filter((value) => value !== item.id);
+					valuesToKeep.forEach((value) => params.append(queryParamKey, value));
 
 					const queryString = params.toString();
 
@@ -286,12 +286,18 @@ export class FilterGenerator {
 					};
 				});
 
+				// We need to uppercase the first letter only if there is no display name,
+				// as the suffixes are stored lower-case
+				const headingText = group.displayName
+					? `${group.displayName} ${suffix}`.trim()
+					: suffix.charAt(0).toUpperCase() + suffix.slice(1);
+
 				return {
-					heading: { text: `${group.displayName} ${suffix}`.trim() },
+					heading: { text: headingText },
 					items: categoryItems
 				};
 			})
-			.filter((category) => category !== null);
+			.filter((category): category is NonNullable<typeof category> => category !== null);
 	}
 
 	private getSelectedValues(query: Record<string, any>, key: string): string[] {
