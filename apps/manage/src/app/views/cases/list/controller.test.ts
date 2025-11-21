@@ -177,6 +177,7 @@ describe('Case Controller', () => {
 				delete onlyRelevantKeys.cases;
 
 				assert.deepStrictEqual(onlyRelevantKeys, {
+					currentPage: 'all-cases',
 					pageHeading: 'Case list',
 					currentUrl: '/cases',
 					paginationParams: {
