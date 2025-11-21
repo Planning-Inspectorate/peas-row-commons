@@ -46,6 +46,11 @@ interface FilterConfig {
 	};
 }
 
+/**
+ * Class that generates the filter data, formatted ready for use in the
+ * MoJ filter component used on the landing page. Needs to create 2 sets of
+ * data: (1) currently selected items in top component (2) groups of checkboxes
+ */
 export class FilterGenerator {
 	private config: FilterConfig;
 
@@ -53,6 +58,10 @@ export class FilterGenerator {
 		this.config = params;
 	}
 
+	/**
+	 * Creates the filters used in the filter component, including the checkboxes to be ticked
+	 * and the currently selected categories that are displayed in the top section of the component.
+	 */
 	public generateFilters(query: Record<string, any>, baseUrl: string): FilterViewModel {
 		const [selectedAreas, selectedTypes, selectedSubTypes] = this.getAllSelectedValues(query);
 
@@ -72,6 +81,10 @@ export class FilterGenerator {
 		};
 	}
 
+	/**
+	 * Creates the where clause used in the query based on the currently selected items
+	 * (area, type, and subtype)
+	 */
 	public createFilterWhereClause(query: Record<string, any>) {
 		const [selectedAreas, selectedTypes, selectedSubTypes] = this.getAllSelectedValues(query);
 
@@ -118,6 +131,20 @@ export class FilterGenerator {
 		return [selectedAreas, selectedTypes, selectedSubTypes];
 	}
 
+	/**
+	 * Checks if current value is in the query params as "selected"
+	 */
+	private getSelectedValues(query: Record<string, any>, key: string): string[] {
+		const val = query[key];
+		if (Array.isArray(val)) return val;
+		if (typeof val === 'string' && val) return [val];
+		return [];
+	}
+
+	/**
+	 * Formats the Case Areas, Case Types and Case Subtypes currently selected into
+	 * their own objects ready for displaying to the user in the component.
+	 */
 	private createSelectedCategories(query: Record<string, any>, baseUrl: string) {
 		const { keys, labels } = this.config;
 
@@ -154,93 +181,10 @@ export class FilterGenerator {
 		return [selectedAreaCategories, selectedTypeCategories, selectedSubTypeCategories];
 	}
 
-	private generateAllCheckboxes(selectedAreas: string[], selectedTypes: string[], selectedSubTypes: string[]) {
-		const { keys, labels } = this.config;
-
-		const checkboxGroups = [];
-
-		const areaItems: FilterItem[] = CASEWORK_AREAS.map((area) => ({
-			value: area.id,
-			text: area.displayName || '',
-			checked: selectedAreas.includes(area.id)
-		}));
-
-		checkboxGroups.push([
-			{
-				idPrefix: `${keys.AREA}-root`,
-				name: keys.AREA,
-				legend: 'Select case work area',
-				items: areaItems
-			}
-		]);
-
-		CASEWORK_AREAS.forEach((area) => {
-			// We want to nest this data inside of an array so we have arrays of arrays,
-			// this is used later for sectioning the groups and styling purposes.
-			const grouping = [];
-
-			const typeGroupsForArea = this.createGenericCheckboxGroups(
-				[area],
-				CASE_TYPES,
-				'caseworkAreaId',
-				keys.TYPE,
-				labels.TYPE_SUFFIX,
-				selectedTypes
-			);
-
-			grouping.push(...typeGroupsForArea);
-
-			const typesInArea = CASE_TYPES.filter((type) => type.caseworkAreaId === area.id);
-			const subTypeGroupsForArea = this.createGenericCheckboxGroups(
-				typesInArea,
-				CASE_SUBTYPES,
-				'parentTypeId',
-				keys.SUBTYPE,
-				labels.SUBTYPE_SUFFIX,
-				selectedSubTypes
-			);
-
-			grouping.push(...subTypeGroupsForArea);
-
-			checkboxGroups.push(grouping);
-		});
-
-		return checkboxGroups;
-	}
-
-	private createGenericCheckboxGroups<
-		TGroup extends { id: string; displayName?: string },
-		TItem extends { id: string; displayName?: string }
-	>(
-		groups: TGroup[],
-		items: TItem[],
-		relationKey: keyof TItem,
-		queryParamKey: string,
-		suffix: string,
-		selectedValues: string[]
-	) {
-		return groups
-			.map((group) => {
-				const itemsInGroup = items.filter((item) => item[relationKey] === group.id);
-
-				if (itemsInGroup.length === 0) return null;
-
-				const filterItems: FilterItem[] = itemsInGroup.map((item) => ({
-					value: item.id,
-					text: item.displayName || '',
-					checked: selectedValues.includes(item.id)
-				}));
-
-				return {
-					idPrefix: `${queryParamKey}-${group.id}`,
-					name: queryParamKey,
-					legend: `Select ${group.displayName} ${suffix}`,
-					items: filterItems
-				};
-			})
-			.filter((group): group is NonNullable<typeof group> => group !== null);
-	}
-
+	/**
+	 * Creates a group of selected items for an item:
+	 * (e.g. all types for a casework area, or all subtypes for a type)
+	 */
 	private createGroupedSelectedCategories<
 		TGroup extends { id: string; displayName?: string },
 		TItem extends { id: string; displayName?: string }
@@ -300,10 +244,98 @@ export class FilterGenerator {
 			.filter((category): category is NonNullable<typeof category> => category !== null);
 	}
 
-	private getSelectedValues(query: Record<string, any>, key: string): string[] {
-		const val = query[key];
-		if (Array.isArray(val)) return val;
-		if (typeof val === 'string' && val) return [val];
-		return [];
+	/**
+	 * Formats the Case Areas, Case Types and Case Subtypes into the checkbox groupings following the format:
+	 * Casework Area A to Casework A Types to Casework A Subtypes, then the same for B.
+	 *
+	 * We nest the groupings so that we can insert a break line between the subsections.
+	 */
+	private generateAllCheckboxes(selectedAreas: string[], selectedTypes: string[], selectedSubTypes: string[]) {
+		const { keys, labels } = this.config;
+
+		const checkboxGroups = [];
+
+		const areaItems: FilterItem[] = CASEWORK_AREAS.map((area) => ({
+			value: area.id,
+			text: area.displayName || '',
+			checked: selectedAreas.includes(area.id)
+		}));
+
+		checkboxGroups.push([
+			{
+				idPrefix: `${keys.AREA}-root`,
+				name: keys.AREA,
+				legend: 'Select case work area',
+				items: areaItems
+			}
+		]);
+
+		CASEWORK_AREAS.forEach((area) => {
+			const grouping = [];
+
+			const typeGroupsForArea = this.createGenericCheckboxGroups(
+				[area],
+				CASE_TYPES,
+				'caseworkAreaId',
+				keys.TYPE,
+				labels.TYPE_SUFFIX,
+				selectedTypes
+			);
+
+			grouping.push(...typeGroupsForArea);
+
+			const typesInArea = CASE_TYPES.filter((type) => type.caseworkAreaId === area.id);
+			const subTypeGroupsForArea = this.createGenericCheckboxGroups(
+				typesInArea,
+				CASE_SUBTYPES,
+				'parentTypeId',
+				keys.SUBTYPE,
+				labels.SUBTYPE_SUFFIX,
+				selectedSubTypes
+			);
+
+			grouping.push(...subTypeGroupsForArea);
+
+			checkboxGroups.push(grouping);
+		});
+
+		return checkboxGroups;
+	}
+
+	/**
+	 * Creates a group of checkboxes for an item:
+	 * (e.g. all types for a casework area, or all subtypes for a type)
+	 */
+	private createGenericCheckboxGroups<
+		TGroup extends { id: string; displayName?: string },
+		TItem extends { id: string; displayName?: string }
+	>(
+		groups: TGroup[],
+		items: TItem[],
+		relationKey: keyof TItem,
+		queryParamKey: string,
+		suffix: string,
+		selectedValues: string[]
+	) {
+		return groups
+			.map((group) => {
+				const itemsInGroup = items.filter((item) => item[relationKey] === group.id);
+
+				if (itemsInGroup.length === 0) return null;
+
+				const filterItems: FilterItem[] = itemsInGroup.map((item) => ({
+					value: item.id,
+					text: item.displayName || '',
+					checked: selectedValues.includes(item.id)
+				}));
+
+				return {
+					idPrefix: `${queryParamKey}-${group.id}`,
+					name: queryParamKey,
+					legend: `Select ${group.displayName} ${suffix}`,
+					items: filterItems
+				};
+			})
+			.filter((group): group is NonNullable<typeof group> => group !== null);
 	}
 }
