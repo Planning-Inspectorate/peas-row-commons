@@ -11,6 +11,8 @@ export function configureNunjucks(): nunjucks.Environment {
 
 	// get the require function, see https://nodejs.org/api/module.html#modulecreaterequirefilename
 	const require = createRequire(import.meta.url);
+	// path to dynamic forms folder
+	const dynamicFormsRoot = path.resolve(require.resolve('@planning-inspectorate/dynamic-forms'), '..');
 	// get the path to the govuk-frontend folder, in node_modules, using the node require resolution
 	const govukFrontendRoot = path.resolve(require.resolve('govuk-frontend'), '../..');
 	// get the path to the moj frontend folder in node_modules, using the node require resolution
@@ -20,7 +22,7 @@ export function configureNunjucks(): nunjucks.Environment {
 	// configure nunjucks
 	return nunjucks.configure(
 		// ensure nunjucks templates can use govuk-frontend components, and templates we've defined in `web/src/app`
-		[govukFrontendRoot, appDir, mojFrontendRoot],
+		[dynamicFormsRoot, govukFrontendRoot, appDir, mojFrontendRoot],
 		{
 			// output with dangerous characters are escaped automatically
 			autoescape: true,
