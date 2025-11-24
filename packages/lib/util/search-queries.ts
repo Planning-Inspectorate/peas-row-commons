@@ -24,7 +24,7 @@ interface SearchOption {
 /**
  * Creates a where clause for Prisma queries based on the provided search queries.
  */
-export function createWhereClause(queries: string[] | undefined, options: SearchOption[]) {
+export function createWhereClause(queries: string[] | number[] | undefined, options: SearchOption[]) {
 	if (!queries || queries.length === 0) {
 		return undefined;
 	}

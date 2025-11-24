@@ -190,6 +190,7 @@ describe('Case Controller', () => {
 				assert.deepStrictEqual(onlyRelevantKeys, {
 					pageHeading: 'Case list',
 					currentUrl: '/cases',
+					searchValue: '',
 					paginationParams: {
 						pageNumber: requestedPage,
 						resultsEndNumber: expected.resultsEndNumber,
