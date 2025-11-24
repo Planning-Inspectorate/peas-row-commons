@@ -6,6 +6,7 @@ import { getPageData, getPaginationParams } from '../../pagination/pagination-ut
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import { FilterGenerator, type FilterViewModel } from '@pins/peas-row-commons-lib/util/filter-generator.ts';
+import { createWhereClause, splitStringQueries } from '@pins/peas-row-commons-lib/util/search-queries.ts';
 
 const FILTER_KEYS = {
 	AREA: 'area',
@@ -35,7 +36,18 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 
 		const filters: FilterViewModel = filterGenerator.generateFilters(req.query, baseUrl);
 
+		const searchString = req.query?.searchCriteria?.toString() || '';
+
+		const searchCriteria = createWhereClause(splitStringQueries(searchString), [
+			{ fields: ['reference'], searchType: 'contains' }
+		]);
+
 		const typeFilterWhereClause = filterGenerator.createFilterWhereClause(req.query);
+
+		const whereClause = {
+			...searchCriteria,
+			...typeFilterWhereClause
+		};
 
 		let cases, totalCases;
 
@@ -52,10 +64,10 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 					},
 					skip: skipSize,
 					take: pageSize,
-					where: typeFilterWhereClause
+					where: whereClause
 				}),
 				db.case.count({
-					where: typeFilterWhereClause
+					where: whereClause
 				})
 			]);
 		} catch (error: any) {
@@ -94,7 +106,8 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			cases: caseViewModels,
 			currentUrl: req.originalUrl,
 			paginationParams,
-			filters
+			filters,
+			searchValue: searchString
 		});
 	};
 }

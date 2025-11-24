@@ -4,6 +4,7 @@
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/tag/macro.njk" import govukTag %}
 {% from "views/layouts/components/filter.njk" import filterComponent %}
+{% from "views/layouts/components/search-bar.njk" import searchBar %}
 
 {% import "views/pagination/pagination.njk" as pagination %}
 {% import "views/pagination/pagination-options.njk" as paginationOptions %}
@@ -24,6 +25,23 @@
             </form>
         </div>
         <div class="govuk-grid-column-two-thirds">
+            <form id="search-bar-form" method="GET">
+                {{ searchBar({
+                    input: {
+                        label: {
+                            text: "Search cases"
+                        },
+                        hint: {
+                            text: "To find a specific case, search by reference."
+                        },
+                        classes: "govuk-input govuk-input--width-30"
+                    },
+                    button: {
+                        text: "Search",
+                        classes: "govuk-button"
+                    }
+                }, searchValue) }}
+            </form>
             <div id="pagination" class="govuk-body">
                 <p class="govuk-body govuk-clearfix">
                     <p class="govuk-body">
@@ -37,6 +55,7 @@
 
                 {% if cases|length == 0 %}
                     <p class="govuk-body">No results were found.</p>
+                    <p class="govuk-body"><a href="/cases" class="govuk-link govuk-link--no-visited-state">Clear search</a> to view all cases.</p>
                 {% else %}
                     {{ casesTable(cases) }}
                 {% endif %}
