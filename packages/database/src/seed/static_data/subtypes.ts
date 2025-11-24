@@ -2,8 +2,8 @@ import { CASE_SUBTYPES_ID, CASE_TYPES_ID } from './ids/index.ts';
 
 export const DROUGHT_SUBTYPES = [
 	{
-		id: CASE_SUBTYPES_ID.DROUGHT_PERMITS,
-		displayName: 'Drought Permits',
+		id: CASE_SUBTYPES_ID.DROUGHT_ORDERS,
+		displayName: 'Drought Orders',
 		parentTypeId: CASE_TYPES_ID.DROUGHT
 	}
 ];
@@ -50,8 +50,8 @@ export const COMMON_LAND_SUBTYPES = [
 
 export const RIGHTS_OF_WAY_SUBTYPES = [
 	{
-		id: CASE_SUBTYPES_ID.DISPENSATION_HA80,
-		displayName: 'Dispensation for Serving Notice HA80',
+		id: CASE_SUBTYPES_ID.OPPOSED_DMMO,
+		displayName: 'Opposed DMMO',
 		parentTypeId: CASE_TYPES_ID.RIGHTS_OF_WAY
 	}
 ];
