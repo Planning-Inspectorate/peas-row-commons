@@ -27,3 +27,14 @@ $font-family: arial, helvetica, sans-serif;
 .status-tag-width {
 	max-width: 250px !important;
 }
+
+.row-inline {
+	display: flex;
+	gap: 8px;
+}
+
+// Button by GOV-UK default gets 32px of margin-bottom.
+// However, we have styled this button to be inline so we do not want that much.
+#search-button {
+	margin-bottom: 16px;
+}

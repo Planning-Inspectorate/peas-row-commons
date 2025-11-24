@@ -1,0 +1,30 @@
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% macro searchBar(options, searchValue) %}
+    <div class="govuk-form-group">
+        {% if not options.input.label.hidden %}
+            <h1 class="govuk-label-wrapper">
+                <label class="{{ options.input.label.classes or "govuk-label govuk-label--m" }}" id="search-label" for="search-input">
+                    {{ options.input.label.text or "Search" }}
+                </label>
+            </h1>
+        {% endif %}
+        {% if not options.input.hint.hidden %}
+            <div id="search-hint" class="govuk-hint">
+                {{ options.input.hint.text or "Enter your search term" }}
+            </div>
+        {% endif %}
+        <div class="row-inline">
+            <input class="{{ options.input.classes or "govuk-input govuk-input--width-20" }}" id="search-input" value="{{ searchValue or "" }}" name="searchCriteria" type="text">
+            {{ govukButton({
+                text: options.button.text or 'Search',
+                id: 'search-button',
+                classes: options.button.classes,
+                type: 'submit'
+            }) }}
+        </div>
+        {% if searchValue %}
+            <a class="govuk-link" href="/cases">Clear search</a>
+        {% endif %}
+    </div>
+{% endmacro %}
