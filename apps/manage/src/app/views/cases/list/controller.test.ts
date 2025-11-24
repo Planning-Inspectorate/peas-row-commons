@@ -191,6 +191,7 @@ describe('Case Controller', () => {
 					currentPage: 'all-cases',
 					pageHeading: 'Case list',
 					currentUrl: '/cases',
+					searchValue: '',
 					paginationParams: {
 						pageNumber: requestedPage,
 						resultsEndNumber: expected.resultsEndNumber,
