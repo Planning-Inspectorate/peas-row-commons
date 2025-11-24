@@ -32,6 +32,7 @@
     "@azure/identity": "^4.13.0",
     "@azure/msal-node": "^3.8.0",
     "@ministryofjustice/frontend": "^7.1.0",
+    "@planning-inspectorate/dynamic-forms": "^2.1.0",
     "@prisma/adapter-mssql": "^6.17.1",
     "@prisma/client": "^6.17.1",
     "accessible-autocomplete": "^3.0.1",

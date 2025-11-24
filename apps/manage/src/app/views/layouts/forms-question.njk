@@ -4,38 +4,20 @@
 
 {% if not title %}
   {% set title %}
-    {{ question.pageTitle | default('GOV.UK') }} - {{ journeyTitle }} - Manage a Crown Development Application
+    {{ question.pageTitle | default('GOV.UK') }} - DCO Portal
   {% endset %}
 {% endif %}
 
 {% block pageTitle %}{{ "Error: " + title if errors else title }}{% endblock %}
 
-{% block before_content %}
-  {% if pageCaption %}
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-two-thirds">
-        <span class="govuk-caption-l">
-          {{pageCaption}}
-        </span>
-      </div>
-    </div>
-  {% endif %}
-{% endblock before_content %}
+{# show question content within content, overrides main content #}
+{% block content %}
+    {{ super() }}
+    {% block dynQuestionContent %}{% endblock %}
+{% endblock %}
 
 {% if warningMessage %}
   {% set beforeSubmitButton = govukWarningText({
     text: warningMessage
   }) %}
 {% endif %}
-
-{% block after_content %}
-  {% if showBackToListLink %}
-    <div class="govuk-grid-row">
-      <div class="govuk-grid-column-two-thirds">
-        <p class="govuk-body">
-          <a href="{{listLink}}" class="govuk-link">Return</a>
-        </p>
-      </div>
-    </div>
-  {% endif %}
-{% endblock after_content %}

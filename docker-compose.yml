@@ -1,17 +1,31 @@
+version: '3.7'
+ 
+volumes:
+  mssql-data:
+  mssql-log:
+  mssql-ca:
+ 
 services:
   mssql:
     image: mcr.microsoft.com/azure-sql-edge:latest
-    container_name: peas-row-commons-mssql
-    platform: linux/amd64 # force platform, so ARM machines to use emulation
+    container_name: ops-5-poc-mssql
+    platform: linux/amd64   # Forces x86 emulation on Apple Silicon
     cap_add: ['SYS_PTRACE']
     user: root
     init: true
     environment:
-      - 'ACCEPT_EULA=1'
-      - 'MSSQL_SA_PASSWORD=DockerDatabaseP@22word!'
+      ACCEPT_EULA: '1'
+      MSSQL_SA_PASSWORD: 'DockerDatabaseP@22word!'
     ports:
-      - 1433:1433
+      - '1433:1433'          # Maps host 1453 to container 1433
     hostname: mssql
     volumes:
       - ./packages/database/src/configuration/mssql.conf:/var/opt/mssql/mssql.conf
-      - ./tmp/mssql-data:/var/opt/mssql/data
+      - mssql-data:/var/opt/mssql/data
+      - mssql-log:/var/opt/mssql/log
+      - mssql-ca:/var/opt/mssql/security/ca-certificates
+    command: >
+      /bin/bash -c "mkdir -p /var/opt/mssql/security/ca-certificates &&
+                    chown -R mssql:mssql /var/opt/mssql &&
+                    /opt/mssql/bin/sqlservr"
+ 
