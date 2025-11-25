@@ -17,7 +17,7 @@ import {
 } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 import { JOURNEY_ID, createJourney } from './journey.ts';
 import { getQuestions } from './questions.ts';
-import { buildSaveController, buildSuccessController } from './save.js';
+import { buildSaveController } from './save.ts';
 import { ManageService } from '#service';
 
 /**
@@ -27,10 +27,12 @@ import { ManageService } from '#service';
 export function createCaseTypeRoutes(service: ManageService): IRouter {
 	const router = createRouter({ mergeParams: true });
 	const questions = getQuestions();
-	const getJourney = buildGetJourney((req: Request, journeyResponse: Handler) => createJourney(JOURNEY_ID,questions, journeyResponse, req));
+	const getJourney = buildGetJourney((req: Request, journeyResponse: Handler) =>
+		createJourney(JOURNEY_ID, questions, journeyResponse, req)
+	);
 	const getJourneyResponse = buildGetJourneyResponseFromSession(JOURNEY_ID);
-	const saveController = buildSaveController(service);
-	const successController = buildSuccessController(service);
+	// to do save controller
+	buildSaveController(service);
 
 	router.get('/', getJourneyResponse, getJourney, redirectToUnansweredQuestion());
 
@@ -43,6 +45,13 @@ export function createCaseTypeRoutes(service: ManageService): IRouter {
 		validate,
 		validationErrorHandler,
 		buildSave(saveDataToSession)
+	);
+
+	router.get('/check-your-answers', getJourneyResponse, getJourney, (req, res) =>
+		list(req, res, '', {
+			pageHeading: 'Check your answers before uploading your document(s)',
+			submitButtonText: 'Confirm upload'
+		})
 	);
 
 	return router;
