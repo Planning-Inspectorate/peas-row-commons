@@ -1,5 +1,5 @@
 {
-	"include": ["**/*.ts", "apps/manage/src/app/views/cases/create-a-case/questions.js", "apps/manage/src/app/views/cases/create-a-case/journey.js", "apps/manage/src/app/views/cases/create-a-case/index.js"],
+	"include": ["**/*.ts"],
 	"exclude": ["node_modules", "packages/database/src/client/**", "**/*.test.ts"],
 	"compilerOptions": {
 		"allowImportingTsExtensions": true,
