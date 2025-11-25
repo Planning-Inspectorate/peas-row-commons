@@ -1,8 +1,8 @@
-import type { PortalService } from '#service';
+import type { ManageService } from '#service';
 import type { Request, Response } from 'express';
 
 // todo: store info to DB apost save function
-export function buildSaveController({ db, logger }: PortalService) {
+export function buildSaveController({ db, logger }: ManageService) {
 	return async (req: Request, res: Response) => {
 		if (!res.locals || !res.locals.journeyResponse) {
 			throw new Error('journey response required');
