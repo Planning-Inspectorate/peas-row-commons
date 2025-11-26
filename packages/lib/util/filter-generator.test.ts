@@ -100,12 +100,12 @@ describe('FilterGenerator Integration Tests', () => {
 
 	describe('Checkbox Generation', () => {
 		it('should generate the correct hierarchy for Rights of Way', () => {
-			const result = generator.generateFilters({}, baseUrl);
+			const result = generator.generateFilters({}, baseUrl, {});
 			const groups = result.checkboxGroups.flat();
 
 			const areaGroup = groups.find((g) => g.idPrefix === 'area-root');
 			const rowItem = areaGroup?.items.find((i) => i.value === CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND);
-			assert.strictEqual(rowItem?.text, 'Rights of Way and Common Land');
+			assert.strictEqual(rowItem?.text, 'Rights of Way and Common Land (0)');
 
 			const rowSubtypeGroup = groups.find((g) => g.idPrefix === `subtype-${CASE_TYPES_ID.RIGHTS_OF_WAY}`);
 			assert.ok(rowSubtypeGroup, 'Subtype group for RoW should exist');
@@ -122,7 +122,7 @@ describe('FilterGenerator Integration Tests', () => {
 				subtype: CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL
 			};
 
-			const result = generator.generateFilters(query, baseUrl);
+			const result = generator.generateFilters(query, baseUrl, {});
 			const groups = result.checkboxGroups.flat();
 
 			const rowSubtypeGroup = groups.find((g) => g.idPrefix === `subtype-${CASE_TYPES_ID.RIGHTS_OF_WAY}`);
@@ -139,7 +139,7 @@ describe('FilterGenerator Integration Tests', () => {
 				type: [CASE_TYPES_ID.RIGHTS_OF_WAY, CASE_TYPES_ID.COMMON_LAND]
 			};
 
-			const result = generator.generateFilters(query, baseUrl);
+			const result = generator.generateFilters(query, baseUrl, {});
 			const groups = result.checkboxGroups.flat();
 
 			const typeGroup = groups.find((g) => g.idPrefix === `type-${CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND}`);
@@ -158,7 +158,7 @@ describe('FilterGenerator Integration Tests', () => {
 				subtype: CASE_SUBTYPES_ID.WORKS_COMMON_LAND
 			};
 
-			const result = generator.generateFilters(query, baseUrl);
+			const result = generator.generateFilters(query, baseUrl, {});
 			const categories = result.selectedCategories.categories;
 
 			const commonLandCat = categories.find((c) => c.heading.text.includes('Common Land'));
@@ -176,7 +176,7 @@ describe('FilterGenerator Integration Tests', () => {
 				page: '2'
 			};
 
-			const result = generator.generateFilters(query, baseUrl);
+			const result = generator.generateFilters(query, baseUrl, {});
 			const categories = result.selectedCategories.categories;
 
 			const areaCat = categories.find((c) => c.heading.text.includes('Rights of Way'));
@@ -192,7 +192,7 @@ describe('FilterGenerator Integration Tests', () => {
 				subtype: [CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL, CASE_SUBTYPES_ID.OPPOSED_DMMO]
 			};
 
-			const result = generator.generateFilters(query, baseUrl);
+			const result = generator.generateFilters(query, baseUrl, {});
 			const categories = result.selectedCategories.categories;
 
 			const subtypeCat = categories.find((c) => c.heading.text.includes('subtype'));
