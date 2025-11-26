@@ -1,4 +1,3 @@
-import { formatInTimeZone } from 'date-fns-tz';
 import type { ManageService } from '#service';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import type { CaseListFields, CaseListViewModel } from './types.ts';
@@ -8,6 +7,10 @@ import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts
 import { FilterGenerator, type FilterViewModel } from '@pins/peas-row-commons-lib/util/filter-generator.ts';
 import { createWhereClause, splitStringQueries } from '@pins/peas-row-commons-lib/util/search-queries.ts';
 import { CASE_TYPES } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+
+import { formatInTimeZone } from 'date-fns-tz';
+import type { Request } from 'express';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const FILTER_KEYS = {
 	AREA: 'area',
@@ -33,44 +36,16 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			labels: FILTER_LABELS
 		});
 
-		const typeFilterWhereClause = filterGenerator.createFilterWhereClause(req.query);
-
 		const searchString = req.query?.searchCriteria?.toString() || '';
 
-		const searchCriteria = createWhereClause(splitStringQueries(searchString), [
-			{ fields: ['reference'], searchType: 'contains' }
-		]);
+		const whereClause = createCombinedWhereClause(req, filterGenerator, searchString);
 
-		const whereClause = {
-			...searchCriteria,
-			...typeFilterWhereClause
-		};
+		const query = generateQuery(db, skipSize, pageSize, whereClause);
 
 		let cases, totalCases, typeCountsGrouped, subTypeCountsGrouped;
 
 		try {
-			[cases, totalCases, typeCountsGrouped, subTypeCountsGrouped] = await Promise.all([
-				db.case.findMany({
-					orderBy: { receivedDate: 'desc' },
-					include: {
-						Type: { select: { displayName: true } }
-					},
-					skip: skipSize,
-					take: pageSize,
-					where: whereClause
-				}),
-				db.case.count({
-					where: whereClause
-				}),
-				db.case.groupBy({
-					by: ['typeId'],
-					_count: { _all: true }
-				}),
-				db.case.groupBy({
-					by: ['subTypeId'],
-					_count: { _all: true }
-				})
-			]);
+			[cases, totalCases, typeCountsGrouped, subTypeCountsGrouped] = await Promise.all(query);
 		} catch (error: any) {
 			wrapPrismaError({
 				error,
@@ -127,11 +102,25 @@ export function caseToViewModel(caseRow: CaseListFields): CaseListViewModel {
 	return viewModel;
 }
 
+interface CountMeta {
+	_count: {
+		_all: number;
+	};
+}
+
+interface TypeGroup extends CountMeta {
+	typeId: number;
+}
+
+interface SubTypeGroup extends CountMeta {
+	subTypeId: number;
+}
+
 /**
  * Formats the type & subtype counts into the correct format for the filter
  * generator, also formats casework area counts based on the data from 'type'.
  */
-function formatCountData(typeCountsGrouped: any, subTypeCountsGrouped: any) {
+function formatCountData(typeCountsGrouped: TypeGroup[], subTypeCountsGrouped: SubTypeGroup[]) {
 	const countMap: Record<string, number> = {};
 
 	for (const caseRow of typeCountsGrouped) {
@@ -153,4 +142,53 @@ function formatCountData(typeCountsGrouped: any, subTypeCountsGrouped: any) {
 	}
 
 	return countMap;
+}
+
+/**
+ * Creates a where clause for filter options and search criteria
+ */
+function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerator, searchString: string) {
+	const typeFilterWhereClause = filterGenerator.createFilterWhereClause(req.query);
+
+	const searchCriteria = createWhereClause(splitStringQueries(searchString), [
+		{ fields: ['reference'], searchType: 'contains' }
+	]);
+
+	return {
+		...searchCriteria,
+		...typeFilterWhereClause
+	};
+}
+
+/**
+ * Creates the query we will use to get the Case data
+ */
+function generateQuery(
+	db: PrismaClient | Prisma.TransactionClient,
+	skipSize: number,
+	pageSize: number,
+	whereClause: Record<string, any>
+) {
+	return [
+		db.case.findMany({
+			orderBy: { receivedDate: 'desc' },
+			include: {
+				Type: { select: { displayName: true } }
+			},
+			skip: skipSize,
+			take: pageSize,
+			where: whereClause
+		}),
+		db.case.count({
+			where: whereClause
+		}),
+		db.case.groupBy({
+			by: ['typeId'],
+			_count: { _all: true }
+		}),
+		db.case.groupBy({
+			by: ['subTypeId'],
+			_count: { _all: true }
+		})
+	];
 }
