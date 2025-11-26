@@ -129,7 +129,10 @@ describe('Case Controller', () => {
 							Type: { displayName: 'Type B' }
 						}
 					]),
-					count: mock.fn(() => 2)
+					count: mock.fn(() => 2),
+					groupBy: mock.fn(() => {
+						return [];
+					})
 				}
 			};
 
@@ -172,7 +175,10 @@ describe('Case Controller', () => {
 				const mockDb = {
 					case: {
 						findMany: mock.fn(() => createMockCases(expected.resultsEndNumber - expected.resultsStartNumber + 1)),
-						count: mock.fn(() => totalItems)
+						count: mock.fn(() => totalItems),
+						groupBy: mock.fn(() => {
+							return [];
+						})
 					}
 				};
 
