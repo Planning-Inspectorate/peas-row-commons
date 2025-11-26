@@ -7,6 +7,7 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import { FilterGenerator, type FilterViewModel } from '@pins/peas-row-commons-lib/util/filter-generator.ts';
 import { createWhereClause, splitStringQueries } from '@pins/peas-row-commons-lib/util/search-queries.ts';
+import { CASE_TYPES } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 
 const FILTER_KEYS = {
 	AREA: 'area',
@@ -27,14 +28,12 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
-		const baseUrl = req.baseUrl;
-
 		const filterGenerator = new FilterGeneratorClass({
 			keys: FILTER_KEYS,
 			labels: FILTER_LABELS
 		});
 
-		const filters: FilterViewModel = filterGenerator.generateFilters(req.query, baseUrl);
+		const typeFilterWhereClause = filterGenerator.createFilterWhereClause(req.query);
 
 		const searchString = req.query?.searchCriteria?.toString() || '';
 
@@ -42,25 +41,19 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			{ fields: ['reference'], searchType: 'contains' }
 		]);
 
-		const typeFilterWhereClause = filterGenerator.createFilterWhereClause(req.query);
-
 		const whereClause = {
 			...searchCriteria,
 			...typeFilterWhereClause
 		};
 
-		let cases, totalCases;
+		let cases, totalCases, typeCountsGrouped, subTypeCountsGrouped;
 
 		try {
-			[cases, totalCases] = await Promise.all([
+			[cases, totalCases, typeCountsGrouped, subTypeCountsGrouped] = await Promise.all([
 				db.case.findMany({
 					orderBy: { receivedDate: 'desc' },
 					include: {
-						Type: {
-							select: {
-								displayName: true
-							}
-						}
+						Type: { select: { displayName: true } }
 					},
 					skip: skipSize,
 					take: pageSize,
@@ -68,6 +61,14 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 				}),
 				db.case.count({
 					where: whereClause
+				}),
+				db.case.groupBy({
+					by: ['typeId'],
+					_count: { _all: true }
+				}),
+				db.case.groupBy({
+					by: ['subTypeId'],
+					_count: { _all: true }
 				})
 			]);
 		} catch (error: any) {
@@ -82,6 +83,10 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 		if (Number.isNaN(totalCases) || !cases) {
 			return notFoundHandler(req, res);
 		}
+
+		const countMap: Record<string, number> = formatCountData(typeCountsGrouped, subTypeCountsGrouped);
+
+		const filters: FilterViewModel = filterGenerator.generateFilters(req.query, req.baseUrl, countMap);
 
 		const caseViewModels = cases.map(caseToViewModel);
 
@@ -120,4 +125,32 @@ export function caseToViewModel(caseRow: CaseListFields): CaseListViewModel {
 		receivedDateSortable: new Date(caseRow.receivedDate)?.getTime()
 	};
 	return viewModel;
+}
+
+/**
+ * Formats the type & subtype counts into the correct format for the filter
+ * generator, also formats casework area counts based on the data from 'type'.
+ */
+function formatCountData(typeCountsGrouped: any, subTypeCountsGrouped: any) {
+	const countMap: Record<string, number> = {};
+
+	for (const caseRow of typeCountsGrouped) {
+		countMap[caseRow.typeId] = caseRow._count._all;
+	}
+
+	for (const caseRow of subTypeCountsGrouped) {
+		countMap[caseRow.subTypeId] = caseRow._count._all;
+	}
+
+	// Case work area is not stored on case model like type and subtype so we
+	// aggregate through type's caseworkAreaId value
+	for (const caseType of CASE_TYPES) {
+		const typeCount = countMap[caseType.id] || 0;
+		if (typeCount > 0) {
+			const areaId = caseType.caseworkAreaId;
+			countMap[areaId] = (countMap[areaId] || 0) + typeCount;
+		}
+	}
+
+	return countMap;
 }

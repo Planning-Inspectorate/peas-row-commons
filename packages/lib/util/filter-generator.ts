@@ -46,6 +46,8 @@ interface FilterConfig {
 	};
 }
 
+type CountMap = Record<string, number>;
+
 /**
  * Class that generates the filter data, formatted ready for use in the
  * MoJ filter component used on the landing page. Needs to create 2 sets of
@@ -62,10 +64,10 @@ export class FilterGenerator {
 	 * Creates the filters used in the filter component, including the checkboxes to be ticked
 	 * and the currently selected categories that are displayed in the top section of the component.
 	 */
-	public generateFilters(query: Record<string, any>, baseUrl: string): FilterViewModel {
+	public generateFilters(query: Record<string, any>, baseUrl: string, counts: CountMap): FilterViewModel {
 		const [selectedAreas, selectedTypes, selectedSubTypes] = this.getAllSelectedValues(query);
 
-		const checkboxGroups = this.generateAllCheckboxes(selectedAreas, selectedTypes, selectedSubTypes);
+		const checkboxGroups = this.generateAllCheckboxes(selectedAreas, selectedTypes, selectedSubTypes, counts);
 
 		const [selectedAreaCategories, selectedTypeCategories, selectedSubTypeCategories] = this.createSelectedCategories(
 			query,
@@ -250,14 +252,19 @@ export class FilterGenerator {
 	 *
 	 * We nest the groupings so that we can insert a break line between the subsections.
 	 */
-	private generateAllCheckboxes(selectedAreas: string[], selectedTypes: string[], selectedSubTypes: string[]) {
+	private generateAllCheckboxes(
+		selectedAreas: string[],
+		selectedTypes: string[],
+		selectedSubTypes: string[],
+		counts: CountMap
+	) {
 		const { keys, labels } = this.config;
 
 		const checkboxGroups = [];
 
 		const areaItems: FilterItem[] = CASEWORK_AREAS.map((area) => ({
 			value: area.id,
-			text: area.displayName || '',
+			text: this.formatLabelWithCount(area.displayName || '', counts[area.id]),
 			checked: selectedAreas.includes(area.id)
 		}));
 
@@ -279,7 +286,8 @@ export class FilterGenerator {
 				'caseworkAreaId',
 				keys.TYPE,
 				labels.TYPE_SUFFIX,
-				selectedTypes
+				selectedTypes,
+				counts
 			);
 
 			grouping.push(...typeGroupsForArea);
@@ -291,7 +299,8 @@ export class FilterGenerator {
 				'parentTypeId',
 				keys.SUBTYPE,
 				labels.SUBTYPE_SUFFIX,
-				selectedSubTypes
+				selectedSubTypes,
+				counts
 			);
 
 			grouping.push(...subTypeGroupsForArea);
@@ -315,7 +324,8 @@ export class FilterGenerator {
 		relationKey: keyof TItem,
 		queryParamKey: string,
 		suffix: string,
-		selectedValues: string[]
+		selectedValues: string[],
+		counts: CountMap
 	) {
 		return groups
 			.map((group) => {
@@ -325,7 +335,7 @@ export class FilterGenerator {
 
 				const filterItems: FilterItem[] = itemsInGroup.map((item) => ({
 					value: item.id,
-					text: item.displayName || '',
+					text: this.formatLabelWithCount(item.displayName || '', counts[item.id]),
 					checked: selectedValues.includes(item.id)
 				}));
 
@@ -337,5 +347,12 @@ export class FilterGenerator {
 				};
 			})
 			.filter((group): group is NonNullable<typeof group> => group !== null);
+	}
+
+	/**
+	 * Helper to format the string with the count.
+	 */
+	private formatLabelWithCount(label: string, count: number | undefined): string {
+		return `${label} (${count || 0})`;
 	}
 }
