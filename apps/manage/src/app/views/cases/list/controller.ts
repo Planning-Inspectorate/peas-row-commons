@@ -120,7 +120,7 @@ interface SubTypeGroup extends CountMeta {
  * Formats the type & subtype counts into the correct format for the filter
  * generator, also formats casework area counts based on the data from 'type'.
  */
-function formatCountData(typeCountsGrouped: TypeGroup[], subTypeCountsGrouped: SubTypeGroup[]) {
+export function formatCountData(typeCountsGrouped: TypeGroup[], subTypeCountsGrouped: SubTypeGroup[]) {
 	const countMap: Record<string, number> = {};
 
 	for (const caseRow of typeCountsGrouped) {

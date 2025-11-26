@@ -1,8 +1,14 @@
 import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
-import { buildListCases, caseToViewModel } from './controller.ts';
+import { buildListCases, caseToViewModel, formatCountData } from './controller.ts';
 import { configureNunjucks } from '../../../nunjucks.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
+
+import {
+	CASEWORK_AREAS_ID,
+	CASE_TYPES_ID,
+	CASE_SUBTYPES_ID
+} from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
 
 const PAGINATION_TEST_CASES = [
 	{
@@ -208,6 +214,61 @@ describe('Case Controller', () => {
 					}
 				});
 			});
+		});
+	});
+	describe('formatCountData (Aggregation Logic)', () => {
+		it('should correctly map Types and SubTypes to their counts', () => {
+			const typeCounts = [{ typeId: CASE_TYPES_ID.DROUGHT, _count: { _all: 5 } }];
+			const subTypeCounts = [{ subTypeId: CASE_SUBTYPES_ID.NEW_LINES, _count: { _all: 3 } }];
+
+			const result = formatCountData(typeCounts as any, subTypeCounts as any);
+
+			assert.strictEqual(result[CASE_TYPES_ID.DROUGHT], 5);
+			assert.strictEqual(result[CASE_SUBTYPES_ID.NEW_LINES], 3);
+		});
+
+		it('should correctly aggregate counts for Casework Areas based on Type parentage', () => {
+			const typeCounts = [
+				{ typeId: CASE_TYPES_ID.COMMON_LAND, _count: { _all: 10 } },
+				{ typeId: CASE_TYPES_ID.RIGHTS_OF_WAY, _count: { _all: 20 } },
+				{ typeId: CASE_TYPES_ID.DROUGHT, _count: { _all: 5 } }
+			];
+
+			const result = formatCountData(typeCounts as any, []);
+
+			assert.strictEqual(result[CASE_TYPES_ID.COMMON_LAND], 10);
+			assert.strictEqual(result[CASE_TYPES_ID.RIGHTS_OF_WAY], 20);
+			assert.strictEqual(result[CASE_TYPES_ID.DROUGHT], 5);
+
+			assert.strictEqual(
+				result[CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND],
+				30,
+				'Should sum Common Land and RoW counts into the parent Area'
+			);
+
+			assert.strictEqual(
+				result[CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS],
+				5,
+				'Should map Drought count to the parent Area'
+			);
+		});
+
+		it('should handle mixed Type and Subtype counts simultaneously', () => {
+			const typeCounts = [{ typeId: CASE_TYPES_ID.HOUSING_PLANNING_CPOS, _count: { _all: 100 } }];
+			const subTypeCounts = [{ subTypeId: CASE_SUBTYPES_ID.COMMONS_ECCLESIASTICAL, _count: { _all: 7 } }];
+
+			const result = formatCountData(typeCounts as any, subTypeCounts as any);
+
+			assert.strictEqual(result[CASE_TYPES_ID.HOUSING_PLANNING_CPOS], 100);
+
+			assert.strictEqual(result[CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS], 100);
+
+			assert.strictEqual(result[CASE_SUBTYPES_ID.COMMONS_ECCLESIASTICAL], 7);
+		});
+
+		it('should return empty object if no counts provided', () => {
+			const result = formatCountData([], []);
+			assert.deepStrictEqual(result, {});
 		});
 	});
 });
