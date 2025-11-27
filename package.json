@@ -28,9 +28,9 @@
     "test-coverage": "node --test --experimental-test-coverage"
   },
   "dependencies": {
-    "@azure/functions": "^4.8.0",
+    "@azure/functions": "^4.9.0",
     "@azure/identity": "^4.13.0",
-    "@azure/msal-node": "^3.8.0",
+    "@azure/msal-node": "^3.8.3",
     "@ministryofjustice/frontend": "^7.1.0",
     "@planning-inspectorate/dynamic-forms": "^2.1.0",
     "@prisma/adapter-mssql": "^7.0.1",
