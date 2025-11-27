@@ -1,6 +1,6 @@
 import { CASE_SUBTYPES_ID, CASE_TYPES_ID } from './ids/index.ts';
 
-const DROUGHT_SUBTYPES = [
+export const DROUGHT_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.DROUGHT_PERMITS,
 		displayName: 'Drought Permits',

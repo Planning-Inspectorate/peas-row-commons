@@ -1,6 +1,6 @@
 import { CASE_TYPES_ID, CASEWORK_AREAS_ID } from './ids/index.ts';
 
-const PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES = [
+export const PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES = [
 	{
 		id: CASE_TYPES_ID.DROUGHT,
 		displayName: 'Drought',
@@ -33,7 +33,7 @@ const PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES = [
 	}
 ];
 
-const RIGHTS_OF_WAY_COMMON_LAND_TYPES = [
+export const RIGHTS_OF_WAY_COMMON_LAND_TYPES = [
 	{
 		id: CASE_TYPES_ID.COASTAL_ACCESS,
 		displayName: 'Coastal Access',
