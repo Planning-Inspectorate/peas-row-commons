@@ -34,7 +34,7 @@ export function createNewCaseRoutes(service: ManageService): IRouter {
 		getJourney,
 		validate,
 		validationErrorHandler,
-		buildSave(buildSaveDataToSession)
+		buildSave(buildSaveDataToSession())
 	);
 
 	router.get('/check-your-answers', getJourneyResponse, getJourney, (req, res) =>

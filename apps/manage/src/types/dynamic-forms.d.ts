@@ -36,9 +36,9 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/questions.js'
 	export const questionClasses: any;
 }
 
-declare module '@planning-inspectorate/dynamic-forms' {
-	export const COMPONENT_TYPES: any;
-}
+// declare module '@planning-inspectorate/dynamic-forms' {
+// 	export const COMPONENT_TYPES: any;
+// }
 
 declare module '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js' {
 	export default class RequiredValidator {
