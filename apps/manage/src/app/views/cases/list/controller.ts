@@ -7,10 +7,10 @@ import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts
 import { FilterGenerator, type FilterViewModel } from '@pins/peas-row-commons-lib/util/filter-generator.ts';
 import { createWhereClause, splitStringQueries } from '@pins/peas-row-commons-lib/util/search-queries.ts';
 import { CASE_TYPES } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+import type { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 
 import { formatInTimeZone } from 'date-fns-tz';
 import type { Request } from 'express';
-import { PrismaClient, Prisma } from '@prisma/client';
 
 const FILTER_KEYS = {
 	AREA: 'area',
@@ -55,7 +55,7 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			});
 		}
 
-		if (Number.isNaN(totalCases) || !cases) {
+		if (Number.isNaN(totalCases) || !cases || !typeCountsGrouped || !subTypeCountsGrouped) {
 			return notFoundHandler(req, res);
 		}
 
@@ -102,19 +102,13 @@ export function caseToViewModel(caseRow: CaseListFields): CaseListViewModel {
 	return viewModel;
 }
 
-interface CountMeta {
-	_count: {
-		_all: number;
-	};
-}
+type TypeGroup = Pick<Prisma.CaseGroupByOutputType, 'typeId'> & {
+	_count: { _all: number };
+};
 
-interface TypeGroup extends CountMeta {
-	typeId: number;
-}
-
-interface SubTypeGroup extends CountMeta {
-	subTypeId: number;
-}
+type SubTypeGroup = Pick<Prisma.CaseGroupByOutputType, 'subTypeId'> & {
+	_count: { _all: number };
+};
 
 /**
  * Formats the type & subtype counts into the correct format for the filter
@@ -163,12 +157,7 @@ function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerato
 /**
  * Creates the query we will use to get the Case data
  */
-function generateQuery(
-	db: PrismaClient | Prisma.TransactionClient,
-	skipSize: number,
-	pageSize: number,
-	whereClause: Record<string, any>
-) {
+function generateQuery(db: PrismaClient, skipSize: number, pageSize: number, whereClause: Record<string, any>) {
 	return [
 		db.case.findMany({
 			orderBy: { receivedDate: 'desc' },
@@ -190,5 +179,5 @@ function generateQuery(
 			by: ['subTypeId'],
 			_count: { _all: true }
 		})
-	];
+	] as const;
 }
