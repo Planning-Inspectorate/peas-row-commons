@@ -16,16 +16,33 @@ export function createJourney(documentTypeId: string, questions: any, response: 
 		journeyId: documentTypeId,
 		sections: [
 
-			 	new Section('', 'questions')
+			new Section('', 'questions')
 				.addQuestion(questions.caseworkArea)
 				.addQuestion(questions.planningEnvironmentApplications)
-				.withCondition((response: any) => questionHasAnswer(response,questions.caseworkArea,CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS))
+				.withCondition((response: any) => questionHasAnswer(response, questions.caseworkArea, CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS))
+
 				.addQuestion(questions.drought)
-				.withCondition((response: any) => questionHasAnswer(response,questions.planningEnvironmentApplications,CASE_TYPES_ID.DROUGHT))
+				.withCondition((response: any) => questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.DROUGHT))
+	
+				
+				.addQuestion(questions.housingAndPlanningCpos)
+				.withCondition((response: any) => questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.HOUSING_PLANNING_CPOS))
+			
+
+				.addQuestion(questions.otherSecretaryofStatecasework)
+				.withCondition((response: any) => questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.OTHER_SOS_CASEWORK))
+//To do bit amguity with purchase notice cant se the the screen in ui
+				.addQuestion(questions.purchaseNotices)
+				.withCondition((response: any) => questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.PURCHASE_NOTICES))
+
+				.addQuestion(questions.wayleaves)
+				.withCondition((response: any) => questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.WAYLEAVES))
+
+
 				.addQuestion(questions.rightsOfWayAndCommonLand)
-				.withCondition((response: any) => questionHasAnswer(response,questions.caseworkArea, CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND)
+				.withCondition((response: any) => questionHasAnswer(response, questions.caseworkArea, CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND)
 				)
-		
+
 		],
 		taskListUrl: 'check-your-answers',
 		journeyTemplate: 'views/layouts/forms-question.njk',

@@ -13,7 +13,7 @@ export const DROUGHT_SUBTYPES = [
 	}
 ];
 
-const WAYLEAVES_SUBTYPES = [
+export const WAYLEAVES_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.NEW_LINES,
 		displayName: 'New lines',
@@ -31,7 +31,7 @@ const WAYLEAVES_SUBTYPES = [
 	}
 ];
 
-const HOUSING_PLANNING_CPOS_SUBTYPES = [
+export const HOUSING_PLANNING_CPOS_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.HOUSING,
 		displayName: 'Housing',
@@ -49,7 +49,7 @@ const HOUSING_PLANNING_CPOS_SUBTYPES = [
 	}
 ];
 
-const OTHER_SOS_CASEWORK_SUBTYPES = [
+export const OTHER_SOS_CASEWORK_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.DEFRA_CPO,
 		displayName: 'DEFRA CPO',
