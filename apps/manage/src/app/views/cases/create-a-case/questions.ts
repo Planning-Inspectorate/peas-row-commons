@@ -65,7 +65,7 @@ export function getQuestions() {
 			question: 'Enter the submitter’s email address',
 			fieldName: CASE_TYPES_ID.PURCHASE_NOTICES,
 			url: 'case-name',
-			options: DROUGHT_SUBTYPES.map((t) => ({ text: t.displayName, value: t.id })),
+			// options: DROUGHT_SUBTYPES.map((t) => ({ text: t.displayName, value: t.id })),
 			validators: [new RequiredValidator(SUB_TYPE_ERROR)]
 		},
 		wayleaves: {
