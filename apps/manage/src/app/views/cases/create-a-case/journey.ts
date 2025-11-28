@@ -38,10 +38,24 @@ export function createJourney(documentTypeId: string, questions: any, response: 
 				.addQuestion(questions.wayleaves)
 				.withCondition((response: any) => questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.WAYLEAVES))
 
-
 				.addQuestion(questions.rightsOfWayAndCommonLand)
 				.withCondition((response: any) => questionHasAnswer(response, questions.caseworkArea, CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND)
 				)
+
+				.addQuestion(questions.coastalAccess)
+				.withCondition((response: any) => questionHasAnswer(response, questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.COASTAL_ACCESS))
+
+
+				.addQuestion(questions.commonLand)
+				.withCondition((response: any) => questionHasAnswer(response, questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.COMMON_LAND))
+
+
+				.addQuestion(questions.rightsOfWay)
+				.withCondition((response: any) => questionHasAnswer(response, questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.RIGHTS_OF_WAY))
+	
+	
+
+	
 
 		],
 		taskListUrl: 'check-your-answers',

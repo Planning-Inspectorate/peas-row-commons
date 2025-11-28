@@ -2,9 +2,9 @@ import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validato
 import { createQuestions } from '@planning-inspectorate/dynamic-forms/src/questions/create-questions.js';
 import { questionClasses } from '@planning-inspectorate/dynamic-forms/src/questions/questions.js';
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
-import { CASE_TYPES, CASEWORK_AREAS } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+import {  CASEWORK_AREAS } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES, RIGHTS_OF_WAY_COMMON_LAND_TYPES } from '@pins/peas-row-commons-database/src/seed/static_data/types.ts';
-import { DROUGHT_SUBTYPES, HOUSING_PLANNING_CPOS_SUBTYPES, OTHER_SOS_CASEWORK_SUBTYPES, WAYLEAVES_SUBTYPES } from '@pins/peas-row-commons-database/src/seed/static_data/subtypes.ts';
+import { COASTAL_ACCESS_SUBTYPES, COMMON_LAND_SUBTYPES, DROUGHT_SUBTYPES, HOUSING_PLANNING_CPOS_SUBTYPES, OTHER_SOS_CASEWORK_SUBTYPES, RIGHTS_OF_WAY_SUBTYPES, WAYLEAVES_SUBTYPES } from '@pins/peas-row-commons-database/src/seed/static_data/subtypes.ts';
 import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/types.ts';
 import { CASEWORK_AREAS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/casework-areas.ts';
 
@@ -85,6 +85,33 @@ export function getQuestions() {
 			url: 'row-type-of-case',
 			options: RIGHTS_OF_WAY_COMMON_LAND_TYPES.map((t) => ({ text: t.displayName, value: t.id })),
 			validators: [new RequiredValidator('Select a Right of Way and Common Land')]
+		},
+		coastalAccess: {
+			type: COMPONENT_TYPES.RADIO,
+			title: 'Coastal Access',
+			question: 'What Coastal Access subtype is it?',
+			fieldName: CASE_TYPES_ID.COASTAL_ACCESS,
+			url: 'coastal-subtype',
+			options: COASTAL_ACCESS_SUBTYPES.map((t) => ({ text: t.displayName, value: t.id })),
+			validators: [new RequiredValidator(SUB_TYPE_ERROR)]
+		},
+		commonLand: {
+			type: COMPONENT_TYPES.RADIO,
+			title: 'Common Land',
+			question: 'What Common Land subtype is it?',
+			fieldName: CASE_TYPES_ID.COMMON_LAND,
+			url: 'common-land-subtype',
+			options: COMMON_LAND_SUBTYPES.map((t) => ({ text: t.displayName, value: t.id })),
+			validators: [new RequiredValidator(SUB_TYPE_ERROR)]
+		},
+		rightsOfWay: {
+			type: COMPONENT_TYPES.RADIO,
+			title: 'Rights of Way',
+			question: 'What Rights of Way subtype is it?',
+			fieldName: CASE_TYPES_ID.RIGHTS_OF_WAY,
+			url: 'row-subtype',
+			options: RIGHTS_OF_WAY_SUBTYPES.map((t) => ({ text: t.displayName, value: t.id })),
+			validators: [new RequiredValidator(SUB_TYPE_ERROR)]
 		}
 	};
 

@@ -107,7 +107,7 @@ export const OTHER_SOS_CASEWORK_SUBTYPES = [
 	}
 ];
 
-const COASTAL_ACCESS_SUBTYPES = [
+export const COASTAL_ACCESS_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.NOTICE_APPEAL,
 		displayName: 'Notice appeal',
@@ -130,7 +130,7 @@ const COASTAL_ACCESS_SUBTYPES = [
 	}
 ];
 
-const COMMON_LAND_SUBTYPES = [
+export const COMMON_LAND_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.COMMONS_ECCLESIASTICAL,
 		displayName: 'Commons for Ecclesiastical Purposes',
@@ -203,7 +203,7 @@ const COMMON_LAND_SUBTYPES = [
 	}
 ];
 
-const RIGHTS_OF_WAY_SUBTYPES = [
+export const RIGHTS_OF_WAY_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.DISPENSATION_HA80,
 		displayName: 'Dispensation for Serving Notice HA80',
