@@ -24,7 +24,12 @@ declare module '@planning-inspectorate/dynamic-forms/src/section.js' {
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/questions/create-questions.js' {
-	export function createQuestions(definitions: any, classes: any, overrides?: any): any;
+	export function createQuestions(
+		definitions: any,
+		classes: any,
+		questionMethodOverrides?: any,
+		textOverrides?: any
+	): any;
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/questions/questions.js' {
@@ -77,4 +82,13 @@ declare module '@planning-inspectorate/dynamic-forms/src/middleware/redirect-to-
 		journeyResponseKey?: string;
 		journeyKey?: string;
 	}): (req: any, res: any, next: any) => void;
+}
+
+declare module '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js' {
+	export class JourneyResponse {
+		referenceId: string;
+		journeyId: JourneyType;
+		answers: Record<string, unknown>;
+		constructor(journeyId: JourneyType, referenceId: string, answers: Record<string, unknown> | null);
+	}
 }
