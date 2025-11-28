@@ -26,7 +26,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 			reference,
 			caseName,
 			baseUrl,
-			backLinkUrl: '/cases'
+			backLinkUrl: res.locals.backLinkUrl || '/cases'
 		});
 	};
 }
