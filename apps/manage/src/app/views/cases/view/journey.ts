@@ -15,7 +15,22 @@ export function createJourney(questions: Record<string, any>, response: Response
 
 	return new Journey({
 		journeyId: JOURNEY_ID,
-		sections: [new Section('Overview', 'questions').addQuestion(questions.reference)],
+		sections: [
+			new Section('Overview', 'questions').addQuestion(questions.reference),
+			new Section('Timetable', 'timetable')
+				.addQuestion(questions.receivedDate)
+				.addQuestion(questions.startDate)
+				.addQuestion(questions.objectionPeriodEndsDate)
+				.addQuestion(questions.expectedSubmissionDate)
+				.addQuestion(questions.offerForWrittenRepresentationDate)
+				.addQuestion(questions.consentDeadlineDate)
+				.addQuestion(questions.partiesEventNotificationDeadlineDate)
+				.addQuestion(questions.targetEventDate)
+				.addQuestion(questions.ogdDueDate)
+				.addQuestion(questions.proposalLetterDate)
+				.addQuestion(questions.expiryDate)
+				.addQuestion(questions.partiesDecisionNotificationDeadlineDate)
+		],
 		taskListUrl: '',
 		journeyTemplate: 'views/layouts/forms-question.njk',
 		taskListTemplate: 'views/cases/view/view.njk',

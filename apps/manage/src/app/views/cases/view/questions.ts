@@ -2,6 +2,8 @@ import { createQuestions } from '@planning-inspectorate/dynamic-forms/src/questi
 import { questionClasses } from '@planning-inspectorate/dynamic-forms/src/questions/questions.js';
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 
+import { DATE_QUESTIONS } from './question-utils.ts';
+
 export function getQuestions() {
 	const questions = {
 		reference: {
@@ -12,14 +14,15 @@ export function getQuestions() {
 			url: '',
 			validators: [],
 			editable: false
-		}
+		},
+		...DATE_QUESTIONS
 	};
 
 	const textOverrides = {
 		notStartedText: '-',
 		continueButtonText: 'Save',
-		changeActionText: 'Edit',
-		answerActionText: 'Edit'
+		changeActionText: 'Change',
+		answerActionText: 'Add'
 	};
 
 	return createQuestions(questions, questionClasses, {}, textOverrides);
