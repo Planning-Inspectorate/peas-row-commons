@@ -62,7 +62,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 			include: {
 				SiteAddress: true,
 				SubType: true,
-				Type: true
+				Type: true,
+				Dates: true
 			}
 		});
 
