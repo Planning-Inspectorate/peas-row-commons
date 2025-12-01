@@ -52,12 +52,17 @@ declare module '@planning-inspectorate/dynamic-forms/src/validator/string-valida
 	}
 }
 
+declare module '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js' {
+	export default class DateValidator {
+		constructor(options: any);
+	}
+}
 declare module '@planning-inspectorate/dynamic-forms/src/middleware/build-get-journey.js' {
 	export function buildGetJourney(createJourney: any): any;
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/controller.js' {
-	export function buildSave(saveFunction: any): any;
+	export function buildSave(saveFunction: any, redirectToTaskListOnSuccess?: boolean): any;
 	export function list(req: any, res: any, template?: string, options?: any): any;
 	export function question(req: any, res: any, next?: any): any;
 }
