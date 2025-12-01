@@ -16,7 +16,7 @@ describe('view-model', () => {
 
 			assert.strictEqual(result.id, '123');
 			assert.strictEqual(result.Type.displayName, 'Rights of Way');
-			assert.strictEqual(result.receivedDate, '15 Jan 2024');
+			assert.strictEqual(result.receivedDateDisplay, '15 Jan 2024');
 			assert.strictEqual(result.receivedDateSortable, input.receivedDate.getTime());
 		});
 	});

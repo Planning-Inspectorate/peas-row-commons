@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { createJourney, JOURNEY_ID } from './journey.ts';
+import { getQuestions } from './questions.ts';
 
 describe('case details journey', () => {
 	it('should error if used with the wrong router structure', () => {
@@ -22,14 +23,9 @@ describe('case details journey', () => {
 		const mockReq = { params: { id: 'case-1' }, baseUrl: '/cases/case-1' };
 		const mockRes = {};
 
-		const mockQuestions = {
-			reference: {
-				fieldName: 'reference-question',
-				shouldDisplay: () => true
-			}
-		};
+		const questions = getQuestions();
 
-		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any);
+		const journey: any = createJourney(questions, mockRes as any, mockReq as any);
 
 		assert.strictEqual(journey.journeyId, JOURNEY_ID);
 
@@ -38,12 +34,12 @@ describe('case details journey', () => {
 
 		assert.strictEqual(journey.baseUrl, '/cases/case-1');
 
-		assert.strictEqual(journey.sections.length, 1);
+		assert.strictEqual(journey.sections.length, 2);
 
 		const overviewSection = journey.sections[0];
 		assert.strictEqual(overviewSection.segment, 'questions');
 
 		assert.strictEqual(overviewSection.questions.length, 1);
-		assert.strictEqual(overviewSection.questions[0].fieldName, 'reference-question');
+		assert.strictEqual(overviewSection.questions[0].fieldName, 'reference');
 	});
 });
