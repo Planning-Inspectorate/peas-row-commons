@@ -37,7 +37,7 @@ export function dateQuestion({
 	};
 }
 
-function camelCaseToSentenceCase(str: string) {
+export function camelCaseToSentenceCase(str: string) {
 	const sentence = str
 		.split(/(?=[A-Z])/)
 		.map((s) => s.toLowerCase())
@@ -46,7 +46,7 @@ function camelCaseToSentenceCase(str: string) {
 	return sentence.charAt(0).toUpperCase() + sentence.slice(1);
 }
 
-function camelCaseToKebabCase(str: string) {
+export function camelCaseToKebabCase(str: string) {
 	return str
 		.split(/(?=[A-Z])/)
 		.map((s) => s.toLowerCase())
