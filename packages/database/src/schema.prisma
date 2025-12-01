@@ -28,6 +28,7 @@ model Case {
   createdDate   DateTime       @default(now())
   updatedDate   DateTime?
   receivedDate  DateTime
+  closedDate    DateTime?
   /// type of case
   typeId        String
   Type          CaseType       @relation(fields: [typeId], references: [id])
@@ -47,6 +48,7 @@ model Case {
   procedureId   String?
   Procedure     CaseProcedure? @relation(fields: [procedureId], references: [id])
   linkedCases   String?
+  Dates         CaseDates?
 }
 
 model CaseworkArea {
@@ -95,4 +97,34 @@ model Address {
   county   String?
   postcode String?
   Case     Case[]
+}
+
+/// Dates that are associated with a case, a couple more generic ones are
+/// kept on the main Case table (e.g. createdDate)
+model CaseDates {
+  id                                      String    @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  /// The project start date.
+  startDate                               DateTime?
+  /// The date that the objection period ends
+  objectionPeriodEndsDate                 DateTime?
+  /// When it is expected that the case will be submitted
+  expectedSubmissionDate                  DateTime?
+  /// Date feedback via written representation is submitted
+  offerForWrittenRepresentationDate       DateTime?
+  /// Date offer for consent ends
+  consentDeadlineDate                     DateTime?
+  /// A target date for an envement
+  targetEventDate                         DateTime?
+  /// Due date for Other Government Departments (OGD)
+  ogdDueDate                              DateTime?
+  /// Date proposal letter sent to e.g. Secretary of State
+  proposalLetterDate                      DateTime?
+  /// Date the case expires
+  expiryDate                              DateTime?
+  /// Date parties sent a deadline notification
+  partiesEventNotificationDeadlineDate    DateTime?
+  /// Date parties sent an event notification
+  partiesDecisionNotificationDeadlineDate DateTime?
+  caseId                                  String    @unique @db.UniqueIdentifier
+  Case                                    Case      @relation(fields: [caseId], references: [id])
 }
