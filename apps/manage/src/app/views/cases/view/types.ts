@@ -13,6 +13,7 @@ export const caseListSelect = {
 	caseOfficerId: true,
 	procedureId: true,
 	linkedCases: true,
+	Dates: true,
 	Type: {
 		select: { displayName: true }
 	},
