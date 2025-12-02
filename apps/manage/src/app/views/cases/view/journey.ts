@@ -29,7 +29,8 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.ogdDueDate)
 				.addQuestion(questions.proposalLetterDate)
 				.addQuestion(questions.expiryDate)
-				.addQuestion(questions.partiesDecisionNotificationDeadlineDate)
+				.addQuestion(questions.partiesDecisionNotificationDeadlineDate),
+			new Section('Documents', 'documents').addQuestion(questions.filesLocation)
 		],
 		taskListUrl: '',
 		journeyTemplate: 'views/layouts/forms-question.njk',
