@@ -51,6 +51,8 @@ model Case {
   Procedure         CaseProcedure? @relation(fields: [procedureId], references: [id])
   linkedCases       String?
   Dates             CaseDates?
+  /// Physical location of real-world files
+  filesLocation     String?
 }
 
 model CaseworkArea {
