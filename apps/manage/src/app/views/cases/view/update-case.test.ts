@@ -1,6 +1,6 @@
 import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert';
-import { buildUpdateCase, mapCasePayload } from './update-case.ts'; // Adjust path
+import { buildUpdateCase, mapCasePayload } from './update-case.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 
 const mockFindUnique = mock.fn();
@@ -45,7 +45,7 @@ describe('Update Case Controller', () => {
 
 		it('should log and return early if there are no answers to save', async () => {
 			const req = { params: { id: 'case-123' } };
-			const data = { answers: {} }; // Empty answers
+			const data = { answers: {} };
 
 			const handler = buildUpdateCase(mockService as any);
 			await handler({ req: req as any, res: {} as any, data });
@@ -58,7 +58,6 @@ describe('Update Case Controller', () => {
 			const req = { params: { id: 'case-123' } };
 			const data = { answers: { name: 'Keep Me' } };
 
-			// Handler configured to CLEAR
 			const handler = buildUpdateCase(mockService as any, true);
 
 			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123' }) as any);
