@@ -1,5 +1,7 @@
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
+import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js';
+import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
 
 interface DateQuestionProps {
 	fieldName: string;
@@ -221,4 +223,32 @@ export const DATE_QUESTIONS = {
 			]
 		}
 	})
+};
+
+export const DOCUMENTS_QUESTIONS = {
+	filesLocation: {
+		type: COMPONENT_TYPES.TEXT_ENTRY,
+		title: 'Files location',
+		question: 'Where are the files located?',
+		fieldName: 'filesLocation',
+		url: 'files-location',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'files-location/remove'
+				}
+			]
+		},
+		validators: [
+			new RequiredValidator('Enter the files location'),
+			new StringValidator({
+				maxLength: {
+					maxLength: 250,
+					maxLengthMessage: 'Files location must be 250 characters or less'
+				}
+			})
+		]
+	}
 };
