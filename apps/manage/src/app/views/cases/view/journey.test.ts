@@ -20,7 +20,7 @@ describe('case details journey', () => {
 	});
 
 	it('should create a journey instance with correct structure and questions', () => {
-		const mockReq = { params: { id: 'case-1' }, baseUrl: '/cases/case-1' };
+		const mockReq = { params: { id: 'case-1' }, baseUrl: '/cases/case-1', session: {} };
 		const mockRes = {};
 
 		const questions = getQuestions();
@@ -34,7 +34,7 @@ describe('case details journey', () => {
 
 		assert.strictEqual(journey.baseUrl, '/cases/case-1');
 
-		assert.strictEqual(journey.sections.length, 2);
+		assert.strictEqual(journey.sections.length, 3);
 
 		const overviewSection = journey.sections[0];
 		assert.strictEqual(overviewSection.segment, 'questions');
