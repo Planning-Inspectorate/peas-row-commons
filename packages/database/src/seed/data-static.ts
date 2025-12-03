@@ -1,5 +1,5 @@
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { CASEWORK_AREAS, CASE_TYPES, CASE_SUBTYPES } from './static_data/index.ts';
+import { CASEWORK_AREAS, CASE_TYPES, CASE_SUBTYPES, PROCEDURES } from './static_data/index.ts';
 
 type ReferenceDataInput = {
 	id: string;
@@ -30,6 +30,8 @@ export async function seedStaticData(dbClient: PrismaClient) {
 	await Promise.all(CASE_TYPES.map((input) => upsertReferenceData({ delegate: dbClient.caseType, input })));
 
 	await Promise.all(CASE_SUBTYPES.map((input) => upsertReferenceData({ delegate: dbClient.caseSubType, input })));
+
+	await Promise.all(PROCEDURES.map((input) => upsertReferenceData({ delegate: dbClient.caseProcedure, input })));
 
 	console.log('static data seed complete');
 }

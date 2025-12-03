@@ -1,14 +1,9 @@
-import { CASE_TYPES_ID, CASEWORK_AREAS_ID, PROCEDURE } from './ids/index.ts';
+import { CASE_TYPES_ID, CASEWORK_AREAS_ID } from './ids/index.ts';
 
 export const PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES = [
 	{
 		id: CASE_TYPES_ID.DROUGHT,
 		displayName: 'Drought',
-		caseworkAreaId: CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS
-	},
-	{
-		id: CASE_TYPES_ID.WAYLEAVES,
-		displayName: 'Wayleaves',
 		caseworkAreaId: CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS
 	},
 	{
@@ -24,6 +19,11 @@ export const PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES = [
 	{
 		id: CASE_TYPES_ID.PURCHASE_NOTICES,
 		displayName: 'Purchase Notices',
+		caseworkAreaId: CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS
+	},
+	{
+		id: CASE_TYPES_ID.WAYLEAVES,
+		displayName: 'Wayleaves',
 		caseworkAreaId: CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS
 	},
 	{
@@ -51,32 +51,4 @@ export const RIGHTS_OF_WAY_COMMON_LAND_TYPES = [
 	}
 ];
 
-export const PROCEDURE_TYPES = [
-	{
-		id: PROCEDURE.ADMIN,
-		displayName: 'Admin',
-		
-	},
-	{
-		id: PROCEDURE.HEARING,
-		displayName: 'Hearing',
-		
-	},
-	{
-		id: PROCEDURE.INQUIRY,
-		displayName: 'Inquiry',
-		
-	},
-		{
-		id: PROCEDURE.PROPOSAL,
-		displayName: 'Proposal',
-		
-	},
-		{
-		id: PROCEDURE.SITE_VISIT,
-		displayName: 'Site visit'
-		}
-		
-];
-
-export const CASE_TYPES = [...PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES, ...RIGHTS_OF_WAY_COMMON_LAND_TYPES, ...PROCEDURE_TYPES];
+export const CASE_TYPES = [...PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES, ...RIGHTS_OF_WAY_COMMON_LAND_TYPES];

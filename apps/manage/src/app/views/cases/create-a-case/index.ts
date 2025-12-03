@@ -6,7 +6,7 @@ import { redirectToUnansweredQuestion } from '@planning-inspectorate/dynamic-for
 import validate from '@planning-inspectorate/dynamic-forms/src/validator/validator.js';
 import { validationErrorHandler } from '@planning-inspectorate/dynamic-forms/src/validator/validation-error-handler.js';
 import {
-	buildSaveDataToSession,
+	saveDataToSession,
 	buildGetJourneyResponseFromSession
 } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 import { JOURNEY_ID, createJourney } from './journey.ts';
@@ -21,7 +21,7 @@ export function createNewCaseRoutes(service: ManageService): IRouter {
 		createJourney(JOURNEY_ID, questions, journeyResponse, req)
 	);
 	const getJourneyResponse = buildGetJourneyResponseFromSession(JOURNEY_ID);
-	// to do save controller
+
 	buildSaveController(service);
 
 	router.get('/', getJourneyResponse, getJourney, redirectToUnansweredQuestion());
@@ -34,7 +34,7 @@ export function createNewCaseRoutes(service: ManageService): IRouter {
 		getJourney,
 		validate,
 		validationErrorHandler,
-		buildSave(buildSaveDataToSession())
+		buildSave(saveDataToSession)
 	);
 
 	router.get('/check-your-answers', getJourneyResponse, getJourney, (req, res) =>
