@@ -4,6 +4,7 @@ import { createJourney } from './journey.ts';
 import type { Handler, Request } from 'express';
 
 import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import { getQuestions } from './questions.ts';
 
 describe('create-a-case journey', () => {
 	it('should throw error when used with wrong router structure', () => {
@@ -11,10 +12,7 @@ describe('create-a-case journey', () => {
 	});
 
 	it('should create a journey with no Section title', () => {
-		const questions = {
-			caseworkArea: { fieldName: 'casework-area' },
-			peasTypeOfCase: { fieldName: 'peas-type-of-case' }
-		};
+		const questions = getQuestions();
 
 		const mockReq = {
 			baseUrl: '/cases/create-a-case'
@@ -30,8 +28,8 @@ describe('create-a-case journey', () => {
 		assert.strictEqual(section.title, undefined);
 
 		// Questions added
-		assert.strictEqual(section.questions.length, 1);
+		assert.strictEqual(section.questions.length, 21);
 
-		assert.strictEqual(section.questions[0].fieldName, 'casework-area');
+		assert.strictEqual(section.questions[0].fieldName, 'caseworkArea');
 	});
 });

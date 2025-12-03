@@ -25,8 +25,12 @@ import {
 	SUB_TYPE_ERROR,
 	CASE_TYPES_CAMEL,
 	CASEWORK_AREAS_CAMEL,
-	generateConditionalOptions
+	generateConditionalOptions,
+	getParentPageOptions,
+	getChildPageOptions
 } from './questions-utils.ts';
+
+import { PROCEDURE_GROUP_IDS, PROCEDURE_GROUPS, GROUP_RELATIONSHIPS } from './view-model.ts';
 
 export function getQuestions() {
 	const questions = {
@@ -237,8 +241,30 @@ export function getQuestions() {
 			question: 'Which procedure will be used?',
 			fieldName: 'procedureId',
 			url: 'procedure',
-			options: PROCEDURES.map(referenceDataToRadioOptions),
+			options: getParentPageOptions(PROCEDURES, PROCEDURE_GROUPS, GROUP_RELATIONSHIPS).map(referenceDataToRadioOptions),
 			validators: [new RequiredValidator(SUB_TYPE_ERROR)]
+		},
+		adminProcedure: {
+			type: COMPONENT_TYPES.RADIO,
+			title: 'Which in house admin procedure will be used?',
+			question: 'Which in house admin procedure will be used?',
+			fieldName: 'adminProcedureId',
+			url: 'admin-procedure',
+			options: getChildPageOptions(PROCEDURE_GROUP_IDS.ADMIN, PROCEDURES, GROUP_RELATIONSHIPS).map(
+				referenceDataToRadioOptions
+			),
+			validators: [new RequiredValidator('Select in house admin procedure')]
+		},
+		siteVisitProcedure: {
+			type: COMPONENT_TYPES.RADIO,
+			title: 'Which type of site visit will be conducted?',
+			question: 'Which type of site visit will be conducted?',
+			fieldName: 'siteVisitProcedureId',
+			url: 'site-visit-procedure',
+			options: getChildPageOptions(PROCEDURE_GROUP_IDS.SITE_VISIT, PROCEDURES, GROUP_RELATIONSHIPS).map(
+				referenceDataToRadioOptions
+			),
+			validators: [new RequiredValidator('Select type of site visit')]
 		}
 	};
 

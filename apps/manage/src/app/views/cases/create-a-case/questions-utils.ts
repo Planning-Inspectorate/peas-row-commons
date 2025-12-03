@@ -1,5 +1,7 @@
 import { CASE_TYPES_ID, CASEWORK_AREAS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
 
+import type { DataPoint, GroupRelationships, UIGroup } from './types.ts';
+
 /**
  * Converts a key in kebab-case into camelCase
  */
@@ -45,9 +47,10 @@ export function generateConditionalOptions(
 	const baseData = rawData.map(referenceDataToRadioOptions);
 
 	for (const conditionalKey of conditionalKeys) {
-		if (!baseData[conditionalKey]) continue;
+		const keyToUpdate = baseData.find((item) => item.value === conditionalKey);
+		if (!keyToUpdate) continue;
 
-		baseData[conditionalKey].conditional = {
+		keyToUpdate.conditional = {
 			type: 'textarea',
 			fieldName: 'text',
 			question: '',
@@ -70,3 +73,35 @@ export function generateConditionalOptions(
 
 	return baseData;
 }
+
+/**
+ * Takes flat data points, and builds just parent options based on an injected relationship map
+ */
+export const getParentPageOptions = (
+	allRealDataPoints: DataPoint[],
+	groups: UIGroup[],
+	groupRelationships: GroupRelationships
+) => {
+	const childIds = new Set(Object.values(groupRelationships).flat());
+
+	const topLevelProcedures = allRealDataPoints.filter((dataPoint) => !childIds.has(dataPoint.id));
+
+	return [...groups, ...topLevelProcedures].sort((a, b) => a.displayName.localeCompare(b.displayName));
+};
+
+/**
+ * Creates a new child set of options based on a selected grouping id and a relationship map passed in
+ */
+export const getChildPageOptions = (
+	selectedGroupId: string,
+	allRealDataPoints: DataPoint[],
+	groupRelationships: GroupRelationships
+) => {
+	const targetIds = groupRelationships[selectedGroupId];
+
+	if (!targetIds) {
+		return [];
+	}
+
+	return allRealDataPoints.filter((dataPoint) => targetIds.includes(dataPoint.id));
+};
