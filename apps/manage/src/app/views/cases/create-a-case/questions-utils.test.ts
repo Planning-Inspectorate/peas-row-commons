@@ -4,7 +4,8 @@ import {
 	referenceDataToRadioOptions,
 	generateConditionalOptions,
 	getChildPageOptions,
-	getParentPageOptions
+	getParentPageOptions,
+	kebabToCamel
 } from './questions-utils.ts';
 
 describe('Questions Utils', () => {
@@ -167,6 +168,31 @@ describe('Questions Utils', () => {
 				const result = getChildPageOptions('non-existent-group', mockRealData, mockRelationships);
 				assert.deepStrictEqual(result, []);
 			});
+		});
+	});
+	describe('kebabToCamel', () => {
+		it('should convert basic kebab-case to camelCase', () => {
+			assert.strictEqual(kebabToCamel('casework-area'), 'caseworkArea');
+			assert.strictEqual(kebabToCamel('site-visit-procedure-id'), 'siteVisitProcedureId');
+		});
+
+		it('should return single words unchanged', () => {
+			assert.strictEqual(kebabToCamel('applicant'), 'applicant');
+			assert.strictEqual(kebabToCamel('id'), 'id');
+		});
+
+		it('should handle empty strings', () => {
+			assert.strictEqual(kebabToCamel(''), '');
+		});
+
+		it('should handle strings with numbers correctly', () => {
+			assert.strictEqual(kebabToCamel('section-106'), 'section-106');
+
+			assert.strictEqual(kebabToCamel('section-106-agreement'), 'section-106Agreement');
+		});
+
+		it('should handle typical UUID-style strings (no change expected)', () => {
+			assert.strictEqual(kebabToCamel('123-abc'), '123Abc');
 		});
 	});
 });

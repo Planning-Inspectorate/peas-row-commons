@@ -5,7 +5,7 @@ import type { DataPoint, GroupRelationships, UIGroup } from './types.ts';
 /**
  * Converts a key in kebab-case into camelCase
  */
-const kebabToCamel = (str: string): string => str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+export const kebabToCamel = (str: string): string => str.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
 
 /**
  * Takes an object and creates the same object but with the keys changed to camelCase.
