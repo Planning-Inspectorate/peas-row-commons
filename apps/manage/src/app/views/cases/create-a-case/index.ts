@@ -13,6 +13,7 @@ import { JOURNEY_ID, createJourney } from './journey.ts';
 import { getQuestions } from './questions.ts';
 import { buildSaveController } from './save.ts';
 import { ManageService } from '#service';
+import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 
 export function createNewCaseRoutes(service: ManageService): IRouter {
 	const router = createRouter({ mergeParams: true });
@@ -22,7 +23,7 @@ export function createNewCaseRoutes(service: ManageService): IRouter {
 	);
 	const getJourneyResponse = buildGetJourneyResponseFromSession(JOURNEY_ID);
 
-	buildSaveController(service);
+	const saveController = buildSaveController(service);
 
 	router.get('/', getJourneyResponse, getJourney, redirectToUnansweredQuestion());
 
@@ -39,10 +40,12 @@ export function createNewCaseRoutes(service: ManageService): IRouter {
 
 	router.get('/check-your-answers', getJourneyResponse, getJourney, (req, res) =>
 		list(req, res, '', {
-			pageHeading: 'Check your answers before uploading your document(s)',
-			submitButtonText: 'Confirm upload'
+			pageHeading: 'Check your answers',
+			submitButtonText: 'Save and continue'
 		})
 	);
+
+	router.post('/check-your-answers', getJourneyResponse, getJourney, asyncHandler(saveController));
 
 	return router;
 }
