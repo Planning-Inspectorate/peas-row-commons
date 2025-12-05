@@ -122,6 +122,7 @@ export function formatCountData(typeCountsGrouped: TypeGroup[], subTypeCountsGro
 	}
 
 	for (const caseRow of subTypeCountsGrouped) {
+		if (!caseRow.subTypeId) continue;
 		countMap[caseRow.subTypeId] = caseRow._count._all;
 	}
 
