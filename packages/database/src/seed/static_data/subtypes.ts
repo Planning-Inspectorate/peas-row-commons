@@ -1,6 +1,6 @@
 import { CASE_SUBTYPES_ID, CASE_TYPES_ID } from './ids/index.ts';
 
-const DROUGHT_SUBTYPES = [
+export const DROUGHT_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.DROUGHT_PERMITS,
 		displayName: 'Drought Permits',
@@ -13,7 +13,7 @@ const DROUGHT_SUBTYPES = [
 	}
 ];
 
-const WAYLEAVES_SUBTYPES = [
+export const WAYLEAVES_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.NEW_LINES,
 		displayName: 'New lines',
@@ -31,7 +31,7 @@ const WAYLEAVES_SUBTYPES = [
 	}
 ];
 
-const HOUSING_PLANNING_CPOS_SUBTYPES = [
+export const HOUSING_PLANNING_CPOS_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.HOUSING,
 		displayName: 'Housing',
@@ -49,7 +49,7 @@ const HOUSING_PLANNING_CPOS_SUBTYPES = [
 	}
 ];
 
-const OTHER_SOS_CASEWORK_SUBTYPES = [
+export const OTHER_SOS_CASEWORK_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.DEFRA_CPO,
 		displayName: 'DEFRA CPO',
@@ -107,7 +107,7 @@ const OTHER_SOS_CASEWORK_SUBTYPES = [
 	}
 ];
 
-const COASTAL_ACCESS_SUBTYPES = [
+export const COASTAL_ACCESS_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.NOTICE_APPEAL,
 		displayName: 'Notice appeal',
@@ -130,7 +130,7 @@ const COASTAL_ACCESS_SUBTYPES = [
 	}
 ];
 
-const COMMON_LAND_SUBTYPES = [
+export const COMMON_LAND_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.COMMONS_ECCLESIASTICAL,
 		displayName: 'Commons for Ecclesiastical Purposes',
@@ -203,7 +203,7 @@ const COMMON_LAND_SUBTYPES = [
 	}
 ];
 
-const RIGHTS_OF_WAY_SUBTYPES = [
+export const RIGHTS_OF_WAY_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.DISPENSATION_HA80,
 		displayName: 'Dispensation for Serving Notice HA80',

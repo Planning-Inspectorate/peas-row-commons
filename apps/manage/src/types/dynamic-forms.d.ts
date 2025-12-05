@@ -15,6 +15,17 @@ declare module '@planning-inspectorate/dynamic-forms/src/journey/journey.js' {
 	}
 }
 
+declare module '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js' {
+	export declare class JourneyResponse {
+		referenceId: string;
+		journeyId: string;
+		answers: Record<string, unknown>;
+		LPACode?: string;
+
+		constructor(journeyId: string, referenceId: string, answers: Record<string, unknown> | null, lpaCode?: string);
+	}
+}
+
 declare module '@planning-inspectorate/dynamic-forms/src/section.js' {
 	export class Section {
 		constructor(name: string, id: string);
@@ -46,6 +57,12 @@ declare module '@planning-inspectorate/dynamic-forms/src/validator/required-vali
 	}
 }
 
+declare module '@planning-inspectorate/dynamic-forms/src/validator/conditional-required-validator.js' {
+	export default class ConditionalRequiredValidator {
+		constructor(message: string);
+	}
+}
+
 declare module '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js' {
 	export default class StringValidator {
 		constructor(options: any);
@@ -57,6 +74,13 @@ declare module '@planning-inspectorate/dynamic-forms/src/validator/date-validato
 		constructor(options: any);
 	}
 }
+
+declare module '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js' {
+	export default class AddressValidator {
+		constructor(options?: any);
+	}
+}
+
 declare module '@planning-inspectorate/dynamic-forms/src/middleware/build-get-journey.js' {
 	export function buildGetJourney(createJourney: any): any;
 }
@@ -79,7 +103,12 @@ declare module '@planning-inspectorate/dynamic-forms/src/validator/validation-er
 declare module '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js' {
 	export function buildGetJourneyResponseFromSession(journeyId: string, sessionKey?: string): any;
 	export function buildSaveDataToSession(options?: any): any;
-	export function clearDataFromSession(options: { req: any; journeyId: string }): any;
+	export function saveDataToSession(options?: any): any;
+	export function clearDataFromSession(options: {
+		req: any;
+		journeyId: string;
+		replaceWith?: Record<string, any>;
+	}): any;
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/middleware/redirect-to-unanswered-question.js' {
