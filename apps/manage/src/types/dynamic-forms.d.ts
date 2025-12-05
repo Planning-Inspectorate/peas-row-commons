@@ -104,7 +104,11 @@ declare module '@planning-inspectorate/dynamic-forms/src/lib/session-answer-stor
 	export function buildGetJourneyResponseFromSession(journeyId: string, sessionKey?: string): any;
 	export function buildSaveDataToSession(options?: any): any;
 	export function saveDataToSession(options?: any): any;
-	export function clearDataFromSession(options: { req: any; journeyId: string }): any;
+	export function clearDataFromSession(options: {
+		req: any;
+		journeyId: string;
+		replaceWith?: Record<string, any>;
+	}): any;
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/middleware/redirect-to-unanswered-question.js' {

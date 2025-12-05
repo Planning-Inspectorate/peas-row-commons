@@ -1,6 +1,17 @@
+{% from "govuk/components/panel/macro.njk" import govukPanel %}
 {% extends "views/layouts/main.njk" %}
-{% from "success/success.njk" import success %}
 
 {% block pageContent %}
-	{{ success(title, bodyText, successBackLinkUrl, successBackLinkText, hasLinkedCase, successBackLinkLinkedCaseUrl, successBackLinkLinkedCaseText) }}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            {{ govukPanel({
+                titleText: title,
+                html: bodyText
+            }) }}
+
+            <p class="govuk-body">
+                <a href="{{ successBackLinkUrl }}" class="govuk-link">{{ successBackLinkText }}</a>
+            </p>
+        </div>
+    </div>
 {% endblock %}
