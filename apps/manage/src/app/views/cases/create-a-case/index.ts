@@ -11,7 +11,7 @@ import {
 } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 import { JOURNEY_ID, createJourney } from './journey.ts';
 import { getQuestions } from './questions.ts';
-import { buildSaveController } from './save.ts';
+import { buildSaveController, buildSuccessController } from './save.ts';
 import { ManageService } from '#service';
 import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 
@@ -24,6 +24,7 @@ export function createNewCaseRoutes(service: ManageService): IRouter {
 	const getJourneyResponse = buildGetJourneyResponseFromSession(JOURNEY_ID);
 
 	const saveController = buildSaveController(service);
+	const successController = buildSuccessController();
 
 	router.get('/', getJourneyResponse, getJourney, redirectToUnansweredQuestion());
 
@@ -46,6 +47,8 @@ export function createNewCaseRoutes(service: ManageService): IRouter {
 	);
 
 	router.post('/check-your-answers', getJourneyResponse, getJourney, asyncHandler(saveController));
+
+	router.get('/success', asyncHandler(successController));
 
 	return router;
 }
