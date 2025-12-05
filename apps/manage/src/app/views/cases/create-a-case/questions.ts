@@ -32,7 +32,7 @@ import {
 
 import { PROCEDURE_GROUP_IDS, PROCEDURE_GROUPS, GROUP_RELATIONSHIPS } from './view-model.ts';
 
-export function getQuestions() {
+export function getQuestions(groupMembers = { caseOfficers: [] }) {
 	const questions = {
 		caseworkArea: {
 			type: COMPONENT_TYPES.RADIO,
@@ -233,7 +233,7 @@ export function getQuestions() {
 			fieldName: 'caseOfficerId',
 			url: 'case-officer',
 			validators: [new RequiredValidator('Select a case officer')],
-			options: [{ id: 'test', displayName: 'Test' }].map(referenceDataToRadioOptions) // NB. Dummy as we don't have entra groups yet.
+			options: groupMembers.caseOfficers.map(referenceDataToRadioOptions)
 		},
 		procedure: {
 			type: COMPONENT_TYPES.RADIO,
