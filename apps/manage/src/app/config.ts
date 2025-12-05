@@ -17,6 +17,9 @@ export interface Config extends BaseConfig {
 		redirectUri: string;
 		signoutUrl: string;
 	};
+	entra: {
+		cacheTtl: number;
+	};
 }
 
 export type ENVIRONMENT_NAMES = Readonly<{ PROD: string; DEV: string; TEST: string; TRAINING: string }>;
@@ -59,7 +62,8 @@ export function loadConfig(): Config {
 		NODE_ENV,
 		REDIS_CONNECTION_STRING,
 		SESSION_SECRET,
-		SQL_CONNECTION_STRING
+		SQL_CONNECTION_STRING,
+		ENTRA_GROUP_CACHE_TTL
 	} = process.env;
 
 	const buildConfig = loadBuildConfig();
@@ -130,7 +134,11 @@ export function loadConfig(): Config {
 			secret: SESSION_SECRET
 		},
 		// the static directory to serve assets from (images, css, etc..)
-		staticDir: buildConfig.staticDir
+		staticDir: buildConfig.staticDir,
+		entra: {
+			// in minutes
+			cacheTtl: parseInt(ENTRA_GROUP_CACHE_TTL || '15')
+		}
 	};
 
 	return config;

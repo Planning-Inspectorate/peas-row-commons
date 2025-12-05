@@ -14,39 +14,54 @@ import { getQuestions } from './questions.ts';
 import { buildSaveController, buildSuccessController } from './save.ts';
 import { ManageService } from '#service';
 import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
+import { buildGetJourneyMiddleware } from './controller.ts';
 
 export function createNewCaseRoutes(service: ManageService): IRouter {
 	const router = createRouter({ mergeParams: true });
-	const questions = getQuestions();
-	const getJourney = buildGetJourney((req: Request, journeyResponse: Handler) =>
-		createJourney(JOURNEY_ID, questions, journeyResponse, req)
-	);
+	const getJourneyMiddleware = buildGetJourneyMiddleware(service);
+
 	const getJourneyResponse = buildGetJourneyResponseFromSession(JOURNEY_ID);
+
+	const getJourney = buildGetJourney(
+		(req: Request & { groupMembers: { caseOfficers: never[] } }, journeyResponse: Handler) => {
+			const groupMembers = req.groupMembers; // Stored on request object because we do not have access to the response object.
+			const questions = getQuestions(groupMembers);
+
+			return createJourney(JOURNEY_ID, questions, journeyResponse, req);
+		}
+	);
 
 	const saveController = buildSaveController(service);
 	const successController = buildSuccessController();
 
-	router.get('/', getJourneyResponse, getJourney, redirectToUnansweredQuestion());
+	router.get('/', getJourneyResponse, getJourneyMiddleware, getJourney, redirectToUnansweredQuestion());
 
-	router.get('/:section/:question', getJourneyResponse, getJourney, question);
+	router.get('/:section/:question', getJourneyResponse, getJourneyMiddleware, getJourney, question);
 
 	router.post(
 		'/:section/:question',
 		getJourneyResponse,
+		getJourneyMiddleware,
 		getJourney,
 		validate,
 		validationErrorHandler,
 		buildSave(saveDataToSession)
 	);
 
-	router.get('/check-your-answers', getJourneyResponse, getJourney, (req, res) =>
+	router.get('/check-your-answers', getJourneyResponse, getJourneyMiddleware, getJourney, (req, res) =>
 		list(req, res, '', {
 			pageHeading: 'Check your answers',
 			submitButtonText: 'Save and continue'
 		})
 	);
 
-	router.post('/check-your-answers', getJourneyResponse, getJourney, asyncHandler(saveController));
+	router.post(
+		'/check-your-answers',
+		getJourneyResponse,
+		getJourneyMiddleware,
+		getJourney,
+		asyncHandler(saveController)
+	);
 
 	router.get('/success', asyncHandler(successController));
 
