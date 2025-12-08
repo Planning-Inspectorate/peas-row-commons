@@ -34,7 +34,7 @@ describe('case details journey', () => {
 
 		assert.strictEqual(journey.baseUrl, '/cases/case-1');
 
-		assert.strictEqual(journey.sections.length, 3);
+		assert.strictEqual(journey.sections.length, 4);
 
 		const overviewSection = journey.sections[0];
 		assert.strictEqual(overviewSection.segment, 'questions');
