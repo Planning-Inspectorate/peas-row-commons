@@ -30,7 +30,12 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.proposalLetterDate)
 				.addQuestion(questions.expiryDate)
 				.addQuestion(questions.partiesDecisionNotificationDeadlineDate),
-			new Section('Documents', 'documents').addQuestion(questions.filesLocation)
+			new Section('Documents', 'documents').addQuestion(questions.filesLocation),
+			new Section('Costs', 'costs')
+				.addQuestion(questions.rechargeable)
+				.addQuestion(questions.finalCost)
+				.addQuestion(questions.feeReceived)
+				.addQuestion(questions.invoiceSent)
 		],
 		taskListUrl: '',
 		journeyTemplate: 'views/layouts/forms-question.njk',

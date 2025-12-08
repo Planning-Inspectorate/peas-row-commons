@@ -14,6 +14,7 @@ export const caseListSelect = {
 	procedureId: true,
 	linkedCases: true,
 	Dates: true,
+	Costs: true,
 	Type: {
 		select: { displayName: true }
 	},

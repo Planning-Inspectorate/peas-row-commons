@@ -11,7 +11,8 @@ export const RELATION_MAP: Record<string, string[]> = {
 		'expiryDate',
 		'partiesEventNotificationDeadlineDate',
 		'partiesDecisionNotificationDeadlineDate'
-	]
+	],
+	Costs: ['rechargeable', 'finalCost', 'feeReceived', 'invoiceSent']
 };
 
 const FIELD_TO_RELATION_LOOKUP: Record<string, string> = {};
