@@ -55,7 +55,7 @@ describe('Update Case Controller', () => {
 		});
 
 		it('should clear answers (set to null) if clearAnswer flag is true', async () => {
-			const req = { params: { id: 'case-123' } };
+			const req = { params: { id: 'case-123' }, session: {} };
 			const data = { answers: { name: 'Keep Me' } };
 
 			const handler = buildUpdateCase(mockService as any, true);
@@ -71,7 +71,7 @@ describe('Update Case Controller', () => {
 		});
 
 		it('should update valid case data correctly', async () => {
-			const req = { params: { id: 'case-123' } };
+			const req = { params: { id: 'case-123' }, session: {} };
 			const data = { answers: { name: 'New Name' } };
 
 			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123' }) as any);

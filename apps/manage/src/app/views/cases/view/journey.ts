@@ -29,7 +29,17 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.ogdDueDate)
 				.addQuestion(questions.proposalLetterDate)
 				.addQuestion(questions.expiryDate)
-				.addQuestion(questions.partiesDecisionNotificationDeadlineDate)
+				.addQuestion(questions.partiesDecisionNotificationDeadlineDate),
+			new Section('Documents', 'documents').addQuestion(questions.filesLocation),
+			new Section('Costs', 'costs')
+				.addQuestion(questions.rechargeable)
+				.addQuestion(questions.finalCost)
+				.addQuestion(questions.feeReceived)
+				.addQuestion(questions.invoiceSent),
+			new Section('Withdrawal or abeyance', 'withdrawal-abeyance')
+				.addQuestion(questions.withdrawalDate)
+				.addQuestion(questions.abeyanceStartDate)
+				.addQuestion(questions.abeyanceEndDate)
 		],
 		taskListUrl: '',
 		journeyTemplate: 'views/layouts/forms-question.njk',

@@ -44,8 +44,24 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 
 		await updateCaseData(id, db, logger, formattedAnswersForQuery);
 
+		addCaseUpdatedSession(req, id);
+
 		logger.info({ id }, 'case updated');
 	};
+}
+
+/**
+ * Add a case updated flag to the session. Used
+ * in the view/controller for displaying a banner.
+ */
+function addCaseUpdatedSession(req: Request, id: string) {
+	if (!req.session) {
+		throw new Error('request session required');
+	}
+
+	const cases = req.session.cases || (req.session.cases = {});
+	const caseProps = cases[id] || (cases[id] = {});
+	caseProps.updated = true;
 }
 
 /**

@@ -1,5 +1,30 @@
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
+import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
+import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js';
+import NumericValidator from '@planning-inspectorate/dynamic-forms/src/validator/numeric-validator.js';
+
+// Stored on invoiceSent column on CaseCosts table, as no enums
+const INVOICE_STATUSES_ID = {
+	YES: 'YES',
+	NO: 'NO',
+	INTERIM: 'INTERIM'
+};
+
+const INVOICE_STATUSES = [
+	{
+		id: INVOICE_STATUSES_ID.YES,
+		displayName: 'Yes'
+	},
+	{
+		id: INVOICE_STATUSES_ID.NO,
+		displayName: 'No'
+	},
+	{
+		id: INVOICE_STATUSES_ID.INTERIM,
+		displayName: 'Interim invoice sent'
+	}
+];
 
 interface DateQuestionProps {
 	fieldName: string;
@@ -217,6 +242,129 @@ export const DATE_QUESTIONS = {
 					text: 'Remove and save',
 					type: 'submit',
 					formaction: 'date-parties-must-be-notified-decision/remove'
+				}
+			]
+		}
+	})
+};
+
+export const DOCUMENTS_QUESTIONS = {
+	filesLocation: {
+		type: COMPONENT_TYPES.TEXT_ENTRY,
+		title: 'Files location',
+		question: 'Where are the files located?',
+		fieldName: 'filesLocation',
+		url: 'files-location',
+		validators: [
+			new StringValidator({
+				maxLength: {
+					maxLength: 250,
+					maxLengthMessage: 'Files location must be 250 characters or less'
+				}
+			})
+		]
+	}
+};
+
+export const COSTS_QUESTIONS = {
+	rechargeable: {
+		type: COMPONENT_TYPES.BOOLEAN,
+		title: 'Rechargeable',
+		question: 'Is this a rechargeable case?',
+		fieldName: 'rechargeable',
+		url: 'rechargeable',
+		validators: [new RequiredValidator('Select yes if this is a rechargeable case')]
+	},
+	finalCost: {
+		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // Multi even though only 1 question so that we can use '£' prefixes.
+		title: 'Final cost',
+		question: 'What was the final cost?',
+		fieldName: 'finalCost',
+		url: 'final-cost',
+		inputFields: [
+			{
+				fieldName: 'finalCost',
+				prefix: { text: '£' },
+				formatPrefix: '£'
+			}
+		],
+		validators: [
+			new RequiredValidator('Input must be numbers'),
+			new NumericValidator({
+				regex: /^$|^\d+(\.\d+)?$/,
+				regexMessage: 'Input must be numbers'
+			}),
+			new NumericValidator({
+				regex: /^$|^\d+(\.\d{1,2})?$/,
+				regexMessage: 'Input must be valid monetary value'
+			}),
+			new NumericValidator({
+				regex: /^$|^(?!0(\.00?)?$)/,
+				regexMessage: 'Final cost must be more than £0.01'
+			})
+		]
+	},
+	feeReceived: {
+		type: COMPONENT_TYPES.BOOLEAN,
+		title: 'Fee received',
+		question: 'Has the fee been received?',
+		fieldName: 'feeReceived',
+		url: 'fee-received',
+		validators: [new RequiredValidator('Select yes if the fee has been received')]
+	},
+	invoiceSent: {
+		type: COMPONENT_TYPES.RADIO, // Radio because it's Yes, No, Interim - so cannot be Bool
+		title: 'Invoice sent',
+		question: 'Has the invoice been sent?',
+		fieldName: 'invoiceSent',
+		url: 'invoice-sent',
+		validators: [new RequiredValidator('Select yes if the invoice has been sent')],
+		options: INVOICE_STATUSES.map((status) => ({ text: status.displayName, value: status.id }))
+	}
+};
+
+export const ABEYANCE_QUESTIONS = {
+	withdrawalDate: dateQuestion({
+		fieldName: 'withdrawalDate',
+		title: 'Withdrawal date',
+		question: 'When was the case withdrawn?',
+		url: 'withdrawal-date',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'withdrawal-date/remove'
+				}
+			]
+		}
+	}),
+	abeyanceStartDate: dateQuestion({
+		fieldName: 'abeyanceStartDate',
+		title: 'Abeyance start date',
+		question: 'When did the abeyance period start?',
+		url: 'abeyance-start-date',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'abeyance-start-date/remove'
+				}
+			]
+		}
+	}),
+	abeyanceEndDate: dateQuestion({
+		fieldName: 'abeyanceEndDate',
+		title: 'Abeyance end date',
+		question: 'When did the abeyance period end?',
+		url: 'abeyance-end-date',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'abeyance-end-date/remove'
 				}
 			]
 		}
