@@ -9,28 +9,38 @@ function formatValue(value: any) {
 	return value;
 }
 
+const NESTED_SECTIONS: (keyof CaseListFields)[] = ['Dates', 'Costs', 'Abeyance'];
+
+/**
+ * Takes raw case data and converts into UI usable data format.
+ * Converts the nested nature of join tables into a flat object.
+ */
 export function caseToViewModel(caseRow: CaseListFields) {
-	const { Dates, Costs, ...caseData } = caseRow;
+	const mergedData: Record<string, any> = { ...caseRow };
 
-	// We destructure then delete ids so we have a flat object for displaying
-	const safeDates = { ...Dates };
-	const safeCosts = { ...Costs };
+	NESTED_SECTIONS.forEach((sectionKey) => {
+		const nestedObject = mergedData[sectionKey];
 
-	delete safeDates.id;
-	delete safeCosts.id;
+		if (nestedObject && typeof nestedObject === 'object') {
+			const cleanNested = { ...nestedObject };
 
-	const mergedData = {
-		...caseData,
-		...safeDates,
-		...safeCosts
-	};
+			// We do this instead of destructuring above because otherwise linter complains
+			// that we never use 'id'.
+			if ('id' in cleanNested) {
+				delete cleanNested.id;
+			}
+
+			Object.assign(mergedData, cleanNested);
+
+			delete mergedData[sectionKey];
+		}
+	});
 
 	const sanitisedData: Record<string, any> = {};
 
-	Object.keys(mergedData).forEach((key) => {
-		const value = mergedData[key as keyof typeof mergedData];
-		sanitisedData[key] = formatValue(value);
-	});
+	for (const key in mergedData) {
+		sanitisedData[key] = formatValue(mergedData[key]);
+	}
 
 	return {
 		...sanitisedData,
