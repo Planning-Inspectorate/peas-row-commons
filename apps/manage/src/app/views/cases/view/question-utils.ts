@@ -301,3 +301,51 @@ export const COSTS_QUESTIONS = {
 		options: INVOICE_STATUSES.map((status) => ({ text: status.displayName, value: status.id }))
 	}
 };
+
+export const ABEYANCE_QUESTIONS = {
+	withdrawalDate: dateQuestion({
+		fieldName: 'withdrawalDate',
+		title: 'Withdrawal date',
+		question: 'When was the case withdrawn?',
+		url: 'withdrawal-date',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'withdrawal-date/remove'
+				}
+			]
+		}
+	}),
+	abeyanceStartDate: dateQuestion({
+		fieldName: 'abeyanceStartDate',
+		title: 'Abeyance start date',
+		question: 'When did the abeyance period start?',
+		url: 'abeyance-start-date',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'abeyance-start-date/remove'
+				}
+			]
+		}
+	}),
+	abeyanceEndDate: dateQuestion({
+		fieldName: 'abeyanceEndDate',
+		title: 'Abeyance end date',
+		question: 'When did the abeyance period end?',
+		url: 'abeyance-end-date',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'abeyance-end-date/remove'
+				}
+			]
+		}
+	})
+};
