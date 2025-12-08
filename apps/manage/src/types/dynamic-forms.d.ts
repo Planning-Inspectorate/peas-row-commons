@@ -57,6 +57,13 @@ declare module '@planning-inspectorate/dynamic-forms/src/validator/date-validato
 		constructor(options: any);
 	}
 }
+
+declare module '@planning-inspectorate/dynamic-forms/src/validator/numeric-validator.js' {
+	export default class NumericValidator {
+		constructor(options: any);
+	}
+}
+
 declare module '@planning-inspectorate/dynamic-forms/src/middleware/build-get-journey.js' {
 	export function buildGetJourney(createJourney: any): any;
 }
@@ -96,4 +103,8 @@ declare module '@planning-inspectorate/dynamic-forms/src/journey/journey-respons
 		answers: Record<string, unknown>;
 		constructor(journeyId: JourneyType, referenceId: string, answers: Record<string, unknown> | null);
 	}
+}
+
+declare module '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js' {
+	export function booleanToYesNoValue(value: any): any;
 }

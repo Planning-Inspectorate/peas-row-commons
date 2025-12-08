@@ -69,7 +69,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				SiteAddress: true,
 				SubType: true,
 				Type: true,
-				Dates: true
+				Dates: true,
+				Costs: true
 			}
 		});
 

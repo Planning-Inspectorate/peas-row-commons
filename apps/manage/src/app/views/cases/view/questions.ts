@@ -2,7 +2,7 @@ import { createQuestions } from '@planning-inspectorate/dynamic-forms/src/questi
 import { questionClasses } from '@planning-inspectorate/dynamic-forms/src/questions/questions.js';
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 
-import { DATE_QUESTIONS, DOCUMENTS_QUESTIONS } from './question-utils.ts';
+import { DATE_QUESTIONS, DOCUMENTS_QUESTIONS, COSTS_QUESTIONS } from './question-utils.ts';
 
 export function getQuestions() {
 	const questions = {
@@ -16,7 +16,8 @@ export function getQuestions() {
 			editable: false
 		},
 		...DATE_QUESTIONS,
-		...DOCUMENTS_QUESTIONS
+		...DOCUMENTS_QUESTIONS,
+		...COSTS_QUESTIONS
 	};
 
 	const textOverrides = {
