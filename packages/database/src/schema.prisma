@@ -52,6 +52,7 @@ model Case {
   /// Physical location of real-world files
   filesLocation String?
   Costs         CaseCosts?
+  Abeyance      CaseAbeyance?
 }
 
 model CaseworkArea {
@@ -142,4 +143,13 @@ model CaseCosts {
   invoiceSent  String?
   caseId       String   @unique @db.UniqueIdentifier
   Case         Case     @relation(fields: [caseId], references: [id])
+}
+
+model CaseAbeyance {
+  id                String    @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  abeyanceStartDate DateTime?
+  abeyanceEndDate   DateTime?
+  withdrawalDate    DateTime?
+  caseId            String    @unique @db.UniqueIdentifier
+  Case              Case      @relation(fields: [caseId], references: [id])
 }
