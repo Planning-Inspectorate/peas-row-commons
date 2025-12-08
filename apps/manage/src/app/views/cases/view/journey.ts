@@ -35,7 +35,11 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.rechargeable)
 				.addQuestion(questions.finalCost)
 				.addQuestion(questions.feeReceived)
-				.addQuestion(questions.invoiceSent)
+				.addQuestion(questions.invoiceSent),
+			new Section('Withdrawal or abeyance', 'withdrawal-abeyance')
+				.addQuestion(questions.withdrawalDate)
+				.addQuestion(questions.abeyanceStartDate)
+				.addQuestion(questions.abeyanceEndDate)
 		],
 		taskListUrl: '',
 		journeyTemplate: 'views/layouts/forms-question.njk',

@@ -70,7 +70,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				SubType: true,
 				Type: true,
 				Dates: true,
-				Costs: true
+				Costs: true,
+				Abeyance: true
 			}
 		});
 
