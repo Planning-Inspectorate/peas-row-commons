@@ -58,6 +58,7 @@ model Case {
   invoiceSentId     String?
   InvoiceSent       CaseInvoiceSent? @relation(fields: [invoiceSentId], references: [id])
   Abeyance          CaseAbeyance?
+  Notes             CaseNote[]
 }
 
 model CaseworkArea {
@@ -179,4 +180,14 @@ model CaseAbeyance {
   withdrawalDate    DateTime?
   caseId            String    @unique @db.UniqueIdentifier
   Case              Case      @relation(fields: [caseId], references: [id])
+}
+
+model CaseNote {
+  id        String   @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  comment   String
+  createdAt DateTime @default(now())
+  /// Entra ID
+  userId    String
+  caseId    String   @db.UniqueIdentifier
+  Case      Case     @relation(fields: [caseId], references: [id])
 }
