@@ -14,6 +14,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 	return async (req, res) => {
 		const reference = res.locals?.journeyResponse?.answers?.reference;
 		const caseName = res.locals?.journeyResponse?.answers?.name;
+		const caseNotes = res.locals?.journeyResponse?.answers?.caseNotes;
 
 		const id = req.params.id;
 
@@ -26,14 +27,22 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 		// Clear updated flag if present so that we only see it once.
 		clearSessionData(req, id, 'updated');
 
+		const errors = readSessionData(req, id, 'updateErrors', [], 'cases');
+		if (!(typeof errors === 'boolean') && errors.length > 0) {
+			res.locals.errorSummary = errors;
+		}
+		clearSessionData(req, id, 'updateErrors', 'cases');
+
 		const baseUrl = req.baseUrl;
 
 		await list(req, res, '', {
 			reference,
 			caseName,
+			notes: caseNotes,
 			baseUrl,
 			backLinkUrl: res.locals.backLinkUrl || '/cases',
-			caseUpdated
+			caseUpdated,
+			currentUrl: req.originalUrl
 		});
 	};
 }
@@ -72,7 +81,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				Type: true,
 				Dates: true,
 				Costs: true,
-				Abeyance: true
+				Abeyance: true,
+				Notes: true
 			}
 		});
 
@@ -80,7 +90,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 			return notFoundHandler(req, res);
 		}
 
-		const answers = caseToViewModel(caseToView);
+		const answers = await caseToViewModel(caseToView);
 
 		const questions = getQuestions();
 

@@ -1,10 +1,13 @@
 {% extends "views/layouts/main.njk" %}
 
+{% from "views/layouts/components/case-notes.njk" import caseNotes %}
+
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
 {% from "govuk/components/service-navigation/macro.njk" import govukServiceNavigation %}
 {% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
 {% from "govuk/components/tag/macro.njk" import govukTag %}
+{% from "govuk/components/details/macro.njk" import govukDetails %}
 
 {% set title = reference + " - " + journeyTitle + " - Manage a Case" %}
 
@@ -42,6 +45,13 @@
                     {% endif %}
                 {% endfor %}
             </ul>
+            {{ govukDetails({
+                summaryText: notes.length + ' case notes',
+                html: caseNotes({
+                    currentUrl: currentUrl,
+                    notes: notes
+                })
+            }) }}
         </div>
         <div class="govuk-grid-column-one-third govuk-!-text-align-right">
             {{ govukButton({
