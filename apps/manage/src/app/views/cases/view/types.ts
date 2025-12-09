@@ -28,7 +28,10 @@ export const caseListSelect = {
 			townCity: true,
 			postcode: true
 		}
-	}
+	},
+	Notes: true
 } satisfies Prisma.CaseSelect;
 
 export type CaseListFields = Prisma.CaseGetPayload<{ select: typeof caseListSelect }>;
+
+export type CaseNoteFields = Prisma.CaseNoteGetPayload<{ select: Prisma.CaseNoteSelect }>;
