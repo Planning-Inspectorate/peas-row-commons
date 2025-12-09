@@ -1,6 +1,6 @@
 import { ManageService } from '#service';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
-import { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
+import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 
 export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestHandler {
 	const { logger, getEntraClient } = service;
