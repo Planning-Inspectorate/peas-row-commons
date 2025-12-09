@@ -1,5 +1,5 @@
-import { InitEntraClient } from '@pins/peas-row-commons-lib/graph/types.ts';
-import { EntraGroupMembers } from './entra-groups-types.ts';
+import type { InitEntraClient } from '@pins/peas-row-commons-lib/graph/types.ts';
+import type { EntraGroupMembers } from './entra-groups-types.ts';
 import type { BaseLogger } from 'pino';
 
 export interface GetEntraGroupMembersOptions {
