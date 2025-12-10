@@ -33,7 +33,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 		await list(req, res, '', {
 			reference,
 			caseName,
-			notes: caseNotes,
+			notes: caseNotes || [],
 			baseUrl,
 			backLinkUrl: res.locals.backLinkUrl || '/cases',
 			currentUrl: req.originalUrl
