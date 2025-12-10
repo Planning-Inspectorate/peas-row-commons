@@ -53,6 +53,7 @@ model Case {
   Dates             CaseDates?
   /// Physical location of real-world files
   filesLocation     String?
+  Folder            Folder[]
 }
 
 model CaseworkArea {
@@ -131,4 +132,21 @@ model CaseDates {
   partiesDecisionNotificationDeadlineDate DateTime?
   caseId                                  String    @unique @db.UniqueIdentifier
   Case                                    Case      @relation(fields: [caseId], references: [id])
+}
+
+/// Folder model
+/// Contains folders created for each case that will contain documents.
+model Folder {
+  id             String    @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  displayName    String
+  displayOrder   Int?
+  parentFolderId String?   @db.UniqueIdentifier
+  caseId         String?   @db.UniqueIdentifier
+  isCustom       Boolean   @default(false)
+  deletedAt      DateTime?
+  case           Case?     @relation(fields: [caseId], references: [id])
+  parentFolder   Folder?   @relation("FolderTree", fields: [parentFolderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  childFolders   Folder[]  @relation("FolderTree")
+
+  @@unique([caseId, displayName, parentFolderId, deletedAt])
 }
