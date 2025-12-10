@@ -18,7 +18,7 @@ export async function caseToViewModel(caseRow: CaseListFields) {
 		delete safeDates.id;
 	}
 
-	const mappedNotes = await mapNotes(Notes);
+	const mappedNotes = Notes && Notes.length ? await mapNotes(Notes) : [];
 
 	return {
 		...caseData,

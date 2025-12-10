@@ -4,7 +4,7 @@ import { caseToViewModel } from './view-model.ts';
 
 describe('view-model', () => {
 	describe('caseToViewModel', () => {
-		it('should format receivedDate and create a sortable timestamp', () => {
+		it('should format receivedDate and create a sortable timestamp', async () => {
 			const input = {
 				id: '123',
 				reference: 'ROW/001',
@@ -12,7 +12,7 @@ describe('view-model', () => {
 				Type: { displayName: 'Rights of Way' }
 			};
 
-			const result = caseToViewModel(input as any);
+			const result = await caseToViewModel(input as any);
 
 			assert.strictEqual(result.id, '123');
 			assert.strictEqual(result.Type.displayName, 'Rights of Way');
