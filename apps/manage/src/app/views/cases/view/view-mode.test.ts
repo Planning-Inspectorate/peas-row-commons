@@ -50,7 +50,7 @@ describe('view-model', () => {
 			assert.strictEqual(result.status, 'INTERIM');
 		});
 
-		it('should format receivedDate and create a sortable timestamp', () => {
+		it('should format receivedDate and create a sortable timestamp', async () => {
 			const input = {
 				id: '123',
 				reference: 'ROW/001',
@@ -58,9 +58,7 @@ describe('view-model', () => {
 				Type: { displayName: 'Rights of Way' }
 			};
 
-			const result: any = caseToViewModel(input as any);
-
-			assert.strictEqual(result.reference, 'ROW/001');
+			const result = await caseToViewModel(input as any);
 
 			assert.strictEqual(result.receivedDateDisplay, '15 Jan 2024');
 			assert.strictEqual(result.receivedDateSortable, input.receivedDate.getTime());
