@@ -4,10 +4,9 @@ import { generateCaseReference } from './case-reference.ts';
 import { mapAnswersToCaseInput, resolveCaseTypeIds } from './case-mapper.ts';
 import { buildReferencePrefix } from './case-codes.ts';
 import { JOURNEY_ID } from './journey.ts';
-import { createFolders } from '../case-folders/folder-utils.ts';
+import { createFolders, findFolders, FOLDER_TEMPLATES_MAP } from '../case-folders/folder-utils.ts';
 
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
-import { PEAS_FOLDERS } from '@pins/peas-row-commons-database/src/seed/static_data/folders.ts';
 
 import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 
@@ -37,7 +36,9 @@ export function buildSaveController({ db, logger }: ManageService) {
 
 				logger.info({ reference }, 'created a new case');
 
-				await createFolders(PEAS_FOLDERS, id, $tx);
+				const foldersToCreate = findFolders(typeId, FOLDER_TEMPLATES_MAP);
+
+				await createFolders(foldersToCreate, id, $tx);
 
 				logger.info({ reference }, 'created folders for case');
 			});

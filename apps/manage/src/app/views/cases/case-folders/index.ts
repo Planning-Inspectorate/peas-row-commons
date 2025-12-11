@@ -11,7 +11,5 @@ export function createRoutes(service: ManageService) {
 	// Gets "all folders" page
 	router.get('/', validateIdFormat, asyncHandler(viewCaseDetails));
 
-	// TODO: /:id endpoint for specific case folder
-
 	return router;
 }
