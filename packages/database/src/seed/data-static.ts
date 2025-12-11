@@ -29,7 +29,9 @@ export async function seedStaticData(dbClient: PrismaClient) {
 
 	await Promise.all(CASE_TYPES.map((input) => upsertReferenceData({ delegate: dbClient.caseType, input })));
 
-	await Promise.all(CASE_SUBTYPES.map((input) => upsertReferenceData({ delegate: dbClient.caseSubType, input })));
+	for (const input of CASE_SUBTYPES) {
+		await upsertReferenceData({ delegate: dbClient.caseSubType, input });
+	}
 
 	await Promise.all(PROCEDURES.map((input) => upsertReferenceData({ delegate: dbClient.caseProcedure, input })));
 
