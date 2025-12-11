@@ -3,6 +3,14 @@ import assert from 'node:assert';
 import { caseToViewModel, mapNotes } from './view-model.ts';
 
 describe('view-model', () => {
+	const groupMembers = {
+		caseOfficers: [
+			{
+				id: '123',
+				displayName: 'Oscar'
+			}
+		]
+	};
 	describe('caseToViewModel', () => {
 		it('should format receivedDate and create a sortable timestamp', async () => {
 			const input = {
@@ -12,7 +20,7 @@ describe('view-model', () => {
 				Type: { displayName: 'Rights of Way' }
 			};
 
-			const result = await caseToViewModel(input as any);
+			const result = await caseToViewModel(input as any, groupMembers);
 
 			assert.strictEqual(result.id, '123');
 			assert.strictEqual(result.Type.displayName, 'Rights of Way');
@@ -29,7 +37,7 @@ describe('view-model', () => {
 				{
 					createdAt: dateOld,
 					comment: 'Old note',
-					userId: 'user_1'
+					userId: '123'
 				},
 				{
 					createdAt: dateNew,
@@ -38,16 +46,16 @@ describe('view-model', () => {
 				}
 			];
 
-			const result = await mapNotes(input as any);
+			const result = await mapNotes(input as any, groupMembers);
 
 			assert.ok(result.caseNotes);
 			assert.strictEqual(result.caseNotes.length, 2);
 
 			assert.strictEqual(result.caseNotes[0].commentText, 'New note');
-			assert.strictEqual(result.caseNotes[0].userName, 'user_2');
+			assert.strictEqual(result.caseNotes[0].userName, 'Unknown');
 
 			assert.strictEqual(result.caseNotes[1].commentText, 'Old note');
-			assert.strictEqual(result.caseNotes[1].userName, 'user_1');
+			assert.strictEqual(result.caseNotes[1].userName, 'Oscar');
 
 			assert.ok(result.caseNotes[0].date);
 			assert.ok(result.caseNotes[0].dayOfWeek);
@@ -56,7 +64,7 @@ describe('view-model', () => {
 
 		it('should handle an empty array of case notes', async () => {
 			const input: any[] = [];
-			const result = await mapNotes(input);
+			const result = await mapNotes(input, groupMembers);
 
 			assert.deepStrictEqual(result.caseNotes, []);
 		});
@@ -70,7 +78,7 @@ describe('view-model', () => {
 				{ createdAt: dateNew, comment: 'B', userId: '2' }
 			];
 
-			await mapNotes(input as any);
+			await mapNotes(input as any, groupMembers);
 
 			assert.strictEqual(input[0].createdAt, dateOld);
 			assert.strictEqual(input[1].createdAt, dateNew);

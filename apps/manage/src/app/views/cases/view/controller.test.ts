@@ -68,7 +68,11 @@ describe('Case Controller', () => {
 
 		const mockService = {
 			db: mockDb,
-			logger: mockLogger()
+			logger: mockLogger(),
+			authConfig: {
+				groups: []
+			},
+			getEntraClient: () => undefined
 		};
 
 		it('should throw if no id param', async () => {
@@ -110,7 +114,11 @@ describe('Case Controller', () => {
 			const next = mock.fn();
 			const middleware = buildGetJourneyMiddleware({
 				db: mockDb,
-				logger: mockLogger()
+				logger: mockLogger(),
+				authConfig: {
+					groups: []
+				},
+				getEntraClient: () => undefined
 			} as any);
 			await assert.doesNotReject(() => middleware(mockReq, mockRes, next));
 			assert.strictEqual(next.mock.callCount(), 1);
