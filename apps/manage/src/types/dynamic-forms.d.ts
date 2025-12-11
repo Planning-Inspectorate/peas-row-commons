@@ -31,6 +31,8 @@ declare module '@planning-inspectorate/dynamic-forms/src/section.js' {
 		constructor(name: string, id: string);
 		addQuestion(question: any): Section;
 		withCondition(condition: (response: any) => boolean): Section;
+		startMultiQuestionCondition(key: string, condition: (response: any) => boolean): Section;
+		endMultiQuestionCondition(key: string): Section;
 	}
 }
 
