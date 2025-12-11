@@ -70,7 +70,7 @@ export const mapNotes = async (
 	return {
 		caseNotes: await Promise.all(
 			caseNotes.map((caseNote) => {
-				const user = groupMembers.caseOfficers.find((member) => (member.id = caseNote.userId));
+				const user = groupMembers.caseOfficers.find((member) => member.id === caseNote.userId);
 
 				console.log(groupMembers);
 				return {
