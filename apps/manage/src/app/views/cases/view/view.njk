@@ -37,11 +37,18 @@
                     {% if section.list.rows.length %}
                         <li>
                             <a href="#{{ section.heading | lower }}"
-                               class="govuk-link govuk-link--no-visited-state">{{ section.heading }}</a>
+                            class="govuk-link govuk-link--no-visited-state">{{ section.heading }}</a>
                         </li>
                     {% endif %}
                 {% endfor %}
             </ul>
+        </div>
+        <div class="govuk-grid-column-one-third govuk-!-text-align-right">
+            {{ govukButton({
+                text: "Manage case documents",
+                href: baseUrl + "/case-folders",
+                classes: "govuk-button--secondary"
+            }) }}
         </div>
         <div class="govuk-grid-column-full">
             {% for section in summaryListData.sections %}

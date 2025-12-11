@@ -1,0 +1,22 @@
+{% extends "views/layouts/main.njk" %}
+
+{% set title = reference + " - Manage a Case" %}
+
+{% block pageTitle %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full govuk-!-margin-bottom-3">
+            <h2 class="govuk-heading-m">
+                {{ reference }}
+            </h2>
+            <h1 class="govuk-heading-l">
+                {{ caseName }}
+            </h1>
+        </div>
+    </div>
+    <div class="govuk-grid-row">
+    </div>
+{% endblock %}
