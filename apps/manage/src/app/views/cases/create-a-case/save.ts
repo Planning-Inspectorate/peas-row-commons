@@ -4,7 +4,7 @@ import { generateCaseReference } from './case-reference.ts';
 import { mapAnswersToCaseInput, resolveCaseTypeIds } from './case-mapper.ts';
 import { buildReferencePrefix } from './case-codes.ts';
 import { JOURNEY_ID } from './journey.ts';
-import { createFolders } from './folder.ts';
+import { createFolders } from '../case-folders/folder-utils.ts';
 
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { PEAS_FOLDERS } from '@pins/peas-row-commons-database/src/seed/static_data/folders.ts';
