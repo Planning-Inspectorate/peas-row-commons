@@ -3,10 +3,10 @@ import {
 	dateISOStringToDisplayTime12hr,
 	getDayFromISODate
 } from '@pins/peas-row-commons-lib/util/dates.ts';
-import type { CaseListFields, CaseNoteFields } from './types.ts';
+import type { CaseListFields, CaseNoteFields, CaseOfficer } from './types.ts';
 import { formatInTimeZone } from 'date-fns-tz';
 
-export async function caseToViewModel(caseRow: CaseListFields) {
+export async function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOfficers: CaseOfficer[] }) {
 	const { Dates, Notes, ...caseData } = caseRow;
 
 	// We need to create a soft copy here because we want
@@ -18,7 +18,7 @@ export async function caseToViewModel(caseRow: CaseListFields) {
 		delete safeDates.id;
 	}
 
-	const mappedNotes = Notes && Notes.length ? await mapNotes(Notes) : [];
+	const mappedNotes = Notes && Notes.length ? await mapNotes(Notes, groupMembers) : [];
 
 	return {
 		...caseData,
@@ -32,19 +32,25 @@ export async function caseToViewModel(caseRow: CaseListFields) {
 /**
  * Maps the raw case data into data presented in the UI.
  */
-export const mapNotes = async (unmappedCaseNotes: Omit<CaseNoteFields, 'Case'>[]) => {
+export const mapNotes = async (
+	unmappedCaseNotes: Omit<CaseNoteFields, 'Case'>[],
+	groupMembers: { caseOfficers: CaseOfficer[] }
+) => {
 	// Sort the cases first so that they are in descending order by creation date.
 	const caseNotes = [...unmappedCaseNotes].sort((a: any, b: any) => b.createdAt - a.createdAt);
 
 	return {
 		caseNotes: await Promise.all(
 			caseNotes.map((caseNote) => {
+				const user = groupMembers.caseOfficers.find((member) => (member.id = caseNote.userId));
+
+				console.log(groupMembers);
 				return {
 					date: dateISOStringToDisplayDate(caseNote.createdAt),
 					dayOfWeek: getDayFromISODate(caseNote.createdAt),
 					time: dateISOStringToDisplayTime12hr(caseNote.createdAt),
 					commentText: caseNote.comment,
-					userName: caseNote.userId
+					userName: user?.displayName || 'Unknown'
 				};
 			})
 		)
