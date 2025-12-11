@@ -5,6 +5,7 @@ import { mapAnswersToCaseInput, resolveCaseTypeIds } from './case-mapper.ts';
 import { buildReferencePrefix } from './case-codes.ts';
 import { JOURNEY_ID } from './journey.ts';
 import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
+import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 
 export function buildSaveController({ db, logger }: ManageService) {
 	return async (req: Request, res: Response) => {
@@ -32,9 +33,13 @@ export function buildSaveController({ db, logger }: ManageService) {
 
 				logger.info({ reference }, 'created a new case');
 			});
-		} catch (error) {
-			logger.error({ error }, 'error saving case data to database');
-			throw new Error('error saving case journey');
+		} catch (error: any) {
+			wrapPrismaError({
+				error,
+				logger,
+				message: 'creating case',
+				logParams: {}
+			});
 		}
 
 		clearDataFromSession({
