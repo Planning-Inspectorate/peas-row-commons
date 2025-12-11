@@ -30,71 +30,55 @@ export function createJourney(documentTypeId: string, questions: any, response: 
 				/**
 				 * Planning, Environmental, & Applications Flow
 				 */
+				.startMultiQuestionCondition(CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS, isPlanningEnvAppArea)
+
 				.addQuestion(questions.planningEnvironmentApplications)
-				.withCondition((response: JourneyResponse) =>
-					questionHasAnswer(response, questions.caseworkArea, CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS)
-				)
 
 				.addQuestion(questions.drought)
-				.withCondition(
-					(response: JourneyResponse) =>
-						questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.DROUGHT) &&
-						// NB. Explicitly validate the parent area to prevent stale session data from leaking if a user switches flows (e.g. RoW to PEAS).
-						isPlanningEnvAppArea(response)
+				.withCondition((response: JourneyResponse) =>
+					questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.DROUGHT)
 				)
 
 				.addQuestion(questions.housingAndPlanningCpos)
-				.withCondition(
-					(response: JourneyResponse) =>
-						questionHasAnswer(
-							response,
-							questions.planningEnvironmentApplications,
-							CASE_TYPES_ID.HOUSING_PLANNING_CPOS
-						) && isPlanningEnvAppArea(response)
+				.withCondition((response: JourneyResponse) =>
+					questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.HOUSING_PLANNING_CPOS)
 				)
 
 				.addQuestion(questions.otherSecretaryofStateCasework)
-				.withCondition(
-					(response: JourneyResponse) =>
-						questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.OTHER_SOS_CASEWORK) &&
-						isPlanningEnvAppArea(response)
+				.withCondition((response: JourneyResponse) =>
+					questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.OTHER_SOS_CASEWORK)
 				)
 
 				.addQuestion(questions.wayleaves)
-				.withCondition(
-					(response: JourneyResponse) =>
-						questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.WAYLEAVES) &&
-						isPlanningEnvAppArea(response)
+				.withCondition((response: JourneyResponse) =>
+					questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.WAYLEAVES)
 				)
+
+				.endMultiQuestionCondition(CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS)
 
 				/**
 				 * Rights of Way and Common Land Flow
 				 */
+				.startMultiQuestionCondition(CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND, isRightsOfWayCommonLandArea)
+
 				.addQuestion(questions.rightsOfWayAndCommonLand)
-				.withCondition((response: JourneyResponse) =>
-					questionHasAnswer(response, questions.caseworkArea, CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND)
-				)
 
 				.addQuestion(questions.coastalAccess)
-				.withCondition(
-					(response: JourneyResponse) =>
-						questionHasAnswer(response, questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.COASTAL_ACCESS) &&
-						isRightsOfWayCommonLandArea(response)
+				.withCondition((response: JourneyResponse) =>
+					questionHasAnswer(response, questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.COASTAL_ACCESS)
 				)
 
 				.addQuestion(questions.commonLand)
-				.withCondition(
-					(response: JourneyResponse) =>
-						questionHasAnswer(response, questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.COMMON_LAND) &&
-						isRightsOfWayCommonLandArea(response)
+				.withCondition((response: JourneyResponse) =>
+					questionHasAnswer(response, questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.COMMON_LAND)
 				)
 
 				.addQuestion(questions.rightsOfWay)
-				.withCondition(
-					(response: JourneyResponse) =>
-						questionHasAnswer(response, questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.RIGHTS_OF_WAY) &&
-						isRightsOfWayCommonLandArea(response)
+				.withCondition((response: JourneyResponse) =>
+					questionHasAnswer(response, questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.RIGHTS_OF_WAY)
 				)
+
+				.endMultiQuestionCondition(CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND)
 
 				/**
 				 * Generic Questions that all case types have.
