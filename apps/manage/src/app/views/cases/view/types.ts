@@ -35,3 +35,8 @@ export const caseListSelect = {
 export type CaseListFields = Prisma.CaseGetPayload<{ select: typeof caseListSelect }>;
 
 export type CaseNoteFields = Prisma.CaseNoteGetPayload<{ select: Prisma.CaseNoteSelect }>;
+
+export type CaseOfficer = {
+	id: string;
+	displayName: string;
+};

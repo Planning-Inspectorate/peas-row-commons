@@ -9,6 +9,7 @@ import { ManageService } from '#service';
 import type { Request, Response, NextFunction } from 'express';
 import { getQuestions } from './questions.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { getEntraGroupMembers } from '#util/entra-groups.ts';
 
 export function buildViewCaseDetails(): AsyncRequestHandler {
 	return async (req, res) => {
@@ -62,7 +63,8 @@ export function validateIdFormat(req: Request, res: Response, next: NextFunction
 }
 
 export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestHandler {
-	const { db, logger } = service;
+	const { db, logger, getEntraClient } = service;
+	const groupId = service.authConfig.groups.applicationAccess;
 
 	return async (req, res, next) => {
 		const id = req.params.id;
@@ -90,7 +92,14 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 			return notFoundHandler(req, res);
 		}
 
-		const answers = await caseToViewModel(caseToView);
+		const groupMembers = await getEntraGroupMembers({
+			logger,
+			initClient: getEntraClient,
+			session: req.session,
+			groupId
+		});
+
+		const answers = await caseToViewModel(caseToView, groupMembers);
 
 		const questions = getQuestions();
 
