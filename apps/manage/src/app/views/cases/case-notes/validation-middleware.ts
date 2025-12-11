@@ -13,7 +13,8 @@ export function buildValidateCaseNotesMiddleware(): AsyncRequestHandler {
 		const errors = generateCaseNoteErrors(req);
 		if (errors.length) {
 			addSessionData(req, id, { updateErrors: errors }, 'cases');
-			return res.redirect(req.baseUrl);
+			const url = req.baseUrl.replace(/\/case-note\/?$/, '');
+			return res.redirect(url);
 		}
 
 		if (next) next();
