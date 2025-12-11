@@ -3,7 +3,7 @@ import {
 	dateISOStringToDisplayTime12hr,
 	getDayFromISODate
 } from '@pins/peas-row-commons-lib/util/dates.ts';
-import type { CaseListFields, CaseNoteFields } from './types.ts';
+import type { CaseListFields, CaseNoteFields, CaseOfficer } from './types.ts';
 import { formatInTimeZone } from 'date-fns-tz';
 import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
 
@@ -20,7 +20,7 @@ const NESTED_SECTIONS: (keyof CaseListFields)[] = ['Dates', 'Costs', 'Abeyance',
  * Takes raw case data and converts into UI usable data format.
  * Converts the nested nature of join tables into a flat object.
  */
-export async function caseToViewModel(caseRow: CaseListFields) {
+export async function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOfficers: CaseOfficer[] }) {
 	const mergedData: Record<string, any> = { ...caseRow };
 
 	NESTED_SECTIONS.forEach((sectionKey) => {
@@ -47,7 +47,7 @@ export async function caseToViewModel(caseRow: CaseListFields) {
 		sanitisedData[key] = formatValue(mergedData[key]);
 	}
 
-	const mappedNotes = await mapNotes(caseRow.Notes);
+	const mappedNotes = await mapNotes(caseRow.Notes, groupMembers);
 
 	return {
 		...sanitisedData,
@@ -60,19 +60,25 @@ export async function caseToViewModel(caseRow: CaseListFields) {
 /**
  * Maps the raw case data into data presented in the UI.
  */
-export const mapNotes = async (unmappedCaseNotes: Omit<CaseNoteFields, 'Case'>[]) => {
+export const mapNotes = async (
+	unmappedCaseNotes: Omit<CaseNoteFields, 'Case'>[],
+	groupMembers: { caseOfficers: CaseOfficer[] }
+) => {
 	// Sort the cases first so that they are in descending order by creation date.
 	const caseNotes = [...unmappedCaseNotes].sort((a: any, b: any) => b.createdAt - a.createdAt);
 
 	return {
 		caseNotes: await Promise.all(
 			caseNotes.map((caseNote) => {
+				const user = groupMembers.caseOfficers.find((member) => (member.id = caseNote.userId));
+
+				console.log(groupMembers);
 				return {
 					date: dateISOStringToDisplayDate(caseNote.createdAt),
 					dayOfWeek: getDayFromISODate(caseNote.createdAt),
 					time: dateISOStringToDisplayTime12hr(caseNote.createdAt),
 					commentText: caseNote.comment,
-					userName: caseNote.userId
+					userName: user?.displayName || 'Unknown'
 				};
 			})
 		)

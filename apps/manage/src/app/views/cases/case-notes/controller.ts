@@ -18,7 +18,9 @@ export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler
 
 		logger.info({ id }, 'case note created');
 
-		res.redirect(req.baseUrl);
+		// Return back to case view page
+		const viewCaseUrl = req.baseUrl.replace(/\/case-note\/?$/, '');
+		res.redirect(viewCaseUrl);
 	};
 }
 
@@ -48,7 +50,7 @@ async function createCaseNote(id: string, comment: string, userId: string, db: P
 		wrapPrismaError({
 			error,
 			logger,
-			message: 'updating case',
+			message: 'creating a case not',
 			logParams: { id }
 		});
 	}
