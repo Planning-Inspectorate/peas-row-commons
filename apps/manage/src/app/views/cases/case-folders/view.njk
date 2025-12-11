@@ -9,7 +9,7 @@
 {% block content %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full govuk-!-margin-bottom-3">
-            <h2 class="govuk-heading-m">
+            <h2 class="govuk-caption-l">
                 {{ reference }}
             </h2>
             <h1 class="govuk-heading-l">
@@ -18,5 +18,18 @@
         </div>
     </div>
     <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <div class="pins-link-menu">
+                {% if folders|length == 0 %}
+                    <p class="govuk-body">No folders were found.</p>
+                {% else %}
+                    {% for folder in folders %}
+                        <a class="govuk-link govuk-heading-s" href="{{ currentUrl }}/{{ folder.id }}">
+                            {{ folder.displayName }}
+                        </a>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
     </div>
 {% endblock %}

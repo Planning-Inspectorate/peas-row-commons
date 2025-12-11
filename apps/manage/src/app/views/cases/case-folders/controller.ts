@@ -1,6 +1,8 @@
 import type { ManageService } from '#service';
+import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
+import { createFoldersViewModel } from './view-model.ts';
 
 export function buildViewCaseFolders(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
@@ -18,7 +20,7 @@ export function buildViewCaseFolders(service: ManageService): AsyncRequestHandle
 					where: { id }
 				}),
 				db.folder.findMany({
-					where: { caseId: id }
+					where: { caseId: id, parentFolderId: null } // Only get top level folders for this view.
 				})
 			]);
 		} catch (error: any) {
@@ -30,11 +32,20 @@ export function buildViewCaseFolders(service: ManageService): AsyncRequestHandle
 			});
 		}
 
+		if (!caseRow || !folders) {
+			return notFoundHandler(req, res);
+		}
+
+		const foldersViewModel = createFoldersViewModel(folders);
+
 		return res.render('views/cases/case-folders/view.njk', {
 			pageHeading: caseRow?.name,
 			reference: caseRow?.reference,
 			caseName: caseRow?.name,
-			folders
+			backLinkUrl: `/cases/${id}`,
+			backLinkText: 'Back to case details',
+			folders: foldersViewModel,
+			currentUrl: req.originalUrl
 		});
 	};
 }
