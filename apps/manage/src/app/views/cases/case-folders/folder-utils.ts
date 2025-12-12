@@ -1,0 +1,94 @@
+import {
+	PEAS_FOLDERS,
+	ROW_FOLDERS,
+	COMMON_LAND_FOLDERS
+} from '@pins/peas-row-commons-database/src/seed/static_data/folders.ts';
+import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/types.ts';
+
+const ROW_FOLDERS_MAP = {
+	[CASE_TYPES_ID.COASTAL_ACCESS]: ROW_FOLDERS,
+	[CASE_TYPES_ID.RIGHTS_OF_WAY]: ROW_FOLDERS
+};
+
+const COMMON_LAND_FOLDERS_MAP = {
+	[CASE_TYPES_ID.COMMON_LAND]: COMMON_LAND_FOLDERS
+};
+
+const PEAS_FOLDERS_MAP = {
+	[CASE_TYPES_ID.DROUGHT]: PEAS_FOLDERS,
+	[CASE_TYPES_ID.HOUSING_PLANNING_CPOS]: PEAS_FOLDERS,
+	[CASE_TYPES_ID.OTHER_SOS_CASEWORK]: PEAS_FOLDERS,
+	[CASE_TYPES_ID.PURCHASE_NOTICES]: PEAS_FOLDERS,
+	[CASE_TYPES_ID.WAYLEAVES]: PEAS_FOLDERS,
+	[CASE_TYPES_ID.CALL_INS]: PEAS_FOLDERS
+};
+
+/**
+ * Maps case types to their desired folder structure on creation.
+ * All PEAS get same folder.
+ * RoW & Coastal Access share one style.
+ * Common Land gets its own folder structure.
+ */
+export const FOLDER_TEMPLATES_MAP = {
+	...PEAS_FOLDERS_MAP,
+	...ROW_FOLDERS_MAP,
+	...COMMON_LAND_FOLDERS_MAP
+};
+
+type Folder = {
+	displayName: string;
+	displayOrder: number;
+	childFolders?: { create: Folder[] };
+};
+
+/**
+ * Updates the static data passed in, appending a caseId
+ */
+export function addCaseIdToFolders(folders: Folder[], caseId: string) {
+	return folders.map((folder) => {
+		const folderWithId = {
+			...folder,
+			caseId
+		};
+
+		if (folder.childFolders?.create) {
+			folderWithId.childFolders = {
+				create: folder.childFolders.create.map((child: any) => ({
+					...child,
+					caseId
+				}))
+			};
+		}
+
+		return folderWithId;
+	});
+}
+
+/**
+ * Creates folders for a given case.
+ *
+ * "Awaits" Promise.all because I think it has clearer intent than
+ * "return"ing it and just awaiting in the function-call. Even though we
+ * lose a tick.
+ */
+export async function createFolders(folders: Folder[], caseId: string, tx: any) {
+	const folderData = addCaseIdToFolders(folders, caseId);
+
+	await Promise.all(
+		folderData.map((folderData) =>
+			tx.folder.create({
+				data: folderData
+			})
+		)
+	);
+}
+
+/**
+ * Returns desired folder structure based on typeId & passed in lookup map.
+ */
+export function findFolders(
+	typeId: (typeof CASE_TYPES_ID)[keyof typeof CASE_TYPES_ID],
+	lookupMap: typeof FOLDER_TEMPLATES_MAP
+) {
+	return lookupMap[typeId] || [];
+}

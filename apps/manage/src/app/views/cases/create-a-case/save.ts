@@ -4,8 +4,11 @@ import { generateCaseReference } from './case-reference.ts';
 import { mapAnswersToCaseInput, resolveCaseTypeIds } from './case-mapper.ts';
 import { buildReferencePrefix } from './case-codes.ts';
 import { JOURNEY_ID } from './journey.ts';
-import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
+import { createFolders, findFolders, FOLDER_TEMPLATES_MAP } from '../case-folders/folder-utils.ts';
+
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
+
+import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 
 export function buildSaveController({ db, logger }: ManageService) {
 	return async (req: Request, res: Response) => {
@@ -32,6 +35,12 @@ export function buildSaveController({ db, logger }: ManageService) {
 				id = created.id;
 
 				logger.info({ reference }, 'created a new case');
+
+				const foldersToCreate = findFolders(typeId, FOLDER_TEMPLATES_MAP);
+
+				await createFolders(foldersToCreate, id, $tx);
+
+				logger.info({ reference }, 'created folders for case');
 			});
 		} catch (error: any) {
 			wrapPrismaError({

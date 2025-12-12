@@ -59,7 +59,7 @@ export function resolveCaseTypeIds(answers: Record<string, any>) {
 /**
  * Finds case type based on casework area
  */
-function resolveCaseType(answers: Record<string, any>): string {
+function resolveCaseType(answers: Record<string, any>) {
 	const areaId = answers.caseworkArea;
 
 	const typeField = kebabToCamel(areaId);

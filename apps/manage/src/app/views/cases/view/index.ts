@@ -7,6 +7,8 @@ import { buildGetJourneyMiddleware, buildViewCaseDetails, validateIdFormat } fro
 import { buildUpdateCase } from './update-case.ts';
 import { ManageService } from '#service';
 
+import { createRoutes as createCaseDocumentsRoutes } from '../case-folders/index.ts';
+
 export function createRoutes(service: ManageService) {
 	const router = createRouter({ mergeParams: true });
 	const getJourney = asyncHandler(buildGetJourneyMiddleware(service));
@@ -15,6 +17,8 @@ export function createRoutes(service: ManageService) {
 	const updateCase = buildSave(updateCaseFn, true);
 	const clearAndUpdateCaseFn = buildUpdateCase(service, true);
 	const clearAndUpdateCase = buildSave(clearAndUpdateCaseFn, true);
+
+	const caseDocumentsRoutes = createCaseDocumentsRoutes(service);
 
 	router.get('/', validateIdFormat, getJourney, asyncHandler(viewCaseDetails));
 
@@ -33,6 +37,9 @@ export function createRoutes(service: ManageService) {
 
 	// Deletes answer
 	router.post('/:section/:question/remove', validateIdFormat, getJourney, asyncHandler(clearAndUpdateCase));
+
+	// View case documents page, /:id/case-documents
+	router.use('/case-folders', caseDocumentsRoutes);
 
 	return router;
 }
