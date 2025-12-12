@@ -8,6 +8,7 @@ import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-
 import { ManageService } from '#service';
 import type { Request, Response, NextFunction } from 'express';
 import { getQuestions } from './questions.ts';
+import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 
 export function buildViewCaseDetails(): AsyncRequestHandler {
 	return async (req, res) => {
@@ -20,10 +21,10 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 			throw new Error('id param required');
 		}
 
-		const caseUpdated = readCaseUpdatedSession(req, id);
+		const caseUpdated = readSessionData(req, id, 'updated', false);
 
 		// Clear updated flag if present so that we only see it once.
-		clearCaseUpdatedSession(req, id);
+		clearSessionData(req, id, 'updated');
 
 		const baseUrl = req.baseUrl;
 
@@ -94,32 +95,4 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 
 		if (next) next();
 	};
-}
-
-/**
- * Read a case updated flag from the session
- */
-function readCaseUpdatedSession(req: Request, id: string) {
-	if (!req.session) {
-		return false;
-	}
-	const caseProps = (req.session?.cases && req.session.cases[id]) || {};
-	return Boolean(caseProps.updated);
-}
-
-/**
- * Clear a case updated flag from the session
- */
-function clearCaseUpdatedSession(req: Request, id: string) {
-	if (!req.session) {
-		return; // no need to error here
-	}
-
-	if (id === '__proto__' || id === 'constructor' || id === 'prototype') {
-		throw new Error('invalid id for object, prototype pollution');
-	}
-
-	if (req.session?.cases?.[id]) {
-		delete req.session.cases[id].updated;
-	}
 }

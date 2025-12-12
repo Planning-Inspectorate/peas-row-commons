@@ -5,6 +5,7 @@ import { getRelationForField } from '@pins/peas-row-commons-lib/util/schema-map.
 
 import type { Request, Response } from 'express';
 import type { Logger } from 'pino';
+import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -44,28 +45,10 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 
 		await updateCaseData(id, db, logger, formattedAnswersForQuery);
 
-		addCaseUpdatedSession(req, id);
+		addSessionData(req, id, { updated: true });
 
 		logger.info({ id }, 'case updated');
 	};
-}
-
-/**
- * Add a case updated flag to the session. Used
- * in the view/controller for displaying a banner.
- */
-function addCaseUpdatedSession(req: Request, id: string) {
-	if (!req.session) {
-		throw new Error('request session required');
-	}
-
-	if (id === '__proto__' || id === 'constructor' || id === 'prototype') {
-		throw new Error('invalid id passed, prototype pollution');
-	}
-
-	const cases = req.session.cases || (req.session.cases = {});
-	const caseProps = cases[id] || (cases[id] = {});
-	caseProps.updated = true;
 }
 
 /**
