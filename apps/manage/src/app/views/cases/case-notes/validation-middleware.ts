@@ -52,7 +52,7 @@ function checkRequiredAnswer(value: string, errorMessage: string, pageLink: stri
  * Check that answer string is under certain character length
  */
 function checkAnswerlength(value: string, errorMessage: string, pageLink: string, length = 150) {
-	if (value.length > length) {
+	if (value?.length > length) {
 		return {
 			text: errorMessage,
 			href: pageLink
