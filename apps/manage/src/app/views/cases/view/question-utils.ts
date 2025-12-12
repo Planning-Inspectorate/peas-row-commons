@@ -3,28 +3,7 @@ import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/da
 import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
 import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js';
 import NumericValidator from '@planning-inspectorate/dynamic-forms/src/validator/numeric-validator.js';
-
-// Stored on invoiceSent column on CaseCosts table, as no enums
-const INVOICE_STATUSES_ID = {
-	YES: 'YES',
-	NO: 'NO',
-	INTERIM: 'INTERIM'
-};
-
-const INVOICE_STATUSES = [
-	{
-		id: INVOICE_STATUSES_ID.YES,
-		displayName: 'Yes'
-	},
-	{
-		id: INVOICE_STATUSES_ID.NO,
-		displayName: 'No'
-	},
-	{
-		id: INVOICE_STATUSES_ID.INTERIM,
-		displayName: 'Interim invoice sent'
-	}
-];
+import { INVOICE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static_data/invoices.ts';
 
 interface DateQuestionProps {
 	fieldName: string;
