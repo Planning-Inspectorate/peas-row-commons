@@ -26,6 +26,8 @@
 #   }
 # }
 
+# account_replication_type = "TBC" # potentially GZRS(similar to appeals)
+
 # common_config = {
 #   resource_group_name = "pins-rg-common-prod-ukw-001"
 #   action_group_names = {
