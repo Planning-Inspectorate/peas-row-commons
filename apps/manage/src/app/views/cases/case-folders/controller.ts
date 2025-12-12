@@ -27,7 +27,7 @@ export function buildViewCaseFolders(service: ManageService): AsyncRequestHandle
 			wrapPrismaError({
 				error,
 				logger,
-				message: 'fetching cases',
+				message: 'fetching folders',
 				logParams: {}
 			});
 		}
@@ -41,7 +41,6 @@ export function buildViewCaseFolders(service: ManageService): AsyncRequestHandle
 		return res.render('views/cases/case-folders/view.njk', {
 			pageHeading: caseRow?.name,
 			reference: caseRow?.reference,
-			caseName: caseRow?.name,
 			backLinkUrl: `/cases/${id}`,
 			backLinkText: 'Back to case details',
 			folders: foldersViewModel,
