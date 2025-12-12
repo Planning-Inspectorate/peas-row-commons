@@ -114,6 +114,12 @@ function clearCaseUpdatedSession(req: Request, id: string) {
 	if (!req.session) {
 		return; // no need to error here
 	}
-	const caseProps = (req.session?.cases && req.session.cases[id]) || {};
-	delete caseProps.updated;
+
+	if (id === '__proto__' || id === 'constructor' || id === 'prototype') {
+		throw new Error('invalid id for object, prototype pollution');
+	}
+
+	if (req.session?.cases?.[id]) {
+		delete req.session.cases[id].updated;
+	}
 }

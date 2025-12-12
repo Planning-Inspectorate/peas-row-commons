@@ -59,6 +59,10 @@ function addCaseUpdatedSession(req: Request, id: string) {
 		throw new Error('request session required');
 	}
 
+	if (id === '__proto__' || id === 'constructor' || id === 'prototype') {
+		throw new Error('invalid id passed, prototype pollution');
+	}
+
 	const cases = req.session.cases || (req.session.cases = {});
 	const caseProps = cases[id] || (cases[id] = {});
 	caseProps.updated = true;
