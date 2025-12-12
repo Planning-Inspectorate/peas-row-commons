@@ -1,6 +1,9 @@
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
 import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
+import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js';
+import NumericValidator from '@planning-inspectorate/dynamic-forms/src/validator/numeric-validator.js';
+import { INVOICE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static_data/invoices.ts';
 
 interface DateQuestionProps {
 	fieldName: string;
@@ -239,5 +242,62 @@ export const DOCUMENTS_QUESTIONS = {
 				}
 			})
 		]
+	}
+};
+
+export const COSTS_QUESTIONS = {
+	rechargeable: {
+		type: COMPONENT_TYPES.BOOLEAN,
+		title: 'Rechargeable',
+		question: 'Is this a rechargeable case?',
+		fieldName: 'rechargeable',
+		url: 'rechargeable',
+		validators: [new RequiredValidator('Select yes if this is a rechargeable case')]
+	},
+	finalCost: {
+		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // Multi even though only 1 question so that we can use '£' prefixes.
+		title: 'Final cost',
+		question: 'What was the final cost?',
+		fieldName: 'finalCost',
+		url: 'final-cost',
+		inputFields: [
+			{
+				fieldName: 'finalCost',
+				prefix: { text: '£' },
+				formatPrefix: '£'
+			}
+		],
+		validators: [
+			new RequiredValidator('Input must be numbers'),
+			new NumericValidator({
+				regex: /^$|^\d+(\.\d+)?$/,
+				regexMessage: 'Input must be numbers'
+			}),
+			new NumericValidator({
+				regex: /^$|^\d+(\.\d{1,2})?$/,
+				regexMessage: 'Input must be valid monetary value'
+			}),
+			new NumericValidator({
+				regex: /^$|^(?!0(\.00?)?$)/,
+				regexMessage: 'Final cost must be more than £0.01'
+			})
+		]
+	},
+	feeReceived: {
+		type: COMPONENT_TYPES.BOOLEAN,
+		title: 'Fee received',
+		question: 'Has the fee been received?',
+		fieldName: 'feeReceived',
+		url: 'fee-received',
+		validators: [new RequiredValidator('Select yes if the fee has been received')]
+	},
+	invoiceSent: {
+		type: COMPONENT_TYPES.RADIO, // Radio because it's Yes, No, Interim - so cannot be Bool
+		title: 'Invoice sent',
+		question: 'Has the invoice been sent?',
+		fieldName: 'invoiceSent',
+		url: 'invoice-sent',
+		validators: [new RequiredValidator('Select yes if the invoice has been sent')],
+		options: INVOICE_STATUSES.map((status) => ({ text: status.displayName, value: status.id }))
 	}
 };
