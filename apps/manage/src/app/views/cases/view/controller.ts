@@ -8,11 +8,14 @@ import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-
 import { ManageService } from '#service';
 import type { Request, Response, NextFunction } from 'express';
 import { getQuestions } from './questions.ts';
+import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { getEntraGroupMembers } from '#util/entra-groups.ts';
 
 export function buildViewCaseDetails(): AsyncRequestHandler {
 	return async (req, res) => {
 		const reference = res.locals?.journeyResponse?.answers?.reference;
 		const caseName = res.locals?.journeyResponse?.answers?.name;
+		const caseNotes = res.locals?.journeyResponse?.answers?.caseNotes;
 
 		const id = req.params.id;
 
@@ -20,13 +23,21 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 			throw new Error('id param required');
 		}
 
+		const errors = readSessionData(req, id, 'updateErrors', [], 'cases');
+		if (!(typeof errors === 'boolean') && errors.length > 0) {
+			res.locals.errorSummary = errors;
+		}
+		clearSessionData(req, id, 'updateErrors', 'cases');
+
 		const baseUrl = req.baseUrl;
 
 		await list(req, res, '', {
 			reference,
 			caseName,
+			notes: caseNotes || [],
 			baseUrl,
-			backLinkUrl: res.locals.backLinkUrl || '/cases'
+			backLinkUrl: res.locals.backLinkUrl || '/cases',
+			currentUrl: req.originalUrl
 		});
 	};
 }
@@ -46,7 +57,8 @@ export function validateIdFormat(req: Request, res: Response, next: NextFunction
 }
 
 export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestHandler {
-	const { db, logger } = service;
+	const { db, logger, getEntraClient } = service;
+	const groupId = service.authConfig.groups.applicationAccess;
 
 	return async (req, res, next) => {
 		const id = req.params.id;
@@ -63,7 +75,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				SiteAddress: true,
 				SubType: true,
 				Type: true,
-				Dates: true
+				Dates: true,
+				Notes: true
 			}
 		});
 
@@ -71,7 +84,14 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 			return notFoundHandler(req, res);
 		}
 
-		const answers = caseToViewModel(caseToView);
+		const groupMembers = await getEntraGroupMembers({
+			logger,
+			initClient: getEntraClient,
+			session: req.session,
+			groupId
+		});
+
+		const answers = await caseToViewModel(caseToView, groupMembers);
 
 		const questions = getQuestions();
 

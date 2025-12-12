@@ -6,15 +6,19 @@ import { validationErrorHandler } from '@planning-inspectorate/dynamic-forms/src
 import { buildGetJourneyMiddleware, buildViewCaseDetails, validateIdFormat } from './controller.ts';
 import { buildUpdateCase } from './update-case.ts';
 import { ManageService } from '#service';
+import { createRoutes as createCaseNotesRoutes } from '../case-notes/index.ts';
 
 export function createRoutes(service: ManageService) {
 	const router = createRouter({ mergeParams: true });
+
 	const getJourney = asyncHandler(buildGetJourneyMiddleware(service));
 	const viewCaseDetails = buildViewCaseDetails();
 	const updateCaseFn = buildUpdateCase(service);
 	const updateCase = buildSave(updateCaseFn, true);
 	const clearAndUpdateCaseFn = buildUpdateCase(service, true);
 	const clearAndUpdateCase = buildSave(clearAndUpdateCaseFn, true);
+
+	const caseNoteRoutes = createCaseNotesRoutes(service);
 
 	router.get('/', validateIdFormat, getJourney, asyncHandler(viewCaseDetails));
 
@@ -33,6 +37,9 @@ export function createRoutes(service: ManageService) {
 
 	// Deletes answer
 	router.post('/:section/:question/remove', validateIdFormat, getJourney, asyncHandler(clearAndUpdateCase));
+
+	// Load case note routes
+	router.use('/case-note', caseNoteRoutes);
 
 	return router;
 }
