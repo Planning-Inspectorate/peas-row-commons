@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { caseToViewModel } from './view-model.ts'; // Ensure extension matches your setup
+import { caseToViewModel } from './view-model.ts';
 
 describe('view-model', () => {
 	describe('caseToViewModel', () => {
