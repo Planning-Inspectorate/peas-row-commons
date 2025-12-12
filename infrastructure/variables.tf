@@ -1,5 +1,10 @@
 # variables should be sorted A-Z
 
+variable "account_replication_type" {
+  description = "The replication type for the storage account"
+  type        = string
+}
+
 variable "alerts_enabled" {
   description = "Whether to enable Azure Monitor alerts"
   type        = string

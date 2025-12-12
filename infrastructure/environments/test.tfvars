@@ -26,6 +26,8 @@ apps_config = {
   }
 }
 
+account_replication_type = "LRS"
+
 common_config = {
   resource_group_name = "pins-rg-common-test-ukw-001"
   action_group_names = {
