@@ -1,5 +1,8 @@
 {% extends "views/layouts/main.njk" %}
 
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
+
 {% set title = reference + " - Case Folder" %}
 
 {% block pageTitle %}
@@ -16,7 +19,7 @@
                 {{ pageHeading }}
             </h1>
             <h1 class="govuk-heading-m">
-                {{ folderName }}
+                {{ folderName }} folder
             </h1>
         </div>
     </div>
@@ -33,4 +36,16 @@
             </div>
         </div>
     </div>
+    <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <p class="govuk-body govuk-!-font-weight-bold">Files</p>
+            {{ govukButton({
+                text: "Upload files",
+                href: "/",
+                classes: "govuk-button--secondary"
+            }) }}
+        </div>
+    </div>
+    <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
 {% endblock %}
