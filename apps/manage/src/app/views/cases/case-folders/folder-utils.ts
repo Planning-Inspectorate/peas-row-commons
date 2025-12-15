@@ -38,7 +38,7 @@ export const FOLDER_TEMPLATES_MAP = {
 type Folder = {
 	displayName: string;
 	displayOrder: number;
-	childFolders?: { create: Folder[] };
+	ChildFolders?: { create: Folder[] };
 };
 
 /**
@@ -51,9 +51,9 @@ export function addCaseIdToFolders(folders: Folder[], caseId: string) {
 			caseId
 		};
 
-		if (folder.childFolders?.create) {
-			folderWithId.childFolders = {
-				create: folder.childFolders.create.map((child: any) => ({
+		if (folder.ChildFolders?.create) {
+			folderWithId.ChildFolders = {
+				create: folder.ChildFolders.create.map((child: any) => ({
 					...child,
 					caseId
 				}))

@@ -26,7 +26,7 @@ export const PEAS_FOLDERS = [
 	{
 		displayName: 'Events information and notifications',
 		displayOrder: 700,
-		childFolders: {
+		ChildFolders: {
 			create: [
 				{
 					displayName: 'Pre-enquiry meeting or Case management conference',
@@ -89,7 +89,7 @@ export const ROW_FOLDERS = [
 	{
 		displayName: 'Advertised modifications',
 		displayOrder: 600,
-		childFolders: {
+		ChildFolders: {
 			create: [
 				{
 					displayName: 'Communications',
