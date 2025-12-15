@@ -20,7 +20,7 @@ const NESTED_SECTIONS: (keyof CaseListFields)[] = ['Dates', 'Costs', 'Abeyance',
  * Takes raw case data and converts into UI usable data format.
  * Converts the nested nature of join tables into a flat object.
  */
-export async function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOfficers: CaseOfficer[] }) {
+export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOfficers: CaseOfficer[] }) {
 	const mergedData: Record<string, any> = { ...caseRow };
 
 	NESTED_SECTIONS.forEach((sectionKey) => {
@@ -47,7 +47,7 @@ export async function caseToViewModel(caseRow: CaseListFields, groupMembers: { c
 		sanitisedData[key] = formatValue(mergedData[key]);
 	}
 
-	const mappedNotes = mapNotes(caseRow.Notes, groupMembers);
+	const mappedNotes = mapNotes(caseRow.Notes || [], groupMembers);
 
 	return {
 		...sanitisedData,
