@@ -53,7 +53,7 @@ model Case {
   Dates             CaseDates?
   /// Physical location of real-world files
   filesLocation     String?
-  Folder            Folder[]
+  Folders           Folder[]
 }
 
 model CaseworkArea {
