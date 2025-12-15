@@ -99,7 +99,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 			groupId
 		});
 
-		const answers = await caseToViewModel(caseToView, groupMembers);
+		const answers = caseToViewModel(caseToView, groupMembers);
 
 		const questions = getQuestions();
 

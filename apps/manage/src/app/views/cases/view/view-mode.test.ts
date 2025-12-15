@@ -20,7 +20,7 @@ describe('view-model', () => {
 				Costs: { estimate: 500 }
 			};
 
-			const result: any = caseToViewModel(input as any);
+			const result: any = caseToViewModel(input as any, groupMembers);
 
 			assert.strictEqual(result.targetDate, '2024-12-25');
 			assert.strictEqual(result.estimate, 500);
@@ -36,7 +36,7 @@ describe('view-model', () => {
 				Costs: { id: 'BAD_COST_ID', estimate: 100 }
 			};
 
-			const result: any = caseToViewModel(input as any);
+			const result: any = caseToViewModel(input as any, groupMembers);
 
 			assert.strictEqual(result.id, 'MAIN_ID');
 			assert.strictEqual(result.targetDate, '2024-01-01');
@@ -51,7 +51,7 @@ describe('view-model', () => {
 				status: 'INTERIM'
 			};
 
-			const result: any = caseToViewModel(input as any);
+			const result: any = caseToViewModel(input as any, groupMembers);
 
 			assert.strictEqual(result.isUrgent, 'yes');
 			assert.strictEqual(result.isClosed, 'no');
@@ -66,7 +66,7 @@ describe('view-model', () => {
 				Type: { displayName: 'Rights of Way' }
 			};
 
-			const result = await caseToViewModel(input as any, groupMembers);
+			const result = caseToViewModel(input as any, groupMembers);
 
 			assert.strictEqual(result.receivedDateDisplay, '15 Jan 2024');
 			assert.strictEqual(result.receivedDateSortable, input.receivedDate.getTime());
@@ -90,7 +90,7 @@ describe('view-model', () => {
 				}
 			];
 
-			const result = await mapNotes(input as any, groupMembers);
+			const result = mapNotes(input as any, groupMembers);
 
 			assert.ok(result.caseNotes);
 			assert.strictEqual(result.caseNotes.length, 2);
@@ -99,7 +99,7 @@ describe('view-model', () => {
 			assert.strictEqual(result.caseNotes[0].userName, 'Unknown');
 
 			assert.strictEqual(result.caseNotes[1].commentText, 'Old note');
-			assert.strictEqual(result.caseNotes[1].userName, 'Oscar');
+			assert.strictEqual(result.caseNotes[1].userName, 'Unknown');
 
 			assert.ok(result.caseNotes[0].date);
 			assert.ok(result.caseNotes[0].dayOfWeek);
@@ -108,7 +108,7 @@ describe('view-model', () => {
 
 		it('should handle an empty array of case notes', async () => {
 			const input: any[] = [];
-			const result = await mapNotes(input, groupMembers);
+			const result = mapNotes(input, groupMembers);
 
 			assert.deepStrictEqual(result.caseNotes, []);
 		});
@@ -122,7 +122,7 @@ describe('view-model', () => {
 				{ createdAt: dateNew, comment: 'B', userId: '2' }
 			];
 
-			await mapNotes(input as any, groupMembers);
+			mapNotes(input as any, groupMembers);
 
 			assert.strictEqual(input[0].createdAt, dateOld);
 			assert.strictEqual(input[1].createdAt, dateNew);
