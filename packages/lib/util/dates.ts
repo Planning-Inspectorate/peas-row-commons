@@ -1,51 +1,39 @@
-import { formatInTimeZone, toZonedTime } from 'date-fns-tz';
+import { formatInTimeZone } from 'date-fns-tz';
+
+const TIME_ZONE = 'Europe/London';
+
+/**
+ * Wrapper to handle missing data, fallbacks, error checkls etc.
+ */
+function formatLondonDate(date: Date, formatPattern: string, fallback = '') {
+	if (!date) {
+		return fallback;
+	}
+
+	try {
+		return formatInTimeZone(date, TIME_ZONE, formatPattern);
+	} catch {
+		return fallback;
+	}
+}
 
 /**
  * Turns date string into 12 hour display
  */
 export function dateISOStringToDisplayTime12hr(dateISOString: Date) {
-	if (!dateISOString) {
-		return '';
-	}
-
-	let displayTimeString;
-
-	try {
-		displayTimeString = formatInTimeZone(dateISOString, 'Europe/London', `h:mmaaa`);
-	} catch {
-		displayTimeString = '';
-	}
-
-	return displayTimeString;
+	return formatLondonDate(dateISOString, 'h:mmaaa');
 }
 
 /**
  * Converts date string into the day month year format
  */
 export function dateISOStringToDisplayDate(dateISOString: Date, fallback = '') {
-	if (!dateISOString) {
-		return fallback;
-	}
-
-	let displayDateString;
-
-	try {
-		displayDateString = formatInTimeZone(dateISOString, 'Europe/London', 'd MMMM yyyy');
-	} catch {
-		displayDateString = '';
-	}
-
-	return displayDateString;
+	return formatLondonDate(dateISOString, 'd MMMM yyyy', fallback);
 }
 
 /**
  * Pulls day date from date string in GB format.
  */
-export const getDayFromISODate = (isoDate: Date) => {
-	if (!isoDate) {
-		return '';
-	}
-
-	const dateInZone = toZonedTime(isoDate, 'Europe/London');
-	return new Intl.DateTimeFormat('en-GB', { weekday: 'long' }).format(dateInZone);
-};
+export function getDayFromISODate(isoDate: Date) {
+	return formatLondonDate(isoDate, 'EEEE');
+}
