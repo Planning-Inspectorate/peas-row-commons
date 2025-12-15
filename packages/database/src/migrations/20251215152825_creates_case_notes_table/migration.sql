@@ -7,7 +7,7 @@ CREATE TABLE [dbo].[CaseNote] (
     [id] UNIQUEIDENTIFIER NOT NULL CONSTRAINT [CaseNote_id_df] DEFAULT newid(),
     [comment] NVARCHAR(1000) NOT NULL,
     [createdAt] DATETIME2 NOT NULL CONSTRAINT [CaseNote_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [userId] NVARCHAR(1000) NOT NULL,
+    [authorEntraId] NVARCHAR(1000) NOT NULL,
     [caseId] UNIQUEIDENTIFIER NOT NULL,
     CONSTRAINT [CaseNote_pkey] PRIMARY KEY CLUSTERED ([id])
 );

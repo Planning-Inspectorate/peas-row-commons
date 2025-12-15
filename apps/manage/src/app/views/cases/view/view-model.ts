@@ -47,7 +47,7 @@ export async function caseToViewModel(caseRow: CaseListFields, groupMembers: { c
 		sanitisedData[key] = formatValue(mergedData[key]);
 	}
 
-	const mappedNotes = await mapNotes(caseRow.Notes, groupMembers);
+	const mappedNotes = mapNotes(caseRow.Notes, groupMembers);
 
 	return {
 		...sanitisedData,
@@ -60,7 +60,7 @@ export async function caseToViewModel(caseRow: CaseListFields, groupMembers: { c
 /**
  * Maps the raw case data into data presented in the UI.
  */
-export const mapNotes = async (
+export const mapNotes = (
 	unmappedCaseNotes: Omit<CaseNoteFields, 'Case'>[],
 	groupMembers: { caseOfficers: CaseOfficer[] }
 ) => {
@@ -68,19 +68,16 @@ export const mapNotes = async (
 	const caseNotes = [...unmappedCaseNotes].sort((a: any, b: any) => b.createdAt - a.createdAt);
 
 	return {
-		caseNotes: await Promise.all(
-			caseNotes.map((caseNote) => {
-				const user = groupMembers.caseOfficers.find((member) => member.id === caseNote.userId);
+		caseNotes: caseNotes.map((caseNote) => {
+			const user = groupMembers.caseOfficers.find((member) => member.id === caseNote.authorEntraId);
 
-				console.log(groupMembers);
-				return {
-					date: dateISOStringToDisplayDate(caseNote.createdAt),
-					dayOfWeek: getDayFromISODate(caseNote.createdAt),
-					time: dateISOStringToDisplayTime12hr(caseNote.createdAt),
-					commentText: caseNote.comment,
-					userName: user?.displayName || 'Unknown'
-				};
-			})
-		)
+			return {
+				date: dateISOStringToDisplayDate(caseNote.createdAt),
+				dayOfWeek: getDayFromISODate(caseNote.createdAt),
+				time: dateISOStringToDisplayTime12hr(caseNote.createdAt),
+				commentText: caseNote.comment,
+				userName: user?.displayName || 'Unknown'
+			};
+		})
 	};
 };

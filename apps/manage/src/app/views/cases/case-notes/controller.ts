@@ -27,7 +27,7 @@ export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler
 /**
  * Queries DB and creates a case note.
  */
-async function createCaseNote(id: string, comment: string, userId: string, db: PrismaClient, logger: Logger) {
+async function createCaseNote(id: string, comment: string, authorId: string, db: PrismaClient, logger: Logger) {
 	try {
 		await db.$transaction(async ($tx: Prisma.TransactionClient) => {
 			const caseRow = await $tx.case.findUnique({
@@ -42,7 +42,7 @@ async function createCaseNote(id: string, comment: string, userId: string, db: P
 				data: {
 					caseId: id,
 					comment,
-					userId
+					authorEntraId: authorId
 				}
 			});
 		});
