@@ -42,6 +42,10 @@
 #   log_daily_cap                        = 0.5
 # }
 
+# storage_config = {
+#   replication_type = "GZRS" # TBC...(similar to appeals)
+# }
+
 # sql_config = {
 #   admin = {
 #     login_username = "pins-peas-row-commons-sql-prod"
