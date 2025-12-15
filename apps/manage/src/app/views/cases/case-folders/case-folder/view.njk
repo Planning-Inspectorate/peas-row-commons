@@ -1,6 +1,6 @@
 {% extends "views/layouts/main.njk" %}
 
-{% set title = reference + " - Manage a Case" %}
+{% set title = reference + " - Case Folder" %}
 
 {% block pageTitle %}
     {{ title }}
@@ -15,16 +15,17 @@
             <h1 class="govuk-heading-l">
                 {{ pageHeading }}
             </h1>
+            <h1 class="govuk-heading-m">
+                {{ folderName }}
+            </h1>
         </div>
     </div>
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full">
             <div class="pins-link-menu">
-                {% if folders|length == 0 %}
-                    <p class="govuk-body">No folders were found.</p>
-                {% else %}
-                    {% for folder in folders %}
-                        <a class="govuk-link govuk-heading-s" href="{{ currentUrl }}/{{ folder.id }}/{{ folder.kebabDisplayName }}">
+                {% if subFolders|length !== 0 %}
+                    {% for folder in subFolders %}
+                        <a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.kebabDisplayName }}">
                             {{ folder.displayName }}
                         </a>
                     {% endfor %}
