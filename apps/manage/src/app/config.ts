@@ -2,9 +2,11 @@ import dotenv from 'dotenv';
 import path from 'node:path';
 import { fileURLToPath } from 'url';
 import type { BaseConfig } from '@pins/peas-row-commons-lib/app/config-types.d.ts';
+import type { BlobStoreConfig } from '@pins/peas-row-commons-lib/blob-store/types.d.ts';
 
 export interface Config extends BaseConfig {
 	appHostname: string;
+	blobStore: BlobStoreConfig;
 	auth: {
 		authority: string;
 		clientId: string;
@@ -63,7 +65,11 @@ export function loadConfig(): Config {
 		REDIS_CONNECTION_STRING,
 		SESSION_SECRET,
 		SQL_CONNECTION_STRING,
-		ENTRA_GROUP_CACHE_TTL
+		ENTRA_GROUP_CACHE_TTL,
+		BLOB_STORE_DISABLED,
+		BLOB_STORE_HOST,
+		BLOB_STORE_CONTAINER,
+		BLOB_STORE_CONNECTION_STRING
 	} = process.env;
 
 	const buildConfig = loadBuildConfig();
@@ -101,7 +107,30 @@ export function loadConfig(): Config {
 
 	const protocol = APP_HOSTNAME?.startsWith('localhost') ? 'http://' : 'https://';
 
+	const blobStoreDisabled = BLOB_STORE_DISABLED === 'true';
+	if (!blobStoreDisabled) {
+		const props = {
+			BLOB_STORE_HOST,
+			BLOB_STORE_CONTAINER
+		};
+		for (const [k, v] of Object.entries(props)) {
+			if (v === undefined || v === '') {
+				throw new Error(k + ' must be a non-empty string');
+			}
+		}
+
+		if (NODE_ENV === 'production' && BLOB_STORE_CONNECTION_STRING) {
+			throw new Error(BLOB_STORE_CONNECTION_STRING + ' must only be used for local development');
+		}
+	}
+
 	config = {
+		blobStore: {
+			disabled: BLOB_STORE_DISABLED === 'true',
+			host: BLOB_STORE_HOST || '',
+			container: BLOB_STORE_CONTAINER || '',
+			connectionString: BLOB_STORE_CONNECTION_STRING || ''
+		},
 		appHostname: APP_HOSTNAME || '',
 		auth: {
 			authority: `https://login.microsoftonline.com/${AUTH_TENANT_ID}`,
