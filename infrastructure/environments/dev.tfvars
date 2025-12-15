@@ -49,6 +49,10 @@ monitoring_config = {
   log_daily_cap                        = 0.1
 }
 
+storage_config = {
+  replication_type = "LRS"
+}
+
 sql_config = {
   admin = {
     login_username = "pins-peas-row-commons-sql-dev"

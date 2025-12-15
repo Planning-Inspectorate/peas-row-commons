@@ -78,6 +78,13 @@ variable "monitoring_config" {
   })
 }
 
+variable "storage_config" {
+  description = "The replication type for the storage account"
+  type = object({
+    replication_type = string
+  })
+}
+
 variable "sql_config" {
   description = "Config for SQL Server and DB"
   type = object({
