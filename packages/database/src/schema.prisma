@@ -24,37 +24,39 @@ datasource db {
 /// Case represents a case in the system
 model Case {
   /// internal identifier
-  id                String         @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  createdDate       DateTime       @default(now())
+  id                String           @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  createdDate       DateTime         @default(now())
   updatedDate       DateTime?
   receivedDate      DateTime
   closedDate        DateTime?
   /// type of case
   typeId            String
-  Type              CaseType       @relation(fields: [typeId], references: [id])
+  Type              CaseType         @relation(fields: [typeId], references: [id])
   /// subtype of case
   subTypeId         String?
-  SubType           CaseSubType?   @relation(fields: [subTypeId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  SubType           CaseSubType?     @relation(fields: [subTypeId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   /// shown to users as a unique reference
-  reference         String         @unique
+  reference         String           @unique
   /// external identifier, optional unlike reference above
   externalReference String?
   name              String
   applicant         String?
-  siteAddressId     String?        @db.UniqueIdentifier
-  SiteAddress       Address?       @relation(fields: [siteAddressId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  siteAddressId     String?          @db.UniqueIdentifier
+  SiteAddress       Address?         @relation(fields: [siteAddressId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   authority         String?
   area              String?
   /// Entra ID
   caseOfficerId     String
   procedureId       String?
-  Procedure         CaseProcedure? @relation(fields: [procedureId], references: [id])
+  Procedure         CaseProcedure?   @relation(fields: [procedureId], references: [id])
   linkedCases       String?
   Dates             CaseDates?
   /// Physical location of real-world files
   filesLocation     String?
   Folders           Folder[]
   Costs             CaseCosts?
+  invoiceSentId     String?
+  InvoiceSent       CaseInvoiceSent? @relation(fields: [invoiceSentId], references: [id])
 }
 
 model CaseworkArea {
@@ -157,9 +159,14 @@ model CaseCosts {
   rechargeable Boolean?
   finalCost    Decimal?
   feeReceived  Boolean?
-  /// Whether the invoice has been sent.
-  /// One of 'YES', 'NO', 'INTERIM', as there is no ENUM in SQL Server.
   invoiceSent  String?
   caseId       String   @unique @db.UniqueIdentifier
   Case         Case     @relation(fields: [caseId], references: [id])
+}
+
+model CaseInvoiceSent {
+  /// unique machine-readable name, not generated, e.g. "interim"
+  id          String  @id
+  displayName String?
+  Case        Case[]
 }
