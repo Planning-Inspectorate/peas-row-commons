@@ -9,6 +9,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@azure/storage-blob": "*",
     "@azure/msal-node": "*",
     "@pins/peas-row-commons-database": "*",
     "connect-redis": "*",
