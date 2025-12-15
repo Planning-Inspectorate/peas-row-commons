@@ -255,7 +255,7 @@ export const COSTS_QUESTIONS = {
 		validators: [new RequiredValidator('Select yes if this is a rechargeable case')]
 	},
 	finalCost: {
-		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // Multi even though only 1 question so that we can use '£' prefixes.
+		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // TODO: update to single line input once that has been updated to have prefixes in dynamic forms
 		title: 'Final cost',
 		question: 'What was the final cost?',
 		fieldName: 'finalCost',
