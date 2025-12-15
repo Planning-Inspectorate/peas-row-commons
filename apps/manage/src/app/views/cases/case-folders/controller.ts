@@ -17,6 +17,10 @@ export function buildViewCaseFolders(service: ManageService): AsyncRequestHandle
 		try {
 			[caseRow, folders] = await Promise.all([
 				db.case.findUnique({
+					select: {
+						name: true,
+						reference: true
+					},
 					where: { id }
 				}),
 				db.folder.findMany({
