@@ -144,9 +144,9 @@ model Folder {
   caseId         String?   @db.UniqueIdentifier
   isCustom       Boolean   @default(false)
   deletedAt      DateTime?
-  case           Case?     @relation(fields: [caseId], references: [id])
-  parentFolder   Folder?   @relation("FolderTree", fields: [parentFolderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  childFolders   Folder[]  @relation("FolderTree")
+  Case           Case?     @relation(fields: [caseId], references: [id])
+  ParentFolder   Folder?   @relation("FolderTree", fields: [parentFolderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ChildFolders   Folder[]  @relation("FolderTree")
 
   @@unique([caseId, displayName, parentFolderId, deletedAt])
 }

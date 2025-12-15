@@ -42,12 +42,12 @@ describe('Folder creation utils', () => {
 			assert.strictEqual(result[1].caseId, caseId);
 		});
 
-		it('should recursively inject caseId into nested "childFolders.create" arrays', () => {
+		it('should recursively inject caseId into nested "ChildFolders.create" arrays', () => {
 			const inputFolders = [
 				{
 					displayName: 'Parent',
 					displayOrder: 1,
-					childFolders: {
+					ChildFolders: {
 						create: [
 							{ displayName: 'Child 1', displayOrder: 1 },
 							{ displayName: 'Child 2', displayOrder: 2 }
@@ -62,7 +62,7 @@ describe('Folder creation utils', () => {
 			assert.strictEqual(result[0].caseId, caseId);
 
 			// Check Children
-			const children: any = result[0]?.childFolders?.create;
+			const children: any = result[0]?.ChildFolders?.create;
 			assert.strictEqual(children?.length, 2);
 			assert.strictEqual(children[0].caseId, caseId);
 			assert.strictEqual(children[1].caseId, caseId);
@@ -110,7 +110,7 @@ describe('Folder creation utils', () => {
 				{
 					displayName: 'Parent',
 					displayOrder: 1,
-					childFolders: {
+					ChildFolders: {
 						create: [{ displayName: 'Child', displayOrder: 1 }]
 					}
 				}
@@ -127,7 +127,7 @@ describe('Folder creation utils', () => {
 
 			// Ensure the transformation happened before passing to tx.create
 			assert.strictEqual(callData.caseId, caseId);
-			assert.strictEqual(callData.childFolders.create[0].caseId, caseId);
+			assert.strictEqual(callData.ChildFolders.create[0].caseId, caseId);
 		});
 	});
 });
