@@ -1,4 +1,5 @@
 import type { Folder } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 
 /**
  * Formats folders array for displaying,
@@ -6,5 +7,13 @@ import type { Folder } from '@pins/peas-row-commons-database/src/client/client.t
  * a display order, else pushes them to the top.
  */
 export function createFoldersViewModel(folders: Folder[]) {
-	return folders.sort((a, b) => (a.displayOrder || 100) - (b?.displayOrder || 100));
+	const sortedFolders = folders.sort((a, b) => (a.displayOrder || 100) - (b?.displayOrder || 100));
+
+	const mappedFolders = sortedFolders.map((folder) => {
+		return {
+			...folder,
+			kebabDisplayName: stringToKebab(folder.displayName)
+		};
+	});
+	return mappedFolders;
 }

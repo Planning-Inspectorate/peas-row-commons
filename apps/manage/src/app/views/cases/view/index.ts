@@ -20,6 +20,10 @@ export function createRoutes(service: ManageService) {
 
 	const caseDocumentsRoutes = createCaseDocumentsRoutes(service);
 
+	// View case documents page, /:id/case-documents
+	router.use('/case-folders', caseDocumentsRoutes);
+
+	// View case
 	router.get('/', validateIdFormat, getJourney, asyncHandler(viewCaseDetails));
 
 	// View individual question
@@ -37,9 +41,6 @@ export function createRoutes(service: ManageService) {
 
 	// Deletes answer
 	router.post('/:section/:question/remove', validateIdFormat, getJourney, asyncHandler(clearAndUpdateCase));
-
-	// View case documents page, /:id/case-documents
-	router.use('/case-folders', caseDocumentsRoutes);
 
 	return router;
 }
