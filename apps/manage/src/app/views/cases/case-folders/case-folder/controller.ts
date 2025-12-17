@@ -58,7 +58,8 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			folderName: currentFolder?.displayName,
 			backLinkUrl: baseFoldersUrl,
 			baseFoldersUrl, // Used for creating the url of the sub-folders
-			subFolders: subFoldersViewModel
+			subFolders: subFoldersViewModel,
+			currentUrl: req.originalUrl
 		});
 	};
 }

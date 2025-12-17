@@ -1,0 +1,72 @@
+{% extends "views/layouts/main.njk" %}
+
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
+{%- from "moj/components/multi-file-upload/macro.njk" import mojMultiFileUpload -%}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% set title = reference + " - Case Folder" %}
+
+{% block pageTitle %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full govuk-!-margin-bottom-3">
+            <h1 class="govuk-heading-l">
+                Upload files in {{ folder.displayName }} folder
+            </h1>
+        </div>
+    </div>
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+
+            {% set uploadForm = "upload-form" %}
+
+            <form action="{{ currentUrl }}" method="post" enctype="multipart/form-data">
+                {% set uploadHtml %}
+                    {{ govukFileUpload({
+                        id: "{{ uploadForm }}",
+                        name: "{{ uploadForm }}",
+                        classes: "moj-multi-file-upload__input",
+                        attributes: { multiple: "" },
+                        errorMessage: errorMessage
+                    }) }}
+
+                    {{ govukButton({
+                        text: "Upload file",
+                        classes: "govuk-button--secondary moj-multi-file-upload__button"
+                    }) }}
+                {% endset %}
+
+                {{ mojMultiFileUpload({
+                    uploadedFiles: {
+                        heading: { text: "Files added" },
+                        items: uploadedFiles
+                    },
+                    uploadHtml: uploadHtml
+                }) }}
+
+                {{ govukButton({
+                    text: "Upload"
+                }) }}
+            </form>
+
+            <script type="module" {% if cspNonce %}nonce="{{ cspNonce }}"{% endif %}>
+                import { MultiFileUpload } from '/assets/js/moj-frontend.min.js';
+                
+                const $multiFileUpload = document.querySelector(
+                    '[data-module="moj-multi-file-upload"]'
+                );
+
+                if ($multiFileUpload) {
+                    new MultiFileUpload($multiFileUpload, {
+                        uploadUrl: '{{ currentUrl | safe }}',
+                        deleteUrl: '/ajax-delete-url' // TODO
+                    });
+                }
+            </script>
+        </div>
+    </div>
+{% endblock %}
