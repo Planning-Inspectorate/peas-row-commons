@@ -4,9 +4,10 @@ import { validateIdFormat } from '../view/controller.ts';
 import type { ManageService } from '#service';
 import { buildUploadToFolderView } from './controller.ts';
 import multer from 'multer';
-import { uploadDocumentsController } from './upload-documents.ts';
+import { uploadDocumentsController } from './upload-documents/controller.ts';
 import { ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MAX_FILE_SIZE, TOTAL_UPLOAD_LIMIT } from './constants.ts';
-import { validateUploads } from './validation-middleware.ts';
+import { validateUploads } from './upload-documents/validation-middleware.ts';
+import { createDocumentsController } from './commit-documents/controller.ts';
 
 export function createRoutes(service: ManageService) {
 	const router = createRouter({ mergeParams: true });
@@ -18,13 +19,18 @@ export function createRoutes(service: ManageService) {
 
 	const uploadDocuments = asyncHandler(uploadDocumentsController(service));
 
+	const createDocuments = asyncHandler(createDocumentsController(service));
+
 	const handleUploads = multer();
 
 	// Gets "upload" page
 	router.get('/', validateIdFormat, asyncHandler(uploadToFoldersView));
 
-	// Uploads files
-	router.post('/', handleUploads.array('documents'), validateRequest, uploadDocuments);
+	// Uploads files (i.e. saves data to Blob)
+	router.post('/document', handleUploads.array('documents'), validateRequest, uploadDocuments);
+
+	// Commits to DB (i.e. creates documents rows)
+	router.post('/', createDocuments);
 
 	return router;
 }

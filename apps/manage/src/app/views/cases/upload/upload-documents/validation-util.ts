@@ -2,7 +2,7 @@ import * as CFB from 'cfb';
 import { fileTypeFromBuffer } from 'file-type';
 import { PDFDocument } from 'pdf-lib';
 import type { Logger } from 'pino';
-import { ALLOWED_EXTENSIONS_TEXT } from './constants.ts';
+import { ALLOWED_EXTENSIONS_TEXT } from '../constants.ts';
 import path from 'path';
 
 interface ValidationError {

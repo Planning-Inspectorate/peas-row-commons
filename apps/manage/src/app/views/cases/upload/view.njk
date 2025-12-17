@@ -62,7 +62,7 @@
 
                 if ($multiFileUpload) {
                     new MultiFileUpload($multiFileUpload, {
-                        uploadUrl: '{{ currentUrl | safe }}',
+                        uploadUrl: '{{ currentUrl | safe }}/document',
                         deleteUrl: '/ajax-delete-url' // TODO
                     });
                 }

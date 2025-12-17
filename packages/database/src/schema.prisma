@@ -59,6 +59,7 @@ model Case {
   InvoiceSent       CaseInvoiceSent? @relation(fields: [invoiceSentId], references: [id])
   Abeyance          CaseAbeyance?
   Notes             CaseNote[]
+  Documents         Document[]
 }
 
 model CaseworkArea {
@@ -142,16 +143,17 @@ model CaseDates {
 /// Folder model
 /// Contains folders created for each case that will contain documents.
 model Folder {
-  id             String    @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  id             String     @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   displayName    String
   displayOrder   Int?
-  parentFolderId String?   @db.UniqueIdentifier
-  caseId         String?   @db.UniqueIdentifier
-  isCustom       Boolean   @default(false)
+  parentFolderId String?    @db.UniqueIdentifier
+  caseId         String?    @db.UniqueIdentifier
+  isCustom       Boolean    @default(false)
   deletedAt      DateTime?
-  Case           Case?     @relation(fields: [caseId], references: [id])
-  ParentFolder   Folder?   @relation("FolderTree", fields: [parentFolderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  ChildFolders   Folder[]  @relation("FolderTree")
+  Case           Case?      @relation(fields: [caseId], references: [id])
+  ParentFolder   Folder?    @relation("FolderTree", fields: [parentFolderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ChildFolders   Folder[]   @relation("FolderTree")
+  Documents      Document[]
 
   @@unique([caseId, displayName, parentFolderId, deletedAt])
 }
@@ -189,4 +191,16 @@ model CaseNote {
   authorEntraId String
   caseId        String   @db.UniqueIdentifier
   Case          Case     @relation(fields: [caseId], references: [id])
+}
+
+model Document {
+  id           String   @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  fileName     String
+  uploadedDate DateTime @default(now())
+  size         BigInt   @default(0)
+  blobName     String
+  caseId       String   @db.UniqueIdentifier
+  Case         Case     @relation(fields: [caseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  folderId     String   @db.UniqueIdentifier
+  Folder       Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
 }
