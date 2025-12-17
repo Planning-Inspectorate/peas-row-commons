@@ -21,9 +21,9 @@ export function buildUploadToFolderView(service: ManageService): AsyncRequestHan
 		// Clear updated flag if present so that we only see it once.
 		clearSessionData(req, id, 'uploadErrors', 'files');
 
-		let caseRow, folder;
+		let caseRow, folder, drafts;
 		try {
-			[caseRow, folder] = await Promise.all([
+			[caseRow, folder, drafts] = await Promise.all([
 				db.case.findUnique({
 					select: {
 						name: true,
@@ -36,6 +36,13 @@ export function buildUploadToFolderView(service: ManageService): AsyncRequestHan
 						displayName: true
 					},
 					where: { id: folderId }
+				}),
+				db.draftDocument.findMany({
+					where: {
+						sessionKey: req.sessionID,
+						caseId: id,
+						folderId: folderId
+					}
 				})
 			]);
 		} catch (error: any) {
@@ -51,8 +58,6 @@ export function buildUploadToFolderView(service: ManageService): AsyncRequestHan
 			return notFoundHandler(req, res);
 		}
 
-		const uploadedSessionFiles = readSessionData(req, id, 'uploadedFiles', [], 'files');
-
 		const errorSummary = typeof uploadErrors !== 'boolean' && uploadErrors.length ? uploadErrors : null;
 
 		return res.render('views/cases/upload/view.njk', {
@@ -63,7 +68,7 @@ export function buildUploadToFolderView(service: ManageService): AsyncRequestHan
 			folder,
 			errorSummary,
 			allowedMimeTypes: ALLOWED_MIME_TYPES,
-			uploadedFiles: typeof uploadedSessionFiles !== 'boolean' ? createUploadedFilesViewModel(uploadedSessionFiles) : []
+			uploadedFiles: createUploadedFilesViewModel(drafts || [])
 		});
 	};
 }

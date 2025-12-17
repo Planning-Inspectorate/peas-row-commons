@@ -1,17 +1,16 @@
-import { encodeBlobNameToBase64, formatBytes } from '@pins/peas-row-commons-lib/util/upload.ts';
+import { formatBytes } from '@pins/peas-row-commons-lib/util/upload.ts';
 import { Readable } from 'stream';
 import type { Request, Response } from 'express';
 import type { ManageService } from '#service';
-import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { Logger } from 'pino';
 import type { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
-import type { SessionUploadedFile } from '../types.ts';
 import { randomUUID } from 'crypto';
+import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 
 export function uploadDocumentsController(service: ManageService) {
 	return async (req: Request, res: Response) => {
-		const { blobStore, logger } = service;
-		const { id } = req.params;
+		const { blobStore, logger, db } = service;
+		const { id, folderId } = req.params;
 		const files = req.files as Express.Multer.File[];
 
 		const filesWithIds = files.map((file) => ({
@@ -21,7 +20,7 @@ export function uploadDocumentsController(service: ManageService) {
 		}));
 
 		await uploadFilesToStorage(blobStore, filesWithIds, logger);
-		updateSessionWithUploads(req, filesWithIds, id);
+		await createDraftDocumentsScratchPad(req, db, filesWithIds, id, folderId);
 
 		// Although code is built to handle many files,
 		// the component only ever triggers one at a time.
@@ -62,24 +61,25 @@ async function uploadFilesToStorage(
 	}
 }
 
-function updateSessionWithUploads(
+/**
+ * Inserts uploaded files into draft documents table,
+ * in case they decide to abandon before finishing.
+ */
+async function createDraftDocumentsScratchPad(
 	req: Request,
+	db: PrismaClient,
 	filesWithIds: { file: Express.Multer.File; blobName: string; originalName: string }[],
-	containerPath: string
-): void {
-	const latestUploads: SessionUploadedFile[] = filesWithIds.map((item) => {
-		return {
-			fileName: item.originalName,
-			size: item.file.size,
-			formattedSize: formatBytes(item.file.size),
-			blobName: item.blobName,
-			blobNameBase64Encoded: encodeBlobNameToBase64(item.blobName)
-		};
+	id: string,
+	folderId: string
+): Promise<void> {
+	await db.draftDocument.createMany({
+		data: filesWithIds.map((file) => ({
+			sessionKey: req.sessionID,
+			caseId: id,
+			folderId: folderId,
+			fileName: file.originalName,
+			blobName: file.blobName,
+			size: BigInt(file.file.size)
+		}))
 	});
-
-	const existingUploads = req.session?.files?.[containerPath]?.uploadedFiles || [];
-
-	const uploadedFiles = [...latestUploads, ...existingUploads];
-
-	addSessionData(req, containerPath, { uploadedFiles }, 'files');
 }

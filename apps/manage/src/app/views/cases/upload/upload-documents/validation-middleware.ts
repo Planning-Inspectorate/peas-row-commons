@@ -1,8 +1,8 @@
 import { formatBytes } from '@pins/peas-row-commons-lib/util/upload.ts';
-import { readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { validateUploadedFile } from './validation-util.ts';
 import type { Request, Response, NextFunction } from 'express';
 import type { ManageService } from '#service';
+import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 
 interface ValidationError {
 	text: string;
@@ -17,7 +17,7 @@ export function validateUploads(
 	totalUploadLimit: number
 ) {
 	return async (req: Request, res: Response, next: NextFunction) => {
-		const { logger } = service;
+		const { logger, db } = service;
 		const { id } = req.params;
 		const files = req.files as Express.Multer.File[];
 
@@ -35,8 +35,8 @@ export function validateUploads(
 		allErrors.push(...validationErrors);
 
 		const [hasDuplicates, isOverLimit] = await Promise.all([
-			checkForDuplicateFiles(req, files, id),
-			checkTotalSizeLimit(req, id, files, totalUploadLimit)
+			checkForDuplicateFiles(db, req, files, id),
+			checkTotalSizeLimit(db, req, id, files, totalUploadLimit)
 		]);
 
 		if (hasDuplicates) {
@@ -70,36 +70,49 @@ export function validateUploads(
  * in blob under a UUID to stop orphan files blocking upload.
  */
 async function checkForDuplicateFiles(
+	db: PrismaClient,
 	req: Request,
 	files: Express.Multer.File[],
-	containerPath: string
+	caseId: string
 ): Promise<boolean> {
-	const existingSessionFiles = readSessionData(req, containerPath, 'uploadedFiles', [], 'files') || [];
+	const existingDrafts = await db.draftDocument.findMany({
+		where: {
+			sessionKey: req.sessionID,
+			caseId: caseId
+		},
+		select: {
+			fileName: true
+		}
+	});
 
-	if (!Array.isArray(existingSessionFiles) || existingSessionFiles.length === 0) {
-		return false;
-	}
+	const existingNames = new Set(existingDrafts.map((d) => d.fileName));
 
 	const isDuplicate = files.some((newFile) => {
 		const newName = Buffer.from(newFile.originalname, 'latin1').toString('utf8');
-
-		return existingSessionFiles.some((existing: any) => existing.fileName === newName);
+		return existingNames.has(newName);
 	});
 
 	return isDuplicate;
 }
 
 async function checkTotalSizeLimit(
+	db: PrismaClient,
 	req: Request,
-	id: string,
+	caseId: string,
 	newFiles: Express.Multer.File[],
 	totalUploadLimit: number
 ): Promise<boolean> {
-	const existingFiles = readSessionData(req, id, 'uploadedFiles', [], 'files') || [];
-	if (typeof existingFiles === 'boolean') return false;
+	const aggregate = await db.draftDocument.aggregate({
+		_sum: {
+			size: true
+		},
+		where: {
+			sessionKey: req.sessionID,
+			caseId: caseId
+		}
+	});
 
-	const existingTotal = existingFiles.reduce((sum: number, file: any) => sum + (file.size || 0), 0);
+	const currentTotal = Number(aggregate._sum.size || 0);
 	const newTotal = newFiles.reduce((sum, file) => sum + (file.size || 0), 0);
-
-	return existingTotal + newTotal > totalUploadLimit;
+	return currentTotal + newTotal > totalUploadLimit;
 }

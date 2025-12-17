@@ -12,6 +12,8 @@ export default defineConfig({
 		seed: 'node src/seed/seed-dev.ts'
 	},
 	datasource: {
-		url: process.env.SQL_CONNECTION_STRING_ADMIN || ''
+		url:
+			process.env.SQL_CONNECTION_STRING_ADMIN ||
+			'sqlserver://localhost:1433;database=peas-row-commons;user=sa;password=DockerDatabaseP@22word!;trustServerCertificate=true'
 	}
 });

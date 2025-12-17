@@ -204,3 +204,18 @@ model Document {
   folderId     String   @db.UniqueIdentifier
   Folder       Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
 }
+
+/// Indicates a document that has been uploaded
+/// to blob but has not yet been committed as a 
+/// real document in the DB.
+model DraftDocument {
+  id         String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  sessionKey String
+  caseId     String
+  folderId   String
+  fileName   String
+  blobName   String
+  size       BigInt
+
+  @@index([sessionKey, caseId])
+}
