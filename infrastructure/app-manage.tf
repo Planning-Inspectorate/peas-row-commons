@@ -73,6 +73,11 @@ module "app_manage" {
 
     # gov notify
     GOV_NOTIFY_API_KEY = local.key_vault_refs["peas-gov-notify-api-key"]
+
+    # blob store
+    BLOB_STORE_DISABLED  = var.apps_config.blob_store.disabled
+    BLOB_STORE_HOST      = local.key_vault_refs["peas-blob-store-host"]
+    BLOB_STORE_CONTAINER = local.key_vault_refs["peas-blob-store-container"]
   }
 
   providers = {
