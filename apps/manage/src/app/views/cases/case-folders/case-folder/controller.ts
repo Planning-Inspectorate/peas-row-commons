@@ -4,6 +4,7 @@ import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { createFoldersViewModel } from '../view-model.ts';
 import { createDocumentsViewModel } from './view-model.ts';
+import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
 
 export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
@@ -19,9 +20,11 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			throw new Error('folderId param required');
 		}
 
-		let caseRow, currentFolder, subFolders, documents;
+		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
+
+		let caseRow, currentFolder, subFolders, documents, totalDocuments;
 		try {
-			[caseRow, currentFolder, subFolders, documents] = await Promise.all([
+			[caseRow, currentFolder, subFolders, documents, totalDocuments] = await Promise.all([
 				db.case.findUnique({
 					select: {
 						reference: true,
@@ -36,6 +39,11 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 					where: { caseId: id, parentFolderId: folderId } // Get children of parent
 				}),
 				db.document.findMany({
+					where: { caseId: id, folderId },
+					skip: skipSize,
+					take: pageSize
+				}),
+				db.document.count({
 					where: { caseId: id, folderId }
 				})
 			]);
@@ -52,6 +60,22 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			return notFoundHandler(req, res);
 		}
 
+		const { totalPages, resultsStartNumber, resultsEndNumber } = getPageData(
+			totalDocuments || 0,
+			selectedItemsPerPage,
+			pageSize,
+			pageNumber
+		);
+
+		const paginationParams = {
+			selectedItemsPerPage,
+			pageNumber,
+			totalPages,
+			resultsStartNumber,
+			resultsEndNumber,
+			totalDocuments
+		};
+
 		const subFoldersViewModel = subFolders ? createFoldersViewModel(subFolders) : [];
 
 		const documentsViewModel = documents ? createDocumentsViewModel(documents) : [];
@@ -66,7 +90,8 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			baseFoldersUrl, // Used for creating the url of the sub-folders
 			subFolders: subFoldersViewModel,
 			currentUrl: req.originalUrl,
-			documents: documentsViewModel
+			documents: documentsViewModel,
+			paginationParams
 		});
 	};
 }
