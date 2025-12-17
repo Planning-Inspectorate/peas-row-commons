@@ -5,7 +5,7 @@ import type { ManageService } from '#service';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { Logger } from 'pino';
 import type { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
-import type { SessionUploadedFile } from './types.ts';
+import type { SessionUploadedFile } from '../types.ts';
 import { randomUUID } from 'crypto';
 
 export function uploadDocumentsController(service: ManageService) {
