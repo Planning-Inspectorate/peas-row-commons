@@ -19,6 +19,8 @@ export function createDocumentsController(service: ManageService) {
 
 			logger.info({ id, folderId }, `Created ${createdLength} documents`);
 
+			addSessionData(req, folderId, { updated: true }, 'folder');
+
 			const folderUrl = req.baseUrl.replace(/\/upload\/?$/, '');
 			return res.redirect(folderUrl);
 		} catch {

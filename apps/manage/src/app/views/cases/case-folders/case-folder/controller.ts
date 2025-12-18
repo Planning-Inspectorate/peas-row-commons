@@ -5,6 +5,7 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { createFoldersViewModel } from '../view-model.ts';
 import { createDocumentsViewModel } from './view-model.ts';
 import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
+import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 
 export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
@@ -19,6 +20,11 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 		if (!folderId) {
 			throw new Error('folderId param required');
 		}
+
+		const folderUpdated = readSessionData(req, folderId, 'updated', false, 'folder');
+
+		// Clear updated flag if present so that we only see it once.
+		clearSessionData(req, folderId, 'updated', 'folder');
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
@@ -102,7 +108,8 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			subFolders: subFoldersViewModel,
 			currentUrl: req.originalUrl,
 			documents: documentsViewModel,
-			paginationParams
+			paginationParams,
+			folderUpdated
 		});
 	};
 }
