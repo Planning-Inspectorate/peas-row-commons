@@ -24,7 +24,7 @@
                     <p class="govuk-body">No folders were found.</p>
                 {% else %}
                     {% for folder in folders %}
-                        <a class="govuk-link govuk-heading-s" href="{{ currentUrl }}/{{ folder.id }}/{{ folder.kebabDisplayName }}">
+                        <a class="govuk-link govuk-heading-s" href="{{ currentUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}">
                             {{ folder.displayName }}
                         </a>
                     {% endfor %}
