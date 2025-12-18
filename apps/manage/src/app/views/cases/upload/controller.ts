@@ -60,10 +60,12 @@ export function buildUploadToFolderView(service: ManageService): AsyncRequestHan
 
 		const errorSummary = typeof uploadErrors !== 'boolean' && uploadErrors.length ? uploadErrors : null;
 
+		const backLinkUrl = req.baseUrl.replace(/\/upload\/?$/, '');
+
 		return res.render('views/cases/upload/view.njk', {
 			pageHeading: caseRow?.name,
 			reference: caseRow?.reference,
-			backLinkUrl: `/cases/${id}`,
+			backLinkUrl,
 			currentUrl: req.originalUrl,
 			folder,
 			errorSummary,
