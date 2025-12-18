@@ -24,7 +24,7 @@
 
             {% set uploadForm = "upload-form" %}
 
-            <form action="{{ currentUrl }}" method="post" enctype="multipart/form-data">
+            <form id = "upload-form-container" action="{{ currentUrl }}" method="post" enctype="multipart/form-data" data-upload-url="{{ currentUrl }}/document" data-delete-url="{{ currentUrl }}/delete">
                 {% set uploadHtml %}
                     {{ govukFileUpload({
                         id: "{{ uploadForm }}",
@@ -60,10 +60,12 @@
                     '[data-module="moj-multi-file-upload"]'
                 );
 
+                const $form = document.querySelector('#upload-form-container');
+
                 if ($multiFileUpload) {
                     new MultiFileUpload($multiFileUpload, {
-                        uploadUrl: '{{ currentUrl | safe }}/document',
-                        deleteUrl: '/ajax-delete-url' // TODO
+                        uploadUrl: $form.dataset.uploadUrl,
+                        deleteUrl: $form.dataset.deleteUrl
                     });
                 }
             </script>
