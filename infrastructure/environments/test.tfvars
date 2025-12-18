@@ -24,6 +24,10 @@ apps_config = {
     family   = "C"
     sku_name = "Basic"
   }
+
+  blob_store = {
+    disabled = false
+  }
 }
 
 common_config = {
