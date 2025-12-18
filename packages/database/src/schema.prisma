@@ -211,6 +211,8 @@ model Document {
 model DraftDocument {
   id         String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   sessionKey String
+  /// Purposefully do not create real PK-FK relations for simplicity
+  /// and speed, this is just a draft row.
   caseId     String
   folderId   String
   fileName   String
