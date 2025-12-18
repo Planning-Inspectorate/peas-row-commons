@@ -1,4 +1,5 @@
 import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { formatBytes } from '@pins/peas-row-commons-lib/util/upload.ts';
 
 const SUCCESS_ICON_HTML = `
     <svg class="moj-banner__icon" fill="currentColor" role="presentation" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 25" height="25" width="25">
@@ -11,8 +12,9 @@ export function createUploadedFilesViewModel(files: Prisma.DraftDocumentModel[])
 		const fileName = file.fileName;
 		return {
 			originalName: fileName,
+			fileName: file.id,
 			message: {
-				html: `<span class="moj-multi-file-upload__success">${SUCCESS_ICON_HTML} ${file.fileName} (${file.size})</span>`
+				html: `<span class="moj-multi-file-upload__success">${SUCCESS_ICON_HTML} ${file.fileName} (${formatBytes(Number(file.size))})</span>`
 			},
 			deleteButton: {
 				text: 'Delete'
