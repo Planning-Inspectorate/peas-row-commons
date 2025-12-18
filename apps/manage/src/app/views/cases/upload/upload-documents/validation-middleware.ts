@@ -69,7 +69,7 @@ export function validateUploads(
  * We check for duplicate files in session (not blob), as we store the files
  * in blob under a UUID to stop orphan files blocking upload.
  */
-async function checkForDuplicateFiles(
+export async function checkForDuplicateFiles(
 	db: PrismaClient,
 	req: Request,
 	files: Express.Multer.File[],
@@ -95,7 +95,7 @@ async function checkForDuplicateFiles(
 	return isDuplicate;
 }
 
-async function checkTotalSizeLimit(
+export async function checkTotalSizeLimit(
 	db: PrismaClient,
 	req: Request,
 	caseId: string,
