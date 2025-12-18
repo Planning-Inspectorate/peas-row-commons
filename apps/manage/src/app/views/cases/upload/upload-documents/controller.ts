@@ -5,7 +5,7 @@ import type { ManageService } from '#service';
 import type { Logger } from 'pino';
 import type { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
 import { randomUUID } from 'crypto';
-import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 
 export function uploadDocumentsController(service: ManageService) {
 	return async (req: Request, res: Response) => {
@@ -20,23 +20,27 @@ export function uploadDocumentsController(service: ManageService) {
 		}));
 
 		await uploadFilesToStorage(blobStore, filesWithIds, logger);
-		await createDraftDocumentsScratchPad(req, db, filesWithIds, id, folderId);
+		const insertedDocuments = await createDraftDocumentsScratchPad(req, db, filesWithIds, id, folderId);
 
 		// Although code is built to handle many files,
 		// the component only ever triggers one at a time.
 		// So take first file in array.
-		const uploadedFile = files[0];
-		const fileName = uploadedFile.originalname;
+		const uploadedFile = insertedDocuments[0];
+		const fileName = uploadedFile.fileName;
+
+		// Original file accessed for size (rather than having to parse BigInt from DB row)
+		const originalFile = files[0];
+
 		return res.json({
 			file: {
-				id: fileName,
+				id: uploadedFile.id,
 				originalname: fileName,
-				filename: fileName,
-				path: uploadedFile.path,
-				size: uploadedFile.size
+				filename: uploadedFile.id,
+				path: uploadedFile.blobName,
+				size: originalFile.size
 			},
 			success: {
-				messageHtml: `<span class="moj-multi-file-upload__filename">${fileName} (${formatBytes(uploadedFile.size)})</span>`
+				messageHtml: `<span class="moj-multi-file-upload__filename">${fileName} (${formatBytes(originalFile.size)})</span>`
 			}
 		});
 	};
@@ -71,15 +75,20 @@ async function createDraftDocumentsScratchPad(
 	filesWithIds: { file: Express.Multer.File; blobName: string; originalName: string }[],
 	id: string,
 	folderId: string
-): Promise<void> {
-	await db.draftDocument.createMany({
-		data: filesWithIds.map((file) => ({
-			sessionKey: req.sessionID,
-			caseId: id,
-			folderId: folderId,
-			fileName: file.originalName,
-			blobName: file.blobName,
-			size: BigInt(file.file.size)
-		}))
-	});
+): Promise<Prisma.DraftDocumentModel[]> {
+	const operations = filesWithIds.map((file) =>
+		db.draftDocument.create({
+			data: {
+				sessionKey: req.sessionID,
+				caseId: id,
+				folderId: folderId,
+				fileName: file.originalName,
+				blobName: file.blobName,
+				size: BigInt(file.file.size)
+			}
+		})
+	);
+	// We use a transaction with many singular creates because
+	// we want the generated ids to be returned.
+	return await db.$transaction(operations);
 }
