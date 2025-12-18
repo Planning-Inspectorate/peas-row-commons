@@ -24,29 +24,40 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 
 		let caseRow, currentFolder, subFolders, documents, totalDocuments;
 		try {
-			[caseRow, currentFolder, subFolders, documents, totalDocuments] = await Promise.all([
-				db.case.findUnique({
-					select: {
-						reference: true,
-						name: true
+			const folderData = await db.folder.findUnique({
+				where: {
+					id: folderId
+				},
+				include: {
+					Case: {
+						select: {
+							reference: true,
+							name: true
+						}
 					},
-					where: { id }
-				}),
-				db.folder.findUnique({
-					where: { id: folderId }
-				}),
-				db.folder.findMany({
-					where: { caseId: id, parentFolderId: folderId } // Get children of parent
-				}),
-				db.document.findMany({
-					where: { caseId: id, folderId },
-					skip: skipSize,
-					take: pageSize
-				}),
-				db.document.count({
-					where: { caseId: id, folderId }
-				})
-			]);
+					ChildFolders: {
+						where: { caseId: id }
+					},
+					Documents: {
+						where: { caseId: id },
+						skip: skipSize,
+						take: pageSize
+					},
+					_count: {
+						select: { Documents: true }
+					}
+				}
+			});
+
+			if (!folderData) throw new Error('Folder not found');
+
+			const { Case, ChildFolders, Documents, _count, ...restOfFolder } = folderData;
+
+			caseRow = Case;
+			currentFolder = restOfFolder;
+			subFolders = ChildFolders;
+			documents = Documents;
+			totalDocuments = _count.Documents;
 		} catch (error: any) {
 			wrapPrismaError({
 				error,
@@ -56,7 +67,7 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			});
 		}
 
-		if (!caseRow || !currentFolder) {
+		if (!caseRow || !currentFolder || Number.isNaN(totalDocuments)) {
 			return notFoundHandler(req, res);
 		}
 
