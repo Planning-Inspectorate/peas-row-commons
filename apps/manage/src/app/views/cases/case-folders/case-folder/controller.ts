@@ -28,7 +28,7 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
-		let caseRow, currentFolder, subFolders, documents, totalDocuments;
+		let caseRow, currentFolder, subFolders, documents, totalDocuments, parentFolder;
 		try {
 			const folderData = await db.folder.findUnique({
 				where: {
@@ -51,19 +51,26 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 					},
 					_count: {
 						select: { Documents: true }
+					},
+					ParentFolder: {
+						select: {
+							id: true,
+							displayName: true
+						}
 					}
 				}
 			});
 
 			if (!folderData) throw new Error('Folder not found');
 
-			const { Case, ChildFolders, Documents, _count, ...restOfFolder } = folderData;
+			const { Case, ChildFolders, Documents, _count, ParentFolder, ...restOfFolder } = folderData;
 
 			caseRow = Case;
 			currentFolder = restOfFolder;
 			subFolders = ChildFolders;
 			documents = Documents;
 			totalDocuments = _count.Documents;
+			parentFolder = ParentFolder;
 		} catch (error: any) {
 			wrapPrismaError({
 				error,
@@ -103,8 +110,10 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			pageHeading: caseRow?.name,
 			reference: caseRow?.reference,
 			folderName: currentFolder?.displayName,
-			backLinkUrl: baseFoldersUrl,
-			baseFoldersUrl, // Used for creating the url of the sub-folders
+			backLinkUrl: parentFolder
+				? baseFoldersUrl + `/${parentFolder.id}/${encodeURI(parentFolder.displayName)}`
+				: baseFoldersUrl,
+			baseFoldersUrl: baseFoldersUrl, // Used for creating the url of the sub-folders
 			subFolders: subFoldersViewModel,
 			currentUrl: req.originalUrl,
 			documents: documentsViewModel,

@@ -40,7 +40,7 @@
             <div class="pins-link-menu">
                 {% if subFolders|length !== 0 %}
                     {% for folder in subFolders %}
-                        <a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.kebabDisplayName }}">
+                        <a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}">
                             {{ folder.displayName }}
                         </a>
                     {% endfor %}
