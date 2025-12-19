@@ -79,7 +79,8 @@ export async function createDocumentsFromDrafts(
 			blobName: draft.blobName,
 			size: draft.size,
 			caseId: caseId,
-			folderId: folderId
+			folderId: folderId,
+			mimeType: draft.mimeType
 		}));
 
 		// We need to create documents from drafts and delete the drafts in the same

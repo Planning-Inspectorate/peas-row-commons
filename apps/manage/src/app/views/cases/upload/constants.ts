@@ -56,5 +56,11 @@ export const ALLOWED_MIME_TYPES = [
 	'application/x-gis'
 ];
 
+/**
+ * These are mime types that can be "previewed",
+ * i.e. viewed in browser
+ */
+export const PREVIEW_MIME_TYPES = ['image/png', 'image/jpeg', 'application/pdf'];
+
 export const MAX_FILE_SIZE = 250 * 1024 * 1024; // 250MB
 export const TOTAL_UPLOAD_LIMIT = 1073741824; // 1GB

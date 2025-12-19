@@ -89,7 +89,8 @@ async function createDraftDocumentsScratchPad(
 				folderId: folderId,
 				fileName: file.originalName,
 				blobName: file.blobName,
-				size: BigInt(file.file.size)
+				size: BigInt(file.file.size),
+				mimeType: file.file.mimetype
 			}
 		})
 	);
