@@ -7,6 +7,11 @@ import type { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/bl
 import { randomUUID } from 'crypto';
 import type { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 
+/**
+ * Controller for uploading a new document to Azure Blob,
+ * stored in Azure under a UUID at the case id endpoint
+ * then creates a draft document row ready for final committing.
+ */
 export function uploadDocumentsController(service: ManageService) {
 	return async (req: Request, res: Response) => {
 		const { blobStore, logger, db } = service;

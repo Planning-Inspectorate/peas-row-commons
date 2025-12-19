@@ -6,6 +6,10 @@ import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/ut
 import { ALLOWED_MIME_TYPES } from './constants.ts';
 import { createUploadedFilesViewModel } from './view-model.ts';
 
+/**
+ * Builds the view that allows users to upload new files to a specific folder
+ * Simulateneously shows a list of currently awaiting files to upload.
+ */
 export function buildUploadToFolderView(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
 	return async (req, res) => {
