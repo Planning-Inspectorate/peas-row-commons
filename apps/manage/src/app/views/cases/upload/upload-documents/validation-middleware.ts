@@ -9,6 +9,10 @@ interface ValidationError {
 	href: string;
 }
 
+/**
+ * Validates uploads against basic errors from Util (not allowed file types etc.)
+ * And then duplicate names in session and total sizing limits.
+ */
 export function validateUploads(
 	service: ManageService,
 	allowedFileExtensions: string[],
@@ -95,6 +99,11 @@ export async function checkForDuplicateFiles(
 	return isDuplicate;
 }
 
+/**
+ * Takes all uploaded files in current session
+ * and see if it is under the passed in total limit.
+ * I.e. fresh docs + previous docs.
+ */
 export async function checkTotalSizeLimit(
 	db: PrismaClient,
 	req: Request,

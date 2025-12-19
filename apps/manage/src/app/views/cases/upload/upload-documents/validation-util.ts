@@ -10,6 +10,11 @@ interface ValidationError {
 	href: string;
 }
 
+/**
+ * Checks that uploaded file is valid.
+ * Things like size, encryption, password
+ * protection, spoofing.
+ */
 export async function validateUploadedFile(
 	file: Express.Multer.File,
 	logger: Logger,
@@ -201,6 +206,9 @@ async function validateEncryption(
 	return errors;
 }
 
+/**
+ * Checks if a PDF is password protected
+ */
 async function isPdfPasswordProtected(buffer: Buffer, logger: Logger): Promise<boolean> {
 	try {
 		await PDFDocument.load(buffer);
@@ -211,6 +219,9 @@ async function isPdfPasswordProtected(buffer: Buffer, logger: Logger): Promise<b
 	}
 }
 
+/**
+ * Checks if word docs or excels are encrypted and rejecting if they do.
+ */
 function isDocOrXlsEncrypted(buffer: Buffer, logger: Logger): boolean {
 	try {
 		const container = CFB.parse(buffer, { type: 'buffer' });
@@ -243,6 +254,10 @@ function isDocOrXlsEncrypted(buffer: Buffer, logger: Logger): boolean {
 	}
 }
 
+/**
+ * Checks for FilePass which is what is used in Excel to determine a
+ * encryption algorithm
+ */
 function hasFilePassRecord(buffer: Buffer): boolean {
 	let offset = 0;
 	while (offset + 4 < buffer.length) {

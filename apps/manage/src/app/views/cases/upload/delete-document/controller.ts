@@ -1,6 +1,10 @@
 import type { Request, Response } from 'express';
 import type { ManageService } from '#service';
 
+/**
+ * Controller used for deleting draft documents after the user has
+ * uploaded a file but then decides to remove it.
+ */
 export function deleteDocumentController(service: ManageService) {
 	return async (req: Request, res: Response) => {
 		const { logger } = service;

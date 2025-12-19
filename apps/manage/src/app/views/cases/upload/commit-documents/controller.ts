@@ -5,6 +5,11 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { Logger } from 'pino';
 
+/**
+ * Creates the documents controller that is used when
+ * "Committing" documents (i.e.) adding it firmly to the DB
+ * from "Draft".
+ */
 export function createDocumentsController(service: ManageService) {
 	const { db, logger } = service;
 	return async (req: Request, res: Response) => {

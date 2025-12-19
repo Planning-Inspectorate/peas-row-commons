@@ -7,6 +7,11 @@ const SUCCESS_ICON_HTML = `
     </svg>
 `;
 
+/**
+ * This model mimics the structure that is automatically created by the MoJ
+ * upload component so that when we refresh we still see the uploaded files there
+ * in the exact same UI format.
+ */
 export function createUploadedFilesViewModel(files: Prisma.DraftDocumentModel[]) {
 	return files.map((file) => {
 		const fileName = file.fileName;
