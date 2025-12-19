@@ -86,11 +86,21 @@
 
 {% macro documentsTable(documentsList) %}
     {% set rows = [] %}
-
     {% for doc in documentsList %}
+        {% set fileLinkHtml %}
+            {% if doc.isPreview %}
+                <a class="govuk-link govuk-!-font-weight-bold" href="{{ doc.downloadHref }}?preview=true" target="_blank">
+                {{ doc.fileName }}
+                </a>
+            {% else %}
+                <p class="govuk-body govuk-!-font-weight-bold">
+                {{ doc.fileName }}
+                </p>
+            {% endif %}
+        {% endset %}
         {% set rows = (rows.push([
             {
-                html: "<a class='govuk-link' href='/documents/" + doc.id + "/download'>" + doc.fileName + "</a>",
+                html: fileLinkHtml,
                 attributes: {
                     "data-sort-value": doc.fileName | lower
                 }
@@ -111,7 +121,7 @@
                 }
             },
             {
-                html: "<a class='govuk-link' href='/'>Download</a> | <a class='govuk-link' href='/'>Delete</a>"
+                html: "<a class='govuk-link' href=" + doc.downloadHref + ">" + 'Download' + "</a>" + "| <a class='govuk-link' href='/'>Delete</a>"
             }
         ]), rows) %}
     {% endfor %}

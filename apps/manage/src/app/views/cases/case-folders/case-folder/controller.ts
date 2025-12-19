@@ -6,6 +6,7 @@ import { createFoldersViewModel } from '../view-model.ts';
 import { createDocumentsViewModel } from './view-model.ts';
 import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 
 export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
@@ -102,7 +103,7 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 
 		const subFoldersViewModel = subFolders ? createFoldersViewModel(subFolders) : [];
 
-		const documentsViewModel = documents ? createDocumentsViewModel(documents) : [];
+		const documentsViewModel = documents ? createDocumentsViewModel(documents, PREVIEW_MIME_TYPES) : [];
 
 		const baseFoldersUrl = `/cases/${id}/case-folders`;
 
