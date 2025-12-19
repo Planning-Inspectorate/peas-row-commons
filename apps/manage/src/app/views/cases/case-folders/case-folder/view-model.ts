@@ -1,6 +1,7 @@
 import { formatBytes } from '@pins/peas-row-commons-lib/util/upload.ts';
 import { formatInTimeZone } from 'date-fns-tz';
 import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 
 export interface DocumentViewModel {
 	id: string;
@@ -10,9 +11,13 @@ export interface DocumentViewModel {
 	sizeSort: number;
 	date: string;
 	dateSort: number;
+	downloadHref: string;
 }
 
-export function createDocumentsViewModel(documents: Prisma.DocumentModel[]): DocumentViewModel[] {
+export function createDocumentsViewModel(
+	documents: Prisma.DocumentModel[],
+	previewMimeTypes: typeof PREVIEW_MIME_TYPES
+): DocumentViewModel[] {
 	return documents.map((doc) => {
 		const dateObj = new Date(doc.uploadedDate);
 		const sizeNum = Number(doc.size);
@@ -24,7 +29,9 @@ export function createDocumentsViewModel(documents: Prisma.DocumentModel[]): Doc
 			size: formatBytes(sizeNum),
 			sizeSort: sizeNum,
 			date: formatInTimeZone(doc.uploadedDate, 'Europe/London', 'dd MMM yyyy'),
-			dateSort: dateObj.getTime()
+			dateSort: dateObj.getTime(),
+			downloadHref: `/documents/${doc.id}/download`,
+			isPreview: previewMimeTypes.includes(doc.mimeType)
 		};
 	});
 }
