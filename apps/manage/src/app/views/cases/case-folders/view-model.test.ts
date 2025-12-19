@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import { createFoldersViewModel } from './view-model.ts';
 
 describe('createFoldersViewModel', () => {
-	it('should sort folders by displayOrder in ascending order and add kebabDisplayName', () => {
+	it('should sort folders by displayOrder in ascending order and add encodedDisplayName', () => {
 		const folders = [
 			{ id: '1', displayName: 'Third Folder', displayOrder: 300 },
 			{ id: '2', displayName: 'First', displayOrder: 100 },
@@ -13,13 +13,13 @@ describe('createFoldersViewModel', () => {
 		const result = createFoldersViewModel(folders as any);
 
 		assert.strictEqual(result[0].displayName, 'First');
-		assert.strictEqual(result[0].kebabDisplayName, 'first');
+		assert.strictEqual(result[0].encodedDisplayName, 'First');
 
 		assert.strictEqual(result[1].displayName, 'Second_Folder');
-		assert.strictEqual(result[1].kebabDisplayName, 'second-folder');
+		assert.strictEqual(result[1].encodedDisplayName, 'Second_Folder');
 
 		assert.strictEqual(result[2].displayName, 'Third Folder');
-		assert.strictEqual(result[2].kebabDisplayName, 'third-folder');
+		assert.strictEqual(result[2].encodedDisplayName, 'Third%20Folder');
 	});
 
 	it('should treat folders without displayOrder as having order 100', () => {
@@ -32,13 +32,13 @@ describe('createFoldersViewModel', () => {
 		const result = createFoldersViewModel(folders as any);
 
 		assert.strictEqual(result[0].displayName, 'Order Ten');
-		assert.strictEqual(result[0].kebabDisplayName, 'order-ten');
+		assert.strictEqual(result[0].encodedDisplayName, 'Order%20Ten');
 
 		assert.strictEqual(result[1].displayName, 'No Order');
-		assert.strictEqual(result[1].kebabDisplayName, 'no-order');
+		assert.strictEqual(result[1].encodedDisplayName, 'No%20Order');
 
 		assert.strictEqual(result[2].displayName, 'Order Two Hundred');
-		assert.strictEqual(result[2].kebabDisplayName, 'order-two-hundred');
+		assert.strictEqual(result[2].encodedDisplayName, 'Order%20Two%20Hundred');
 	});
 
 	it('should return an empty array if input is empty', () => {
@@ -54,8 +54,8 @@ describe('createFoldersViewModel', () => {
 
 		const result = createFoldersViewModel(folders as any);
 
-		assert.strictEqual(result[0].kebabDisplayName, 'notices-and-order-documents');
-		assert.strictEqual(result[1].kebabDisplayName, 'advertised-modifications');
+		assert.strictEqual(result[0].encodedDisplayName, 'Notices%20and%20order%20documents');
+		assert.strictEqual(result[1].encodedDisplayName, 'AdvertisedModifications');
 	});
 
 	it('should maintain stable sort for items with same displayOrder', () => {
@@ -67,9 +67,9 @@ describe('createFoldersViewModel', () => {
 		const result = createFoldersViewModel(folders as any);
 
 		assert.strictEqual(result[0].displayName, 'Alpha Item');
-		assert.strictEqual(result[0].kebabDisplayName, 'alpha-item');
+		assert.strictEqual(result[0].encodedDisplayName, 'Alpha%20Item');
 
 		assert.strictEqual(result[1].displayName, 'Beta Item');
-		assert.strictEqual(result[1].kebabDisplayName, 'beta-item');
+		assert.strictEqual(result[1].encodedDisplayName, 'Beta%20Item');
 	});
 });

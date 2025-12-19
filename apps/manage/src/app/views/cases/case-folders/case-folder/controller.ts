@@ -3,6 +3,10 @@ import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { createFoldersViewModel } from '../view-model.ts';
+import { createDocumentsViewModel } from './view-model.ts';
+import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
+import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 
 export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
@@ -18,23 +22,56 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			throw new Error('folderId param required');
 		}
 
-		let caseRow, currentFolder, subFolders;
+		const folderUpdated = readSessionData(req, folderId, 'updated', false, 'folder');
+
+		// Clear updated flag if present so that we only see it once.
+		clearSessionData(req, folderId, 'updated', 'folder');
+
+		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
+
+		let caseRow, currentFolder, subFolders, documents, totalDocuments, parentFolder;
 		try {
-			[caseRow, currentFolder, subFolders] = await Promise.all([
-				db.case.findUnique({
-					select: {
-						reference: true,
-						name: true
+			const folderData = await db.folder.findUnique({
+				where: {
+					id: folderId
+				},
+				include: {
+					Case: {
+						select: {
+							reference: true,
+							name: true
+						}
 					},
-					where: { id }
-				}),
-				db.folder.findUnique({
-					where: { id: folderId }
-				}),
-				db.folder.findMany({
-					where: { caseId: id, parentFolderId: folderId } // Get children of parent
-				})
-			]);
+					ChildFolders: {
+						where: { caseId: id }
+					},
+					Documents: {
+						where: { caseId: id },
+						skip: skipSize,
+						take: pageSize
+					},
+					_count: {
+						select: { Documents: true }
+					},
+					ParentFolder: {
+						select: {
+							id: true,
+							displayName: true
+						}
+					}
+				}
+			});
+
+			if (!folderData) throw new Error('Folder not found');
+
+			const { Case, ChildFolders, Documents, _count, ParentFolder, ...restOfFolder } = folderData;
+
+			caseRow = Case;
+			currentFolder = restOfFolder;
+			subFolders = ChildFolders;
+			documents = Documents;
+			totalDocuments = _count.Documents;
+			parentFolder = ParentFolder;
 		} catch (error: any) {
 			wrapPrismaError({
 				error,
@@ -44,11 +81,29 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			});
 		}
 
-		if (!caseRow || !currentFolder) {
+		if (!caseRow || !currentFolder || Number.isNaN(totalDocuments)) {
 			return notFoundHandler(req, res);
 		}
 
+		const { totalPages, resultsStartNumber, resultsEndNumber } = getPageData(
+			totalDocuments || 0,
+			selectedItemsPerPage,
+			pageSize,
+			pageNumber
+		);
+
+		const paginationParams = {
+			selectedItemsPerPage,
+			pageNumber,
+			totalPages,
+			resultsStartNumber,
+			resultsEndNumber,
+			totalDocuments
+		};
+
 		const subFoldersViewModel = subFolders ? createFoldersViewModel(subFolders) : [];
+
+		const documentsViewModel = documents ? createDocumentsViewModel(documents, PREVIEW_MIME_TYPES) : [];
 
 		const baseFoldersUrl = `/cases/${id}/case-folders`;
 
@@ -56,9 +111,15 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			pageHeading: caseRow?.name,
 			reference: caseRow?.reference,
 			folderName: currentFolder?.displayName,
-			backLinkUrl: baseFoldersUrl,
-			baseFoldersUrl, // Used for creating the url of the sub-folders
-			subFolders: subFoldersViewModel
+			backLinkUrl: parentFolder
+				? baseFoldersUrl + `/${parentFolder.id}/${encodeURI(parentFolder.displayName)}`
+				: baseFoldersUrl,
+			baseFoldersUrl: baseFoldersUrl, // Used for creating the url of the sub-folders
+			subFolders: subFoldersViewModel,
+			currentUrl: req.originalUrl,
+			documents: documentsViewModel,
+			paginationParams,
+			folderUpdated
 		});
 	};
 }
