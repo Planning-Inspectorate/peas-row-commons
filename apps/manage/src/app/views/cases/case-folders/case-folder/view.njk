@@ -2,6 +2,11 @@
 
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
+
+{% import "views/pagination/pagination.njk" as pagination %}
+{% import "views/pagination/pagination-options.njk" as paginationOptions %}
 
 {% set title = reference + " - Case Folder" %}
 
@@ -10,6 +15,13 @@
 {% endblock %}
 
 {% block content %}
+    {% if folderUpdated %}
+        {{ govukNotificationBanner({
+            classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
+            text: "Folder has been updated",
+            type: "success"
+        }) }}
+    {% endif %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full govuk-!-margin-bottom-3">
             <h2 class="govuk-caption-l">
@@ -28,7 +40,7 @@
             <div class="pins-link-menu">
                 {% if subFolders|length !== 0 %}
                     {% for folder in subFolders %}
-                        <a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.kebabDisplayName }}">
+                        <a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}">
                             {{ folder.displayName }}
                         </a>
                     {% endfor %}
@@ -42,10 +54,97 @@
             <p class="govuk-body govuk-!-font-weight-bold">Files</p>
             {{ govukButton({
                 text: "Upload files",
-                href: "/",
+                href: currentUrl + "/upload",
                 classes: "govuk-button--secondary"
             }) }}
         </div>
     </div>
     <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+    <div id="pagination" class="govuk-body">
+        {% if documents|length !== 0 %}
+            <p class="govuk-body govuk-clearfix">
+                <p class="govuk-body">
+                    Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalDocuments > paginationParams.resultsEndNumber else paginationParams.totalDocuments }}</strong>
+                    of <strong>{{ paginationParams.totalDocuments }}</strong> results
+                </p>
+                <p class="pins-pagination-options">
+                    {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalDocuments, paginationParams.pageNumber, paginationParams.searchValue) }}
+                </p>
+            </p>
+            <div class="govuk-grid-row">
+                <div class="govuk-grid-column-full">
+                    {{ documentsTable(documents) }}
+                </div>
+            </div>
+            {# if pageNumber and totalPages values are both 1 then pagination options not shown #}
+            {{ pagination.renderPagination(paginationParams.pageNumber, paginationParams.totalPages, currentUrl) }}
+        {% else %}
+            <p class="govuk-body">This folder contains 0 documents</p>
+        {% endif %}
+    </div>
 {% endblock %}
+
+{% macro documentsTable(documentsList) %}
+    {% set rows = [] %}
+
+    {% for doc in documentsList %}
+        {% set rows = (rows.push([
+            {
+                html: "<a class='govuk-link' href='/documents/" + doc.id + "/download'>" + doc.fileName + "</a>",
+                attributes: {
+                    "data-sort-value": doc.fileName | lower
+                }
+            },
+            {
+                text: doc.fileType
+            },
+            {
+                text: doc.size,
+                attributes: {
+                    "data-sort-value": doc.sizeSort
+                }
+            },
+            {
+                text: doc.date,
+                attributes: {
+                    "data-sort-value": doc.dateSort
+                }
+            },
+            {
+                html: "<a class='govuk-link' href='/'>Download</a> | <a class='govuk-link' href='/'>Delete</a>"
+            }
+        ]), rows) %}
+    {% endfor %}
+
+    {% set headers = [
+        {
+            text: 'File name',
+            attributes: { "aria-sort": "none" },
+            classes: "govuk-!-width-one-third"
+        },
+        {
+            text: 'File type',
+            attributes: { "aria-sort": "none" }
+        },
+        {
+            text: 'File size',
+            attributes: { "aria-sort": "none" }
+        },
+        {
+            text: 'Uploaded',
+            attributes: { "aria-sort": "descending" } 
+        },
+        {
+            text: 'Actions'
+        }
+    ] %}
+
+    {{ govukTable({
+        attributes: {
+            "data-module": "moj-sortable-table"
+        },
+        head: headers,
+        rows: rows
+    }) }}
+
+{% endmacro %}

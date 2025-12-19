@@ -1,0 +1,34 @@
+import { formatBytes } from '@pins/peas-row-commons-lib/util/upload.ts';
+import { formatInTimeZone } from 'date-fns-tz';
+import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+
+export interface DocumentViewModel {
+	id: string;
+	fileName: string;
+	fileType: string;
+	size: string;
+	sizeSort: number;
+	date: string;
+	dateSort: number;
+}
+
+export function createDocumentsViewModel(documents: Prisma.DocumentModel[]): DocumentViewModel[] {
+	return documents.map((doc) => {
+		const dateObj = new Date(doc.uploadedDate);
+		const sizeNum = Number(doc.size);
+
+		return {
+			id: doc.id,
+			fileName: doc.fileName,
+			fileType: getFileExtension(doc.fileName),
+			size: formatBytes(sizeNum),
+			sizeSort: sizeNum,
+			date: formatInTimeZone(doc.uploadedDate, 'Europe/London', 'dd MMM yyyy'),
+			dateSort: dateObj.getTime()
+		};
+	});
+}
+
+function getFileExtension(fileName: string): string {
+	return fileName.split('.').pop()?.toUpperCase() || '';
+}
