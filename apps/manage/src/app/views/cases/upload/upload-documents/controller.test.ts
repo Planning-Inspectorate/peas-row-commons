@@ -79,7 +79,8 @@ describe('uploadDocumentsController', () => {
 				folderId: 'folder-456',
 				fileName: 'test.pdf',
 				blobName: uploadArgs[2],
-				size: BigInt(1024)
+				size: BigInt(1024),
+				mimeType: 'application/pdf'
 			});
 
 			assert.strictEqual(mockDb.$transaction.mock.callCount(), 1);

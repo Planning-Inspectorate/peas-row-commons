@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createDocumentsViewModel } from './view-model.ts';
+import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 
 describe('createDocumentsViewModel', () => {
 	const createMockDoc = (overrides = {}) =>
@@ -32,7 +33,7 @@ describe('createDocumentsViewModel', () => {
 			})
 		];
 
-		const result = createDocumentsViewModel(inputDocs);
+		const result = createDocumentsViewModel(inputDocs, PREVIEW_MIME_TYPES);
 
 		assert.strictEqual(result.length, 2);
 
@@ -57,7 +58,7 @@ describe('createDocumentsViewModel', () => {
 			createMockDoc({ fileName: '.config' })
 		];
 
-		const result = createDocumentsViewModel(docs);
+		const result = createDocumentsViewModel(docs, PREVIEW_MIME_TYPES);
 
 		assert.strictEqual(result[0].fileType, 'GZ');
 		assert.strictEqual(result[1].fileType, 'README');
@@ -68,7 +69,7 @@ describe('createDocumentsViewModel', () => {
 		const summerDate = new Date('2023-07-01T23:30:00Z');
 		const docs = [createMockDoc({ uploadedDate: summerDate })];
 
-		const result = createDocumentsViewModel(docs);
+		const result = createDocumentsViewModel(docs, PREVIEW_MIME_TYPES);
 
 		assert.strictEqual(result[0].date, '02 Jul 2023');
 	});
@@ -77,14 +78,14 @@ describe('createDocumentsViewModel', () => {
 		const bigVal = BigInt(1024 * 1024);
 		const docs = [createMockDoc({ size: bigVal })];
 
-		const result = createDocumentsViewModel(docs);
+		const result = createDocumentsViewModel(docs, PREVIEW_MIME_TYPES);
 
 		assert.strictEqual(result[0].sizeSort, 1048576);
 		assert.ok(typeof result[0].size === 'string');
 	});
 
 	it('should return empty array if no documents provided', () => {
-		const result = createDocumentsViewModel([]);
+		const result = createDocumentsViewModel([], PREVIEW_MIME_TYPES);
 		assert.deepStrictEqual(result, []);
 	});
 });
