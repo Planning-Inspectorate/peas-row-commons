@@ -9,6 +9,8 @@ updates:
     directory: '/' # Location of package manifests
     schedule:
       interval: 'weekly'
+    cooldown:
+      default-days: 7
     groups:
       azure:
         patterns:
@@ -33,3 +35,5 @@ updates:
     schedule:
       interval: 'weekly'
       day: 'tuesday' # day after npm updates
+    cooldown:
+      default-days: 7
