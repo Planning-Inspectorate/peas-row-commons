@@ -33,6 +33,10 @@ import {
 import { PROCEDURE_GROUP_IDS, PROCEDURE_GROUPS, GROUP_RELATIONSHIPS } from './view-model.ts';
 
 export function getQuestions(groupMembers = { caseOfficers: [] }) {
+	const mappedGroupMembers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
+
+	mappedGroupMembers.unshift({ text: '', value: '' });
+
 	const questions = {
 		caseworkArea: {
 			type: COMPONENT_TYPES.RADIO,
@@ -233,7 +237,7 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			fieldName: 'caseOfficerId',
 			url: 'case-officer',
 			validators: [new RequiredValidator('Select a case officer')],
-			options: groupMembers.caseOfficers.map(referenceDataToRadioOptions)
+			options: mappedGroupMembers
 		},
 		procedure: {
 			type: COMPONENT_TYPES.RADIO,

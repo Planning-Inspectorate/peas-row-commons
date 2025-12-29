@@ -12,6 +12,8 @@ import {
 	ADVERTISED_MODIFICATIONS,
 	PRIORITIES
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
+import type { CaseOfficer } from './types.ts';
 
 interface DateQuestionProps {
 	fieldName: string;
@@ -599,3 +601,35 @@ export const CASE_DETAILS_QUESTIONS = {
 		}
 	}
 };
+
+export const TEAM_QUESTIONS = {
+	caseOfficer: {
+		type: COMPONENT_TYPES.SELECT,
+		title: 'Who is the assigned case officer?',
+		question: 'Who is the assigned case officer?',
+		fieldName: 'caseOfficerId',
+		url: 'case-officer',
+		validators: [new RequiredValidator('Select a case officer')]
+	}
+};
+
+/**
+ * Creates a team questions object, with the extra dynamic options for caseOfficers
+ * added, based on the entra group members passed in.
+ */
+export function createTeamQuestions(
+	teamQuestions: typeof TEAM_QUESTIONS,
+	groupMembers: { caseOfficers: CaseOfficer[] }
+) {
+	const options = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
+
+	options.unshift({ text: '', value: '' });
+
+	return {
+		...teamQuestions,
+		caseOfficer: {
+			...teamQuestions.caseOfficer,
+			options
+		}
+	};
+}
