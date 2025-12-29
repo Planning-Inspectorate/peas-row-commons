@@ -3,7 +3,15 @@ import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/da
 import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
 import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js';
 import NumericValidator from '@planning-inspectorate/dynamic-forms/src/validator/numeric-validator.js';
-import { INVOICE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static_data/invoices.ts';
+import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
+import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
+
+import {
+	INVOICE_STATUSES,
+	CASE_STATUSES,
+	ADVERTISED_MODIFICATIONS,
+	PRIORITIES
+} from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 
 interface DateQuestionProps {
 	fieldName: string;
@@ -348,4 +356,244 @@ export const ABEYANCE_QUESTIONS = {
 			]
 		}
 	})
+};
+
+export const CASE_DETAILS_QUESTIONS = {
+	reference: {
+		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
+		title: 'Case reference',
+		question: 'not editable',
+		fieldName: 'reference',
+		url: '',
+		validators: [],
+		editable: false
+	},
+	externalReference: {
+		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
+		title: 'External reference',
+		question: 'What is the external reference for the case?',
+		fieldName: 'externalReference',
+		url: 'external-reference',
+		validators: [
+			new StringValidator({
+				maxLength: {
+					maxLength: 50,
+					maxLengthMessage: 'External reference must be less than 50 characters'
+				}
+			})
+		]
+	},
+	internalReference: {
+		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
+		title: 'Internal reference',
+		question: 'What is the internal reference for the case?',
+		fieldName: 'internalReference',
+		url: 'internal-reference',
+		validators: [
+			new StringValidator({
+				maxLength: {
+					maxLength: 50,
+					maxLengthMessage: 'Internal reference must be less than 50 characters'
+				}
+			})
+		]
+	},
+	caseName: {
+		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
+		title: 'Case name',
+		question: 'What is the case name?',
+		fieldName: 'name',
+		url: 'case-name',
+		validators: [
+			new RequiredValidator('Enter the case name'),
+			new StringValidator({
+				maxLength: {
+					maxLength: 200,
+					maxLengthMessage: 'Case name must be between 1 and 200 characters'
+				}
+			})
+		]
+	},
+	caseStatus: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Case status',
+		question: 'What is the case status?',
+		fieldName: 'statusId',
+		url: 'case-status',
+		validators: [],
+		options: CASE_STATUSES.map((status) => ({ text: status.displayName, value: status.id })),
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'case-status/remove'
+				}
+			]
+		}
+	},
+	advertisedModificationStatus: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Advertised modification status',
+		question: 'Which round of advertised modifications is the case at?',
+		fieldName: 'advertisedModificationId',
+		url: 'advertised-modifications-status',
+		validators: [],
+		options: ADVERTISED_MODIFICATIONS.map((status) => ({ text: status.displayName, value: status.id })),
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'advertised-modifications-status/remove'
+				}
+			]
+		}
+	},
+	applicant: {
+		type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
+		title: 'Applicant / Server',
+		question: 'What was the final cost?',
+		fieldName: 'applicantId',
+		url: 'applicant-server',
+		inputFields: [
+			{
+				fieldName: 'applicantName',
+				label: 'Applicant / server name'
+			},
+			{
+				fieldName: 'applicantEmail',
+				label: 'Email'
+			},
+			{
+				fieldName: 'applicantTelephoneNumber',
+				label: 'Telephone number'
+			}
+		],
+		validators: [
+			new MultiFieldInputValidator({
+				fields: [
+					{
+						fieldName: 'applicantName',
+						errorMessage: 'Enter the applicant name',
+						regex: {
+							regex: /^.{0,249}$/,
+							regexMessage: 'Name must be less than 250 characters'
+						}
+					},
+					{
+						fieldName: 'applicantEmail',
+						errorMessage: 'Enter an email address',
+						regex: {
+							regex: /^.{0,249}$/,
+							regexMessage: 'Email must be less than 250 characters'
+						}
+					},
+					{
+						fieldName: 'applicantTelephoneNumber',
+						errorMessage: 'Enter a telephone number',
+						regex: {
+							regex: /^.{0,14}$/,
+							regexMessage: 'Telephone number must be less than 15 characters'
+						}
+					}
+				]
+			})
+		]
+	},
+	siteAddress: {
+		type: COMPONENT_TYPES.ADDRESS,
+		title: 'Site address',
+		question: 'What is the site address?',
+		hint: 'Optional',
+		fieldName: 'siteAddress',
+		url: 'site-address',
+		validators: [new AddressValidator()]
+	},
+	location: {
+		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
+		title: 'Site location',
+		question: 'What is the site location if no address was added?',
+		hint: 'For example, name of common, village green, area or body of water',
+		fieldName: 'location',
+		url: 'location',
+		validators: [
+			new StringValidator({
+				maxLength: {
+					maxLength: 150,
+					maxLengthMessage: 'Location must be less than 150 characters'
+				}
+			})
+		]
+	},
+	authority: {
+		type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
+		title: 'Authority (LPA,OMA, CRA)',
+		question: 'Who is the authority?',
+		hint: 'Enter the Local Planning Authority or Common Registration Authority (optional)',
+		fieldName: 'authorityId',
+		url: 'authority',
+		inputFields: [
+			{
+				fieldName: 'authorityName',
+				label: 'Authority name'
+			},
+			{
+				fieldName: 'authorityEmail',
+				label: 'Email'
+			},
+			{
+				fieldName: 'authorityTelephoneNumber',
+				label: 'Telephone number'
+			}
+		],
+		validators: [
+			new MultiFieldInputValidator({
+				fields: [
+					{
+						fieldName: 'authorityName',
+						errorMessage: 'Enter the authority name',
+						regex: {
+							regex: /^.{1,249}$/,
+							regexMessage: 'Name must be less than 250 characters'
+						}
+					},
+					{
+						fieldName: 'authorityEmail',
+						errorMessage: 'Enter an email address',
+						regex: {
+							regex: /^.{1,249}$/,
+							regexMessage: 'Email must be less than 250 characters'
+						}
+					},
+					{
+						fieldName: 'authorityTelephoneNumber',
+						errorMessage: 'Enter a telephone number',
+						regex: {
+							regex: /^.{1,14}$/,
+							regexMessage: 'Telephone number must be less than 15 characters'
+						}
+					}
+				]
+			})
+		]
+	},
+	priority: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Priority',
+		question: 'What is the priority?',
+		fieldName: 'priorityId',
+		url: 'priority',
+		validators: [],
+		options: PRIORITIES.map((priority) => ({ text: priority.displayName, value: priority.id })),
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'priority/remove'
+				}
+			]
+		}
+	}
 };
