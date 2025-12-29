@@ -476,6 +476,7 @@ export const CASE_DETAILS_QUESTIONS = {
 					{
 						fieldName: 'applicantName',
 						errorMessage: 'Enter the applicant name',
+						required: true,
 						regex: {
 							regex: /^.{0,249}$/,
 							regexMessage: 'Name must be less than 250 characters'
@@ -553,8 +554,9 @@ export const CASE_DETAILS_QUESTIONS = {
 					{
 						fieldName: 'authorityName',
 						errorMessage: 'Enter the authority name',
+						required: true,
 						regex: {
-							regex: /^.{1,249}$/,
+							regex: /^.{0,249}$/,
 							regexMessage: 'Name must be less than 250 characters'
 						}
 					},
@@ -562,7 +564,7 @@ export const CASE_DETAILS_QUESTIONS = {
 						fieldName: 'authorityEmail',
 						errorMessage: 'Enter an email address',
 						regex: {
-							regex: /^.{1,249}$/,
+							regex: /^.{0,249}$/,
 							regexMessage: 'Email must be less than 250 characters'
 						}
 					},
@@ -570,7 +572,7 @@ export const CASE_DETAILS_QUESTIONS = {
 						fieldName: 'authorityTelephoneNumber',
 						errorMessage: 'Enter a telephone number',
 						regex: {
-							regex: /^.{1,14}$/,
+							regex: /^.{0,14}$/,
 							regexMessage: 'Telephone number must be less than 15 characters'
 						}
 					}
