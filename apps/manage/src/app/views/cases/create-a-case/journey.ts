@@ -88,7 +88,7 @@ export function createJourney(documentTypeId: string, questions: any, response: 
 				.addQuestion(questions.receivedDate)
 				.addQuestion(questions.applicant)
 				.addQuestion(questions.siteAddress)
-				.addQuestion(questions.area)
+				.addQuestion(questions.location)
 				.addQuestion(questions.authority)
 				.addQuestion(questions.caseOfficer)
 				.addQuestion(questions.procedure)
