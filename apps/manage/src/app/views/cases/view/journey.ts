@@ -16,7 +16,18 @@ export function createJourney(questions: Record<string, any>, response: Response
 	return new Journey({
 		journeyId: JOURNEY_ID,
 		sections: [
-			new Section('Overview', 'questions').addQuestion(questions.reference),
+			new Section('Case details', 'case-details')
+				.addQuestion(questions.reference)
+				.addQuestion(questions.externalReference)
+				.addQuestion(questions.internalReference)
+				.addQuestion(questions.caseName)
+				.addQuestion(questions.caseStatus)
+				.addQuestion(questions.advertisedModificationStatus)
+				.addQuestion(questions.applicant)
+				.addQuestion(questions.siteAddress)
+				.addQuestion(questions.location)
+				.addQuestion(questions.authority)
+				.addQuestion(questions.priority),
 			new Section('Timetable', 'timetable')
 				.addQuestion(questions.receivedDate)
 				.addQuestion(questions.startDate)
