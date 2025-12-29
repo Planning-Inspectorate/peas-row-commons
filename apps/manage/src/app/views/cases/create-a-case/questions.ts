@@ -194,18 +194,18 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			url: 'site-address',
 			validators: [new AddressValidator()]
 		},
-		area: {
+		location: {
 			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
-			title: 'What is the area?',
-			question: 'What is the area?',
-			hint: '(optional)',
-			fieldName: 'area',
-			url: 'area',
+			title: 'What is the site location if no address was added?',
+			question: 'What is the site location if no address was added?',
+			hint: 'For example, name of common, village green, area or body of water',
+			fieldName: 'location',
+			url: 'location',
 			validators: [
 				new StringValidator({
 					maxLength: {
 						maxLength: 150,
-						maxLengthMessage: 'Area must be less than 150 characters'
+						maxLengthMessage: 'Location must be less than 150 characters'
 					}
 				})
 			]
