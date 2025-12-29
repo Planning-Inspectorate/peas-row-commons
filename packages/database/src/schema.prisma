@@ -24,42 +24,52 @@ datasource db {
 /// Case represents a case in the system
 model Case {
   /// internal identifier
-  id                String           @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  createdDate       DateTime         @default(now())
-  updatedDate       DateTime?
-  receivedDate      DateTime
-  closedDate        DateTime?
+  id                       String                        @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  createdDate              DateTime                      @default(now())
+  updatedDate              DateTime?
+  receivedDate             DateTime
+  closedDate               DateTime?
   /// type of case
-  typeId            String
-  Type              CaseType         @relation(fields: [typeId], references: [id])
+  typeId                   String
+  Type                     CaseType                      @relation(fields: [typeId], references: [id])
   /// subtype of case
-  subTypeId         String?
-  SubType           CaseSubType?     @relation(fields: [subTypeId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  subTypeId                String?
+  SubType                  CaseSubType?                  @relation(fields: [subTypeId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   /// shown to users as a unique reference
-  reference         String           @unique
+  reference                String                        @unique
   /// external identifier, optional unlike reference above
-  externalReference String?
-  name              String
-  applicant         String?
-  siteAddressId     String?          @db.UniqueIdentifier
-  SiteAddress       Address?         @relation(fields: [siteAddressId], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  authority         String?
-  area              String?
+  externalReference        String?
+  /// internal reference, if existing case from Horizon
+  internalReference        String?
+  name                     String
+  siteAddressId            String?                       @db.UniqueIdentifier
+  SiteAddress              Address?                      @relation(fields: [siteAddressId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  location                 String?
   /// Entra ID
-  caseOfficerId     String
-  procedureId       String?
-  Procedure         CaseProcedure?   @relation(fields: [procedureId], references: [id])
-  linkedCases       String?
-  Dates             CaseDates?
+  caseOfficerId            String
+  procedureId              String?
+  Procedure                CaseProcedure?                @relation(fields: [procedureId], references: [id])
+  linkedCases              String?
+  Dates                    CaseDates?
   /// Physical location of real-world files
-  filesLocation     String?
-  Folders           Folder[]
-  Costs             CaseCosts?
-  invoiceSentId     String?
-  InvoiceSent       CaseInvoiceSent? @relation(fields: [invoiceSentId], references: [id])
-  Abeyance          CaseAbeyance?
-  Notes             CaseNote[]
-  Documents         Document[]
+  filesLocation            String?
+  Folders                  Folder[]
+  Costs                    CaseCosts?
+  invoiceSentId            String?
+  InvoiceSent              CaseInvoiceSent?              @relation(fields: [invoiceSentId], references: [id])
+  Abeyance                 CaseAbeyance?
+  Notes                    CaseNote[]
+  Documents                Document[]
+  statusId                 String?
+  Status                   CaseStatus?                   @relation(fields: [statusId], references: [id])
+  advertisedModificationId String?
+  AdvertisedModification   AdvertisedModificationStatus? @relation(fields: [advertisedModificationId], references: [id])
+  applicantId              String?                       @db.UniqueIdentifier
+  Applicant                Applicant?                    @relation(fields: [applicantId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  authorityid              String?                       @db.UniqueIdentifier
+  Authority                Authority?                    @relation(fields: [authorityid], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  priorityId               String?
+  Priority                 CasePriority?                 @relation(fields: [priorityId], references: [id])
 }
 
 model CaseworkArea {
@@ -193,6 +203,27 @@ model CaseNote {
   Case          Case     @relation(fields: [caseId], references: [id])
 }
 
+model CaseStatus {
+  /// unique machine-readable name, not generated, e.g. "new-case"
+  id          String  @id
+  displayName String?
+  Case        Case[]
+}
+
+model AdvertisedModificationStatus {
+  /// unique machine-readable name, not generated, e.g. "advertised-modification-1"
+  id          String  @id
+  displayName String?
+  Case        Case[]
+}
+
+model CasePriority {
+  /// unique machine-readable name, not generated, e.g. "high"
+  id          String  @id
+  displayName String?
+  Case        Case[]
+}
+
 model Document {
   id           String    @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   fileName     String
@@ -223,4 +254,20 @@ model DraftDocument {
   mimeType   String
 
   @@index([sessionKey, caseId])
+}
+
+model Applicant {
+  id              String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  name            String
+  email           String
+  telephoneNumber String
+  Case            Case[]
+}
+
+model Authority {
+  id              String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  name            String
+  email           String
+  telephoneNumber String
+  Case            Case[]
 }
