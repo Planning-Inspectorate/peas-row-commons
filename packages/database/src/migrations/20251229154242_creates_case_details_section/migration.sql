@@ -47,8 +47,8 @@ CREATE TABLE [dbo].[CasePriority] (
 CREATE TABLE [dbo].[Applicant] (
     [id] UNIQUEIDENTIFIER NOT NULL CONSTRAINT [Applicant_id_df] DEFAULT newid(),
     [name] NVARCHAR(1000) NOT NULL,
-    [email] NVARCHAR(1000) NOT NULL,
-    [telephoneNumber] NVARCHAR(1000) NOT NULL,
+    [email] NVARCHAR(1000),
+    [telephoneNumber] NVARCHAR(1000),
     CONSTRAINT [Applicant_pkey] PRIMARY KEY CLUSTERED ([id])
 );
 
@@ -56,8 +56,8 @@ CREATE TABLE [dbo].[Applicant] (
 CREATE TABLE [dbo].[Authority] (
     [id] UNIQUEIDENTIFIER NOT NULL CONSTRAINT [Authority_id_df] DEFAULT newid(),
     [name] NVARCHAR(1000) NOT NULL,
-    [email] NVARCHAR(1000) NOT NULL,
-    [telephoneNumber] NVARCHAR(1000) NOT NULL,
+    [email] NVARCHAR(1000),
+    [telephoneNumber] NVARCHAR(1000),
     CONSTRAINT [Authority_pkey] PRIMARY KEY CLUSTERED ([id])
 );
 
