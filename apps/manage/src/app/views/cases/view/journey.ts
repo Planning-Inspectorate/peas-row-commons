@@ -50,7 +50,8 @@ export function createJourney(questions: Record<string, any>, response: Response
 			new Section('Withdrawal or abeyance', 'withdrawal-abeyance')
 				.addQuestion(questions.withdrawalDate)
 				.addQuestion(questions.abeyanceStartDate)
-				.addQuestion(questions.abeyanceEndDate)
+				.addQuestion(questions.abeyanceEndDate),
+			new Section('Team', 'team').addQuestion(questions.caseOfficer)
 		],
 		taskListUrl: '',
 		journeyTemplate: 'views/layouts/forms-question.njk',
