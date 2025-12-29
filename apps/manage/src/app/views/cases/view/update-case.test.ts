@@ -137,5 +137,73 @@ describe('Update Case Controller', () => {
 			assert.strictEqual(result.name, 'Main Field');
 			assert.strictEqual((result as any).Dates.upsert.create.startDate, '2025-01-01');
 		});
+
+		it('should transform applicant fields into Applicant upsert payload', () => {
+			const input = {
+				applicantName: 'John Doe',
+				applicantEmail: 'john@example.com',
+				applicantTelephoneNumber: '0123456789'
+			};
+			const result = mapCasePayload(input);
+
+			const applicantUpdate = (result as any).Applicant;
+			assert.ok(applicantUpdate, 'Should have Applicant property');
+
+			assert.strictEqual(applicantUpdate.upsert.create.name, 'John Doe');
+			assert.strictEqual(applicantUpdate.upsert.create.email, 'john@example.com');
+			assert.strictEqual(applicantUpdate.upsert.create.telephoneNumber, '0123456789');
+
+			assert.strictEqual((result as any).applicantName, undefined);
+		});
+
+		it('should transform authority fields into Authority upsert payload', () => {
+			const input = {
+				authorityName: 'Local Council',
+				authorityEmail: 'planning@council.gov.uk',
+				authorityTelephoneNumber: '0987654321'
+			};
+			const result = mapCasePayload(input);
+
+			const authorityUpdate = (result as any).Authority;
+			assert.ok(authorityUpdate, 'Should have Authority property');
+
+			assert.strictEqual(authorityUpdate.upsert.create.name, 'Local Council');
+			assert.strictEqual(authorityUpdate.upsert.create.email, 'planning@council.gov.uk');
+
+			assert.strictEqual((result as any).authorityName, undefined);
+		});
+
+		it('should transform siteAddress object into SiteAddress upsert payload with correct key mapping', () => {
+			const input = {
+				siteAddress: {
+					addressLine1: '1 High St',
+					addressLine2: 'Village',
+					townCity: 'London',
+					county: 'Greater London',
+					postcode: 'SW1 1AA'
+				}
+			};
+			const result = mapCasePayload(input);
+
+			const addressUpdate = (result as any).SiteAddress;
+			assert.ok(addressUpdate, 'Should have SiteAddress property');
+
+			assert.strictEqual(addressUpdate.upsert.create.line1, '1 High St');
+			assert.strictEqual(addressUpdate.upsert.create.townCity, 'London');
+			assert.strictEqual(addressUpdate.upsert.create.postcode, 'SW1 1AA');
+
+			assert.strictEqual((result as any).siteAddress, undefined);
+		});
+
+		it('should skip applicant transformation if fields are incomplete', () => {
+			const input = {
+				applicantName: 'Incomplete User'
+			};
+
+			const result = mapCasePayload(input);
+
+			assert.strictEqual((result as any).Applicant, undefined);
+			assert.strictEqual((result as any).applicantName, 'Incomplete User');
+		});
 	});
 });
