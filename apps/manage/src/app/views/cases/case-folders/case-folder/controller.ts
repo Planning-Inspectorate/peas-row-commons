@@ -116,7 +116,7 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			reference: caseRow?.reference,
 			folderName: currentFolder?.displayName,
 			backLinkUrl: parentFolder
-				? baseFoldersUrl + `/${parentFolder.id}/${encodeURI(parentFolder.displayName)}`
+				? baseFoldersUrl + `/${parentFolder.id}/${encodeURIComponent(parentFolder.displayName)}`
 				: baseFoldersUrl,
 			baseFoldersUrl: baseFoldersUrl, // Used for creating the url of the sub-folders
 			subFolders: subFoldersViewModel,

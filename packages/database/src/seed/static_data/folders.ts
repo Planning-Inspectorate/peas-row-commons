@@ -12,8 +12,20 @@ export const PEAS_FOLDERS = [
 		displayOrder: 300
 	},
 	{
-		displayName: 'Statements of case',
-		displayOrder: 400
+		displayName: 'Statements of case / final comments',
+		displayOrder: 400,
+		ChildFolders: {
+			create: [
+				{
+					displayName: 'Statements of case',
+					displayOrder: 100
+				},
+				{
+					displayName: 'Final comments',
+					displayOrder: 200
+				}
+			]
+		}
 	},
 	{
 		displayName: 'Proofs of evidence, Rebuttals and Statement of Common Ground (if inquiry)',
@@ -29,7 +41,7 @@ export const PEAS_FOLDERS = [
 		ChildFolders: {
 			create: [
 				{
-					displayName: 'Pre-enquiry meeting or Case management conference',
+					displayName: 'Pre-inquiry meeting or Case management conference',
 					displayOrder: 100
 				},
 				{
@@ -37,12 +49,8 @@ export const PEAS_FOLDERS = [
 					displayOrder: 200
 				},
 				{
-					displayName: 'Final comments',
-					displayOrder: 300
-				},
-				{
 					displayName: 'Inquiry notice',
-					displayOrder: 400
+					displayOrder: 300
 				}
 			]
 		}
