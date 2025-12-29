@@ -1,4 +1,4 @@
-import { Prisma } from '@pins/peas-row-commons-database/src/client/client.js';
+import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 
 export const caseListSelect = {
 	id: true,

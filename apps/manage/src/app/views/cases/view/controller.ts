@@ -103,7 +103,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 
 		const answers = caseToViewModel(caseToView, groupMembers);
 
-		const questions = getQuestions();
+		const questions = getQuestions(groupMembers);
 
 		// put these on locals for the list controller
 		res.locals.originalAnswers = { ...answers };
