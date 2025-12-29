@@ -202,11 +202,11 @@ model Document {
   size         BigInt    @default(0)
   blobName     String
   mimeType     String    @default("application/octet-stream")
+  deletedAt    DateTime?
   caseId       String    @db.UniqueIdentifier
   Case         Case      @relation(fields: [caseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   folderId     String    @db.UniqueIdentifier
   Folder       Folder    @relation(fields: [folderId], references: [id], onDelete: Cascade)
-  deletedAt    DateTime?
 }
 
 /// Indicates a document that has been uploaded
