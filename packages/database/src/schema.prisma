@@ -194,16 +194,17 @@ model CaseNote {
 }
 
 model Document {
-  id           String   @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  id           String    @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   fileName     String
-  uploadedDate DateTime @default(now())
-  size         BigInt   @default(0)
+  uploadedDate DateTime  @default(now())
+  size         BigInt    @default(0)
   blobName     String
   mimeType     String
-  caseId       String   @db.UniqueIdentifier
-  Case         Case     @relation(fields: [caseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  folderId     String   @db.UniqueIdentifier
-  Folder       Folder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  deletedAt    DateTime?
+  caseId       String    @db.UniqueIdentifier
+  Case         Case      @relation(fields: [caseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  folderId     String    @db.UniqueIdentifier
+  Folder       Folder    @relation(fields: [folderId], references: [id], onDelete: Cascade)
 }
 
 /// Indicates a document that has been uploaded
