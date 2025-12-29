@@ -121,7 +121,7 @@
                 }
             },
             {
-                html: "<a class='govuk-link' href=" + doc.downloadHref + ">" + 'Download' + "</a>" + "| <a class='govuk-link' href='/'>Delete</a>"
+                html: "<a class='govuk-link' href=" + doc.downloadHref + ">" + 'Download' + "</a>" + "| <a class='govuk-link' href=" + currentUrl + "/" + doc.id + "/delete" + ">Delete</a>"
             }
         ]), rows) %}
     {% endfor %}
