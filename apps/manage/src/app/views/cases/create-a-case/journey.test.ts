@@ -28,7 +28,7 @@ describe('create-a-case journey', () => {
 		assert.strictEqual(section.title, undefined);
 
 		// Questions added
-		assert.strictEqual(section.questions.length, 21);
+		assert.strictEqual(section.questions.length, 18);
 
 		assert.strictEqual(section.questions[0].fieldName, 'caseworkArea');
 	});
