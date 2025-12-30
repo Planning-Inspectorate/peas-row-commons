@@ -1,6 +1,7 @@
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import type { Request } from 'express';
+import { checkAnswerlength, checkRequiredAnswer } from '@pins/peas-row-commons-lib/util/strings.ts';
 
 export function buildValidateCaseNotesMiddleware(): AsyncRequestHandler {
 	return async (req, res, next) => {
@@ -31,31 +32,7 @@ function generateCaseNoteErrors(req: Request) {
 
 	errors.push(checkRequiredAnswer(comment, 'Enter a case note', req.baseUrl));
 
-	errors.push(checkAnswerlength(comment, 'Case note must be 500 characters or less', req.baseUrl));
+	errors.push(checkAnswerlength(comment, 'Case note must be 500 characters or less', req.baseUrl, 500));
 
 	return errors.filter((error) => error);
-}
-
-/**
- * Checks if a provided answer is not empty, returns an error ready object if it is empty.
- */
-function checkRequiredAnswer(value: string, errorMessage: string, pageLink: string) {
-	if (typeof value === 'undefined' || value === '' || value === null) {
-		return {
-			text: errorMessage,
-			href: pageLink
-		};
-	}
-}
-
-/**
- * Check that answer string is under certain character length
- */
-function checkAnswerlength(value: string, errorMessage: string, pageLink: string, length = 150) {
-	if (value?.length > length) {
-		return {
-			text: errorMessage,
-			href: pageLink
-		};
-	}
 }

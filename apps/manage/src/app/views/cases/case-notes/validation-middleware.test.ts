@@ -62,9 +62,9 @@ describe('buildValidateCaseNotesMiddleware', () => {
 		assert.deepStrictEqual(res.redirect.mock.calls[0].arguments, [expectedUrl]);
 	});
 
-	it('should redirect when comment exceeds 150 characters', async () => {
-		// Create a string with 151 characters
-		const longComment = 'a'.repeat(151);
+	it('should redirect when comment exceeds 500 characters', async () => {
+		// Create a string with 501 characters
+		const longComment = 'a'.repeat(501);
 
 		const req = {
 			params: { id: '123' },
