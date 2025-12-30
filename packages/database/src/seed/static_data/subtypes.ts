@@ -44,7 +44,7 @@ export const HOUSING_PLANNING_CPOS_SUBTYPES = [
 	},
 	{
 		id: CASE_SUBTYPES_ID.ADHOC,
-		displayName: 'Adhoc',
+		displayName: 'Ad hoc',
 		parentTypeId: CASE_TYPES_ID.HOUSING_PLANNING_CPOS
 	}
 ];
@@ -71,28 +71,18 @@ export const OTHER_SOS_CASEWORK_SUBTYPES = [
 		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
 	},
 	{
-		id: CASE_SUBTYPES_ID.SSSI,
-		displayName: 'SSSI',
-		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
-	},
-	{
 		id: CASE_SUBTYPES_ID.ADVERT,
 		displayName: 'Advert',
 		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
 	},
 	{
-		id: CASE_SUBTYPES_ID.DISCONTINUANCE_NOTICE,
-		displayName: 'Discontinuance notice',
-		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
-	},
-	{
-		id: CASE_SUBTYPES_ID.REVOCATION,
-		displayName: 'Revocation',
-		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
-	},
-	{
 		id: CASE_SUBTYPES_ID.COMPLETION_NOTICE,
 		displayName: 'Completion notice',
+		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
+	},
+	{
+		id: CASE_SUBTYPES_ID.DISCONTINUANCE_NOTICE,
+		displayName: 'Discontinuance notice',
 		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
 	},
 	{
@@ -104,18 +94,23 @@ export const OTHER_SOS_CASEWORK_SUBTYPES = [
 		id: CASE_SUBTYPES_ID.REVIEW_OF_MINERAL_PP,
 		displayName: 'Review of mineral permission',
 		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
+	},
+	{
+		id: CASE_SUBTYPES_ID.REVOCATION,
+		displayName: 'Revocation',
+		parentTypeId: CASE_TYPES_ID.OTHER_SOS_CASEWORK
 	}
 ];
 
 export const COASTAL_ACCESS_SUBTYPES = [
 	{
-		id: CASE_SUBTYPES_ID.NOTICE_APPEAL,
-		displayName: 'Notice appeal',
+		id: CASE_SUBTYPES_ID.COASTAL_ACCESS_APPEAL,
+		displayName: 'Coastal access appeal',
 		parentTypeId: CASE_TYPES_ID.COASTAL_ACCESS
 	},
 	{
-		id: CASE_SUBTYPES_ID.COASTAL_ACCESS_APPEAL,
-		displayName: 'Coastal access appeal',
+		id: CASE_SUBTYPES_ID.NOTICE_APPEAL,
+		displayName: 'Notice appeal',
 		parentTypeId: CASE_TYPES_ID.COASTAL_ACCESS
 	},
 	{
@@ -143,7 +138,7 @@ export const COMMON_LAND_SUBTYPES = [
 	},
 	{
 		id: CASE_SUBTYPES_ID.COMPULSORY_PURCHASE_CL,
-		displayName: 'Compulsory Purchase of Common Land 1',
+		displayName: 'Compulsory Purchase of Common Land',
 		parentTypeId: CASE_TYPES_ID.COMMON_LAND
 	},
 	{
@@ -242,6 +237,11 @@ export const RIGHTS_OF_WAY_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.SCHEDULE_14_DIRECTION,
 		displayName: 'Schedule 14 Direction',
+		parentTypeId: CASE_TYPES_ID.RIGHTS_OF_WAY
+	},
+	{
+		id: CASE_SUBTYPES_ID.SCHEDULE_13A_APPEAL,
+		displayName: 'Schedule 13A Appeal',
 		parentTypeId: CASE_TYPES_ID.RIGHTS_OF_WAY
 	}
 ];
