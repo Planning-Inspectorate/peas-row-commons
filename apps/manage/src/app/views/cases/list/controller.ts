@@ -163,7 +163,9 @@ function generateQuery(db: PrismaClient, skipSize: number, pageSize: number, whe
 		db.case.findMany({
 			orderBy: { receivedDate: 'desc' },
 			include: {
-				Type: { select: { displayName: true } }
+				Type: { select: { displayName: true } },
+				SubType: { select: { displayName: true } },
+				Status: { select: { displayName: true } }
 			},
 			skip: skipSize,
 			take: pageSize,
