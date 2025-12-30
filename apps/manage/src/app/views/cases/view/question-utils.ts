@@ -662,7 +662,7 @@ export const OVERVIEW_QUESTIONS = {
 		question: 'What is the inspector band?',
 		fieldName: 'inspectorBandId',
 		url: 'inspector-band',
-		validators: [],
+		validators: [new RequiredValidator('Select inspector band')],
 		options: INSPECTOR_BANDS.map((band) => ({ text: band.displayName, value: band.id })),
 		viewData: {
 			extraActionButtons: [
