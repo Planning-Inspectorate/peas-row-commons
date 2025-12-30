@@ -152,7 +152,11 @@ describe('Case Controller', () => {
 
 			assert.deepStrictEqual(dbArgs.orderBy, { receivedDate: 'desc' });
 			assert.strictEqual(dbArgs.take, 25);
-			assert.deepStrictEqual(dbArgs.include, { Type: { select: { displayName: true } } });
+			assert.deepStrictEqual(dbArgs.include, {
+				Type: { select: { displayName: true } },
+				SubType: { select: { displayName: true } },
+				Status: { select: { displayName: true } }
+			});
 
 			assert.strictEqual(mockRes.render.mock.callCount(), 1);
 			const renderArgs = mockRes.render.mock.calls[0].arguments;
