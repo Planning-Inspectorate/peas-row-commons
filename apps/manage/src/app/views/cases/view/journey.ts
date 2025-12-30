@@ -16,16 +16,33 @@ export function createJourney(questions: Record<string, any>, response: Response
 	return new Journey({
 		journeyId: JOURNEY_ID,
 		sections: [
-			new Section('Overview', 'questions').addQuestion(questions.reference),
+			new Section('Overview', 'overview')
+				.addQuestion(questions.caseType)
+				.addQuestion(questions.caseSubtype)
+				.addQuestion(questions.act)
+				.addQuestion(questions.consentSought)
+				.addQuestion(questions.inspectorBand),
+			new Section('Case details', 'case-details')
+				.addQuestion(questions.reference)
+				.addQuestion(questions.externalReference)
+				.addQuestion(questions.internalReference)
+				.addQuestion(questions.caseName)
+				.addQuestion(questions.caseStatus)
+				.addQuestion(questions.advertisedModificationStatus)
+				.addQuestion(questions.applicant)
+				.addQuestion(questions.siteAddress)
+				.addQuestion(questions.location)
+				.addQuestion(questions.authority)
+				.addQuestion(questions.priority),
 			new Section('Timetable', 'timetable')
 				.addQuestion(questions.receivedDate)
 				.addQuestion(questions.startDate)
-				.addQuestion(questions.objectionPeriodEndsDate)
 				.addQuestion(questions.expectedSubmissionDate)
-				.addQuestion(questions.offerForWrittenRepresentationDate)
+				.addQuestion(questions.targetDecisionDate)
+				.addQuestion(questions.caseOfficerVerificationDate)
+				.addQuestion(questions.proposedModificationsDate)
+				.addQuestion(questions.objectionPeriodEndsDate)
 				.addQuestion(questions.consentDeadlineDate)
-				.addQuestion(questions.partiesEventNotificationDeadlineDate)
-				.addQuestion(questions.targetEventDate)
 				.addQuestion(questions.ogdDueDate)
 				.addQuestion(questions.proposalLetterDate)
 				.addQuestion(questions.expiryDate)
@@ -39,7 +56,8 @@ export function createJourney(questions: Record<string, any>, response: Response
 			new Section('Withdrawal or abeyance', 'withdrawal-abeyance')
 				.addQuestion(questions.withdrawalDate)
 				.addQuestion(questions.abeyanceStartDate)
-				.addQuestion(questions.abeyanceEndDate)
+				.addQuestion(questions.abeyanceEndDate),
+			new Section('Team', 'team').addQuestion(questions.caseOfficer)
 		],
 		taskListUrl: '',
 		journeyTemplate: 'views/layouts/forms-question.njk',

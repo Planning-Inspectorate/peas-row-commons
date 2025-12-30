@@ -5,21 +5,7 @@ export async function seedDev(dbClient: PrismaClient) {
 	console.log('starting seed of 100 cases...');
 
 	const locations = ['Bristol', 'Taunton', 'Leeds', 'Sheffield', 'Manchester', 'London', 'Birmingham', 'Liverpool'];
-	const authorities = [
-		'Bristol City Council',
-		'Somerset Council',
-		'Leeds City Council',
-		'Sheffield City Council',
-		'Environment Agency'
-	];
-	const applicants = [
-		'Green Dale Parish Council',
-		'Yorkshire Water',
-		'BuildCorp Ltd',
-		'Highways England',
-		'National Grid',
-		'Redrow Homes'
-	];
+
 	const officers = ['dev_officer_001', 'dev_officer_002', 'dev_officer_003'];
 
 	const scenarios = [
@@ -49,8 +35,6 @@ export async function seedDev(dbClient: PrismaClient) {
 	for (let i = 1; i <= 100; i++) {
 		const scenario = scenarios[i % scenarios.length];
 		const location = locations[i % locations.length];
-		const authority = authorities[i % authorities.length];
-		const applicant = applicants[i % applicants.length];
 		const officer = officers[i % officers.length];
 
 		const idSuffix = (1000 + i).toString();
@@ -80,11 +64,9 @@ export async function seedDev(dbClient: PrismaClient) {
 			create: {
 				reference,
 				name: `${scenario.nameTemplate} ${location} - Site ${i}`,
-				applicant,
 				caseOfficerId: officer,
 				receivedDate,
-				authority,
-				area: i % 2 === 0 ? 'South West' : 'North East',
+				location: i % 2 === 0 ? 'South West' : 'North East',
 				Type: { connect: { id: scenario.type } },
 				SubType: { connect: { id: scenario.subType } },
 				...siteAddressData
