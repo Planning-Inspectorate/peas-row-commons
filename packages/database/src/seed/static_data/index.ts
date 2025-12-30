@@ -6,3 +6,4 @@ export { INVOICE_STATUSES } from './invoices.ts';
 export { PRIORITIES } from './priority.ts';
 export { ADVERTISED_MODIFICATIONS } from './advertised-modification.ts';
 export { CASE_STATUSES } from './status.ts';
+export { INSPECTOR_BANDS } from './inspector-bands.ts';
