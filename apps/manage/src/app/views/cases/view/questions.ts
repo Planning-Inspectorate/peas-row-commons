@@ -8,7 +8,8 @@ import {
 	ABEYANCE_QUESTIONS,
 	CASE_DETAILS_QUESTIONS,
 	TEAM_QUESTIONS,
-	createTeamQuestions
+	createTeamQuestions,
+	OVERVIEW_QUESTIONS
 } from './question-utils.ts';
 
 import type { CaseOfficer } from './types.ts';
@@ -23,7 +24,8 @@ export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }) {
 		...COSTS_QUESTIONS,
 		...ABEYANCE_QUESTIONS,
 		...CASE_DETAILS_QUESTIONS,
-		...generatedTeamQuestions
+		...generatedTeamQuestions,
+		...OVERVIEW_QUESTIONS
 	};
 
 	const textOverrides = {
