@@ -80,16 +80,13 @@
                 }
             },
             {
-                text: case.Type.displayName
-            },
-            {
-                text: case.receivedDate,
-                attributes: {
-                    "data-sort-value": case.receivedDateSortable
-                }
+                text: case.SubType.displayName if case.SubType else case.Type.displayName
             },
             {
                 text: case.name
+            },
+            {
+                text: case.Status.displayName
             }
         ]), cases) %}
     {% endfor %}
@@ -103,21 +100,21 @@
             }
         },
         {
-            text: 'Case type',
+            text: 'Subtype',
             classes: "govuk-!-width-one-quarter",
             attributes: {
                 "aria-sort": "none"
             }
         },
         {
-            text: 'Received on',
+            text: 'Case name',
             classes: "govuk-!-width-one-quarter",
             attributes: {
-                "aria-sort": "descending"
+                "aria-sort": "none"
             }
         },
         {
-            text: 'Case name',
+            text: 'Status',
             classes: "govuk-!-width-one-quarter",
             attributes: {
                 "aria-sort": "none"
