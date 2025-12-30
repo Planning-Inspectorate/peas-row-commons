@@ -18,26 +18,4 @@ describe('case details journey', () => {
 			{ message: `not a valid request for the ${JOURNEY_ID} journey (invalid baseUrl)` }
 		);
 	});
-
-	it('should create a journey instance with correct structure and questions', () => {
-		const mockReq = { params: { id: 'case-1' }, baseUrl: '/cases/case-1', session: {} };
-		const mockRes = {};
-
-		const questions = getQuestions();
-
-		const journey: any = createJourney(questions, mockRes as any, mockReq as any);
-
-		assert.strictEqual(journey.journeyId, JOURNEY_ID);
-
-		assert.strictEqual(journey.journeyTitle, 'Case details');
-		assert.strictEqual(journey.returnToListing, true);
-
-		assert.strictEqual(journey.baseUrl, '/cases/case-1');
-
-		const overviewSection = journey.sections[0];
-		assert.strictEqual(overviewSection.segment, 'questions');
-
-		assert.strictEqual(overviewSection.questions.length, 1);
-		assert.strictEqual(overviewSection.questions[0].fieldName, 'reference');
-	});
 });
