@@ -71,6 +71,13 @@ model Case {
   Authority                Authority?                    @relation(fields: [authorityid], references: [id], onUpdate: NoAction, onDelete: NoAction)
   priorityId               String?
   Priority                 CasePriority?                 @relation(fields: [priorityId], references: [id])
+  /// The relevant legislation / act
+  act                      String?
+  /// What type of consent has been sought
+  consentSought            String?
+  /// The band for the inspector
+  inspectorBandId          String?
+  InspectorBand            InspectorBand?                @relation(fields: [inspectorBandId], references: [id])
 }
 
 model CaseworkArea {
@@ -268,4 +275,11 @@ model Authority {
   id   String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   name String
   Case Case[]
+}
+
+model InspectorBand {
+  /// unique machine-readable name, not generated, e.g. "1"
+  id          String  @id
+  displayName String?
+  Case        Case[]
 }
