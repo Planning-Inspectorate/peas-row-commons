@@ -41,10 +41,36 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		}
 	});
 
-	const sanitisedData: Record<string, any> = {};
+	if (caseRow.Applicant) {
+		mergedData.applicantName = caseRow.Applicant.name;
+		mergedData.applicantEmail = caseRow.Applicant.email;
+		mergedData.applicantTelephoneNumber = caseRow.Applicant.telephoneNumber;
+		delete mergedData.Applicant;
+	}
 
+	if (caseRow.Authority) {
+		mergedData.authorityName = caseRow.Authority.name;
+		mergedData.authorityEmail = caseRow.Authority.email;
+		mergedData.authorityTelephoneNumber = caseRow.Authority.telephoneNumber;
+		delete mergedData.Authority;
+	}
+
+	const sanitisedData: Record<string, any> = {};
 	for (const key in mergedData) {
-		sanitisedData[key] = formatValue(mergedData[key]);
+		if (key !== 'SiteAddress') {
+			sanitisedData[key] = formatValue(mergedData[key]);
+		}
+	}
+
+	let siteAddress = null;
+	if (caseRow.SiteAddress) {
+		siteAddress = {
+			addressLine1: caseRow.SiteAddress.line1,
+			addressLine2: caseRow.SiteAddress.line2,
+			townCity: caseRow.SiteAddress.townCity,
+			county: caseRow.SiteAddress.county,
+			postcode: caseRow.SiteAddress.postcode
+		};
 	}
 
 	const mappedNotes = mapNotes(caseRow.Notes || [], groupMembers);
@@ -52,6 +78,7 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 	return {
 		...sanitisedData,
 		...mappedNotes,
+		siteAddress,
 		receivedDateDisplay: formatInTimeZone(caseRow.receivedDate, 'Europe/London', 'dd MMM yyyy'),
 		receivedDateSortable: new Date(caseRow.receivedDate)?.getTime()
 	};

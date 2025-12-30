@@ -87,18 +87,20 @@ async function updateCaseData(
 
 /**
  * Takes a flat object of keys, and creates the correct nested structure needed for
- * DB upsert. Leaves flat if the key is not found on any sub-tables, and we assume
- * it's on the main table (Case).
+ * DB upsert.
  *
- * E.g. 'startDate' is on the 'Dates' table, as such when someone edits this we take
- * the generic `startDate` key and make sure to find its parent (Dates) and nest it:
- * { Dates: startDate: '01-01-2020' }.
- *
+ * It explicitly handles complex multi-field objects (Applicant, Authority, SiteAddress)
+ * first, then passes any remaining keys to the generic mapping logic.
  */
 export function mapCasePayload(flatData: Record<string, any>): Prisma.CaseUpdateInput {
-	const [mainTableData, nestedData] = parseDataToCorrectTable(flatData);
+	const prismaPayload: Prisma.CaseUpdateInput = {};
 
-	return generateNestedQuery(mainTableData, nestedData);
+	handleUniqueDataCases(flatData, prismaPayload);
+
+	const [mainTableData, nestedData] = parseDataToCorrectTable(flatData);
+	const genericPayload = generateNestedQuery(mainTableData, nestedData);
+
+	return { ...prismaPayload, ...genericPayload };
 }
 
 /**
@@ -128,10 +130,6 @@ function parseDataToCorrectTable(flatData: Record<string, any>) {
 
 /**
  * Creates the payload ready to upsert based on the two data sets (main vs nested).
- *
- * NB. casting the payload to `any` here is sadly mandatory if we want to avoid having to
- * turn the modular & generic code in the parsing and mapping functions into more
- * specific code that checks every possible table with "if-else"s.
  */
 function generateNestedQuery(mainTableData: Record<string, any>, nestedData: Record<string, Record<string, any>>) {
 	const prismaPayload: Prisma.CaseUpdateInput = { ...mainTableData };
@@ -146,4 +144,101 @@ function generateNestedQuery(mainTableData: Record<string, any>, nestedData: Rec
 	});
 
 	return prismaPayload;
+}
+
+/**
+ * Handles all the unique data cases that require creating new tables or deleting the tables.
+ */
+function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	handleApplicant(flatData, prismaPayload);
+	handleAuthority(flatData, prismaPayload);
+	handleAddress(flatData, prismaPayload);
+}
+
+/**
+ * Handles mapping the applicant or server data to the db fields.
+ */
+function handleApplicant(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (
+		!(
+			Object.hasOwn(flatData, 'applicantName') &&
+			Object.hasOwn(flatData, 'applicantEmail') &&
+			Object.hasOwn(flatData, 'applicantTelephoneNumber')
+		)
+	)
+		return;
+
+	const applicantData = {
+		name: flatData.applicantName,
+		email: flatData.applicantEmail,
+		telephoneNumber: flatData.applicantTelephoneNumber
+	};
+
+	prismaPayload.Applicant = {
+		upsert: {
+			create: applicantData,
+			update: applicantData
+		}
+	};
+
+	delete flatData.applicantName;
+	delete flatData.applicantEmail;
+	delete flatData.applicantTelephoneNumber;
+}
+
+/**
+ * Handles mapping the authority data fields to the db fields.
+ */
+function handleAuthority(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (
+		!(
+			Object.hasOwn(flatData, 'authorityName') &&
+			Object.hasOwn(flatData, 'authorityEmail') &&
+			Object.hasOwn(flatData, 'authorityTelephoneNumber')
+		)
+	)
+		return;
+
+	const authorityData = {
+		name: flatData.authorityName,
+		email: flatData.authorityEmail,
+		telephoneNumber: flatData.authorityTelephoneNumber
+	};
+
+	prismaPayload.Authority = {
+		upsert: {
+			create: authorityData,
+			update: authorityData
+		}
+	};
+
+	delete flatData.authorityName;
+	delete flatData.authorityEmail;
+	delete flatData.authorityTelephoneNumber;
+}
+
+/**
+ * Handles mapping address data fields to db fields.
+ */
+function handleAddress(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (!flatData.siteAddress) return;
+
+	const address = flatData.siteAddress;
+
+	const addressData = {
+		line1: address.addressLine1,
+		line2: address.addressLine2,
+		townCity: address.townCity,
+		county: address.county,
+		postcode: address.postcode
+	};
+
+	prismaPayload.SiteAddress = {
+		upsert: {
+			create: addressData,
+			update: addressData
+		}
+	};
+
+	delete flatData.siteAddress;
 }
