@@ -6,7 +6,8 @@ import {
 	PROCEDURES,
 	INVOICE_STATUSES,
 	PRIORITIES,
-	ADVERTISED_MODIFICATIONS
+	ADVERTISED_MODIFICATIONS,
+	INSPECTOR_BANDS
 } from './static_data/index.ts';
 import { CASE_STATUSES } from './static_data/status.ts';
 
@@ -69,6 +70,10 @@ export async function seedStaticData(dbClient: PrismaClient) {
 
 	for (const input of INVOICE_STATUSES) {
 		await upsertReferenceData({ delegate: dbClient.caseInvoiceSent, input });
+	}
+
+	for (const input of INSPECTOR_BANDS) {
+		await upsertReferenceData({ delegate: dbClient.inspectorBand, input });
 	}
 
 	console.log('static data seed complete');
