@@ -25,7 +25,7 @@
 		<hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
 		{%- for caseNote in params.notes -%}
 			<section>
-				<p class="govuk-body govuk-!-margin-bottom-1">
+				<p class="govuk-body govuk-!-margin-bottom-1 govuk-!-text-break-word">
 					{{caseNote.commentText | safe}}
 				</p>
 				<p class="govuk-hint govuk-!-margin-bottom-6">
