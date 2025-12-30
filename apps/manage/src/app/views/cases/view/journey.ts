@@ -16,6 +16,12 @@ export function createJourney(questions: Record<string, any>, response: Response
 	return new Journey({
 		journeyId: JOURNEY_ID,
 		sections: [
+			new Section('Overview', 'overview')
+				.addQuestion(questions.caseType)
+				.addQuestion(questions.caseSubtype)
+				.addQuestion(questions.act)
+				.addQuestion(questions.consentSought)
+				.addQuestion(questions.inspectorBand),
 			new Section('Case details', 'case-details')
 				.addQuestion(questions.reference)
 				.addQuestion(questions.externalReference)

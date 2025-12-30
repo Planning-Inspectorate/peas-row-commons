@@ -10,7 +10,10 @@ import {
 	INVOICE_STATUSES,
 	CASE_STATUSES,
 	ADVERTISED_MODIFICATIONS,
-	PRIORITIES
+	PRIORITIES,
+	CASE_TYPES,
+	CASE_SUBTYPES,
+	INSPECTOR_BANDS
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
 import type { CaseOfficer } from './types.ts';
@@ -596,6 +599,77 @@ export const CASE_DETAILS_QUESTIONS = {
 					text: 'Remove and save',
 					type: 'submit',
 					formaction: 'priority/remove'
+				}
+			]
+		}
+	}
+};
+
+export const OVERVIEW_QUESTIONS = {
+	caseType: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Case type',
+		question: 'not editable',
+		fieldName: 'typeId',
+		url: '',
+		validators: [],
+		editable: false,
+		options: CASE_TYPES.map((type) => ({ text: type.displayName, value: type.id }))
+	},
+	caseSubtype: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Subtype',
+		question: 'not editable',
+		fieldName: 'subTypeId',
+		url: '',
+		validators: [],
+		editable: false,
+		options: CASE_SUBTYPES.map((type) => ({ text: type.displayName, value: type.id }))
+	},
+	act: {
+		type: COMPONENT_TYPES.TEXT_ENTRY,
+		title: 'Act',
+		question: 'What is the relevant legislation/act for this case?',
+		fieldName: 'act',
+		url: 'act',
+		validators: [
+			new StringValidator({
+				maxLength: {
+					maxLength: 250,
+					maxLengthMessage: 'Act must be 250 characters or less'
+				}
+			})
+		]
+	},
+	consentSought: {
+		type: COMPONENT_TYPES.TEXT_ENTRY,
+		title: 'Consent sought',
+		question: 'Which consent has been sought for this case?',
+		fieldName: 'consentSought',
+		url: 'consent-sought',
+		validators: [
+			new StringValidator({
+				maxLength: {
+					maxLength: 500,
+					maxLengthMessage: 'Consent sought must be 500 characters or less'
+				}
+			})
+		]
+	},
+	inspectorBand: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Inspector band',
+		question: 'What is the inspector band?',
+		fieldName: 'inspectorBandId',
+		url: 'inspector-band',
+		validators: [],
+		options: INSPECTOR_BANDS.map((band) => ({ text: band.displayName, value: band.id })),
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'inspector-band/remove'
 				}
 			]
 		}
