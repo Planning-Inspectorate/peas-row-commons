@@ -34,6 +34,10 @@ variable "apps_config" {
       family   = string
       sku_name = string
     })
+
+    blob_store = object({
+      disabled = bool
+    })
   })
 }
 

@@ -1,5 +1,15 @@
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { CASEWORK_AREAS, CASE_TYPES, CASE_SUBTYPES, PROCEDURES, INVOICE_STATUSES } from './static_data/index.ts';
+import {
+	CASEWORK_AREAS,
+	CASE_TYPES,
+	CASE_SUBTYPES,
+	PROCEDURES,
+	INVOICE_STATUSES,
+	PRIORITIES,
+	ADVERTISED_MODIFICATIONS,
+	INSPECTOR_BANDS
+} from './static_data/index.ts';
+import { CASE_STATUSES } from './static_data/status.ts';
 
 type ReferenceDataInput = {
 	id: string;
@@ -30,6 +40,18 @@ async function upsertReferenceData<T extends ReferenceDataInput>({
  * (specifically subtypes) overloading the connection pool.
  */
 export async function seedStaticData(dbClient: PrismaClient) {
+	for (const input of PRIORITIES) {
+		await upsertReferenceData({ delegate: dbClient.casePriority, input });
+	}
+
+	for (const input of ADVERTISED_MODIFICATIONS) {
+		await upsertReferenceData({ delegate: dbClient.advertisedModificationStatus, input });
+	}
+
+	for (const input of CASE_STATUSES) {
+		await upsertReferenceData({ delegate: dbClient.caseStatus, input });
+	}
+
 	for (const input of CASEWORK_AREAS) {
 		await upsertReferenceData({ delegate: dbClient.caseworkArea, input });
 	}
@@ -48,6 +70,10 @@ export async function seedStaticData(dbClient: PrismaClient) {
 
 	for (const input of INVOICE_STATUSES) {
 		await upsertReferenceData({ delegate: dbClient.caseInvoiceSent, input });
+	}
+
+	for (const input of INSPECTOR_BANDS) {
+		await upsertReferenceData({ delegate: dbClient.inspectorBand, input });
 	}
 
 	console.log('static data seed complete');

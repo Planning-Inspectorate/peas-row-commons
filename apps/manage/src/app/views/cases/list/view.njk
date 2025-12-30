@@ -74,7 +74,7 @@
     {% for case in caseRows %}
         {% set cases = (cases.push([
             {
-                html: "<a class='govuk-link' href='/cases/" +  case.id +"'>" + case.reference + "</a>",
+                html: "<a class='govuk-link' target='_blank' href='/cases/" +  case.id +"'>" + case.reference + "</a>",
                 attributes: {
                     "data-sort-value": case.reference
                 }

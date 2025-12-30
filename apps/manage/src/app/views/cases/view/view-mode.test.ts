@@ -71,7 +71,84 @@ describe('view-model', () => {
 			assert.strictEqual(result.receivedDateDisplay, '15 Jan 2024');
 			assert.strictEqual(result.receivedDateSortable, input.receivedDate.getTime());
 		});
+
+		it('should map nested Applicant object to flat applicant fields', () => {
+			const input = {
+				id: '123',
+				receivedDate: new Date(),
+				Applicant: {
+					name: 'John Doe',
+					email: 'john@example.com',
+					telephoneNumber: '0123456789'
+				}
+			};
+
+			const result: any = caseToViewModel(input as any, groupMembers);
+
+			assert.strictEqual(result.applicantName, 'John Doe');
+			assert.strictEqual(result.applicantEmail, 'john@example.com');
+			assert.strictEqual(result.applicantTelephoneNumber, '0123456789');
+
+			assert.strictEqual(result.Applicant, undefined);
+		});
+
+		it('should map nested Authority object to flat authority fields', () => {
+			const input = {
+				id: '123',
+				receivedDate: new Date(),
+				Authority: {
+					name: 'Local Council',
+					email: 'council@gov.uk',
+					telephoneNumber: '0987654321'
+				}
+			};
+
+			const result: any = caseToViewModel(input as any, groupMembers);
+
+			assert.strictEqual(result.authorityName, 'Local Council');
+			assert.strictEqual(result.authorityEmail, 'council@gov.uk');
+			assert.strictEqual(result.authorityTelephoneNumber, '0987654321');
+
+			assert.strictEqual(result.Authority, undefined);
+		});
+
+		it('should map nested SiteAddress object to UI compatible siteAddress object', () => {
+			const input = {
+				id: '123',
+				receivedDate: new Date(),
+				SiteAddress: {
+					line1: '1 High St',
+					line2: 'Village',
+					townCity: 'London',
+					county: 'Greater London',
+					postcode: 'SW1 1AA'
+				}
+			};
+
+			const result: any = caseToViewModel(input as any, groupMembers);
+
+			assert.ok(result.siteAddress);
+			assert.strictEqual(result.siteAddress.addressLine1, '1 High St');
+			assert.strictEqual(result.siteAddress.addressLine2, 'Village');
+			assert.strictEqual(result.siteAddress.townCity, 'London');
+			assert.strictEqual(result.siteAddress.county, 'Greater London');
+			assert.strictEqual(result.siteAddress.postcode, 'SW1 1AA');
+
+			assert.strictEqual(result.line1, undefined);
+			assert.strictEqual(result.SiteAddress, undefined);
+		});
+
+		it('should return null for siteAddress if no SiteAddress data exists', () => {
+			const input = {
+				id: '123',
+				receivedDate: new Date()
+			};
+
+			const result: any = caseToViewModel(input as any, groupMembers);
+			assert.strictEqual(result.siteAddress, null);
+		});
 	});
+
 	describe('mapNotes', () => {
 		it('should map fields and sort notes by createdAt in descending order', async () => {
 			const dateOld = new Date('2023-01-01T10:00:00.000Z');

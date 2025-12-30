@@ -84,7 +84,9 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				Dates: true,
 				Costs: true,
 				Abeyance: true,
-				Notes: true
+				Notes: true,
+				Authority: true,
+				Applicant: true
 			}
 		});
 
@@ -101,7 +103,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 
 		const answers = caseToViewModel(caseToView, groupMembers);
 
-		const questions = getQuestions();
+		const questions = getQuestions(groupMembers);
 
 		// put these on locals for the list controller
 		res.locals.originalAnswers = { ...answers };
