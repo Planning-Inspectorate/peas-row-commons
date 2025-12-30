@@ -33,6 +33,10 @@ import {
 import { PROCEDURE_GROUP_IDS, PROCEDURE_GROUPS, GROUP_RELATIONSHIPS } from './view-model.ts';
 
 export function getQuestions(groupMembers = { caseOfficers: [] }) {
+	const mappedGroupMembers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
+
+	mappedGroupMembers.unshift({ text: '', value: '' });
+
 	const questions = {
 		caseworkArea: {
 			type: COMPONENT_TYPES.RADIO,
@@ -45,8 +49,8 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 		},
 		planningEnvironmentApplications: {
 			type: COMPONENT_TYPES.RADIO,
-			title: 'Which Case type is it?',
-			question: 'Which Case type is it?',
+			title: 'Which case type is it?',
+			question: 'Which case type is it?',
 			fieldName: CASEWORK_AREAS_CAMEL.PLANNING_ENVIRONMENTAL_APPLICATIONS,
 			url: 'peas-type-of-case',
 			options: PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES.map(referenceDataToRadioOptions),
@@ -63,8 +67,8 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 		},
 		housingAndPlanningCpos: {
 			type: COMPONENT_TYPES.RADIO,
-			title: 'Which Compulsory Purchase Order (CPO) subtype is it?',
-			question: 'Which Compulsory Purchase Order (CPO) subtype is it?',
+			title: 'Select the subtype that covers this Compulsory Purchase Order (CPO)',
+			question: 'Select the subtype that covers this Compulsory Purchase Order (CPO)',
 			fieldName: CASE_TYPES_CAMEL.HOUSING_PLANNING_CPOS,
 			url: 'housing-planning-cpos-subtype',
 			options: HOUSING_PLANNING_CPOS_SUBTYPES.map(referenceDataToRadioOptions),
@@ -93,8 +97,8 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 		},
 		rightsOfWayAndCommonLand: {
 			type: COMPONENT_TYPES.RADIO,
-			title: 'Which Case type is it?',
-			question: 'Which Case type is it?',
+			title: 'Which case type is it?',
+			question: 'Which case type is it?',
 			fieldName: CASEWORK_AREAS_CAMEL.RIGHTS_OF_WAY_COMMON_LAND,
 			url: 'row-type-of-case',
 			options: RIGHTS_OF_WAY_COMMON_LAND_TYPES.map(referenceDataToRadioOptions),
@@ -145,9 +149,8 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 		},
 		externalReference: {
 			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
-			title: 'What is the external reference?',
-			question: 'What is the external reference?',
-			hint: '(optional)',
+			title: 'What is the external reference? (optional)',
+			question: 'What is the external reference? (optional)',
 			fieldName: 'externalReference',
 			url: 'external-reference',
 			validators: [
@@ -172,7 +175,7 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
 			title: 'Who is the applicant?',
 			question: 'Who is the applicant?',
-			hint: 'Enter either the applicant or server',
+			hint: 'Enter the main party e.g applicant, server, utility company',
 			fieldName: 'applicant',
 			url: 'applicant',
 			validators: [
@@ -194,27 +197,27 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			url: 'site-address',
 			validators: [new AddressValidator()]
 		},
-		area: {
+		location: {
 			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
-			title: 'What is the area?',
-			question: 'What is the area?',
-			hint: '(optional)',
-			fieldName: 'area',
-			url: 'area',
+			title: 'What is the site location if no address was added?',
+			question: 'What is the site location if no address was added?',
+			hint: 'For example, name of common, village green, area or body of water',
+			fieldName: 'location',
+			url: 'location',
 			validators: [
 				new StringValidator({
 					maxLength: {
 						maxLength: 150,
-						maxLengthMessage: 'Area must be less than 150 characters'
+						maxLengthMessage: 'Location must be less than 150 characters'
 					}
 				})
 			]
 		},
 		authority: {
 			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
-			title: 'Who is the authority?',
-			question: 'Who is the authority?',
-			hint: 'Enter the Local Planning Authority or Common Registration Authority (optional)',
+			title: 'Who is the authority? (optional)',
+			question: 'Who is the authority? (optional)',
+			hint: 'Enter the Local Planning Authority or Common Registration Authority',
 			fieldName: 'authority',
 			url: 'authority',
 			validators: [
@@ -233,7 +236,7 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			fieldName: 'caseOfficerId',
 			url: 'case-officer',
 			validators: [new RequiredValidator('Select a case officer')],
-			options: groupMembers.caseOfficers.map(referenceDataToRadioOptions)
+			options: mappedGroupMembers
 		},
 		procedure: {
 			type: COMPONENT_TYPES.RADIO,

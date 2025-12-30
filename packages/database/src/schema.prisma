@@ -24,41 +24,59 @@ datasource db {
 /// Case represents a case in the system
 model Case {
   /// internal identifier
-  id                String           @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  createdDate       DateTime         @default(now())
-  updatedDate       DateTime?
-  receivedDate      DateTime
-  closedDate        DateTime?
+  id                       String                        @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  createdDate              DateTime                      @default(now())
+  updatedDate              DateTime?
+  receivedDate             DateTime
+  closedDate               DateTime?
   /// type of case
-  typeId            String
-  Type              CaseType         @relation(fields: [typeId], references: [id])
+  typeId                   String
+  Type                     CaseType                      @relation(fields: [typeId], references: [id])
   /// subtype of case
-  subTypeId         String?
-  SubType           CaseSubType?     @relation(fields: [subTypeId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  subTypeId                String?
+  SubType                  CaseSubType?                  @relation(fields: [subTypeId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   /// shown to users as a unique reference
-  reference         String           @unique
+  reference                String                        @unique
   /// external identifier, optional unlike reference above
-  externalReference String?
-  name              String
-  applicant         String?
-  siteAddressId     String?          @db.UniqueIdentifier
-  SiteAddress       Address?         @relation(fields: [siteAddressId], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  authority         String?
-  area              String?
+  externalReference        String?
+  /// internal reference, if existing case from Horizon
+  internalReference        String?
+  name                     String
+  siteAddressId            String?                       @db.UniqueIdentifier
+  SiteAddress              Address?                      @relation(fields: [siteAddressId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  location                 String?
   /// Entra ID
-  caseOfficerId     String
-  procedureId       String?
-  Procedure         CaseProcedure?   @relation(fields: [procedureId], references: [id])
-  linkedCases       String?
-  Dates             CaseDates?
+  caseOfficerId            String
+  procedureId              String?
+  Procedure                CaseProcedure?                @relation(fields: [procedureId], references: [id])
+  linkedCases              String?
+  Dates                    CaseDates?
   /// Physical location of real-world files
-  filesLocation     String?
-  Folders           Folder[]
-  Costs             CaseCosts?
-  invoiceSentId     String?
-  InvoiceSent       CaseInvoiceSent? @relation(fields: [invoiceSentId], references: [id])
-  Abeyance          CaseAbeyance?
-  Notes             CaseNote[]
+  filesLocation            String?
+  Folders                  Folder[]
+  Costs                    CaseCosts?
+  invoiceSentId            String?
+  InvoiceSent              CaseInvoiceSent?              @relation(fields: [invoiceSentId], references: [id])
+  Abeyance                 CaseAbeyance?
+  Notes                    CaseNote[]
+  Documents                Document[]
+  statusId                 String?
+  Status                   CaseStatus?                   @relation(fields: [statusId], references: [id])
+  advertisedModificationId String?
+  AdvertisedModification   AdvertisedModificationStatus? @relation(fields: [advertisedModificationId], references: [id])
+  applicantId              String?                       @db.UniqueIdentifier
+  Applicant                Applicant?                    @relation(fields: [applicantId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  authorityid              String?                       @db.UniqueIdentifier
+  Authority                Authority?                    @relation(fields: [authorityid], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  priorityId               String?
+  Priority                 CasePriority?                 @relation(fields: [priorityId], references: [id])
+  /// The relevant legislation / act
+  act                      String?
+  /// What type of consent has been sought
+  consentSought            String?
+  /// The band for the inspector
+  inspectorBandId          String?
+  InspectorBand            InspectorBand?                @relation(fields: [inspectorBandId], references: [id])
 }
 
 model CaseworkArea {
@@ -115,26 +133,26 @@ model CaseDates {
   id                                      String    @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   /// The project start date.
   startDate                               DateTime?
-  /// The date that the objection period ends
-  objectionPeriodEndsDate                 DateTime?
   /// When it is expected that the case will be submitted
   expectedSubmissionDate                  DateTime?
-  /// Date feedback via written representation is submitted
-  offerForWrittenRepresentationDate       DateTime?
   /// Date offer for consent ends
   consentDeadlineDate                     DateTime?
-  /// A target date for an envement
-  targetEventDate                         DateTime?
   /// Due date for Other Government Departments (OGD)
   ogdDueDate                              DateTime?
   /// Date proposal letter sent to e.g. Secretary of State
   proposalLetterDate                      DateTime?
   /// Date the case expires
   expiryDate                              DateTime?
-  /// Date parties sent a deadline notification
-  partiesEventNotificationDeadlineDate    DateTime?
   /// Date parties sent an event notification
   partiesDecisionNotificationDeadlineDate DateTime?
+  /// Date for the target decision
+  targetDecisionDate                      DateTime?
+  /// Date when the case officer verified the case
+  caseOfficerVerificationDate             DateTime?
+  /// Date proposed modifications were advertised
+  proposedModificationsDate               DateTime?
+  /// Date the objection period ends
+  objectionPeriodEndsDate                 DateTime?
   caseId                                  String    @unique @db.UniqueIdentifier
   Case                                    Case      @relation(fields: [caseId], references: [id])
 }
@@ -142,16 +160,17 @@ model CaseDates {
 /// Folder model
 /// Contains folders created for each case that will contain documents.
 model Folder {
-  id             String    @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  id             String     @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   displayName    String
   displayOrder   Int?
-  parentFolderId String?   @db.UniqueIdentifier
-  caseId         String?   @db.UniqueIdentifier
-  isCustom       Boolean   @default(false)
+  parentFolderId String?    @db.UniqueIdentifier
+  caseId         String?    @db.UniqueIdentifier
+  isCustom       Boolean    @default(false)
   deletedAt      DateTime?
-  Case           Case?     @relation(fields: [caseId], references: [id])
-  ParentFolder   Folder?   @relation("FolderTree", fields: [parentFolderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  ChildFolders   Folder[]  @relation("FolderTree")
+  Case           Case?      @relation(fields: [caseId], references: [id])
+  ParentFolder   Folder?    @relation("FolderTree", fields: [parentFolderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ChildFolders   Folder[]   @relation("FolderTree")
+  Documents      Document[]
 
   @@unique([caseId, displayName, parentFolderId, deletedAt])
 }
@@ -189,4 +208,80 @@ model CaseNote {
   authorEntraId String
   caseId        String   @db.UniqueIdentifier
   Case          Case     @relation(fields: [caseId], references: [id])
+}
+
+model CaseStatus {
+  /// unique machine-readable name, not generated, e.g. "new-case"
+  id          String  @id
+  displayName String?
+  Case        Case[]
+}
+
+model AdvertisedModificationStatus {
+  /// unique machine-readable name, not generated, e.g. "advertised-modification-1"
+  id          String  @id
+  displayName String?
+  Case        Case[]
+}
+
+model CasePriority {
+  /// unique machine-readable name, not generated, e.g. "high"
+  id          String  @id
+  displayName String?
+  Case        Case[]
+}
+
+model Document {
+  id           String    @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  fileName     String
+  uploadedDate DateTime  @default(now())
+  size         BigInt    @default(0)
+  blobName     String
+  mimeType     String
+  deletedAt    DateTime?
+  caseId       String    @db.UniqueIdentifier
+  Case         Case      @relation(fields: [caseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  folderId     String    @db.UniqueIdentifier
+  Folder       Folder    @relation(fields: [folderId], references: [id], onDelete: Cascade)
+}
+
+/// Indicates a document that has been uploaded
+/// to blob but has not yet been committed as a 
+/// real document in the DB.
+model DraftDocument {
+  id         String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  sessionKey String
+  /// Purposefully do not create real PK-FK relations for simplicity
+  /// and speed, this is just a draft row.
+  caseId     String
+  folderId   String
+  fileName   String
+  blobName   String
+  size       BigInt
+  mimeType   String
+
+  @@index([sessionKey, caseId])
+}
+
+model Applicant {
+  id              String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  name            String
+  email           String?
+  telephoneNumber String?
+  Case            Case[]
+}
+
+model Authority {
+  id              String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  name            String
+  email           String?
+  telephoneNumber String?
+  Case            Case[]
+}
+
+model InspectorBand {
+  /// unique machine-readable name, not generated, e.g. "1"
+  id          String  @id
+  displayName String?
+  Case        Case[]
 }
