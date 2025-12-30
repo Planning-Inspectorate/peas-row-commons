@@ -4,7 +4,6 @@ import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journe
 import type { Handler, Request } from 'express';
 import { questionHasAnswer } from '@planning-inspectorate/dynamic-forms/src/components/utils/question-has-answer.js';
 import { CASEWORK_AREAS_ID, CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
-import { PROCEDURE_GROUP_IDS } from './view-model.ts';
 
 export const JOURNEY_ID = 'create-a-case';
 
@@ -91,21 +90,6 @@ export function createJourney(documentTypeId: string, questions: any, response: 
 				.addQuestion(questions.location)
 				.addQuestion(questions.authority)
 				.addQuestion(questions.caseOfficer)
-				.addQuestion(questions.procedure)
-
-				/**
-				 * Procedure specific questions if user selects admin or site visit
-				 * (stored flatly in DB).
-				 */
-				.addQuestion(questions.adminProcedure)
-				.withCondition((response: JourneyResponse) =>
-					questionHasAnswer(response, questions.procedure, PROCEDURE_GROUP_IDS.ADMIN)
-				)
-
-				.addQuestion(questions.siteVisitProcedure)
-				.withCondition((response: JourneyResponse) =>
-					questionHasAnswer(response, questions.procedure, PROCEDURE_GROUP_IDS.SITE_VISIT)
-				)
 		],
 		taskListUrl: 'check-your-answers',
 		journeyTemplate: 'views/layouts/forms-question.njk',
