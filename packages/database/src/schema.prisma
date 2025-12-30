@@ -133,26 +133,26 @@ model CaseDates {
   id                                      String    @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   /// The project start date.
   startDate                               DateTime?
-  /// The date that the objection period ends
-  objectionPeriodEndsDate                 DateTime?
   /// When it is expected that the case will be submitted
   expectedSubmissionDate                  DateTime?
-  /// Date feedback via written representation is submitted
-  offerForWrittenRepresentationDate       DateTime?
   /// Date offer for consent ends
   consentDeadlineDate                     DateTime?
-  /// A target date for an envement
-  targetEventDate                         DateTime?
   /// Due date for Other Government Departments (OGD)
   ogdDueDate                              DateTime?
   /// Date proposal letter sent to e.g. Secretary of State
   proposalLetterDate                      DateTime?
   /// Date the case expires
   expiryDate                              DateTime?
-  /// Date parties sent a deadline notification
-  partiesEventNotificationDeadlineDate    DateTime?
   /// Date parties sent an event notification
   partiesDecisionNotificationDeadlineDate DateTime?
+  /// Date for the target decision
+  targetDecisionDate                      DateTime?
+  /// Date when the case officer verified the case
+  caseOfficerVerificationDate             DateTime?
+  /// Date proposed modifications were advertised
+  proposedModificationsDate               DateTime?
+  /// Date the objection period ends
+  objectionPeriodEndsDate                 DateTime?
   caseId                                  String    @unique @db.UniqueIdentifier
   Case                                    Case      @relation(fields: [caseId], references: [id])
 }
