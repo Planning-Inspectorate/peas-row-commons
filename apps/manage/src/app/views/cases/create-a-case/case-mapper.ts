@@ -1,6 +1,7 @@
 import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { kebabToCamel } from './questions-utils.ts';
 import { PROCEDURE_GROUP_IDS } from './view-model.ts';
+import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
 
 /**
  * Takes an answers object and formats the data correctly ready for insertion into DB.
@@ -15,11 +16,10 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 		name: answers.name,
 		receivedDate: answers.receivedDate,
 		externalReference: answers.externalReference,
-		applicant: answers.applicant,
-		authority: answers.authority,
 		caseOfficerId: answers.caseOfficerId,
-		area: answers.area,
-		Type: { connect: { id: caseType } }
+		location: answers.location,
+		Type: { connect: { id: caseType } },
+		Status: { connect: { id: CASE_STATUS_ID.NEW_CASE } } // All created cases start at "new-case"
 	};
 
 	// otherSosCasework takes priority, indicating a "user entered" subtype
@@ -41,6 +41,22 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 	if (hasSiteAddress(answers)) {
 		input.SiteAddress = {
 			create: mapAddressInput(answers.siteAddress)
+		};
+	}
+
+	if (answers.applicant) {
+		input.Applicant = {
+			create: {
+				name: answers.applicant
+			}
+		};
+	}
+
+	if (answers.authority) {
+		input.Authority = {
+			create: {
+				name: answers.authority
+			}
 		};
 	}
 

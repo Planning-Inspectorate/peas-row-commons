@@ -1,24 +1,31 @@
 import { createQuestions } from '@planning-inspectorate/dynamic-forms/src/questions/create-questions.js';
 import { questionClasses } from '@planning-inspectorate/dynamic-forms/src/questions/questions.js';
-import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 
-import { DATE_QUESTIONS, DOCUMENTS_QUESTIONS, COSTS_QUESTIONS, ABEYANCE_QUESTIONS } from './question-utils.ts';
+import {
+	DATE_QUESTIONS,
+	DOCUMENTS_QUESTIONS,
+	COSTS_QUESTIONS,
+	ABEYANCE_QUESTIONS,
+	CASE_DETAILS_QUESTIONS,
+	TEAM_QUESTIONS,
+	createTeamQuestions,
+	OVERVIEW_QUESTIONS
+} from './question-utils.ts';
 
-export function getQuestions() {
+import type { CaseOfficer } from './types.ts';
+
+export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }) {
+	// We must generate team questions due to the varying nature of groupMembers
+	const generatedTeamQuestions = createTeamQuestions(TEAM_QUESTIONS, groupMembers);
+
 	const questions = {
-		reference: {
-			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
-			title: 'Case reference',
-			question: 'not editable',
-			fieldName: 'reference',
-			url: '',
-			validators: [],
-			editable: false
-		},
 		...DATE_QUESTIONS,
 		...DOCUMENTS_QUESTIONS,
 		...COSTS_QUESTIONS,
-		...ABEYANCE_QUESTIONS
+		...ABEYANCE_QUESTIONS,
+		...CASE_DETAILS_QUESTIONS,
+		...generatedTeamQuestions,
+		...OVERVIEW_QUESTIONS
 	};
 
 	const textOverrides = {
