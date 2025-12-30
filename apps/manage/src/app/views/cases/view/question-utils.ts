@@ -94,13 +94,13 @@ export const DATE_QUESTIONS = {
 		fieldName: 'objectionPeriodEndsDate',
 		title: 'Objection period ends',
 		question: 'When does the objection period end?',
-		url: 'objection-period-ends',
+		url: 'objection-period-end-date',
 		viewData: {
 			extraActionButtons: [
 				{
 					text: 'Remove and save',
 					type: 'submit',
-					formaction: 'objection-period-ends/remove'
+					formaction: 'objection-period-end-date/remove'
 				}
 			]
 		}
@@ -115,21 +115,6 @@ export const DATE_QUESTIONS = {
 					text: 'Remove and save',
 					type: 'submit',
 					formaction: 'expected-submission-date/remove'
-				}
-			]
-		}
-	}),
-	offerForWrittenRepresentationDate: dateQuestion({
-		fieldName: 'offerForWrittenRepresentationDate',
-		title: 'Date offer for written representation',
-		question: 'What date was written representation offered as the procedure type?',
-		url: 'date-offer-written-representations',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'date-offer-written-representations/remove'
 				}
 			]
 		}
@@ -149,23 +134,9 @@ export const DATE_QUESTIONS = {
 			]
 		}
 	}),
-	targetEventDate: dateQuestion({
-		fieldName: 'targetEventDate',
-		title: 'Event target date',
-		question: 'What is the target date for holding the event?',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'target-event-date/remove'
-				}
-			]
-		}
-	}),
 	ogdDueDate: dateQuestion({
 		fieldName: 'ogdDueDate',
-		title: 'Date due in OGD',
+		title: 'Date due to Other Government Department (OGD)',
 		question: 'What date is the decision due to Other Government Department (OGD)?',
 		url: 'date-due-in-ogd',
 		viewData: {
@@ -207,21 +178,6 @@ export const DATE_QUESTIONS = {
 			]
 		}
 	}),
-	partiesEventNotificationDeadlineDate: dateQuestion({
-		fieldName: 'partiesEventNotificationDeadlineDate',
-		title: 'Date parties must be notified of event',
-		question: 'What date must the parties be notified of the event by?',
-		url: 'date-parties-must-be-notified-event',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'date-parties-must-be-notified-event/remove'
-				}
-			]
-		}
-	}),
 	partiesDecisionNotificationDeadlineDate: dateQuestion({
 		fieldName: 'partiesDecisionNotificationDeadlineDate',
 		title: 'Date to notify parties of decision',
@@ -233,6 +189,51 @@ export const DATE_QUESTIONS = {
 					text: 'Remove and save',
 					type: 'submit',
 					formaction: 'date-parties-must-be-notified-decision/remove'
+				}
+			]
+		}
+	}),
+	targetDecisionDate: dateQuestion({
+		fieldName: 'targetDecisionDate',
+		title: 'Target decision date',
+		question: 'What is the target decision date?',
+		url: 'target-decision-date',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'target-decision-date/remove'
+				}
+			]
+		}
+	}),
+	caseOfficerVerificationDate: dateQuestion({
+		fieldName: 'caseOfficerVerificationDate',
+		title: 'Case officer verification date',
+		question: 'When did the case officer verify the case?',
+		url: 'case-officer-verification-date',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'case-officer-verification-date/remove'
+				}
+			]
+		}
+	}),
+	proposedModificationsDate: dateQuestion({
+		fieldName: 'proposedModificationsDate',
+		title: 'Date proposed modifications advertised',
+		question: 'When were the proposed modifications advertised?',
+		url: 'date-proposed-modifications-advertised',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'date-proposed-modifications-advertised/remove'
 				}
 			]
 		}
