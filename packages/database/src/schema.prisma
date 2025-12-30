@@ -283,3 +283,10 @@ model InspectorBand {
   displayName String?
   Case        Case[]
 }
+
+model InspectorBand {
+  /// unique machine-readable name, not generated, e.g. "1"
+  id          String  @id
+  displayName String?
+  Case        Case[]
+}
