@@ -123,7 +123,7 @@ export class FilterGenerator {
 		return where.AND.length > 0 ? where : undefined;
 	}
 
-	private getAllSelectedValues(query: Record<string, any>) {
+	public getAllSelectedValues(query: Record<string, any>) {
 		const { keys } = this.config;
 
 		const selectedAreas = this.getSelectedValues(query, keys.AREA);
