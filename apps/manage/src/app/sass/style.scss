@@ -38,3 +38,22 @@ $font-family: arial, helvetica, sans-serif;
 #search-button {
 	margin-bottom: 16px;
 }
+
+.uploading-bar--hidden {
+	display: none;
+	margin-bottom: 1em;
+}
+.uploading-bar--visible {
+	display: block;
+	margin-bottom: 1em;
+}
+
+// This component goes Files Addes -> File Uploader by default with a black dashed dropzone
+// But in our designs we want the reverse order with blue dashed dropzone.
+.moj-multi-file-upload--enhanced {
+	display: flex;
+	flex-direction: column-reverse;
+	.moj-multi-file-upload__dropzone {
+		outline: 3px dashed #1d70b8;
+	}
+}

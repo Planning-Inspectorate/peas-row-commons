@@ -20,7 +20,6 @@ const OTHER_SOS_CASEWORK_SUBTYPES_ID = Object.freeze({
 	DESNZ_CPO: 'desnz-cpo',
 	DFT_CPO: 'dft-cpo',
 	ADHOC_CPO: 'ad-hoc-cpo',
-	SSSI: 'sssi',
 	ADVERT: 'advert',
 	DISCONTINUANCE_NOTICE: 'discontinuance-notice',
 	REVOCATION: 'revocation',
@@ -61,7 +60,8 @@ const RIGHTS_OF_WAY_SUBTYPES_ID = Object.freeze({
 	OPPOSED_PPO_HA80: 'opposed-ppo-ha80',
 	OPPOSED_PPO_TCPA90: 'opposed-ppo-tcpa90',
 	SCHEDULE_14_APPEAL: 'schedule-14-appeal',
-	SCHEDULE_14_DIRECTION: 'schedule-14-direction'
+	SCHEDULE_14_DIRECTION: 'schedule-14-direction',
+	SCHEDULE_13A_APPEAL: 'schedule-13-a-appeal'
 });
 
 export const CASE_SUBTYPES_ID = Object.freeze({

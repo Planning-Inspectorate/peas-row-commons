@@ -146,7 +146,22 @@ function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerato
 	const typeFilterWhereClause = filterGenerator.createFilterWhereClause(req.query);
 
 	const searchCriteria = createWhereClause(splitStringQueries(searchString), [
-		{ fields: ['reference'], searchType: 'contains' }
+		{ fields: ['reference', 'name'], searchType: 'contains' },
+		{
+			parent: 'Applicant',
+			fields: ['name'],
+			searchType: 'contains'
+		},
+		{
+			parent: 'Status',
+			fields: ['displayName'],
+			searchType: 'contains'
+		},
+		{
+			parent: 'Authority',
+			fields: ['name'],
+			searchType: 'contains'
+		}
 	]);
 
 	return {
@@ -163,7 +178,9 @@ function generateQuery(db: PrismaClient, skipSize: number, pageSize: number, whe
 		db.case.findMany({
 			orderBy: { receivedDate: 'desc' },
 			include: {
-				Type: { select: { displayName: true } }
+				Type: { select: { displayName: true } },
+				SubType: { select: { displayName: true } },
+				Status: { select: { displayName: true } }
 			},
 			skip: skipSize,
 			take: pageSize,

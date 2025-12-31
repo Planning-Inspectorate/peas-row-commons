@@ -89,6 +89,12 @@ declare module '@planning-inspectorate/dynamic-forms/src/validator/numeric-valid
 	}
 }
 
+declare module '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js' {
+	export default class MultiFieldInputValidator {
+		constructor(options: any);
+	}
+}
+
 declare module '@planning-inspectorate/dynamic-forms/src/middleware/build-get-journey.js' {
 	export function buildGetJourney(createJourney: any): any;
 }

@@ -15,3 +15,17 @@ services:
     volumes:
       - ./packages/database/src/configuration/mssql.conf:/var/opt/mssql/mssql.conf
       - ./tmp/mssql-data:/var/opt/mssql/data
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: pins_azurite
+    restart: always
+    ports:
+      - '10000:10000' # Blob
+    volumes:
+      - ./tmp/azurite:/data
+    command: >
+      azurite
+      --silent
+      --location /data
+      --blobHost 0.0.0.0
+      --skipApiVersionCheck
