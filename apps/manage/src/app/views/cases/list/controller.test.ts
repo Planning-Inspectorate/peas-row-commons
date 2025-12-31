@@ -1,6 +1,12 @@
 import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
-import { buildListCases, caseToViewModel, formatCountData } from './controller.ts';
+import {
+	buildListCases,
+	caseToViewModel,
+	createFilterValuesString,
+	formatCountData,
+	getCurrentFiltersAndGenerateString
+} from './controller.ts';
 import { configureNunjucks } from '../../../nunjucks.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 
@@ -85,6 +91,9 @@ describe('Case Controller', () => {
 		}
 		createFilterWhereClause() {
 			return {};
+		}
+		getAllSelectedValues() {
+			return [[], [], []];
 		}
 	}
 
@@ -214,7 +223,8 @@ describe('Case Controller', () => {
 						resultsStartNumber: expected.resultsStartNumber,
 						selectedItemsPerPage: itemsPerPage,
 						totalCases: totalItems,
-						totalPages: expected.totalPages
+						totalPages: expected.totalPages,
+						filtersValue: ''
 					}
 				});
 			});
@@ -273,6 +283,67 @@ describe('Case Controller', () => {
 		it('should return empty object if no counts provided', () => {
 			const result = formatCountData([], []);
 			assert.deepStrictEqual(result, {});
+		});
+	});
+
+	describe('Filter Helper Functions', () => {
+		describe('createFilterValuesString', () => {
+			it('should convert an object of array values into a query string', () => {
+				const input = {
+					area: ['North', 'South'],
+					type: ['Commercial'],
+					subType: []
+				};
+
+				const result = createFilterValuesString(input as any);
+
+				assert.strictEqual(result, '&area=North&area=South&type=Commercial');
+			});
+
+			it('should return an empty string if all arrays are empty', () => {
+				const input = {
+					area: [],
+					type: [],
+					subType: []
+				};
+
+				const result = createFilterValuesString(input as any);
+
+				assert.strictEqual(result, '');
+			});
+		});
+
+		describe('getCurrentFiltersAndGenerateString', () => {
+			it('should extract values using the generator and return formatted string', () => {
+				const mockReq = {
+					query: { area: 'North', type: 'Commercial' }
+				};
+
+				const mockGenerator = {
+					getAllSelectedValues: mock.fn((query) => {
+						return [['North'], ['Commercial'], ['Specific Sub']];
+					})
+				};
+
+				const result = getCurrentFiltersAndGenerateString(mockGenerator as any, mockReq as any);
+
+				assert.strictEqual(mockGenerator.getAllSelectedValues.mock.callCount(), 1);
+				assert.deepStrictEqual(mockGenerator.getAllSelectedValues.mock.calls[0].arguments[0], mockReq.query);
+
+				assert.strictEqual(result, '&area=North&type=Commercial&subType=Specific Sub');
+			});
+
+			it('should handle cases where generator returns empty arrays', () => {
+				const mockReq = { query: {} };
+
+				const mockGenerator = {
+					getAllSelectedValues: mock.fn(() => [[], [], []])
+				};
+
+				const result = getCurrentFiltersAndGenerateString(mockGenerator as any, mockReq as any);
+
+				assert.strictEqual(result, '');
+			});
 		});
 	});
 });
