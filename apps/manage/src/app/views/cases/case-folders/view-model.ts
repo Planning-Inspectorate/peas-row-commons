@@ -1,5 +1,4 @@
 import type { Folder } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 
 /**
  * Formats folders array for displaying,
@@ -12,7 +11,7 @@ export function createFoldersViewModel(folders: Folder[]) {
 	const mappedFolders = sortedFolders.map((folder) => {
 		return {
 			...folder,
-			kebabDisplayName: stringToKebab(folder.displayName)
+			encodedDisplayName: encodeURIComponent(folder.displayName)
 		};
 	});
 	return mappedFolders;

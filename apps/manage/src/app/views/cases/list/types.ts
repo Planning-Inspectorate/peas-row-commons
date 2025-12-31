@@ -20,3 +20,9 @@ export interface CaseListViewModel {
 	Type: { displayName: string | null };
 	receivedDateSortable: number;
 }
+
+export type CurrentFilters = {
+	area: string[];
+	type: string[];
+	subType: string[];
+};

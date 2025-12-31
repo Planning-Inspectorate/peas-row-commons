@@ -1,14 +1,21 @@
 {% from "govuk/components/pagination/macro.njk" import govukPagination %}
 
 {% macro renderPagination(currentPage, totalPages, currentUrl) %}
+    {% set cleanUrl = currentUrl | replace("?page=" ~ currentPage, "") | replace("&page=" ~ currentPage, "") %}
+
+    {% if cleanUrl.indexOf("?") == -1 and cleanUrl.indexOf("&") > -1 %}
+         {% set cleanUrl = cleanUrl | replace("&", "?", 1) %}
+    {% endif %}
+
+    {% set connector = "&" if cleanUrl.indexOf("?") > -1 else "?" %}
+
     {% set paginationItems = [] %}
-    {% set queryParametersPopulated = currentUrl.indexOf("?itemsPerPage=") > -1 %}
 
     {# Always include the first page #}
     {% if totalPages > 1 %}
         {% set _ = paginationItems.push({
             "number": 1,
-            "href": currentUrl | replace("&page=" + currentPage, "") + "&page=1" if queryParametersPopulated else "?page=1",
+            "href": cleanUrl ~ connector ~ "page=1",
             "current": currentPage == 1
         }) %}
     {% endif %}
@@ -23,29 +30,34 @@
         {% if i > 1 and i < totalPages %}
             {% set _ = paginationItems.push({
                 "number": i,
-                "href": currentUrl | replace("&page=" + currentPage, "") + "&page=" ~ i if queryParametersPopulated else "?page=" ~ i,
+                "href": cleanUrl ~ connector ~ "page=" ~ i,
                 "current": i == currentPage
             }) %}
         {% endif %}
     {% endfor %}
 
-    {# Add elipses if there's a gap before the last page #}
+    {# Add elipses if there's a gap between first page and current range #}
     {% if currentPage < totalPages - 2 %}
         {% set _ = paginationItems.push({ "ellipsis": true }) %}
     {% endif %}
 
     {# Always include the last page #}
-    {% if totalPages > 1 and totalPages != 1 %}
+    {% if totalPages > 1 %}
         {% set _ = paginationItems.push({
             "number": totalPages,
-            "href": currentUrl | replace("&page=" + currentPage, "") + "&page=" ~ totalPages if queryParametersPopulated else "?page=" ~ totalPages,
+            "href": cleanUrl ~ connector ~ "page=" ~ totalPages,
             "current": currentPage == totalPages
         }) %}
     {% endif %}
 
     {{ govukPagination({
-        "previous": { "href": currentUrl | replace("&page=" + currentPage, "") + "&page=" ~ (currentPage - 1) if queryParametersPopulated else "?page=" ~ (currentPage - 1) } if currentPage > 1 else {},
-        "next": { "href": currentUrl | replace("&page=" + currentPage, "") + "&page=" ~ (currentPage + 1) if queryParametersPopulated else "?page=" ~ (currentPage + 1) } if currentPage < totalPages else {},
+        "previous": { 
+            "href": cleanUrl ~ connector ~ "page=" ~ (currentPage - 1) 
+        } if currentPage > 1 else {},
+        "next": { 
+            "href": cleanUrl ~ connector ~ "page=" ~ (currentPage + 1) 
+        } if currentPage < totalPages else {},
         "items": paginationItems
     }) }}
+
 {% endmacro %}
