@@ -27,8 +27,6 @@ describe('pagination macro', () => {
 		process.env = { ...originalEnv };
 	});
 
-	// --- EXISTING TESTS ---
-
 	it('should render pagination correctly based on current page and total pages with elipses when current page greater than 3', () => {
 		const currentPage = 4;
 		const totalPages = 5;
