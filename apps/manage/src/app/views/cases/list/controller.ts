@@ -1,6 +1,6 @@
 import type { ManageService } from '#service';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
-import type { CaseListFields, CaseListViewModel } from './types.ts';
+import type { CaseListFields, CaseListViewModel, CurrentFilters } from './types.ts';
 import { getPageData, getPaginationParams } from '../../pagination/pagination-utils.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
@@ -35,6 +35,8 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			keys: FILTER_KEYS,
 			labels: FILTER_LABELS
 		});
+
+		const currentFiltersString = getCurrentFiltersAndGenerateString(filterGenerator, req);
 
 		const searchString = req.query?.searchCriteria?.toString() || '';
 
@@ -78,7 +80,8 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			totalPages,
 			resultsStartNumber,
 			resultsEndNumber,
-			totalCases
+			totalCases,
+			filtersValue: currentFiltersString
 		};
 
 		return res.render('views/cases/list/view.njk', {
@@ -198,4 +201,39 @@ function generateQuery(db: PrismaClient, skipSize: number, pageSize: number, whe
 			_count: { _all: true }
 		})
 	] as const;
+}
+
+/**
+ * Checks params for just current filters and turns them back into a string.
+ *
+ * Needed for maintaining filters across pagination.
+ */
+export function getCurrentFiltersAndGenerateString(filterGenerator: FilterGenerator, req: Request) {
+	const [area, type, subType] = filterGenerator.getAllSelectedValues(req.query);
+
+	const currentFilters = {
+		area,
+		type,
+		subType
+	};
+
+	const filtersValue = createFilterValuesString(currentFilters);
+
+	return filtersValue;
+}
+
+/**
+ * Given an object of currently selected filters, turn them into a
+ * query string.
+ */
+export function createFilterValuesString(currentFilters: CurrentFilters) {
+	let string = '';
+
+	for (const [key, value] of Object.entries(currentFilters)) {
+		value.forEach((item) => {
+			string += `&${key}=${item}`;
+		});
+	}
+
+	return string;
 }
