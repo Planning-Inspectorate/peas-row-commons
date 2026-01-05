@@ -43,15 +43,11 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 
 	if (caseRow.Applicant) {
 		mergedData.applicantName = caseRow.Applicant.name;
-		mergedData.applicantEmail = caseRow.Applicant.email;
-		mergedData.applicantTelephoneNumber = caseRow.Applicant.telephoneNumber;
 		delete mergedData.Applicant;
 	}
 
 	if (caseRow.Authority) {
 		mergedData.authorityName = caseRow.Authority.name;
-		mergedData.authorityEmail = caseRow.Authority.email;
-		mergedData.authorityTelephoneNumber = caseRow.Authority.telephoneNumber;
 		delete mergedData.Authority;
 	}
 
