@@ -259,17 +259,13 @@ model DraftDocument {
 }
 
 model Applicant {
-  id              String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  name            String
-  email           String?
-  telephoneNumber String?
-  Case            Case[]
+  id   String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  name String
+  Case Case[]
 }
 
 model Authority {
-  id              String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  name            String
-  email           String?
-  telephoneNumber String?
-  Case            Case[]
+  id   String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  name String
+  Case Case[]
 }
