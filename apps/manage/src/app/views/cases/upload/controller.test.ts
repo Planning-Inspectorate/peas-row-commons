@@ -64,12 +64,12 @@ describe('buildUploadToFolderView', () => {
 			const req = mockReq();
 			const res = mockRes();
 
-			mockDb.case.findUnique.mock.mockImplementation(() =>
-				Promise.resolve({ name: 'Test Case', reference: 'REF-001' })
-			);
-			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve({ displayName: 'Evidence Folder' }));
-			mockDb.draftDocument.findMany.mock.mockImplementation(() =>
-				Promise.resolve([{ id: 'doc-1', fileName: 'test.pdf', size: BigInt(1024) }])
+			mockDb.folder.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({
+					displayName: 'Evidence Folder',
+					Case: { name: 'Test Case', reference: 'REF-001' },
+					DraftDocuments: [{ id: 'doc-1', fileName: 'test.pdf', size: BigInt(1024) }]
+				})
 			);
 
 			await buildUploadToFolderView(service as any)(req, res);
@@ -89,9 +89,12 @@ describe('buildUploadToFolderView', () => {
 			const req = mockReq();
 			const res = mockRes();
 
-			mockDb.case.findUnique.mock.mockImplementation(() => Promise.resolve({}));
-			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve(null));
-			mockDb.draftDocument.findMany.mock.mockImplementation(() => Promise.resolve([]));
+			mockDb.folder.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({
+					Case: null,
+					DraftDocuments: []
+				})
+			);
 
 			await buildUploadToFolderView(service as any)(req, res);
 
@@ -106,9 +109,7 @@ describe('buildUploadToFolderView', () => {
 			const res = mockRes();
 			const dbError = new Error('Connection lost');
 
-			mockDb.case.findUnique.mock.mockImplementation(() => Promise.reject(dbError));
-			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve({}));
-			mockDb.draftDocument.findMany.mock.mockImplementation(() => Promise.resolve([]));
+			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.reject(dbError));
 
 			await assert.rejects(() => buildUploadToFolderView(service as any)(req, res), dbError);
 
