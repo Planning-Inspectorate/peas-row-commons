@@ -27,28 +27,32 @@ export function buildUploadToFolderView(service: ManageService): AsyncRequestHan
 
 		let caseRow, folder, drafts;
 		try {
-			[caseRow, folder, drafts] = await Promise.all([
-				db.case.findUnique({
-					select: {
-						name: true,
-						reference: true
+			const folderData = await db.folder.findUnique({
+				where: {
+					id: folderId
+				},
+				include: {
+					Case: {
+						select: {
+							reference: true,
+							name: true
+						}
 					},
-					where: { id }
-				}),
-				db.folder.findUnique({
-					select: {
-						displayName: true
-					},
-					where: { id: folderId }
-				}),
-				db.draftDocument.findMany({
-					where: {
-						sessionKey: req.sessionID,
-						caseId: id,
-						folderId: folderId
+					DraftDocuments: {
+						where: {
+							sessionKey: req.sessionID
+						}
 					}
-				})
-			]);
+				}
+			});
+
+			if (!folderData) throw new Error('Folder not found');
+
+			const { Case, DraftDocuments, ...restOfFolder } = folderData;
+
+			caseRow = Case;
+			folder = restOfFolder;
+			drafts = DraftDocuments;
 		} catch (error: any) {
 			wrapPrismaError({
 				error,
