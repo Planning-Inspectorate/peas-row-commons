@@ -18,8 +18,8 @@ CREATE TABLE [dbo].[Document] (
 CREATE TABLE [dbo].[DraftDocument] (
     [id] UNIQUEIDENTIFIER NOT NULL CONSTRAINT [DraftDocument_id_df] DEFAULT newid(),
     [sessionKey] NVARCHAR(1000) NOT NULL,
-    [caseId] NVARCHAR(1000) NOT NULL,
-    [folderId] NVARCHAR(1000) NOT NULL,
+    [caseId] UNIQUEIDENTIFIER NOT NULL, 
+    [folderId] UNIQUEIDENTIFIER NOT NULL,
     [fileName] NVARCHAR(1000) NOT NULL,
     [blobName] NVARCHAR(1000) NOT NULL,
     [size] BIGINT NOT NULL,
@@ -34,6 +34,12 @@ ALTER TABLE [dbo].[Document] ADD CONSTRAINT [Document_caseId_fkey] FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE [dbo].[Document] ADD CONSTRAINT [Document_folderId_fkey] FOREIGN KEY ([folderId]) REFERENCES [dbo].[Folder]([id]) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[DraftDocument] ADD CONSTRAINT [DraftDocument_caseId_fkey] FOREIGN KEY ([caseId]) REFERENCES [dbo].[Case]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[DraftDocument] ADD CONSTRAINT [DraftDocument_folderId_fkey] FOREIGN KEY ([folderId]) REFERENCES [dbo].[Folder]([id]) ON DELETE CASCADE ON UPDATE CASCADE;
 
 COMMIT TRAN;
 
