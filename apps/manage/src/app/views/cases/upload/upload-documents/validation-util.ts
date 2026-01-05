@@ -89,7 +89,7 @@ function validateBasicAttributes(file: Express.Multer.File, maxFileSize: number)
 	}
 
 	// Only allow standard characters and hyphens, underscores and spaces
-	if (/[^a-zA-Z0-9.\-_ ]/.test(originalname)) {
+	if (/[^a-zA-Z0-9.\-_ ()]/.test(originalname)) {
 		errors.push({
 			text: `${originalname}: Filename contains special characters. Please remove these and try again.`,
 			href: '#upload-form'
