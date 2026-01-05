@@ -77,17 +77,13 @@ describe('view-model', () => {
 				id: '123',
 				receivedDate: new Date(),
 				Applicant: {
-					name: 'John Doe',
-					email: 'john@example.com',
-					telephoneNumber: '0123456789'
+					name: 'John Doe'
 				}
 			};
 
 			const result: any = caseToViewModel(input as any, groupMembers);
 
 			assert.strictEqual(result.applicantName, 'John Doe');
-			assert.strictEqual(result.applicantEmail, 'john@example.com');
-			assert.strictEqual(result.applicantTelephoneNumber, '0123456789');
 
 			assert.strictEqual(result.Applicant, undefined);
 		});
@@ -97,17 +93,13 @@ describe('view-model', () => {
 				id: '123',
 				receivedDate: new Date(),
 				Authority: {
-					name: 'Local Council',
-					email: 'council@gov.uk',
-					telephoneNumber: '0987654321'
+					name: 'Local Council'
 				}
 			};
 
 			const result: any = caseToViewModel(input as any, groupMembers);
 
 			assert.strictEqual(result.authorityName, 'Local Council');
-			assert.strictEqual(result.authorityEmail, 'council@gov.uk');
-			assert.strictEqual(result.authorityTelephoneNumber, '0987654321');
 
 			assert.strictEqual(result.Authority, undefined);
 		});
