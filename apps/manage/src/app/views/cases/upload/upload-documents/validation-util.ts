@@ -88,9 +88,10 @@ function validateBasicAttributes(file: Express.Multer.File, maxFileSize: number)
 		});
 	}
 
-	if (originalname.includes('–') || originalname.includes('—')) {
+	// Only allow standard characters and hyphens, underscores and spaces
+	if (/[^a-zA-Z0-9.\-_ ]/.test(originalname)) {
 		errors.push({
-			text: `${originalname}: The attachment name contains special characters '-' or '_'. Please remove these and try again.`,
+			text: `${originalname}: Filename contains special characters. Please remove these and try again.`,
 			href: '#upload-form'
 		});
 	}
