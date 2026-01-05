@@ -3,7 +3,6 @@ import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/da
 import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
 import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js';
 import NumericValidator from '@planning-inspectorate/dynamic-forms/src/validator/numeric-validator.js';
-import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
 import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
 
 import {
@@ -451,54 +450,19 @@ export const CASE_DETAILS_QUESTIONS = {
 		}
 	},
 	applicant: {
-		type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
+		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
 		title: 'Applicant / Server',
-		question: 'What was the final cost?',
-		fieldName: 'applicantId',
+		question: 'Who is the applicant?',
+		hint: 'Enter either the applicant or server',
+		fieldName: 'applicantName',
 		url: 'applicant-server',
-		inputFields: [
-			{
-				fieldName: 'applicantName',
-				label: 'Applicant / server name'
-			},
-			{
-				fieldName: 'applicantEmail',
-				label: 'Email'
-			},
-			{
-				fieldName: 'applicantTelephoneNumber',
-				label: 'Telephone number'
-			}
-		],
 		validators: [
-			new MultiFieldInputValidator({
-				fields: [
-					{
-						fieldName: 'applicantName',
-						errorMessage: 'Enter the applicant name',
-						required: true,
-						regex: {
-							regex: /^.{0,249}$/,
-							regexMessage: 'Name must be less than 250 characters'
-						}
-					},
-					{
-						fieldName: 'applicantEmail',
-						errorMessage: 'Enter an email address',
-						regex: {
-							regex: /^.{0,249}$/,
-							regexMessage: 'Email must be less than 250 characters'
-						}
-					},
-					{
-						fieldName: 'applicantTelephoneNumber',
-						errorMessage: 'Enter a telephone number',
-						regex: {
-							regex: /^.{0,14}$/,
-							regexMessage: 'Telephone number must be less than 15 characters'
-						}
-					}
-				]
+			new RequiredValidator('Enter the applicant'),
+			new StringValidator({
+				maxLength: {
+					maxLength: 150,
+					maxLengthMessage: 'Applicant must be less than 150 characters'
+				}
 			})
 		]
 	},
@@ -528,55 +492,18 @@ export const CASE_DETAILS_QUESTIONS = {
 		]
 	},
 	authority: {
-		type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
+		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
 		title: 'Authority (LPA,OMA, CRA)',
 		question: 'Who is the authority?',
 		hint: 'Enter the Local Planning Authority or Common Registration Authority (optional)',
-		fieldName: 'authorityId',
+		fieldName: 'authorityName',
 		url: 'authority',
-		inputFields: [
-			{
-				fieldName: 'authorityName',
-				label: 'Authority name'
-			},
-			{
-				fieldName: 'authorityEmail',
-				label: 'Email'
-			},
-			{
-				fieldName: 'authorityTelephoneNumber',
-				label: 'Telephone number'
-			}
-		],
 		validators: [
-			new MultiFieldInputValidator({
-				fields: [
-					{
-						fieldName: 'authorityName',
-						errorMessage: 'Enter the authority name',
-						required: true,
-						regex: {
-							regex: /^.{0,249}$/,
-							regexMessage: 'Name must be less than 250 characters'
-						}
-					},
-					{
-						fieldName: 'authorityEmail',
-						errorMessage: 'Enter an email address',
-						regex: {
-							regex: /^.{0,249}$/,
-							regexMessage: 'Email must be less than 250 characters'
-						}
-					},
-					{
-						fieldName: 'authorityTelephoneNumber',
-						errorMessage: 'Enter a telephone number',
-						regex: {
-							regex: /^.{0,14}$/,
-							regexMessage: 'Telephone number must be less than 15 characters'
-						}
-					}
-				]
+			new StringValidator({
+				maxLength: {
+					maxLength: 150,
+					maxLengthMessage: 'Authority must be less than 150 characters'
+				}
 			})
 		]
 	},

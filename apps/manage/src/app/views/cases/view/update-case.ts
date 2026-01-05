@@ -159,19 +159,10 @@ function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Pri
  * Handles mapping the applicant or server data to the db fields.
  */
 function handleApplicant(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
-	if (
-		!(
-			Object.hasOwn(flatData, 'applicantName') &&
-			Object.hasOwn(flatData, 'applicantEmail') &&
-			Object.hasOwn(flatData, 'applicantTelephoneNumber')
-		)
-	)
-		return;
+	if (!Object.hasOwn(flatData, 'applicantName')) return;
 
 	const applicantData = {
-		name: flatData.applicantName,
-		email: flatData.applicantEmail,
-		telephoneNumber: flatData.applicantTelephoneNumber
+		name: flatData.applicantName
 	};
 
 	prismaPayload.Applicant = {
@@ -182,27 +173,16 @@ function handleApplicant(flatData: Record<string, any>, prismaPayload: Prisma.Ca
 	};
 
 	delete flatData.applicantName;
-	delete flatData.applicantEmail;
-	delete flatData.applicantTelephoneNumber;
 }
 
 /**
  * Handles mapping the authority data fields to the db fields.
  */
 function handleAuthority(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
-	if (
-		!(
-			Object.hasOwn(flatData, 'authorityName') &&
-			Object.hasOwn(flatData, 'authorityEmail') &&
-			Object.hasOwn(flatData, 'authorityTelephoneNumber')
-		)
-	)
-		return;
+	if (!Object.hasOwn(flatData, 'authorityName')) return;
 
 	const authorityData = {
-		name: flatData.authorityName,
-		email: flatData.authorityEmail,
-		telephoneNumber: flatData.authorityTelephoneNumber
+		name: flatData.authorityName
 	};
 
 	prismaPayload.Authority = {
@@ -213,8 +193,6 @@ function handleAuthority(flatData: Record<string, any>, prismaPayload: Prisma.Ca
 	};
 
 	delete flatData.authorityName;
-	delete flatData.authorityEmail;
-	delete flatData.authorityTelephoneNumber;
 }
 
 /**

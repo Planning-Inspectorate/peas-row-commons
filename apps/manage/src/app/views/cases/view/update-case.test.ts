@@ -140,9 +140,7 @@ describe('Update Case Controller', () => {
 
 		it('should transform applicant fields into Applicant upsert payload', () => {
 			const input = {
-				applicantName: 'John Doe',
-				applicantEmail: 'john@example.com',
-				applicantTelephoneNumber: '0123456789'
+				applicantName: 'John Doe'
 			};
 			const result = mapCasePayload(input);
 
@@ -150,17 +148,13 @@ describe('Update Case Controller', () => {
 			assert.ok(applicantUpdate, 'Should have Applicant property');
 
 			assert.strictEqual(applicantUpdate.upsert.create.name, 'John Doe');
-			assert.strictEqual(applicantUpdate.upsert.create.email, 'john@example.com');
-			assert.strictEqual(applicantUpdate.upsert.create.telephoneNumber, '0123456789');
 
 			assert.strictEqual((result as any).applicantName, undefined);
 		});
 
 		it('should transform authority fields into Authority upsert payload', () => {
 			const input = {
-				authorityName: 'Local Council',
-				authorityEmail: 'planning@council.gov.uk',
-				authorityTelephoneNumber: '0987654321'
+				authorityName: 'Local Council'
 			};
 			const result = mapCasePayload(input);
 
@@ -168,7 +162,6 @@ describe('Update Case Controller', () => {
 			assert.ok(authorityUpdate, 'Should have Authority property');
 
 			assert.strictEqual(authorityUpdate.upsert.create.name, 'Local Council');
-			assert.strictEqual(authorityUpdate.upsert.create.email, 'planning@council.gov.uk');
 
 			assert.strictEqual((result as any).authorityName, undefined);
 		});
@@ -196,14 +189,12 @@ describe('Update Case Controller', () => {
 		});
 
 		it('should skip applicant transformation if fields are incomplete', () => {
-			const input = {
-				applicantName: 'Incomplete User'
-			};
+			const input = {};
 
 			const result = mapCasePayload(input);
 
 			assert.strictEqual((result as any).Applicant, undefined);
-			assert.strictEqual((result as any).applicantName, 'Incomplete User');
+			assert.strictEqual((result as any).applicantName, undefined);
 		});
 	});
 });
