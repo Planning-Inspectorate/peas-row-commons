@@ -60,6 +60,7 @@ model Case {
   Abeyance          CaseAbeyance?
   Notes             CaseNote[]
   Documents         Document[]
+  DraftDocuments    DraftDocument[]
 }
 
 model CaseworkArea {
@@ -143,17 +144,18 @@ model CaseDates {
 /// Folder model
 /// Contains folders created for each case that will contain documents.
 model Folder {
-  id             String     @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  id             String          @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   displayName    String
   displayOrder   Int?
-  parentFolderId String?    @db.UniqueIdentifier
-  caseId         String?    @db.UniqueIdentifier
-  isCustom       Boolean    @default(false)
+  parentFolderId String?         @db.UniqueIdentifier
+  caseId         String?         @db.UniqueIdentifier
+  isCustom       Boolean         @default(false)
   deletedAt      DateTime?
-  Case           Case?      @relation(fields: [caseId], references: [id])
-  ParentFolder   Folder?    @relation("FolderTree", fields: [parentFolderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  ChildFolders   Folder[]   @relation("FolderTree")
+  Case           Case?           @relation(fields: [caseId], references: [id])
+  ParentFolder   Folder?         @relation("FolderTree", fields: [parentFolderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ChildFolders   Folder[]        @relation("FolderTree")
   Documents      Document[]
+  DraftDocuments DraftDocument[]
 
   @@unique([caseId, displayName, parentFolderId, deletedAt])
 }
@@ -211,10 +213,10 @@ model Document {
 model DraftDocument {
   id         String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   sessionKey String
-  /// Purposefully do not create real PK-FK relations for simplicity
-  /// and speed, this is just a draft row.
-  caseId     String
-  folderId   String
+  caseId     String @db.UniqueIdentifier
+  Case       Case   @relation(fields: [caseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  folderId   String @db.UniqueIdentifier
+  Folder     Folder @relation(fields: [folderId], references: [id], onDelete: Cascade)
   fileName   String
   blobName   String
   size       BigInt
