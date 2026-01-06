@@ -201,7 +201,7 @@ model Document {
   uploadedDate DateTime @default(now())
   size         BigInt   @default(0)
   blobName     String
-  mimeType     String
+  mimeType     String   @default("application/octet-stream")
   caseId       String   @db.UniqueIdentifier
   Case         Case     @relation(fields: [caseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   folderId     String   @db.UniqueIdentifier
@@ -221,7 +221,7 @@ model DraftDocument {
   fileName   String
   blobName   String
   size       BigInt
-  mimeType   String
+  mimeType   String @default("application/octet-stream")
 
   @@index([sessionKey, caseId])
 }

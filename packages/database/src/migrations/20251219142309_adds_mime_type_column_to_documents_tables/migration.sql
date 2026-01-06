@@ -1,19 +1,12 @@
-/*
-  Warnings:
-
-  - Added the required column `mimeType` to the `Document` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `mimeType` to the `DraftDocument` table without a default value. This is not possible if the table is not empty.
-
-*/
 BEGIN TRY
 
 BEGIN TRAN;
 
 -- AlterTable
-ALTER TABLE [dbo].[Document] ADD [mimeType] NVARCHAR(1000) NOT NULL;
+ALTER TABLE [dbo].[Document] ADD [mimeType] NVARCHAR(1000) NOT NULL CONSTRAINT [Document_mimeType_df] DEFAULT 'application/octet-stream';
 
 -- AlterTable
-ALTER TABLE [dbo].[DraftDocument] ADD [mimeType] NVARCHAR(1000) NOT NULL;
+ALTER TABLE [dbo].[DraftDocument] ADD [mimeType] NVARCHAR(1000) NOT NULL CONSTRAINT [DraftDocument_mimeType_df] DEFAULT 'application/octet-stream';
 
 COMMIT TRAN;
 
