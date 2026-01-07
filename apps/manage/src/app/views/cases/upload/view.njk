@@ -28,7 +28,7 @@
             </ul>
             <p class="govuk-body">The total combined size of your uploaded files must be smaller than 1GB.</p>
 
-            {% set uploadForm = "upload" %}
+            {% set uploadForm = "upload-form" %}
 
             <form id = "upload-form-container" action="{{ currentUrl }}" method="post" enctype="multipart/form-data" data-upload-url="{{ currentUrl }}/document" data-delete-url="{{ currentUrl }}/delete">
                 {% set uploadHtml %}
@@ -53,7 +53,8 @@
                     },
                     uploadHtml: uploadHtml
                 }) }}
-
+            </form>
+            <form action="{{ currentUrl }}" method="post">
                 {{ govukButton({
                     text: "Upload"
                 }) }}
