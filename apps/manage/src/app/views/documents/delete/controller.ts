@@ -59,7 +59,7 @@ export function buildDeleteFileView(service: ManageService) {
 			});
 		}
 
-		const currentUrl = `/cases/${document.caseId}/case-folders/${document.Folder.id}/${document.Folder.displayName}/${documentId}/delete`;
+		const currentUrl = `${backLinkUrl}/${documentId}/delete`;
 
 		// Otherwise show the confirmation screen
 		return res.render('views/cases/case-folders/case-folder/delete-file/confirmation.njk', {
@@ -119,17 +119,17 @@ export function buildDeleteFileController(service: ManageService) {
 
 			res.locals.errorSummary = [{ text: 'Failed to delete document, please try again.' }];
 
-			const currentUrl = document
-				? `/cases/${document.caseId}/case-folders/${document.Folder.id}/${document.Folder.displayName}/${documentId}/delete`
+			const backLinkUrl = document
+				? `/cases/${document.caseId}/case-folders/${document.Folder.id}/${document.Folder.displayName}`
 				: '/';
+
+			const currentUrl = document ? `${backLinkUrl}/${documentId}/delete` : '/';
 
 			return res.render('views/cases/case-folders/case-folder/delete-file/confirmation.njk', {
 				pageHeading: 'Delete file',
 				documents: document ? [document] : [],
 				currentUrl,
-				backLinkUrl: document
-					? `/cases/${document.caseId}/case-folders/${document.Folder.id}/${document.Folder.displayName}`
-					: '/'
+				backLinkUrl
 			});
 		}
 	};
