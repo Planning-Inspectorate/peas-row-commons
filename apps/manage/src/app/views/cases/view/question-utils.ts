@@ -493,7 +493,7 @@ export const CASE_DETAILS_QUESTIONS = {
 	},
 	authority: {
 		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
-		title: 'Authority (LPA,OMA, CRA)',
+		title: 'Authority (LPA, OMA, CRA)',
 		question: 'Who is the authority?',
 		hint: 'Enter the Local Planning Authority or Common Registration Authority (optional)',
 		fieldName: 'authorityName',
