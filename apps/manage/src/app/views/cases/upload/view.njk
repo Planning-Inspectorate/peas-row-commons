@@ -33,8 +33,8 @@
             <form id = "upload-form-container" action="{{ currentUrl }}" method="post" enctype="multipart/form-data" data-upload-url="{{ currentUrl }}/document" data-delete-url="{{ currentUrl }}/delete">
                 {% set uploadHtml %}
                     {{ govukFileUpload({
-                        id: "{{ uploadForm }}",
-                        name: "{{ uploadForm }}",
+                        id: uploadForm,
+                        name: uploadForm,
                         classes: "moj-multi-file-upload__input",
                         attributes: { multiple: "" },
                         errorMessage: errorMessage
