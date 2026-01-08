@@ -6,6 +6,7 @@ import { getRelationForField } from '@pins/peas-row-commons-lib/util/schema-map.
 import type { Request, Response } from 'express';
 import type { Logger } from 'pino';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { yesNoToBoolean } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
 
 interface HandlerParams {
 	req: Request;
@@ -153,6 +154,13 @@ function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Pri
 	handleApplicant(flatData, prismaPayload);
 	handleAuthority(flatData, prismaPayload);
 	handleAddress(flatData, prismaPayload);
+	handleBooleans(flatData);
+}
+
+function handleBooleans(flatData: Record<string, any>) {
+	if (Object.hasOwn(flatData, 'isFencingPermanent')) {
+		flatData.isFencingPermanent = yesNoToBoolean(flatData.isFencingPermanent);
+	}
 }
 
 /**

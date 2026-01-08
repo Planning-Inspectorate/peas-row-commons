@@ -26,7 +26,9 @@ export const RELATION_MAP: Record<string, string[]> = {
 		'sealedOrderReturnedDate',
 		'decisionPublishedDate',
 		'isFencingPermanent',
-		'fencingPermanentComment'
+		'fencingPermanentComment',
+		'grantedWithConditionsComment',
+		'proposeNotToConfirmComment'
 	]
 };
 

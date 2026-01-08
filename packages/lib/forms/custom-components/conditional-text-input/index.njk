@@ -1,0 +1,49 @@
+{% extends layoutTemplate %}
+
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% if question.html %}
+    {% set htmlHint %}
+        {% include question.html ignore missing %}
+    {% endset %}
+{% endif %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <form action="" method="post" novalidate>
+                <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                <h1 class="govuk-heading-l">{{ question.question }}</h1>
+                <p class="govuk-body">{{ question.description }}</p>
+
+                {% if question.html %}
+                    {% include question.html ignore missing %}
+                {% endif %}
+                {{ govukRadios({
+                    classes: "govuk-radios",
+                    idPrefix: question.fieldName,
+                    name: question.fieldName,
+                    errorMessage: errors[question.fieldName] and {
+                        text: errors[question.fieldName].msg
+                    },
+                    fieldset: {
+                        legend: {
+                            text: question.legend,
+                            classes: "govuk-fieldset__legend--m"
+                        }
+                    },
+                    items: question.options
+                }) }}
+
+                {{ govukButton({
+                    text: continueButtonText,
+                    type: "submit",
+                    attributes: { "data-cy":"button-save-and-continue"}
+                }) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

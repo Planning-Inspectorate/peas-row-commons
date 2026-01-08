@@ -19,6 +19,8 @@ import {
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
 import type { CaseOfficer } from './types.ts';
+import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
+import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/outcome.ts';
 
 interface DateQuestionProps {
 	fieldName: string;
@@ -739,22 +741,36 @@ export const OUTCOME_QUESTIONS = {
 		validators: [new RequiredValidator('Select the decision maker')]
 	},
 	outcome: {
-		type: COMPONENT_TYPES.RADIO,
+		type: CUSTOM_COMPONENTS.CONDITIONAL_TEXT_OPTIONS,
 		title: 'Outcome',
 		question: 'What is the outcome?',
 		fieldName: 'outcomeId',
 		url: 'outcome',
-		validators: [],
-		options: OUTCOMES.map((status) => ({ text: status.displayName, value: status.id })),
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'outcome/remove'
-				}
-			]
-		}
+		validators: [new RequiredValidator('Select the outcome')],
+		options: OUTCOMES.map((status) => {
+			const option: any = {
+				text: status.displayName,
+				value: status.id
+			};
+
+			if (status.id === OUTCOME_ID.GRANTED_WITH_CONDITIONS) {
+				option.conditional = {
+					question: 'Condition details',
+					fieldName: 'grantedWithConditionsComment',
+					type: 'textarea'
+				};
+			}
+
+			if (status.id === OUTCOME_ID.PROPOSE_NOT_TO_CONFIRM) {
+				option.conditional = {
+					question: 'Other details',
+					fieldName: 'proposeNotToConfirmComment',
+					type: 'textarea'
+				};
+			}
+
+			return option;
+		})
 	},
 	inTarget: {
 		type: COMPONENT_TYPES.BOOLEAN,
@@ -851,12 +867,26 @@ export const OUTCOME_QUESTIONS = {
 		}
 	}),
 	isFencingPermanent: {
-		type: COMPONENT_TYPES.BOOLEAN,
+		type: CUSTOM_COMPONENTS.FENCING_PERMANENT,
 		title: 'Is fencing permanent',
 		question: 'Is the fencing permanent?',
 		fieldName: 'isFencingPermanent',
 		url: 'fencing-permanent',
-		validators: [new RequiredValidator('Select yes if the decision was received in the target timeframe')]
+		validators: [new RequiredValidator('Select yes if the decision was received in the target timeframe')],
+		options: [
+			{
+				text: 'Yes',
+				value: 'yes'
+			},
+			{
+				text: 'No',
+				value: 'no',
+				conditional: {
+					fieldName: 'fencingPermanentComment',
+					type: 'textarea'
+				}
+			}
+		]
 	}
 };
 
