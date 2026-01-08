@@ -13,7 +13,21 @@ export const RELATION_MAP: Record<string, string[]> = {
 		'proposedModificationsDate'
 	],
 	Costs: ['rechargeable', 'finalCost', 'feeReceived', 'invoiceSent'],
-	Abeyance: ['withdrawalDate', 'abeyanceStartDate', 'abeyanceEndDate']
+	Abeyance: ['withdrawalDate', 'abeyanceStartDate', 'abeyanceEndDate'],
+	Decision: [
+		'decisionTypeId',
+		'outcomeId',
+		'decisionMakerEntraId',
+		'outcomeDate',
+		'decisionReceivedDate',
+		'inTarget',
+		'partiesNotifiedDate',
+		'orderDecisionDispatchDate',
+		'sealedOrderReturnedDate',
+		'decisionPublishedDate',
+		'isFencingPermanent',
+		'fencingPermanentComment'
+	]
 };
 
 const FIELD_TO_RELATION_LOOKUP: Record<string, string> = {};

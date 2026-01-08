@@ -86,7 +86,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				Abeyance: true,
 				Notes: true,
 				Authority: true,
-				Applicant: true
+				Applicant: true,
+				Decision: true
 			}
 		});
 
