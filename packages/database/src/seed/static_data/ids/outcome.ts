@@ -1,0 +1,20 @@
+export const OUTCOME_ID = {
+	ALLOW: 'allow',
+	NOT_ALLOWED: 'not-allowed',
+	PARTIALLY_ALLOW: 'partially-allow',
+	CONFIRMED: 'confirmed',
+	NOT_CONFIRMED: 'not-confirmed',
+	CONFIRMED_WITH_MODIFICATIONS: 'confirmed-with-modifications',
+	DIRECTED: 'directed',
+	NOT_DIRECTED: 'not-directed',
+	GRANTED_WITH_CONDITIONS: 'granted-with-conditions',
+	GRANTED_WITHOUT_CONDITIONS: 'granted-without-conditions',
+	NOT_GRANTED: 'not-granted',
+	MODIFIED_ADV: 'modified-adv',
+	MODIFIED_NOT_ADV: 'modified-not-adv',
+	ORDER_MADE: 'order-made',
+	ORDER_NOT_MADE: 'order-not-made',
+	ORDER_MADE_WITH_MODIFICATIONS: 'order-made-with-modifications',
+	PROPOSE_TO_CONFIRM: 'propose-to-confirm',
+	PROPOSE_NOT_TO_CONFIRM: 'propose-not-to-confirm'
+};
