@@ -15,6 +15,7 @@ import {
 } from './question-utils.ts';
 
 import type { CaseOfficer } from './types.ts';
+import { CUSTOM_COMPONENT_CLASSES } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 
 export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }) {
 	// We must generate team questions due to the varying nature of groupMembers
@@ -39,5 +40,10 @@ export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }) {
 		answerActionText: 'Add'
 	};
 
-	return createQuestions(questions, questionClasses, {}, textOverrides);
+	const classes = {
+		...questionClasses,
+		...CUSTOM_COMPONENT_CLASSES
+	};
+
+	return createQuestions(questions, classes, {}, textOverrides);
 }

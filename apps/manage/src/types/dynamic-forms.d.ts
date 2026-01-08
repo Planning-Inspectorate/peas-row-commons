@@ -7,11 +7,14 @@ declare module '@planning-inspectorate/dynamic-forms/src/components/boolean/ques
 		readonly YES: 'yes';
 		readonly NO: 'no';
 	};
+
+	export function yesNoToBoolean(value: any): any;
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/journey/journey.js' {
 	export class Journey {
 		constructor(config: any);
+		response: any;
 	}
 }
 
@@ -23,6 +26,199 @@ declare module '@planning-inspectorate/dynamic-forms/src/journey/journey-respons
 		LPACode?: string;
 
 		constructor(journeyId: string, referenceId: string, answers: Record<string, unknown> | null, lpaCode?: string);
+	}
+}
+
+declare module '@planning-inspectorate/dynamic-forms/src/questions/options-question.js' {
+	import { Question, QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+	import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+	import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+	import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+	import { Request } from 'express';
+
+	export interface ConditionalConfig {
+		question: string;
+		fieldName: string;
+		type?: string;
+		inputClasses?: string;
+		html?: string;
+		value?: unknown;
+		label?: string;
+		hint?: string;
+	}
+
+	export interface Option {
+		text: string;
+		value: string;
+		hint?: { text: string } | object;
+		checked?: boolean;
+		selected?: boolean;
+		attributes?: Record<string, string>;
+		behaviour?: 'exclusive';
+		conditional?: ConditionalConfig;
+		conditionalText?: { html: string };
+	}
+
+	export interface OptionsQuestionParams {
+		title: string;
+		question: string;
+		fieldName: string;
+		options: Option[];
+		url?: string;
+		hint?: string;
+		validators?: any[];
+		editable?: boolean;
+		viewFolder?: string;
+		[key: string]: any;
+	}
+
+	export default class OptionsQuestion extends Question {
+		options: Option[];
+		optionJoinString: string;
+
+		constructor(params: OptionsQuestionParams);
+
+		prepQuestionForRendering(
+			section: Section,
+			journey: Journey,
+			customViewData?: Record<string, unknown>,
+			payload?: Record<string, any>
+		): QuestionViewModel;
+
+		getDataToSave(req: Request, journeyResponse: JourneyResponse): Promise<{ answers: Record<string, unknown> }>;
+	}
+}
+
+declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' {
+	import { Request, Response } from 'express';
+	import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+	import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+	import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+
+	export interface ActionLink {
+		href: string;
+		text: string;
+		visuallyHiddenText?: string;
+	}
+
+	export interface PreppedQuestion {
+		value: any;
+		question: string;
+		fieldName: string;
+		pageTitle: string;
+		description?: string;
+		html?: string;
+		hint?: string;
+		interfaceType?: string;
+		autocomplete?: string;
+		[key: string]: any;
+	}
+
+	export interface QuestionViewModel {
+		question: PreppedQuestion;
+		layoutTemplate: string;
+		pageCaption?: string;
+		navigation: string[];
+		backLink: string;
+		showBackToListLink: boolean;
+		listLink: string;
+		journeyTitle: string;
+		payload?: any;
+		continueButtonText: string;
+		errors?: Record<string, any>;
+		errorSummary?: any[];
+		[key: string]: any;
+	}
+
+	export interface QuestionParameters {
+		title: string;
+		question: string;
+		viewFolder: string;
+		fieldName: string;
+		url?: string;
+		pageTitle?: string;
+		description?: string;
+		validators?: any[];
+		html?: string;
+		hint?: string;
+		interfaceType?: string;
+		shouldDisplay?: (response?: JourneyResponse) => boolean;
+		autocomplete?: string;
+		editable?: boolean;
+		actionLink?: ActionLink;
+		viewData?: Record<string, unknown>;
+	}
+
+	export interface SummaryListItem {
+		key: string;
+		value: string | Record<string, any>;
+		action?: ActionLink | ActionLink[];
+	}
+
+	export class Question {
+		pageTitle: string;
+		title: string;
+		question: string;
+		description?: string;
+		viewFolder: string;
+		fieldName: string;
+		taskList: boolean;
+		validators: any[];
+		hint?: string;
+		showBackToListLink: boolean;
+		url?: string;
+		html?: string;
+		interfaceType?: string;
+		actionLink?: ActionLink;
+
+		notStartedText: string;
+		continueButtonText: string;
+		changeActionText: string;
+		answerActionText: string;
+		addActionText: string;
+
+		details: { title: string; text: string };
+		autocomplete?: string;
+		editable: boolean;
+		viewData: Record<string, unknown>;
+
+		shouldDisplay: (response?: JourneyResponse) => boolean;
+
+		constructor(params: QuestionParameters, methodOverrides?: Record<string, any>);
+
+		prepQuestionForRendering(
+			section: Section,
+			journey: Journey,
+			customViewData?: Record<string, unknown>,
+			payload?: unknown
+		): QuestionViewModel;
+
+		renderAction(res: Response, viewModel: QuestionViewModel): void;
+
+		checkForValidationErrors(req: Request, sectionObj: Section, journey: Journey): QuestionViewModel | undefined;
+
+		getDataToSave(req: Request, journeyResponse: JourneyResponse): Promise<{ answers: Record<string, unknown> }>;
+
+		checkForSavingErrors(req: Request, sectionObj: Section, journey: Journey): QuestionViewModel | undefined;
+
+		handleNextQuestion(res: Response, journey: Journey, sectionSegment: string, questionSegment: string): void;
+
+		formatAnswerForSummary(
+			sectionSegment: string,
+			journey: Journey,
+			answer: any,
+			capitals?: boolean
+		): SummaryListItem[];
+
+		getAction(sectionSegment: string, journey: Journey, answer: any): ActionLink | ActionLink[] | undefined;
+
+		format(answer: any): any;
+
+		isRequired(): boolean;
+
+		fieldIsRequired(inputField: string): boolean;
+
+		isAnswered(journeyResponse: JourneyResponse, fieldName?: string): boolean;
 	}
 }
 
