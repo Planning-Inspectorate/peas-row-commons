@@ -7,3 +7,5 @@ export { PRIORITY_ID } from './priority.ts';
 export { CASE_STATUS_ID } from './status.ts';
 export { ADVERTISED_MODIFICATION_ID } from './advertised-modification.ts';
 export { INSPECTOR_BAND_ID } from './inspector-band.ts';
+export { DECISION_TYPE_ID } from './decision-type.ts';
+export { OUTCOME_ID } from './outcome.ts';
