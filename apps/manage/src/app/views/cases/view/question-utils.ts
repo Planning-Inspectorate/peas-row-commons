@@ -13,7 +13,9 @@ import {
 	PRIORITIES,
 	CASE_TYPES,
 	CASE_SUBTYPES,
-	INSPECTOR_BANDS
+	INSPECTOR_BANDS,
+	DECISION_TYPES,
+	OUTCOMES
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
 import type { CaseOfficer } from './types.ts';
@@ -704,6 +706,176 @@ export function createTeamQuestions(
 		...teamQuestions,
 		caseOfficer: {
 			...teamQuestions.caseOfficer,
+			options
+		}
+	};
+}
+
+export const OUTCOME_QUESTIONS = {
+	decisionType: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Type of decision or report',
+		question: 'What is the type of decision or report?',
+		fieldName: 'decisionTypeId',
+		url: 'type-of-decision',
+		validators: [new RequiredValidator('Select a type of decision or report')],
+		options: DECISION_TYPES.map((status) => ({ text: status.displayName, value: status.id })),
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'type-of-decision/remove'
+				}
+			]
+		}
+	},
+	decisionMaker: {
+		type: COMPONENT_TYPES.SELECT,
+		title: 'Decision maker',
+		question: 'Who is the decision maker?',
+		fieldName: 'decisionMakerEntraId',
+		url: 'decision-maker',
+		validators: [new RequiredValidator('Select the decision maker')]
+	},
+	outcome: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Outcome',
+		question: 'What is the outcome?',
+		fieldName: 'outcomeId',
+		url: 'outcome',
+		validators: [],
+		options: OUTCOMES.map((status) => ({ text: status.displayName, value: status.id })),
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'outcome/remove'
+				}
+			]
+		}
+	},
+	inTarget: {
+		type: COMPONENT_TYPES.BOOLEAN,
+		title: 'In target?',
+		question: 'Was the decision received in the target timeframe?',
+		fieldName: 'inTarget',
+		url: 'in-target',
+		validators: [new RequiredValidator('Select yes if the decision was received in the target timeframe')]
+	},
+	outcomeDate: dateQuestion({
+		fieldName: 'outcomeDate',
+		title: 'Outcome date',
+		question: 'Outcome date',
+		hint: 'Date of the decision, proposal, report or recommendation. For example 27 3 2007.',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'outcome-date/remove'
+				}
+			]
+		}
+	}),
+	decisionReceivedDate: dateQuestion({
+		fieldName: 'decisionReceivedDate',
+		title: 'Decision received',
+		question: 'Decision received (optional)',
+		hint: 'Required if the decision was determined external to PINS. For example 27 3 2007.',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'decision-received-date/remove'
+				}
+			]
+		}
+	}),
+	partiesNotifiedDate: dateQuestion({
+		fieldName: 'partiesNotifiedDate',
+		title: 'Parties notified of outcome',
+		question: 'When were the parties notified of the outcome?',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'parties-notified-date/remove'
+				}
+			]
+		}
+	}),
+	orderDecisionDispatchDate: dateQuestion({
+		fieldName: 'orderDecisionDispatchDate',
+		title: 'Order decision dispatch',
+		question: 'When was the decision order dispatched?',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'order-decision-dispatch-date/remove'
+				}
+			]
+		}
+	}),
+	sealedOrderReturnedDate: dateQuestion({
+		fieldName: 'sealedOrderReturnedDate',
+		title: 'Sealed order returned',
+		question: 'When was the sealed order returned?',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'sealed-order-returned-date/remove'
+				}
+			]
+		}
+	}),
+	decisionPublishedDate: dateQuestion({
+		fieldName: 'decisionPublishedDate',
+		title: 'Decision published',
+		question: 'When was the decision published?',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'decision-published-date/remove'
+				}
+			]
+		}
+	}),
+	isFencingPermanent: {
+		type: COMPONENT_TYPES.BOOLEAN,
+		title: 'Is fencing permanent',
+		question: 'Is the fencing permanent?',
+		fieldName: 'isFencingPermanent',
+		url: 'fencing-permanent',
+		validators: [new RequiredValidator('Select yes if the decision was received in the target timeframe')]
+	}
+};
+
+/**
+ * Creates the Outcome questions, adding in the group members from
+ * entra for decision makers.
+ */
+export function createOutcomeQuestions(
+	outcomeQuestions: typeof OUTCOME_QUESTIONS,
+	groupMembers: { caseOfficers: CaseOfficer[] }
+) {
+	const options = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
+
+	options.unshift({ text: '', value: '' });
+
+	return {
+		...outcomeQuestions,
+		decisionMaker: {
+			...outcomeQuestions.decisionMaker,
 			options
 		}
 	};

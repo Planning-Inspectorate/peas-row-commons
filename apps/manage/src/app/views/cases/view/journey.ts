@@ -57,7 +57,19 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.withdrawalDate)
 				.addQuestion(questions.abeyanceStartDate)
 				.addQuestion(questions.abeyanceEndDate),
-			new Section('Team', 'team').addQuestion(questions.caseOfficer)
+			new Section('Team', 'team').addQuestion(questions.caseOfficer),
+			new Section('Outcome', 'outcome')
+				.addQuestion(questions.decisionType)
+				.addQuestion(questions.decisionMaker)
+				.addQuestion(questions.outcome)
+				.addQuestion(questions.inTarget)
+				.addQuestion(questions.outcomeDate)
+				.addQuestion(questions.decisionReceivedDate)
+				.addQuestion(questions.partiesNotifiedDate)
+				.addQuestion(questions.orderDecisionDispatchDate)
+				.addQuestion(questions.sealedOrderReturnedDate)
+				.addQuestion(questions.decisionPublishedDate)
+				.addQuestion(questions.isFencingPermanent)
 		],
 		taskListUrl: '',
 		journeyTemplate: 'views/layouts/forms-question.njk',
