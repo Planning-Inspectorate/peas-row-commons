@@ -78,6 +78,7 @@ model Case {
   /// The band for the inspector
   inspectorBandId          String?
   InspectorBand            InspectorBand?                @relation(fields: [inspectorBandId], references: [id])
+  Decision                 CaseDecision?
 }
 
 model CaseworkArea {
@@ -282,4 +283,38 @@ model InspectorBand {
   id          String  @id
   displayName String?
   Case        Case[]
+}
+
+model CaseDecision {
+  id                        String        @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  decisionMakerEntraId      String?
+  outcomeDate               DateTime?
+  decisionReceivedDate      DateTime?
+  inTarget                  Boolean?
+  partiesNotifiedDate       DateTime?
+  orderDecisionDispatchDate DateTime?
+  sealedOrderReturnedDate   DateTime?
+  decisionPublishedDate     DateTime?
+  isFencingPermanent        Boolean?
+  fencingPermanentComment   String?       @db.NVarChar(2000)
+  decisionTypeId            String?
+  DecisionType              DecisionType? @relation(fields: [decisionTypeId], references: [id])
+  outcomeId                 String?
+  Outcome                   Outcome?      @relation(fields: [outcomeId], references: [id])
+  caseId                    String        @unique @db.UniqueIdentifier
+  Case                      Case          @relation(fields: [caseId], references: [id])
+}
+
+model DecisionType {
+  /// unique machine-readable name, not generated, e.g. "interim"
+  id           String         @id
+  displayName  String?
+  CaseDecision CaseDecision[]
+}
+
+model Outcome {
+  /// unique machine-readable name, not generated, e.g. "allow"
+  id           String         @id
+  displayName  String?
+  CaseDecision CaseDecision[]
 }
