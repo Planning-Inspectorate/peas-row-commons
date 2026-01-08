@@ -15,6 +15,8 @@ CREATE TABLE [dbo].[CaseDecision] (
     [decisionPublishedDate] DATETIME2,
     [isFencingPermanent] BIT,
     [fencingPermanentComment] NVARCHAR(2000),
+    [grantedWithConditionsComment] NVARCHAR(2000),
+    [proposeNotToConfirmComment] NVARCHAR(2000),
     [decisionTypeId] NVARCHAR(1000),
     [outcomeId] NVARCHAR(1000),
     [caseId] UNIQUEIDENTIFIER NOT NULL,
