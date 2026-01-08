@@ -23,7 +23,8 @@ export const caseListSelect = {
 	SiteAddress: true,
 	Notes: true,
 	Applicant: true,
-	Authority: true
+	Authority: true,
+	Decision: true
 } satisfies Prisma.CaseSelect;
 
 export type CaseListFields = Prisma.CaseGetPayload<{ select: typeof caseListSelect }>;

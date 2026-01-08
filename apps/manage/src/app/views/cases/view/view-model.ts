@@ -14,7 +14,7 @@ function formatValue(value: any) {
 	return value;
 }
 
-const NESTED_SECTIONS: (keyof CaseListFields)[] = ['Dates', 'Costs', 'Abeyance', 'Notes'];
+const NESTED_SECTIONS: (keyof CaseListFields)[] = ['Dates', 'Costs', 'Abeyance', 'Notes', 'Decision'];
 
 /**
  * Takes raw case data and converts into UI usable data format.
