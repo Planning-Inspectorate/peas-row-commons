@@ -105,10 +105,15 @@ describe('case details journey', () => {
 				title: 'Withdrawal or abeyance',
 				segment: 'withdrawal-abeyance',
 				questions: ['withdrawalDate', 'abeyanceStartDate', 'abeyanceEndDate']
+			},
+			{
+				title: 'Team',
+				segment: 'team',
+				questions: ['caseOfficer']
 			}
 		];
 
-		assert.strictEqual(journey.sections.length, 5, 'Journey should have exactly 5 sections');
+		assert.strictEqual(journey.sections.length, 6, 'Journey should have exactly 6 sections');
 
 		expectedStructure.forEach((expected, sIndex) => {
 			const actualSection = journey.sections[sIndex];
