@@ -872,7 +872,7 @@ export const OUTCOME_QUESTIONS = {
 		question: 'Is the fencing permanent?',
 		fieldName: 'isFencingPermanent',
 		url: 'fencing-permanent',
-		validators: [new RequiredValidator('Select yes if the decision was received in the target timeframe')],
+		validators: [new RequiredValidator('Select yes if the fencing is permanent')],
 		options: [
 			{
 				text: 'Yes',
