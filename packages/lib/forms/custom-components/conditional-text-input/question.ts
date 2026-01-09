@@ -30,6 +30,13 @@ interface ConditionalOptionsQuestionParams {
 	editable?: boolean;
 }
 
+/**
+ * Custom class for handling the use of nested conditional text inputs inside
+ * of an options list. Can have multiple values be conditional. Class will handle
+ * saving the values, displaying the correct value in the list, displaying the correct
+ * text too. Will also handle removing any old text that is no longer associated
+ * with the selected value.
+ */
 export default class ConditionalOptionsQuestion extends OptionsQuestion {
 	conditionalMapping: Record<string, string>;
 
@@ -82,6 +89,10 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 		);
 	}
 
+	/**
+	 * Prepares to display the text associated with the currently selected option,
+	 * if any.
+	 */
 	override prepQuestionForRendering(
 		section: Section,
 		journey: Journey,
@@ -99,6 +110,12 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 		return super.prepQuestionForRendering(section, journey, customViewData, payload);
 	}
 
+	/**
+	 * Grabs the main selected value + loops over the conditional options,
+	 * finding the one that is associated with that value (if any) and preparing
+	 * that text to be saved, whilst also setting any old text associated with
+	 * an unselected field to null
+	 */
 	override async getDataToSave(
 		req: Request,
 		journeyResponse: JourneyResponse
@@ -106,19 +123,22 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 		const responseToSave: { answers: Record<string, unknown> } = { answers: {} };
 		const { body } = req;
 
-		const mainValue = (body[this.fieldName] as string)?.trim();
+		const mainValue = body[this.fieldName]?.trim();
 		responseToSave.answers[this.fieldName] = mainValue;
 		journeyResponse.answers[this.fieldName] = mainValue;
 
 		Object.entries(this.conditionalMapping).forEach(([optionValue, targetDbName]) => {
 			const proxyUiName = `${this.fieldName}_${optionValue}_text`;
-			const textValue = (body[proxyUiName] as string)?.trim();
+			const textValue = body[proxyUiName]?.trim();
 
+			// Prepare text to be saved if selected
 			if (mainValue === optionValue) {
 				const conditionalToSave = textValue || null;
 				responseToSave.answers[targetDbName] = conditionalToSave;
 				journeyResponse.answers[targetDbName] = conditionalToSave;
 			} else {
+				// Make sure to set any other options answers to null to avoid
+				// DB having 2+ different text fields in columns
 				responseToSave.answers[targetDbName] = null;
 				journeyResponse.answers[targetDbName] = null;
 			}
@@ -127,6 +147,10 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 		return responseToSave;
 	}
 
+	/**
+	 * Formats answer in the same way that a 'radio' option might, using the
+	 * text value and not the key capitalised.
+	 */
 	override formatAnswerForSummary(sectionSegment: string, journey: Journey, answer: string | null) {
 		if (answer) {
 			const selectedOption = this.options.find((option) => option.value === answer);
