@@ -47,8 +47,6 @@ model Case {
   location                 String?
   /// Entra ID
   caseOfficerId            String
-  procedureId              String?
-  Procedure                CaseProcedure?                @relation(fields: [procedureId], references: [id])
   linkedCases              String?
   Dates                    CaseDates?
   /// Physical location of real-world files
@@ -79,6 +77,9 @@ model Case {
   inspectorBandId          String?
   InspectorBand            InspectorBand?                @relation(fields: [inspectorBandId], references: [id])
   Decision                 CaseDecision?
+  Procedures               Procedure[]
+  /// The primary procedure
+  primaryProcedureStep     String?                       @db.NVarChar(50)
 }
 
 model CaseworkArea {
@@ -109,24 +110,19 @@ model CaseSubType {
   ParentType   CaseType @relation(fields: [parentTypeId], references: [id])
 }
 
-/// CaseProcedure represents the procedure type a case will follow
-model CaseProcedure {
-  /// unique machine-readable name, not generated, e.g. "inquiry"
-  id          String  @id
-  displayName String?
-  Case        Case[]
-}
-
 /// Address represents an address of a property or place
 model Address {
   /// internal identifier
-  id       String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  line1    String?
-  line2    String?
-  townCity String?
-  county   String?
-  postcode String?
-  Case     Case[]
+  id                  String      @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  line1               String?
+  line2               String?
+  townCity            String?
+  county              String?
+  postcode            String?
+  Case                Case[]
+  ConferenceProcedure Procedure[] @relation("ProcedureConferenceVenue")
+  HearingProcedure    Procedure[] @relation("ProcedureHearingVenue")
+  InquiryProcedure    Procedure[] @relation("ProcedureInquiryVenue")
 }
 
 /// Dates that are associated with a case, a couple more generic ones are
@@ -331,4 +327,118 @@ model Outcome {
   id           String         @id
   displayName  String?
   CaseDecision CaseDecision[]
+}
+
+model Procedure {
+  id String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+
+  procedureTypeId             String?
+  ProcedureType               ProcedureType?   @relation(fields: [procedureTypeId], references: [id])
+  procedureStatusId           String?
+  ProcedureStatus             ProcedureStatus? @relation(fields: [procedureStatusId], references: [id])
+  caseOfficerVerificationDate DateTime?
+
+  siteVisitDate DateTime?
+
+  hearingTargetDate    DateTime?
+  earliestHearingDate  DateTime?
+  confirmedHearingDate DateTime?
+  hearingClosedDate    DateTime?
+
+  hearingDateNotificationDate  DateTime?
+  hearingVenueNotificationDate DateTime?
+  partiesNotifiedOfHearingDate DateTime?
+
+  lengthOfHearingEvent       Decimal?
+  hearingInTarget            Boolean?
+  hearingPreparationTimeDays Decimal?
+  hearingTravelTimeDays      Decimal?
+  hearingSittingTimeDays     Decimal?
+  hearingReportingTimeDays   Decimal?
+
+  hearingFormatId String?
+  HearingFormat   ProcedureEventFormat? @relation("HearingFormat", fields: [hearingFormatId], references: [id])
+  hearingVenueId  String?               @db.UniqueIdentifier
+  HearingVenue    Address?              @relation("ProcedureHearingVenue", fields: [hearingVenueId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  inquiryTargetDate    DateTime?
+  earliestInquiryDate  DateTime?
+  confirmedInquiryDate DateTime?
+  inquiryFinishedDate  DateTime?
+  inquiryClosedDate    DateTime?
+
+  inquiryDateNotificationDate  DateTime?
+  inquiryVenueNotificationDate DateTime?
+  partiesNotifiedOfInquiryDate DateTime?
+
+  lengthOfInquiryEvent       Decimal?
+  inquiryInTarget            Boolean?
+  inquiryPreparationTimeDays Decimal?
+  inquiryTravelTimeDays      Decimal?
+  inquirySittingTimeDays     Decimal?
+  inquiryReportingTimeDays   Decimal?
+
+  inquiryFormatId String?
+  InquiryFormat   ProcedureEventFormat? @relation("InquiryFormat", fields: [inquiryFormatId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  inquiryVenueId  String?               @db.UniqueIdentifier
+  InquiryVenue    Address?              @relation("ProcedureInquiryVenue", fields: [inquiryVenueId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  conferenceDate         DateTime?
+  conferenceNoteSentDate DateTime?
+  preInquiryMeetingDate  DateTime?
+  preInquiryNoteSentDate DateTime?
+
+  conferenceFormatId String?
+  ConferenceFormat   ProcedureEventFormat? @relation("ConferenceFormat", fields: [conferenceFormatId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  conferenceVenueId  String?               @db.UniqueIdentifier
+  ConferenceVenue    Address?              @relation("ProcedureConferenceVenue", fields: [conferenceVenueId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  preInquiryMeetingFormatId String?
+  PreInquiryMeetingFormat   ProcedureEventFormat? @relation("PreInquiryMeetingFormat", fields: [preInquiryMeetingFormatId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  inquiryOrConferenceId String?
+  InquiryOrConference   InquiryOrConference? @relation(fields: [inquiryOrConferenceId], references: [id])
+
+  proofsOfEvidenceReceivedDate       DateTime?
+  statementsOfCaseReceivedDate       DateTime?
+  inHouseDate                        DateTime?
+  offerForWrittenRepresentationsDate DateTime?
+
+  caseId String @db.UniqueIdentifier
+  Case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  step   String @db.NVarChar(50)
+
+  @@unique([caseId, step], name: "Unique_Procedure_Step_Per_Case")
+}
+
+/// Types for different events formats, e.g. 'virtual or hybrid'
+model ProcedureEventFormat {
+  id          String  @id
+  displayName String?
+
+  HearingProcedures    Procedure[] @relation("HearingFormat")
+  InquiryProcedures    Procedure[] @relation("InquiryFormat")
+  ConferenceProcedures Procedure[] @relation("ConferenceFormat")
+  PreInquiryProcedures Procedure[] @relation("PreInquiryMeetingFormat")
+}
+
+model ProcedureType {
+  /// unique machine-readable name, not generated, e.g. "written-reps"
+  id          String      @id
+  displayName String?
+  Procedure   Procedure[]
+}
+
+model ProcedureStatus {
+  /// unique machine-readable name, not generated, e.g. "Active"
+  id          String      @id
+  displayName String?
+  Procedure   Procedure[]
+}
+
+model InquiryOrConference {
+  /// unique machine-readable name, not generated, e.g. "pre-inquiry-meeting
+  id          String      @id
+  displayName String?
+  Procedure   Procedure[]
 }
