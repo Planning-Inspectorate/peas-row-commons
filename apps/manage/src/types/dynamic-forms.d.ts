@@ -340,3 +340,21 @@ declare module '@planning-inspectorate/dynamic-forms/src/journey/journey-respons
 declare module '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js' {
 	export function booleanToYesNoValue(value: any): any;
 }
+
+declare module '@planning-inspectorate/dynamic-forms/src/components/date-time/question.js' {
+	export default class DateTimeQuestion {
+		fieldName: any;
+		dateFormat: any;
+		timeFormat: any;
+		title: any;
+		getAction(sectionSegment: any, journey: any, answer: any): any;
+		prepQuestionForRendering(section: any, journey: any, customViewData: any, payload: any): any;
+		async getDataToSave(req: any, journeyResponse: any): any;
+		formatAnswerForSummary(sectionSegment: any, journey: any, answer: any): any;
+	}
+}
+
+declare module '@planning-inspectorate/dynamic-forms/src/lib/date-utils.js' {
+	export function parseDateInput(params: any): any;
+	export function formatDateForDisplay(date: any, params: any): any;
+}

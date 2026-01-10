@@ -87,7 +87,14 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				Notes: true,
 				Authority: true,
 				Applicant: true,
-				Decision: true
+				Decision: true,
+				Procedures: {
+					include: {
+						HearingVenue: true,
+						InquiryVenue: true,
+						ConferenceVenue: true
+					}
+				}
 			}
 		});
 

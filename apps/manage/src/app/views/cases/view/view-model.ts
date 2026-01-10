@@ -17,6 +17,54 @@ function formatValue(value: any) {
 const NESTED_SECTIONS: (keyof CaseListFields)[] = ['Dates', 'Costs', 'Abeyance', 'Notes', 'Decision'];
 
 /**
+ * Standardises address objects from Prisma (line1) to UI (addressLine1)
+ */
+function mapAddress(address: any) {
+	if (!address) return null;
+	return {
+		addressLine1: address.line1,
+		addressLine2: address.line2,
+		townCity: address.townCity,
+		county: address.county,
+		postcode: address.postcode
+	};
+}
+
+/**
+ * Flattens the Procedures array into procedureOne..., procedureTwo... fields
+ */
+function mapProcedures(procedures: any[]) {
+	if (!procedures || !Array.isArray(procedures)) return {};
+
+	const flattened: Record<string, any> = {};
+
+	procedures.forEach((proc) => {
+		if (!proc.step) return;
+		const suffix = proc.step.replace('Procedure', '');
+		const prefix = `procedure${suffix}`;
+
+		Object.keys(proc).forEach((key) => {
+			if (['step', 'caseId', 'id', 'createdAt', 'updatedAt'].includes(key)) return;
+
+			const value = proc[key];
+			if (value === null || value === undefined) return;
+
+			const suffixKey = key.charAt(0).toUpperCase() + key.slice(1);
+
+			const uiKey = `${prefix}${suffixKey}`;
+
+			if (key.endsWith('Venue') && typeof value === 'object') {
+				flattened[uiKey] = mapAddress(value);
+			} else {
+				flattened[uiKey] = formatValue(value);
+			}
+		});
+	});
+
+	return flattened;
+}
+
+/**
  * Takes raw case data and converts into UI usable data format.
  * Converts the nested nature of join tables into a flat object.
  */
@@ -55,6 +103,9 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		delete mergedData.Authority;
 	}
 
+	const mappedProcedures = mapProcedures(mergedData.Procedures || []);
+	delete mergedData.Procedures;
+
 	const sanitisedData: Record<string, any> = {};
 	for (const key in mergedData) {
 		if (key !== 'SiteAddress') {
@@ -62,21 +113,13 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		}
 	}
 
-	let siteAddress = null;
-	if (caseRow.SiteAddress) {
-		siteAddress = {
-			addressLine1: caseRow.SiteAddress.line1,
-			addressLine2: caseRow.SiteAddress.line2,
-			townCity: caseRow.SiteAddress.townCity,
-			county: caseRow.SiteAddress.county,
-			postcode: caseRow.SiteAddress.postcode
-		};
-	}
+	const siteAddress = mapAddress(caseRow.SiteAddress);
 
 	const mappedNotes = mapNotes(caseRow.Notes || [], groupMembers);
 
 	return {
 		...sanitisedData,
+		...mappedProcedures,
 		...mappedNotes,
 		siteAddress,
 		receivedDateDisplay: formatInTimeZone(caseRow.receivedDate, 'Europe/London', 'dd MMM yyyy'),

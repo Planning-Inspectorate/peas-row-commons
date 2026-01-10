@@ -11,7 +11,8 @@ import {
 	createTeamQuestions,
 	createOutcomeQuestions,
 	OVERVIEW_QUESTIONS,
-	OUTCOME_QUESTIONS
+	OUTCOME_QUESTIONS,
+	createProcedureQuestions
 } from './question-utils.ts';
 
 import type { CaseOfficer } from './types.ts';
@@ -22,6 +23,10 @@ export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }) {
 	const generatedTeamQuestions = createTeamQuestions(TEAM_QUESTIONS, groupMembers);
 	const generateOutcomeQuestions = createOutcomeQuestions(OUTCOME_QUESTIONS, groupMembers);
 
+	const procedureOneQuestions = createProcedureQuestions('One');
+	const procedureTwoQuestions = createProcedureQuestions('Two');
+	const procedureThreeQuestions = createProcedureQuestions('Three');
+
 	const questions = {
 		...DATE_QUESTIONS,
 		...DOCUMENTS_QUESTIONS,
@@ -30,7 +35,10 @@ export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }) {
 		...CASE_DETAILS_QUESTIONS,
 		...generatedTeamQuestions,
 		...OVERVIEW_QUESTIONS,
-		...generateOutcomeQuestions
+		...generateOutcomeQuestions,
+		...procedureOneQuestions,
+		...procedureTwoQuestions,
+		...procedureThreeQuestions
 	};
 
 	const textOverrides = {
