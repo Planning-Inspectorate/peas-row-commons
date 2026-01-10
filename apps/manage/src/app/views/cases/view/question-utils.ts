@@ -14,7 +14,11 @@ import {
 	CASE_SUBTYPES,
 	INSPECTOR_BANDS,
 	DECISION_TYPES,
-	OUTCOMES
+	OUTCOMES,
+	PROCEDURE_STATUSES,
+	PROCEDURES,
+	PROCEDURE_EVENT_FORMATS,
+	INQUIRY_OR_CONFERENCES
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
 import type { CaseOfficer } from './types.ts';
@@ -29,6 +33,7 @@ interface DateQuestionProps {
 	viewData?: Record<string, unknown>;
 	question?: string;
 	url?: string;
+	hasTime?: boolean;
 }
 
 export function dateQuestion({
@@ -38,14 +43,15 @@ export function dateQuestion({
 	editable = true,
 	viewData = {},
 	question,
-	url
+	url,
+	hasTime = false
 }: DateQuestionProps) {
 	if (!title) {
 		title = camelCaseToSentenceCase(fieldName);
 	}
 
 	return {
-		type: COMPONENT_TYPES.DATE,
+		type: hasTime ? CUSTOM_COMPONENTS.OPTIONAL_TIME_DATE_TIME : COMPONENT_TYPES.DATE,
 		title: title,
 		question: question || `What is the ${title?.toLowerCase()}?`,
 		hint: hint,
@@ -605,13 +611,35 @@ export const OVERVIEW_QUESTIONS = {
 				}
 			]
 		}
+	},
+	primaryProcedure: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Primary procedure',
+		question: 'Which procedure is the primary procedure?',
+		fieldName: 'primaryProcedureStep',
+		url: 'primary-procedure',
+		validators: [new RequiredValidator('Select primary procedure')],
+		options: [
+			{ text: 'Procedure 1', value: 'ProcedureOne' },
+			{ text: 'Procedure 2', value: 'ProcedureTwo' },
+			{ text: 'Procedure 3', value: 'ProcedureThree' }
+		],
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'primary-procedure/remove'
+				}
+			]
+		}
 	}
 };
 
 export const TEAM_QUESTIONS = {
 	caseOfficer: {
 		type: COMPONENT_TYPES.SELECT,
-		title: 'Who is the assigned case officer?',
+		title: 'Case officer',
 		question: 'Who is the assigned case officer?',
 		fieldName: 'caseOfficerId',
 		url: 'case-officer',
@@ -837,3 +865,663 @@ export function createOutcomeQuestions(
 		}
 	};
 }
+
+const getPrefix = (suffix: string) => `procedure${suffix}`;
+
+/**
+ * Dynamically creates the (3) procedure sections.
+ *
+ * We have (3) procedure sections: Procedure One, Two and Three.
+ *
+ * They have the exact same columns and eventually map to the same
+ * table in the DB.
+ *
+ * As such they need UI specific keys to help differentiate them
+ *
+ * Follows format of 'procedure<number><keyName>' e.g. 'procedureOneHearingDate'
+ *
+ * This is then deciphered in the BE.
+ */
+export const createProcedureQuestions = (suffix: string) => {
+	const prefix = getPrefix(suffix);
+
+	return {
+		[`${prefix}Type`]: {
+			type: COMPONENT_TYPES.RADIO,
+			title: 'Procedure type',
+			question: 'What is the procedure type?',
+			fieldName: `${prefix}ProcedureTypeId`,
+			url: 'type-of-procedure',
+			validators: [new RequiredValidator('Select type of procedure')],
+			options: PROCEDURES.map((status) => ({ text: status.displayName, value: status.id })),
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'type-of-procedure/remove'
+					}
+				]
+			}
+		},
+		[`${prefix}Status`]: {
+			type: COMPONENT_TYPES.RADIO,
+			title: 'Procedure status',
+			question: 'What is the status of the procedure?',
+			fieldName: `${prefix}ProcedureStatusId`,
+			url: 'status-of-procedure',
+			validators: [],
+			options: PROCEDURE_STATUSES.map((status) => ({ text: status.displayName, value: status.id }))
+		},
+		[`${prefix}SiteVisitDate`]: dateQuestion({
+			fieldName: `${prefix}SiteVisitDate`,
+			title: 'Site visit date',
+			question: 'When is the site visit date? (optional)',
+			url: 'site-visit-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'site-visit-date/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}ProofsReceivedDate`]: dateQuestion({
+			fieldName: `${prefix}ProofsOfEvidenceReceivedDate`,
+			title: 'Proofs of evidence received',
+			question: 'When were all the proofs of evidence received? (optional)',
+			url: 'proofs-received-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'proofs-received-date/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}StatementsReceivedDate`]: dateQuestion({
+			fieldName: `${prefix}StatementsOfCaseReceivedDate`,
+			title: 'Statements of case received',
+			question: 'When were all the statements of case received? (optional)',
+			url: 'statements-received-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'statements-received-date/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}CaseOfficerVerificationDate`]: dateQuestion({
+			fieldName: `${prefix}CaseOfficerVerificationDate`,
+			title: 'Case officer verification date',
+			question: 'When did the case officer verify the documents? (optional)',
+			hint: 'Have all the necessary Statements of Case, Written Reps procedures, Notices, Proof of Posting and Proofs of Evidence been received?',
+			url: 'case-officer-verification-case',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'case-officer-verification-case/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}HearingTargetDate`]: dateQuestion({
+			fieldName: `${prefix}HearingTargetDate`,
+			title: 'Target hearing date',
+			question: 'When is the target hearing date? (optional)',
+			url: 'target-hearing-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'target-hearing-date/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}HearingDateNotificationDate`]: dateQuestion({
+			fieldName: `${prefix}HearingDateNotificationDate`,
+			title: 'Date parties notified of hearing date',
+			question: 'When were parties notified of the hearing date? (optional)',
+			url: 'date-notified-of-hearing-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'date-notified-of-hearing-date/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}HearingVenueNotificationDate`]: dateQuestion({
+			fieldName: `${prefix}HearingVenueNotificationDate`,
+			title: 'Date parties notified of hearing venue',
+			question: 'When were parties notified of the hearing venue? (optional)',
+			url: 'date-notified-of-hearing-venue',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'date-notified-of-hearing-venue/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}ConfirmedHearingDate`]: dateQuestion({
+			fieldName: `${prefix}ConfirmedHearingDate`,
+			title: 'Confirmed hearing date',
+			question: 'What is the hearing date? (optional)',
+			url: 'confirmed-hearing-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'confirmed-hearing-date/remove'
+					}
+				]
+			},
+			hasTime: true
+		}),
+		[`${prefix}HearingFormat`]: {
+			type: COMPONENT_TYPES.RADIO,
+			title: 'Hearing type',
+			question: 'What is the type of hearing?',
+			fieldName: `${prefix}HearingFormatId`,
+			url: 'type-of-hearing',
+			validators: [],
+			options: PROCEDURE_EVENT_FORMATS.map((type) => ({ text: type.displayName, value: type.id }))
+		},
+		[`${prefix}HearingVenue`]: {
+			type: COMPONENT_TYPES.ADDRESS,
+			title: 'Hearing venue',
+			question: 'Where is the hearing?',
+			fieldName: `${prefix}HearingVenue`,
+			url: 'hearing-venue',
+			validators: [new AddressValidator()]
+		},
+		[`${prefix}EarliestHearingDate`]: dateQuestion({
+			fieldName: `${prefix}EarliestHearingDate`,
+			title: 'Earliest potential hearing date',
+			question: 'When is the earliest possible hearing date? (optional)',
+			url: 'earliest-potential-hearing-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'earliest-potential-hearing-date/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}HearingLength`]: {
+			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
+			title: 'Length of event',
+			question: 'How long will the hearing take?',
+			fieldName: `${prefix}LengthOfHearingEvent`,
+			url: 'estimated-hearing-length',
+			suffix: 'days',
+			validators: [],
+			viewData: { width: 5 }
+		},
+		[`${prefix}HearingInTarget`]: {
+			type: COMPONENT_TYPES.BOOLEAN,
+			title: 'Hearing in target?',
+			question: 'Was the hearing completed in the target timeframe?',
+			fieldName: `${prefix}HearingInTarget`,
+			url: 'hearing-in-target',
+			validators: []
+		},
+		[`${prefix}HearingClosedDate`]: dateQuestion({
+			fieldName: `${prefix}HearingClosedDate`,
+			title: 'Date hearing closed',
+			question: 'When did the hearing close? (optional)',
+			url: 'date-hearing-closed',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'date-hearing-closed/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}HearingPreparationTime`]: {
+			type: COMPONENT_TYPES.NUMBER,
+			title: 'Preparation time (days)',
+			question: 'How long is the hearing preparation time? (optional)',
+			fieldName: `${prefix}HearingPreparationTimeDays`,
+			url: 'hearing-preparation-time',
+			suffix: 'days',
+			validators: [
+				new NumericValidator({
+					regex: /^$|^\d+(\.\d+)?$/,
+					regexMessage: 'Hearing preparation time must only contain numbers'
+				})
+			],
+			viewData: { width: 5 }
+		},
+		[`${prefix}HearingTravelTime`]: {
+			type: COMPONENT_TYPES.NUMBER,
+			title: 'Travel time (days)',
+			question: 'How long is the hearing travel time? (optional)',
+			fieldName: `${prefix}HearingTravelTimeDays`,
+			url: 'hearing-travel-time',
+			suffix: 'days',
+			validators: [
+				new NumericValidator({
+					regex: /^$|^\d+(\.\d+)?$/,
+					regexMessage: 'Hearing travel time must only contain numbers'
+				})
+			],
+			viewData: { width: 5 }
+		},
+		[`${prefix}HearingSittingTime`]: {
+			type: COMPONENT_TYPES.NUMBER,
+			title: 'Sitting time (days)',
+			question: 'How long is the hearing sitting time? (optional)',
+			fieldName: `${prefix}HearingSittingTimeDays`,
+			url: 'hearing-sitting-time',
+			suffix: 'days',
+			validators: [
+				new NumericValidator({
+					regex: /^$|^\d+(\.\d+)?$/,
+					regexMessage: 'Hearing sitting time must only contain numbers'
+				})
+			],
+			viewData: { width: 5 }
+		},
+		[`${prefix}HearingReportingTime`]: {
+			type: COMPONENT_TYPES.NUMBER,
+			title: 'Reporting time (days)',
+			question: 'How long is the hearing reporting time? (optional)',
+			fieldName: `${prefix}HearingReportingTimeDays`,
+			url: 'hearing-reporting-time',
+			suffix: 'days',
+			validators: [
+				new NumericValidator({
+					regex: /^$|^\d+(\.\d+)?$/,
+					regexMessage: 'Hearing reporting time must only contain numbers'
+				})
+			],
+			viewData: { width: 5 }
+		},
+		[`${prefix}InquiryTargetDate`]: dateQuestion({
+			fieldName: `${prefix}InquiryTargetDate`,
+			title: 'Inquiry target date',
+			question: 'When is the target inquiry date? (optional)',
+			url: 'target-inquiry-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'target-inquiry-date/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}InquiryDateNotificationDate`]: dateQuestion({
+			fieldName: `${prefix}InquiryDateNotificationDate`,
+			title: 'Date parties notified of inquiry date',
+			question: 'When were parties notified of the inquiry date? (optional)',
+			url: 'date-notified-of-inquiry-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'date-notified-of-inquiry-date/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}InquiryVenueNotificationDate`]: dateQuestion({
+			fieldName: `${prefix}InquiryVenueNotificationDate`,
+			title: 'Date parties notified of inquiry venue',
+			question: 'When were parties notified of the inquiry venue? (optional)',
+			url: 'date-notified-of-inquiry-venue',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'date-notified-of-inquiry-venue/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}InquiryOrConference`]: {
+			type: COMPONENT_TYPES.RADIO,
+			title: 'Pre inquiry meeting or case management conference',
+			question: 'Will there be a pre inquiry meeting or a case management conference?',
+			fieldName: `${prefix}InquiryOrConferenceId`,
+			url: 'pim-or-cmc',
+			validators: [],
+			options: INQUIRY_OR_CONFERENCES.map((type) => ({ text: type.displayName, value: type.id }))
+		},
+		[`${prefix}PreInquiryMeetingDate`]: dateQuestion({
+			fieldName: `${prefix}PreInquiryMeetingDate`,
+			title: 'Pre inquiry meeting date',
+			question: 'When is the pre inquiry meeting? (optional)',
+			url: 'pre-inquiry-meeting-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'pre-inquiry-meeting-date/remove'
+					}
+				]
+			},
+			hasTime: true
+		}),
+		[`${prefix}PreInquiryFormat`]: {
+			type: COMPONENT_TYPES.RADIO,
+			title: 'Pre inquiry meeting format',
+			question: 'What is the format of the pre inquiry meeting?',
+			fieldName: `${prefix}PreInquiryMeetingFormatId`,
+			url: 'pre-inquiry-type',
+			validators: [],
+			options: PROCEDURE_EVENT_FORMATS.filter((f) => f.id !== 'hybrid').map((type) => ({
+				text: type.displayName,
+				value: type.id
+			}))
+		},
+		[`${prefix}PreInquiryNoteSent`]: dateQuestion({
+			fieldName: `${prefix}PreInquiryNoteSentDate`,
+			title: 'Pre inquiry meeting note sent',
+			question: 'When was the pre inquiry meeting management note sent? (optional)',
+			url: 'pre-inquiry-note-sent',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'pre-inquiry-note-sent/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}CmcDate`]: dateQuestion({
+			fieldName: `${prefix}ConferenceDate`,
+			title: 'Case management conference date',
+			question: 'When is the case management conference? (optional)',
+			url: 'cmc-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'cmc-date/remove'
+					}
+				]
+			},
+			hasTime: true
+		}),
+		[`${prefix}CmcFormat`]: {
+			type: COMPONENT_TYPES.RADIO,
+			title: 'Case management conference type',
+			question: 'What is the type of the case management conference?',
+			fieldName: `${prefix}ConferenceFormatId`,
+			url: 'case-management-conference-type',
+			validators: [],
+			options: PROCEDURE_EVENT_FORMATS.filter((f) => f.id !== 'hybrid').map((type) => ({
+				text: type.displayName,
+				value: type.id
+			}))
+		},
+		[`${prefix}CmcVenue`]: {
+			type: COMPONENT_TYPES.ADDRESS,
+			title: 'Case management conference venue',
+			question: 'Where is the case management conference?',
+			fieldName: `${prefix}ConferenceVenue`,
+			url: 'case-management-conference-venue',
+			validators: [new AddressValidator()]
+		},
+		[`${prefix}CmcNoteSentDate`]: dateQuestion({
+			fieldName: `${prefix}ConferenceNoteSentDate`,
+			title: 'Case management conference note sent',
+			question: 'When was the case management note sent? (optional)',
+			url: 'case-management-conference-note-sent',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'case-management-conference-note-sent/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}ConfirmedInquiryDate`]: dateQuestion({
+			fieldName: `${prefix}ConfirmedInquiryDate`,
+			title: 'Confirmed inquiry date',
+			question: 'What is the inquiry date? (optional)',
+			url: 'inquiry-date-confirmed',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'inquiry-date-confirmed/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}InquiryFormat`]: {
+			type: COMPONENT_TYPES.RADIO,
+			title: 'Inquiry type',
+			question: 'What is the inquiry type?',
+			fieldName: `${prefix}InquiryFormatId`,
+			url: 'inquiry-type',
+			validators: [],
+			options: PROCEDURE_EVENT_FORMATS.map((type) => ({ text: type.displayName, value: type.id }))
+		},
+		[`${prefix}InquiryVenue`]: {
+			type: COMPONENT_TYPES.ADDRESS,
+			title: 'Inquiry venue',
+			question: 'What is the inquiry venue?',
+			fieldName: `${prefix}InquiryVenue`,
+			url: 'inquiry-venue',
+			validators: [new AddressValidator()]
+		},
+		[`${prefix}EarliestInquiryDate`]: dateQuestion({
+			fieldName: `${prefix}EarliestInquiryDate`,
+			title: 'Earliest potential inquiry date',
+			question: 'When is the earliest possible inquiry date? (optional)',
+			url: 'earliest-potential-inquiry-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'earliest-potential-inquiry-date/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}InquiryLength`]: {
+			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
+			title: 'Length of event',
+			question: 'How long will the inquiry take?',
+			fieldName: `${prefix}LengthOfInquiryEvent`,
+			url: 'estimated-inquiry-length',
+			suffix: 'days',
+			validators: [],
+			viewData: { width: 5 }
+		},
+		[`${prefix}InquiryFinishedDate`]: dateQuestion({
+			fieldName: `${prefix}InquiryFinishedDate`,
+			title: 'Date inquiry finished',
+			question: 'When did the inquiry end? (optional)',
+			url: 'date-inquiry-finished',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'date-inquiry-finished/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}InquiryInTarget`]: {
+			type: COMPONENT_TYPES.BOOLEAN,
+			title: 'Event in target?',
+			question: 'Was the inquiry completed in the target timeframe?',
+			fieldName: `${prefix}InquiryInTarget`,
+			url: 'inquiry-in-target',
+			validators: []
+		},
+		[`${prefix}InquiryClosedDate`]: dateQuestion({
+			fieldName: `${prefix}InquiryClosedDate`,
+			title: 'Date inquiry closed',
+			question: 'When did the inquiry close? (optional)',
+			url: 'date-inquiry-closed',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'date-inquiry-closed/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}PartiesNotifiedOfInquiryDate`]: dateQuestion({
+			fieldName: `${prefix}PartiesNotifiedOfInquiryDate`,
+			title: 'Date parties must be notified of inquiry',
+			question: 'When must parties be notified of the inquiry? (optional)',
+			url: 'party-notified-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'party-notified-date/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}PartiesNotifiedOfHearingDate`]: dateQuestion({
+			fieldName: `${prefix}PartiesNotifiedOfHearingDate`,
+			title: 'Date parties must be notified of hearing',
+			question: 'When must parties be notified of the hearing? (optional)',
+			url: 'party-notified-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'party-notified-date/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}InquiryPreparationTime`]: {
+			type: COMPONENT_TYPES.NUMBER,
+			title: 'Preparation time (days)',
+			question: 'How long is the inquiry preparation time? (optional)',
+			fieldName: `${prefix}InquiryPreparationTimeDays`,
+			url: 'inquiry-preparation-time',
+			suffix: 'days',
+			validators: [
+				new NumericValidator({
+					regex: /^$|^\d+(\.\d+)?$/,
+					regexMessage: 'Inquiry preparation time must only contain numbers'
+				})
+			],
+			viewData: { width: 5 }
+		},
+		[`${prefix}InquiryTravelTime`]: {
+			type: COMPONENT_TYPES.NUMBER,
+			title: 'Travel time (days)',
+			question: 'How long is the inquiry travel time? (optional)',
+			fieldName: `${prefix}InquiryTravelTimeDays`,
+			url: 'inquiry-travel-time',
+			suffix: 'days',
+			validators: [
+				new NumericValidator({
+					regex: /^$|^\d+(\.\d+)?$/,
+					regexMessage: 'Inquiry travel time must only contain numbers'
+				})
+			],
+			viewData: { width: 5 }
+		},
+		[`${prefix}InquirySittingTime`]: {
+			type: COMPONENT_TYPES.NUMBER,
+			title: 'Sitting time (days)',
+			question: 'How long is the inquiry sitting time? (optional)',
+			fieldName: `${prefix}InquirySittingTimeDays`,
+			url: 'inquiry-sitting-time',
+			suffix: 'days',
+			validators: [
+				new NumericValidator({
+					regex: /^$|^\d+(\.\d+)?$/,
+					regexMessage: 'Inquiry sitting time must only contain numbers'
+				})
+			],
+			viewData: { width: 5 }
+		},
+		[`${prefix}InquiryReportingTime`]: {
+			type: COMPONENT_TYPES.NUMBER,
+			title: 'Reporting time (days)',
+			question: 'How long is the inquiry reporting time? (optional)',
+			fieldName: `${prefix}InquiryReportingTimeDays`,
+			url: 'inquiry-reporting-time',
+			suffix: 'days',
+			validators: [
+				new NumericValidator({
+					regex: /^$|^\d+(\.\d+)?$/,
+					regexMessage: 'Inquiry reporting time must only contain numbers'
+				})
+			],
+			viewData: { width: 5 }
+		},
+		[`${prefix}InHouseDate`]: dateQuestion({
+			fieldName: `${prefix}InHouseDate`,
+			title: 'In house date',
+			question: 'When was Admin in house procedure done? (optional)',
+			url: 'in-house-date',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'in-house-date/remove'
+					}
+				]
+			}
+		}),
+		[`${prefix}OfferWrittenRepsDate`]: dateQuestion({
+			fieldName: `${prefix}OfferForWrittenRepresentationsDate`,
+			title: 'Date offer for written representations',
+			question: 'When was the date offered for written representations? (optional)',
+			url: 'date-offer-written-representations',
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'date-offer-written-representations/remove'
+					}
+				]
+			}
+		})
+	};
+};

@@ -2,6 +2,7 @@ import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journe
 import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 
 import type { Request, Response } from 'express';
+import { createProcedureSection } from './journey-utils.ts';
 
 export const JOURNEY_ID = 'case-details';
 
@@ -13,6 +14,12 @@ export function createJourney(questions: Record<string, any>, response: Response
 		throw new Error(`not a valid request for the ${JOURNEY_ID} journey (invalid baseUrl)`);
 	}
 
+	const procedureSections = [
+		createProcedureSection('One', questions),
+		createProcedureSection('Two', questions),
+		createProcedureSection('Three', questions)
+	];
+
 	return new Journey({
 		journeyId: JOURNEY_ID,
 		sections: [
@@ -21,7 +28,8 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.caseSubtype)
 				.addQuestion(questions.act)
 				.addQuestion(questions.consentSought)
-				.addQuestion(questions.inspectorBand),
+				.addQuestion(questions.inspectorBand)
+				.addQuestion(questions.primaryProcedure),
 			new Section('Case details', 'case-details')
 				.addQuestion(questions.reference)
 				.addQuestion(questions.externalReference)
@@ -69,7 +77,8 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.orderDecisionDispatchDate)
 				.addQuestion(questions.sealedOrderReturnedDate)
 				.addQuestion(questions.decisionPublishedDate)
-				.addQuestion(questions.isFencingPermanent)
+				.addQuestion(questions.isFencingPermanent),
+			...procedureSections
 		],
 		taskListUrl: '',
 		journeyTemplate: 'views/layouts/forms-question.njk',
