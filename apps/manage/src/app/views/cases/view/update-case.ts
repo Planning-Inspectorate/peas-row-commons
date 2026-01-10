@@ -7,6 +7,7 @@ import type { Request, Response } from 'express';
 import type { Logger } from 'pino';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { yesNoToBoolean } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
+import { handleProcedureGeneric } from './procedure-utils.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -38,7 +39,7 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 			return;
 		}
 
-		const formattedAnswersForQuery = mapCasePayload(rawAnswers);
+		const formattedAnswersForQuery = mapCasePayload(rawAnswers, id);
 
 		formattedAnswersForQuery.updatedDate = new Date();
 
@@ -93,10 +94,10 @@ async function updateCaseData(
  * It explicitly handles complex multi-field objects (Applicant, Authority, SiteAddress)
  * first, then passes any remaining keys to the generic mapping logic.
  */
-export function mapCasePayload(flatData: Record<string, any>): Prisma.CaseUpdateInput {
+export function mapCasePayload(flatData: Record<string, any>, caseId: string): Prisma.CaseUpdateInput {
 	const prismaPayload: Prisma.CaseUpdateInput = {};
 
-	handleUniqueDataCases(flatData, prismaPayload);
+	handleUniqueDataCases(flatData, prismaPayload, caseId);
 
 	const [mainTableData, nestedData] = parseDataToCorrectTable(flatData);
 	const genericPayload = generateNestedQuery(mainTableData, nestedData);
@@ -150,10 +151,15 @@ function generateNestedQuery(mainTableData: Record<string, any>, nestedData: Rec
 /**
  * Handles all the unique data cases that require creating new tables or deleting the tables.
  */
-function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput, caseId: string) {
 	handleApplicant(flatData, prismaPayload);
 	handleAuthority(flatData, prismaPayload);
 	handleAddress(flatData, prismaPayload);
+
+	['One', 'Two', 'Three'].forEach((suffix) => {
+		handleProcedureGeneric(caseId, flatData, prismaPayload, suffix);
+	});
+
 	handleBooleans(flatData);
 }
 
