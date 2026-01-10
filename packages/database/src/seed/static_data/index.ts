@@ -9,3 +9,6 @@ export { CASE_STATUSES } from './status.ts';
 export { INSPECTOR_BANDS } from './inspector-bands.ts';
 export { DECISION_TYPES } from './decision-type.ts';
 export { OUTCOMES } from './outcome.ts';
+export { PROCEDURE_STATUSES } from './procedure-status.ts';
+export { PROCEDURE_EVENT_FORMATS } from './procedure-event-format.ts';
+export { INQUIRY_OR_CONFERENCES } from './inquiry-or-conference.ts';

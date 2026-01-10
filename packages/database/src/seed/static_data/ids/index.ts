@@ -9,3 +9,6 @@ export { ADVERTISED_MODIFICATION_ID } from './advertised-modification.ts';
 export { INSPECTOR_BAND_ID } from './inspector-band.ts';
 export { DECISION_TYPE_ID } from './decision-type.ts';
 export { OUTCOME_ID } from './outcome.ts';
+export { PROCEDURE_STATUS_ID } from './procedure-status.ts';
+export { PROCEDURE_EVENT_FORMAT_ID } from './procedure-event-format.ts';
+export { INQUIRY_OR_CONFERENCE_ID } from './inquiry-or-conference.ts';

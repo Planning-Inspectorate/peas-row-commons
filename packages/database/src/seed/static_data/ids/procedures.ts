@@ -1,11 +1,8 @@
 export const PROCEDURES_ID = Object.freeze({
-	CASE_OFFICER: 'case-officer',
-	INSPECTOR: 'inspector',
+	ADMIN_IN_HOUSE: 'admin-in-house',
 	HEARING: 'hearing',
 	INQUIRY: 'inquiry',
 	PROPOSAL: 'proposal',
-	ARSV: 'arsv',
-	ASV: 'asv',
-	USV: 'usv',
+	SITE_VISIT: 'site-visit',
 	WRITTEN_REPS: 'written-reps'
 });
