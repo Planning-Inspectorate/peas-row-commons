@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { caseToViewModel, mapNotes } from './view-model.ts';
+import { caseToViewModel, mapNotes, mapProcedures } from './view-model.ts';
 
 describe('view-model', () => {
 	const groupMembers = {
@@ -195,6 +195,94 @@ describe('view-model', () => {
 
 			assert.strictEqual(input[0].createdAt, dateOld);
 			assert.strictEqual(input[1].createdAt, dateNew);
+		});
+	});
+	describe('mapProcedures', () => {
+		it('should flatten procedure fields and prefix them with the step name', () => {
+			const input = [
+				{
+					step: 'ProcedureOne',
+					status: 'Open',
+					targetDate: new Date('2025-01-01')
+				},
+				{
+					step: 'ProcedureTwo',
+					status: 'Closed'
+				}
+			];
+
+			const result = mapProcedures(input);
+
+			assert.strictEqual(result.procedureOneStatus, 'Open');
+			assert.ok(result.procedureOneTargetDate);
+
+			assert.strictEqual(result.procedureTwoStatus, 'Closed');
+		});
+
+		it('should transform Venue objects using mapAddress when key ends in "Venue"', () => {
+			const input = [
+				{
+					step: 'ProcedureOne',
+					HearingVenue: {
+						line1: '123 Fake St',
+						townCity: 'Bristol',
+						postcode: 'BS1 5TR'
+					}
+				}
+			];
+
+			const result = mapProcedures(input);
+
+			const venue = result.procedureOneHearingVenue;
+
+			assert.ok(venue, 'Venue object should exist');
+			assert.strictEqual(venue.addressLine1, '123 Fake St');
+			assert.strictEqual(venue.townCity, 'Bristol');
+			assert.strictEqual(venue.postcode, 'BS1 5TR');
+		});
+
+		it('should format boolean values using formatValue (e.g. Yes/No)', () => {
+			const input = [
+				{
+					step: 'ProcedureOne',
+					isUrgent: true,
+					hasFinished: false
+				}
+			];
+
+			const result = mapProcedures(input);
+
+			assert.strictEqual(result.procedureOneIsUrgent, 'yes');
+			assert.strictEqual(result.procedureOneHasFinished, 'no');
+		});
+
+		it('should ignore excluded keys (id, caseId, etc) and null values', () => {
+			const input = [
+				{
+					step: 'ProcedureOne',
+					id: 'ignore-me',
+					caseId: 'ignore-me-too',
+					createdAt: new Date(),
+					validField: 'keep-me',
+					emptyField: null
+				}
+			];
+
+			const result = mapProcedures(input);
+
+			assert.strictEqual(result.procedureOneValidField, 'keep-me');
+
+			assert.strictEqual(result.procedureOneId, undefined);
+			assert.strictEqual(result.procedureOneCaseId, undefined);
+			assert.strictEqual(result.procedureOneCreatedAt, undefined);
+
+			assert.strictEqual(result.procedureOneEmptyField, undefined);
+		});
+
+		it('should return empty object if input is not an array', () => {
+			assert.deepStrictEqual(mapProcedures(null as any), {});
+			assert.deepStrictEqual(mapProcedures(undefined as any), {});
+			assert.deepStrictEqual(mapProcedures({} as any), {});
 		});
 	});
 });

@@ -20,7 +20,7 @@ const NESTED_SECTIONS: (keyof CaseListFields)[] = ['Dates', 'Costs', 'Abeyance',
 /**
  * Flattens the Procedures array into procedureOne..., procedureTwo... fields
  */
-function mapProcedures(procedures: any[]) {
+export function mapProcedures(procedures: any[]) {
 	if (!procedures || !Array.isArray(procedures)) return {};
 
 	const flattened: Record<string, any> = {};
