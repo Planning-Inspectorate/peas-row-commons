@@ -342,6 +342,14 @@ model Procedure {
   /// Date of site visit
   siteVisitDate DateTime?
 
+  /// Site visit type
+  siteVisitTypeId String?
+  SiteVisitType   SiteVisitType? @relation(fields: [siteVisitTypeId], references: [id])
+
+  /// Admin procedure type
+  adminProcedureType String?
+  AdminProcedureType AdminProcedureType? @relation(fields: [adminProcedureType], references: [id])
+
   /// Timeline of hearing
   hearingTargetDate    DateTime?
   earliestHearingDate  DateTime?
@@ -455,6 +463,20 @@ model ProcedureStatus {
 
 model InquiryOrConference {
   /// unique machine-readable name, not generated, e.g. "pre-inquiry-meeting
+  id          String      @id
+  displayName String?
+  Procedure   Procedure[]
+}
+
+model SiteVisitType {
+  /// unique machine-readable name, not generated, e.g. "arsv"
+  id          String      @id
+  displayName String?
+  Procedure   Procedure[]
+}
+
+model AdminProcedureType {
+  /// unique machine-readable name, not generated, e.g. "case-officer"
   id          String      @id
   displayName String?
   Procedure   Procedure[]

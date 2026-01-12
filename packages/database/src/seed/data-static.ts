@@ -12,7 +12,9 @@ import {
 	OUTCOMES,
 	PROCEDURE_STATUSES,
 	PROCEDURE_EVENT_FORMATS,
-	INQUIRY_OR_CONFERENCES
+	INQUIRY_OR_CONFERENCES,
+	ADMIN_PROCEDURES,
+	SITE_VISITS
 } from './static_data/index.ts';
 import { CASE_STATUSES } from './static_data/status.ts';
 
@@ -99,6 +101,14 @@ export async function seedStaticData(dbClient: PrismaClient) {
 
 	for (const input of INQUIRY_OR_CONFERENCES) {
 		await upsertReferenceData({ delegate: dbClient.inquiryOrConference, input });
+	}
+
+	for (const input of ADMIN_PROCEDURES) {
+		await upsertReferenceData({ delegate: dbClient.adminProcedureType, input });
+	}
+
+	for (const input of SITE_VISITS) {
+		await upsertReferenceData({ delegate: dbClient.siteVisitType, input });
 	}
 
 	console.log('static data seed complete');

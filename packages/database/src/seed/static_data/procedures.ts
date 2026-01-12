@@ -14,10 +14,6 @@ export const PROCEDURES = [
 		displayName: 'Inquiry'
 	},
 	{
-		id: PROCEDURES_ID.PROPOSAL,
-		displayName: 'Proposal'
-	},
-	{
 		id: PROCEDURES_ID.SITE_VISIT,
 		displayName: 'Site visit'
 	},

@@ -12,3 +12,5 @@ export { OUTCOMES } from './outcome.ts';
 export { PROCEDURE_STATUSES } from './procedure-status.ts';
 export { PROCEDURE_EVENT_FORMATS } from './procedure-event-format.ts';
 export { INQUIRY_OR_CONFERENCES } from './inquiry-or-conference.ts';
+export { ADMIN_PROCEDURES } from './admin-procedure-types.ts';
+export { SITE_VISITS } from './site-visit-types.ts';
