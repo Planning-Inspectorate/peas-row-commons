@@ -91,7 +91,9 @@ describe('createProcedureSection', () => {
 			'InquirySittingTime',
 			'InquiryReportingTime',
 			'InHouseDate',
-			'OfferWrittenRepsDate'
+			'AdminType',
+			'OfferWrittenRepsDate',
+			'SiteVisitType'
 		];
 
 		assert.strictEqual(
@@ -121,6 +123,6 @@ describe('createProcedureSection', () => {
 		const section: any = createProcedureSection(suffix, mockQuestions as any);
 
 		assert.strictEqual(section.questions[0].fieldName, `${prefix}Type`);
-		assert.strictEqual(section.questions[section.questions.length - 1].fieldName, `${prefix}OfferWrittenRepsDate`);
+		assert.strictEqual(section.questions[section.questions.length - 1].fieldName, `${prefix}SiteVisitType`);
 	});
 });
