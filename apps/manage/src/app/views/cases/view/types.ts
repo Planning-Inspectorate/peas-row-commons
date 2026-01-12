@@ -9,7 +9,6 @@ export const caseListSelect = {
 	receivedDate: true,
 	location: true,
 	caseOfficerId: true,
-	procedureId: true,
 	linkedCases: true,
 	Dates: true,
 	Costs: true,

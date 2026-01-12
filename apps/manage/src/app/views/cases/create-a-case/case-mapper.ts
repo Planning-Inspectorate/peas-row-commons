@@ -1,6 +1,5 @@
 import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { kebabToCamel } from './questions-utils.ts';
-import { PROCEDURE_GROUP_IDS } from './view-model.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
 
 /**
@@ -9,7 +8,6 @@ import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_
 export function mapAnswersToCaseInput(answers: Record<string, any>, reference: string) {
 	const caseType = resolveCaseType(answers);
 	const caseSubType = resolveCaseSubType(caseType, answers);
-	const procedure = resolveProcedure(answers);
 
 	const input: Prisma.XOR<Prisma.CaseCreateInput, Prisma.CaseUncheckedCreateInput> = {
 		reference,
@@ -32,10 +30,6 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 		input.SubType = {
 			connect: { id: caseSubType }
 		};
-	}
-
-	if (procedure) {
-		input.Procedure = { connect: { id: procedure } };
 	}
 
 	if (hasSiteAddress(answers)) {
@@ -91,23 +85,6 @@ function resolveCaseSubType(caseType: string | null, answers: Record<string, any
 
 	const subtypeField = kebabToCamel(caseType);
 	return answers[subtypeField] || null;
-}
-
-/**
- * Finds procedure, normally is a straight mapping, however there are 2
- * groupings that have a subtype that is needed instead.
- */
-function resolveProcedure(answers: Record<string, any>): string | null {
-	const { procedureId, adminProcedureId, siteVisitProcedureId } = answers;
-
-	if (!procedureId) return null;
-
-	const groups = Object.values(PROCEDURE_GROUP_IDS);
-	if (groups.includes(procedureId)) {
-		return adminProcedureId || siteVisitProcedureId || null;
-	}
-
-	return procedureId;
 }
 
 function hasSiteAddress(answers: Record<string, any>): boolean {
