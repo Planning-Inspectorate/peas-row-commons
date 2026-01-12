@@ -18,7 +18,9 @@ import {
 	PROCEDURE_STATUSES,
 	PROCEDURES,
 	PROCEDURE_EVENT_FORMATS,
-	INQUIRY_OR_CONFERENCES
+	INQUIRY_OR_CONFERENCES,
+	ADMIN_PROCEDURES,
+	SITE_VISITS
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
 import type { CaseOfficer } from './types.ts';
@@ -1589,6 +1591,42 @@ export const createProcedureQuestions = (suffix: string) => {
 					}
 				]
 			}
-		})
+		}),
+		[`${prefix}AdminType`]: {
+			type: COMPONENT_TYPES.RADIO,
+			title: 'Admin procedure type',
+			question: 'What is the admin procedure type?',
+			fieldName: `${prefix}AdminProcedureType`,
+			url: 'admin-procedure-type',
+			validators: [new RequiredValidator('Select the admin procedure type')],
+			options: ADMIN_PROCEDURES.map((status) => ({ text: status.displayName, value: status.id })),
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'admin-procedure-type/remove'
+					}
+				]
+			}
+		},
+		[`${prefix}SiteVisitType`]: {
+			type: COMPONENT_TYPES.RADIO,
+			title: 'Type of site visit',
+			question: 'What type of site visit is it?',
+			fieldName: `${prefix}SiteVisitTypeId`,
+			url: 'type-of-site-visit',
+			validators: [new RequiredValidator('Select the type of site visit')],
+			options: SITE_VISITS.map((status) => ({ text: status.displayName, value: status.id })),
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'type-of-site-visit/remove'
+					}
+				]
+			}
+		}
 	};
 };

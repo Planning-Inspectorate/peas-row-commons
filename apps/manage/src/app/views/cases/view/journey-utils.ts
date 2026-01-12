@@ -13,6 +13,9 @@ const isHearingType = (response: JourneyResponse, typeQuestion: any) =>
 const isInquiryType = (response: JourneyResponse, typeQuestion: any) =>
 	isSpecificType(response, typeQuestion, PROCEDURES_ID.INQUIRY);
 
+const isAdminType = (response: JourneyResponse, typeQuestion: any) =>
+	isSpecificType(response, typeQuestion, PROCEDURES_ID.ADMIN_IN_HOUSE);
+
 const isEitherInquiryOrHearing = (response: JourneyResponse, typeQuestion: any) =>
 	isInquiryType(response, typeQuestion) || isHearingType(response, typeQuestion);
 
@@ -147,16 +150,23 @@ export function createProcedureSection(suffix: string, questions: ReturnType<typ
 			.endMultiQuestionCondition(conditionId(`${PROCEDURES_ID.INQUIRY}-METRICS`))
 
 			/**
+			 * Admin questions
+			 */
+			.startMultiQuestionCondition(conditionId(PROCEDURES_ID.ADMIN_IN_HOUSE), (r) => isAdminType(r, question('Type')))
+			.addQuestion(question('InHouseDate'))
+			.addQuestion(question('AdminType'))
+			.endMultiQuestionCondition(conditionId(PROCEDURES_ID.ADMIN_IN_HOUSE))
+
+			/**
 			 * Specific questions
 			 */
-			.addQuestion(question('InHouseDate'))
-			.withCondition((response: JourneyResponse) =>
-				questionHasAnswer(response, question('Type'), PROCEDURES_ID.ADMIN_IN_HOUSE)
-			)
-
 			.addQuestion(question('OfferWrittenRepsDate'))
 			.withCondition((response: JourneyResponse) =>
 				questionHasAnswer(response, question('Type'), PROCEDURES_ID.WRITTEN_REPS)
+			)
+			.addQuestion(question('SiteVisitType'))
+			.withCondition((response: JourneyResponse) =>
+				questionHasAnswer(response, question('Type'), PROCEDURES_ID.SITE_VISIT)
 			)
 	);
 }
