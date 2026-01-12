@@ -287,17 +287,29 @@ model InspectorBand {
 
 model CaseDecision {
   id                           String        @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  /// Decision maker for the case, entra id
   decisionMakerEntraId         String?
+  /// The date the actual decision outcome was determinied
   outcomeDate                  DateTime?
+  /// The date the decision was received 
   decisionReceivedDate         DateTime?
+  /// Whether decision was received within the target timeframe
   inTarget                     Boolean?
+  /// The date relevant parties (e.g. appellant) were notified of the decision.
   partiesNotifiedDate          DateTime?
+  /// The date the decision regarding an order was dispatched
   orderDecisionDispatchDate    DateTime?
+  /// The date the sealed order was returned
   sealedOrderReturnedDate      DateTime?
+  /// The date the decision was published
   decisionPublishedDate        DateTime?
+  /// Indicates if the fencing in question is deemed permanent
   isFencingPermanent           Boolean?
+  /// Details explaining the permanent fencing decision
   fencingPermanentComment      String?       @db.NVarChar(2000)
+  /// Details or specific conditions applied if the outcome is 'Granted with Conditions'
   grantedWithConditionsComment String?       @db.NVarChar(2000)
+  /// Reasoning provided if the Inspector proposes NOT to confirm an order
   proposeNotToConfirmComment   String?       @db.NVarChar(2000)
   decisionTypeId               String?
   DecisionType                 DecisionType? @relation(fields: [decisionTypeId], references: [id])
