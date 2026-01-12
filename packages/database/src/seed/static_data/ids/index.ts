@@ -12,3 +12,5 @@ export { OUTCOME_ID } from './outcome.ts';
 export { PROCEDURE_STATUS_ID } from './procedure-status.ts';
 export { PROCEDURE_EVENT_FORMAT_ID } from './procedure-event-format.ts';
 export { INQUIRY_OR_CONFERENCE_ID } from './inquiry-or-conference.ts';
+export { ADMIN_PROCEDURES_ID } from './admin-procedure-type.ts';
+export { SITE_VISITS_ID } from './site-visit-type.ts';

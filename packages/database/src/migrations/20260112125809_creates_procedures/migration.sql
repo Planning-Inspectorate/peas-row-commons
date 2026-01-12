@@ -26,6 +26,8 @@ CREATE TABLE [dbo].[Procedure] (
     [procedureStatusId] NVARCHAR(1000),
     [caseOfficerVerificationDate] DATETIME2,
     [siteVisitDate] DATETIME2,
+    [siteVisitTypeId] NVARCHAR(1000),
+    [adminProcedureType] NVARCHAR(1000),
     [hearingTargetDate] DATETIME2,
     [earliestHearingDate] DATETIME2,
     [confirmedHearingDate] DATETIME2,
@@ -103,11 +105,31 @@ CREATE TABLE [dbo].[InquiryOrConference] (
     CONSTRAINT [InquiryOrConference_pkey] PRIMARY KEY CLUSTERED ([id])
 );
 
+-- CreateTable
+CREATE TABLE [dbo].[SiteVisitType] (
+    [id] NVARCHAR(1000) NOT NULL,
+    [displayName] NVARCHAR(1000),
+    CONSTRAINT [SiteVisitType_pkey] PRIMARY KEY CLUSTERED ([id])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[AdminProcedureType] (
+    [id] NVARCHAR(1000) NOT NULL,
+    [displayName] NVARCHAR(1000),
+    CONSTRAINT [AdminProcedureType_pkey] PRIMARY KEY CLUSTERED ([id])
+);
+
 -- AddForeignKey
 ALTER TABLE [dbo].[Procedure] ADD CONSTRAINT [Procedure_procedureTypeId_fkey] FOREIGN KEY ([procedureTypeId]) REFERENCES [dbo].[ProcedureType]([id]) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE [dbo].[Procedure] ADD CONSTRAINT [Procedure_procedureStatusId_fkey] FOREIGN KEY ([procedureStatusId]) REFERENCES [dbo].[ProcedureStatus]([id]) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[Procedure] ADD CONSTRAINT [Procedure_siteVisitTypeId_fkey] FOREIGN KEY ([siteVisitTypeId]) REFERENCES [dbo].[SiteVisitType]([id]) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[Procedure] ADD CONSTRAINT [Procedure_adminProcedureType_fkey] FOREIGN KEY ([adminProcedureType]) REFERENCES [dbo].[AdminProcedureType]([id]) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE [dbo].[Procedure] ADD CONSTRAINT [Procedure_hearingFormatId_fkey] FOREIGN KEY ([hearingFormatId]) REFERENCES [dbo].[ProcedureEventFormat]([id]) ON DELETE SET NULL ON UPDATE CASCADE;
