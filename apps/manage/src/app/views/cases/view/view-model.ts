@@ -34,6 +34,7 @@ function mapAddress(address: any) {
  * Flattens the Procedures array into procedureOne..., procedureTwo... fields
  */
 function mapProcedures(procedures: any[]) {
+	console.log(procedures, 'quack');
 	if (!procedures || !Array.isArray(procedures)) return {};
 
 	const flattened: Record<string, any> = {};
