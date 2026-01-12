@@ -16,13 +16,6 @@ const isInquiryType = (response: JourneyResponse, typeQuestion: any) =>
 const isEitherInquiryOrHearing = (response: JourneyResponse, typeQuestion: any) =>
 	isInquiryType(response, typeQuestion) || isHearingType(response, typeQuestion);
 
-const isNotProposal = (response: JourneyResponse, typeQuestion: any) =>
-	isInquiryType(response, typeQuestion) ||
-	isHearingType(response, typeQuestion) ||
-	isSpecificType(response, typeQuestion, PROCEDURES_ID.SITE_VISIT) ||
-	isSpecificType(response, typeQuestion, PROCEDURES_ID.ADMIN_IN_HOUSE) ||
-	isSpecificType(response, typeQuestion, PROCEDURES_ID.WRITTEN_REPS);
-
 export function createProcedureSection(suffix: string, questions: ReturnType<typeof createProcedureQuestions>) {
 	const sectionName = `Procedure ${suffix === 'One' ? '1' : suffix === 'Two' ? '2' : '3'}`;
 	const sectionUrl = `procedure-${suffix.toLowerCase()}`;
@@ -33,19 +26,11 @@ export function createProcedureSection(suffix: string, questions: ReturnType<typ
 	return (
 		new Section(sectionName, sectionUrl)
 			/**
-			 * All procedures have type question
+			 * All procedures have type, status and site visit questions
 			 */
 			.addQuestion(question('Type'))
-
-			/**
-			 * Status & Site visit: All except 'Proposal'
-			 */
-			.startMultiQuestionCondition(conditionId(`NOT-${PROCEDURES_ID.PROPOSAL}`), (r) =>
-				isNotProposal(r, question('Type'))
-			)
 			.addQuestion(question('Status'))
 			.addQuestion(question('SiteVisitDate'))
-			.endMultiQuestionCondition(conditionId(`NOT-${PROCEDURES_ID.PROPOSAL}`))
 
 			/**
 			 * Hearing target dates
