@@ -1041,8 +1041,17 @@ export const createProcedureQuestions = (suffix: string) => {
 			question: 'What is the type of hearing?',
 			fieldName: `${prefix}HearingFormatId`,
 			url: 'type-of-hearing',
-			validators: [],
-			options: PROCEDURE_EVENT_FORMATS.map((type) => ({ text: type.displayName, value: type.id }))
+			validators: [new RequiredValidator('Select type of hearing')],
+			options: PROCEDURE_EVENT_FORMATS.map((type) => ({ text: type.displayName, value: type.id })),
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'type-of-hearing/remove'
+					}
+				]
+			}
 		},
 		[`${prefix}HearingVenue`]: {
 			type: COMPONENT_TYPES.ADDRESS,
@@ -1068,13 +1077,20 @@ export const createProcedureQuestions = (suffix: string) => {
 			}
 		}),
 		[`${prefix}HearingLength`]: {
-			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
-			title: 'Length of event',
+			type: COMPONENT_TYPES.NUMBER,
+			title: 'Length of event / estimated length (days)',
 			question: 'How long will the hearing take?',
 			fieldName: `${prefix}LengthOfHearingEvent`,
 			url: 'estimated-hearing-length',
 			suffix: 'days',
-			validators: [],
+			hint: 'Estimated or actual length',
+			validators: [
+				new RequiredValidator('Enter the length of event'),
+				new NumericValidator({
+					regex: /^$|^\d+(\.\d+)?$/,
+					regexMessage: 'Length of event must only contain numbers'
+				})
+			],
 			viewData: { width: 5 }
 		},
 		[`${prefix}HearingInTarget`]: {
@@ -1083,7 +1099,7 @@ export const createProcedureQuestions = (suffix: string) => {
 			question: 'Was the hearing completed in the target timeframe?',
 			fieldName: `${prefix}HearingInTarget`,
 			url: 'hearing-in-target',
-			validators: []
+			validators: [new RequiredValidator('Select yes if the hearing was completed in the target timeframe')]
 		},
 		[`${prefix}HearingClosedDate`]: dateQuestion({
 			fieldName: `${prefix}HearingClosedDate`,
@@ -1123,6 +1139,7 @@ export const createProcedureQuestions = (suffix: string) => {
 			url: 'hearing-travel-time',
 			suffix: 'days',
 			validators: [
+				new RequiredValidator('Enter the hearing travel time'),
 				new NumericValidator({
 					regex: /^$|^\d+(\.\d+)?$/,
 					regexMessage: 'Hearing travel time must only contain numbers'
@@ -1138,6 +1155,7 @@ export const createProcedureQuestions = (suffix: string) => {
 			url: 'hearing-sitting-time',
 			suffix: 'days',
 			validators: [
+				new RequiredValidator('Enter the hearing sitting time'),
 				new NumericValidator({
 					regex: /^$|^\d+(\.\d+)?$/,
 					regexMessage: 'Hearing sitting time must only contain numbers'
@@ -1153,6 +1171,7 @@ export const createProcedureQuestions = (suffix: string) => {
 			url: 'hearing-reporting-time',
 			suffix: 'days',
 			validators: [
+				new RequiredValidator('Enter the hearing reporting time'),
 				new NumericValidator({
 					regex: /^$|^\d+(\.\d+)?$/,
 					regexMessage: 'Hearing reporting time must only contain numbers'
@@ -1211,8 +1230,19 @@ export const createProcedureQuestions = (suffix: string) => {
 			question: 'Will there be a pre inquiry meeting or a case management conference?',
 			fieldName: `${prefix}InquiryOrConferenceId`,
 			url: 'pim-or-cmc',
-			validators: [],
-			options: INQUIRY_OR_CONFERENCES.map((type) => ({ text: type.displayName, value: type.id }))
+			validators: [
+				new RequiredValidator('Select whether there will be a pre inquiry meeting or case management conference')
+			],
+			options: INQUIRY_OR_CONFERENCES.map((type) => ({ text: type.displayName, value: type.id })),
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'pim-or-cmc/remove'
+					}
+				]
+			}
 		},
 		[`${prefix}PreInquiryMeetingDate`]: dateQuestion({
 			fieldName: `${prefix}PreInquiryMeetingDate`,
@@ -1236,11 +1266,20 @@ export const createProcedureQuestions = (suffix: string) => {
 			question: 'What is the format of the pre inquiry meeting?',
 			fieldName: `${prefix}PreInquiryMeetingFormatId`,
 			url: 'pre-inquiry-type',
-			validators: [],
+			validators: [new RequiredValidator('Select the format of the pre inquiry meeting')],
 			options: PROCEDURE_EVENT_FORMATS.filter((f) => f.id !== 'hybrid').map((type) => ({
 				text: type.displayName,
 				value: type.id
-			}))
+			})),
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'pre-inquiry-type/remove'
+					}
+				]
+			}
 		},
 		[`${prefix}PreInquiryNoteSent`]: dateQuestion({
 			fieldName: `${prefix}PreInquiryNoteSentDate`,
@@ -1279,11 +1318,20 @@ export const createProcedureQuestions = (suffix: string) => {
 			question: 'What is the type of the case management conference?',
 			fieldName: `${prefix}ConferenceFormatId`,
 			url: 'case-management-conference-type',
-			validators: [],
+			validators: [new RequiredValidator('Select the type of the case management conference')],
 			options: PROCEDURE_EVENT_FORMATS.filter((f) => f.id !== 'hybrid').map((type) => ({
 				text: type.displayName,
 				value: type.id
-			}))
+			})),
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'case-management-conference-type/remove'
+					}
+				]
+			}
 		},
 		[`${prefix}CmcVenue`]: {
 			type: COMPONENT_TYPES.ADDRESS,
@@ -1329,8 +1377,17 @@ export const createProcedureQuestions = (suffix: string) => {
 			question: 'What is the inquiry type?',
 			fieldName: `${prefix}InquiryFormatId`,
 			url: 'inquiry-type',
-			validators: [],
-			options: PROCEDURE_EVENT_FORMATS.map((type) => ({ text: type.displayName, value: type.id }))
+			validators: [new RequiredValidator('Select the inquiry type')],
+			options: PROCEDURE_EVENT_FORMATS.map((type) => ({ text: type.displayName, value: type.id })),
+			viewData: {
+				extraActionButtons: [
+					{
+						text: 'Remove and save',
+						type: 'submit',
+						formaction: 'inquiry-type/remove'
+					}
+				]
+			}
 		},
 		[`${prefix}InquiryVenue`]: {
 			type: COMPONENT_TYPES.ADDRESS,
@@ -1356,13 +1413,19 @@ export const createProcedureQuestions = (suffix: string) => {
 			}
 		}),
 		[`${prefix}InquiryLength`]: {
-			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
-			title: 'Length of event',
+			type: COMPONENT_TYPES.NUMBER,
+			title: 'Length of event / estimated length (days)',
 			question: 'How long will the inquiry take?',
 			fieldName: `${prefix}LengthOfInquiryEvent`,
 			url: 'estimated-inquiry-length',
 			suffix: 'days',
-			validators: [],
+			validators: [
+				new RequiredValidator('Enter the length of event'),
+				new NumericValidator({
+					regex: /^$|^\d+(\.\d+)?$/,
+					regexMessage: 'Length of event must only contain numbers'
+				})
+			],
 			viewData: { width: 5 }
 		},
 		[`${prefix}InquiryFinishedDate`]: dateQuestion({
@@ -1386,7 +1449,7 @@ export const createProcedureQuestions = (suffix: string) => {
 			question: 'Was the inquiry completed in the target timeframe?',
 			fieldName: `${prefix}InquiryInTarget`,
 			url: 'inquiry-in-target',
-			validators: []
+			validators: [new RequiredValidator('Select whether the inquiry was completed in the target timeframe')]
 		},
 		[`${prefix}InquiryClosedDate`]: dateQuestion({
 			fieldName: `${prefix}InquiryClosedDate`,
@@ -1441,6 +1504,7 @@ export const createProcedureQuestions = (suffix: string) => {
 			url: 'inquiry-preparation-time',
 			suffix: 'days',
 			validators: [
+				new RequiredValidator('Enter the inquiry preparation time'),
 				new NumericValidator({
 					regex: /^$|^\d+(\.\d+)?$/,
 					regexMessage: 'Inquiry preparation time must only contain numbers'
@@ -1456,6 +1520,7 @@ export const createProcedureQuestions = (suffix: string) => {
 			url: 'inquiry-travel-time',
 			suffix: 'days',
 			validators: [
+				new RequiredValidator('Enter the inquiry travel time'),
 				new NumericValidator({
 					regex: /^$|^\d+(\.\d+)?$/,
 					regexMessage: 'Inquiry travel time must only contain numbers'
@@ -1471,6 +1536,7 @@ export const createProcedureQuestions = (suffix: string) => {
 			url: 'inquiry-sitting-time',
 			suffix: 'days',
 			validators: [
+				new RequiredValidator('Enter the inquiry sitting time'),
 				new NumericValidator({
 					regex: /^$|^\d+(\.\d+)?$/,
 					regexMessage: 'Inquiry sitting time must only contain numbers'
@@ -1486,6 +1552,7 @@ export const createProcedureQuestions = (suffix: string) => {
 			url: 'inquiry-reporting-time',
 			suffix: 'days',
 			validators: [
+				new RequiredValidator('Enter the inquiry reporting time'),
 				new NumericValidator({
 					regex: /^$|^\d+(\.\d+)?$/,
 					regexMessage: 'Inquiry reporting time must only contain numbers'
