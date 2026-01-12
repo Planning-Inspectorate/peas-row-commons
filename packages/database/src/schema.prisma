@@ -332,23 +332,28 @@ model Outcome {
 model Procedure {
   id String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
 
+  /// Core procedure data
   procedureTypeId             String?
   ProcedureType               ProcedureType?   @relation(fields: [procedureTypeId], references: [id])
   procedureStatusId           String?
   ProcedureStatus             ProcedureStatus? @relation(fields: [procedureStatusId], references: [id])
   caseOfficerVerificationDate DateTime?
 
+  /// Date of site visit
   siteVisitDate DateTime?
 
+  /// Timeline of hearing
   hearingTargetDate    DateTime?
   earliestHearingDate  DateTime?
   confirmedHearingDate DateTime?
   hearingClosedDate    DateTime?
 
+  /// Hearing notifications
   hearingDateNotificationDate  DateTime?
   hearingVenueNotificationDate DateTime?
   partiesNotifiedOfHearingDate DateTime?
 
+  /// Hearing data
   lengthOfHearingEvent       Decimal?
   hearingInTarget            Boolean?
   hearingPreparationTimeDays Decimal?
@@ -356,21 +361,25 @@ model Procedure {
   hearingSittingTimeDays     Decimal?
   hearingReportingTimeDays   Decimal?
 
+  /// Format & venue of hearings
   hearingFormatId String?
   HearingFormat   ProcedureEventFormat? @relation("HearingFormat", fields: [hearingFormatId], references: [id])
   hearingVenueId  String?               @db.UniqueIdentifier
   HearingVenue    Address?              @relation("ProcedureHearingVenue", fields: [hearingVenueId], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
+  /// Timeline of inquiry
   inquiryTargetDate    DateTime?
   earliestInquiryDate  DateTime?
   confirmedInquiryDate DateTime?
   inquiryFinishedDate  DateTime?
   inquiryClosedDate    DateTime?
 
+  /// Inquiry notifications
   inquiryDateNotificationDate  DateTime?
   inquiryVenueNotificationDate DateTime?
   partiesNotifiedOfInquiryDate DateTime?
 
+  /// Data around inquiry event, e.g. length, time
   lengthOfInquiryEvent       Decimal?
   inquiryInTarget            Boolean?
   inquiryPreparationTimeDays Decimal?
@@ -378,16 +387,19 @@ model Procedure {
   inquirySittingTimeDays     Decimal?
   inquiryReportingTimeDays   Decimal?
 
+  /// Format & venue of inquiry meetings
   inquiryFormatId String?
   InquiryFormat   ProcedureEventFormat? @relation("InquiryFormat", fields: [inquiryFormatId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   inquiryVenueId  String?               @db.UniqueIdentifier
   InquiryVenue    Address?              @relation("ProcedureInquiryVenue", fields: [inquiryVenueId], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
+  /// Dates for conference / pre inquiry meetings
   conferenceDate         DateTime?
   conferenceNoteSentDate DateTime?
   preInquiryMeetingDate  DateTime?
   preInquiryNoteSentDate DateTime?
 
+  /// Format & venue of conference
   conferenceFormatId String?
   ConferenceFormat   ProcedureEventFormat? @relation("ConferenceFormat", fields: [conferenceFormatId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   conferenceVenueId  String?               @db.UniqueIdentifier
@@ -396,9 +408,11 @@ model Procedure {
   preInquiryMeetingFormatId String?
   PreInquiryMeetingFormat   ProcedureEventFormat? @relation("PreInquiryMeetingFormat", fields: [preInquiryMeetingFormatId], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
+  /// Whether it is an inquiry or conference
   inquiryOrConferenceId String?
   InquiryOrConference   InquiryOrConference? @relation(fields: [inquiryOrConferenceId], references: [id])
 
+  /// Dates for submission of documents
   proofsOfEvidenceReceivedDate       DateTime?
   statementsOfCaseReceivedDate       DateTime?
   inHouseDate                        DateTime?
@@ -406,13 +420,16 @@ model Procedure {
 
   caseId String @db.UniqueIdentifier
   Case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
-  step   String @db.NVarChar(50)
+
+  /// Identifies what number this procedure is (e.g. 'ProcedureOne')
+  step String @db.NVarChar(50)
 
   @@unique([caseId, step], name: "Unique_Procedure_Step_Per_Case")
 }
 
 /// Types for different events formats, e.g. 'virtual or hybrid'
 model ProcedureEventFormat {
+  /// unique machine-readable name, not generated
   id          String  @id
   displayName String?
 
