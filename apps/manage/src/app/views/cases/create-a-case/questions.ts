@@ -5,7 +5,7 @@ import { questionClasses } from '@planning-inspectorate/dynamic-forms/src/questi
 import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
 import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
-import { CASEWORK_AREAS, PROCEDURES } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+import { CASEWORK_AREAS } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import {
 	PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES,
 	RIGHTS_OF_WAY_COMMON_LAND_TYPES
@@ -25,12 +25,8 @@ import {
 	SUB_TYPE_ERROR,
 	CASE_TYPES_CAMEL,
 	CASEWORK_AREAS_CAMEL,
-	generateConditionalOptions,
-	getParentPageOptions,
-	getChildPageOptions
+	generateConditionalOptions
 } from './questions-utils.ts';
-
-import { PROCEDURE_GROUP_IDS, PROCEDURE_GROUPS, GROUP_RELATIONSHIPS } from './view-model.ts';
 
 export function getQuestions(groupMembers = { caseOfficers: [] }) {
 	const mappedGroupMembers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
@@ -237,37 +233,6 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			url: 'case-officer',
 			validators: [new RequiredValidator('Select a case officer')],
 			options: mappedGroupMembers
-		},
-		procedure: {
-			type: COMPONENT_TYPES.RADIO,
-			title: 'Which procedure will be used?',
-			question: 'Which procedure will be used?',
-			fieldName: 'procedureId',
-			url: 'procedure',
-			options: getParentPageOptions(PROCEDURES, PROCEDURE_GROUPS, GROUP_RELATIONSHIPS).map(referenceDataToRadioOptions),
-			validators: [new RequiredValidator(SUB_TYPE_ERROR)]
-		},
-		adminProcedure: {
-			type: COMPONENT_TYPES.RADIO,
-			title: 'Which in house admin procedure will be used?',
-			question: 'Which in house admin procedure will be used?',
-			fieldName: 'adminProcedureId',
-			url: 'admin-procedure',
-			options: getChildPageOptions(PROCEDURE_GROUP_IDS.ADMIN, PROCEDURES, GROUP_RELATIONSHIPS).map(
-				referenceDataToRadioOptions
-			),
-			validators: [new RequiredValidator('Select in house admin procedure')]
-		},
-		siteVisitProcedure: {
-			type: COMPONENT_TYPES.RADIO,
-			title: 'Which type of site visit will be conducted?',
-			question: 'Which type of site visit will be conducted?',
-			fieldName: 'siteVisitProcedureId',
-			url: 'site-visit-procedure',
-			options: getChildPageOptions(PROCEDURE_GROUP_IDS.SITE_VISIT, PROCEDURES, GROUP_RELATIONSHIPS).map(
-				referenceDataToRadioOptions
-			),
-			validators: [new RequiredValidator('Select type of site visit')]
 		}
 	};
 
