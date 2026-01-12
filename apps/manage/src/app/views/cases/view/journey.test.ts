@@ -115,10 +115,27 @@ describe('case details journey', () => {
 				title: 'Team',
 				segment: 'team',
 				questions: ['caseOfficer']
+			},
+			{
+				title: 'Outcome',
+				segment: 'outcome',
+				questions: [
+					'decisionType',
+					'decisionMaker',
+					'outcome',
+					'inTarget',
+					'outcomeDate',
+					'decisionReceivedDate',
+					'partiesNotifiedDate',
+					'orderDecisionDispatchDate',
+					'sealedOrderReturnedDate',
+					'decisionPublishedDate',
+					'isFencingPermanent'
+				]
 			}
 		];
 
-		assert.strictEqual(journey.sections.length, 7, 'Journey should have exactly 7 sections');
+		assert.strictEqual(journey.sections.length, 8, 'Journey should have exactly 8 sections');
 
 		expectedStructure.forEach((expected, sIndex) => {
 			const actualSection = journey.sections[sIndex];
