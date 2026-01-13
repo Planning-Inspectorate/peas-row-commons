@@ -133,7 +133,7 @@ describe('case details journey', () => {
 			{
 				title: 'Team',
 				segment: 'team',
-				questions: ['caseOfficer']
+				questions: ['caseOfficer', 'inspectorDetails']
 			},
 			{
 				title: 'Timetable',
