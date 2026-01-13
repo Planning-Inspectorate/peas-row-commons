@@ -29,7 +29,17 @@ declare module '@planning-inspectorate/dynamic-forms/src/journey/journey-respons
 declare module '@planning-inspectorate/dynamic-forms/src/section.js' {
 	export class Section {
 		constructor(name: string, id: string);
-		addQuestion(question: any): Section;
+		addQuestion(question: any, manageSection?: any): Section;
+		withCondition(condition: (response: any) => boolean): Section;
+		startMultiQuestionCondition(key: string, condition: (response: any) => boolean): Section;
+		endMultiQuestionCondition(key: string): Section;
+	}
+}
+
+declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js' {
+	export class ManageListSection {
+		constructor();
+		addQuestion(question: any, manageSection?: any): Section;
 		withCondition(condition: (response: any) => boolean): Section;
 		startMultiQuestionCondition(key: string, condition: (response: any) => boolean): Section;
 		endMultiQuestionCondition(key: string): Section;
@@ -122,6 +132,7 @@ declare module '@planning-inspectorate/dynamic-forms/src/lib/session-answer-stor
 		req: any;
 		journeyId: string;
 		replaceWith?: Record<string, any>;
+		reqParam?: any;
 	}): any;
 }
 

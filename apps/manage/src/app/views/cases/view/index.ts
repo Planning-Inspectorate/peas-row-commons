@@ -9,6 +9,11 @@ import { ManageService } from '#service';
 import { createRoutes as createCaseNotesRoutes } from '../case-notes/index.ts';
 
 import { createRoutes as createCaseDocumentsRoutes } from '../case-folders/index.ts';
+import {
+	buildGetJourneyResponseFromSession,
+	saveDataToSession
+} from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
+import { JOURNEY_ID } from './journey.ts';
 
 export function createRoutes(service: ManageService) {
 	const router = createRouter({ mergeParams: true });
@@ -30,17 +35,36 @@ export function createRoutes(service: ManageService) {
 	// View case
 	router.get('/', validateIdFormat, getJourney, asyncHandler(viewCaseDetails));
 
+	const getJourneyResponse = buildGetJourneyResponseFromSession(JOURNEY_ID);
+
 	// View individual question
-	router.get('/:section/:question', validateIdFormat, getJourney, asyncHandler(question));
+	router.get(
+		'/:section/:question{/:manageListAction/:manageListItemId/:manageListQuestion}',
+		validateIdFormat,
+		getJourneyResponse,
+		getJourney,
+		asyncHandler(question)
+	);
 
 	// Edit question
 	router.post(
 		'/:section/:question',
 		validateIdFormat,
+		getJourneyResponse,
 		getJourney,
 		validate,
 		validationErrorHandler,
 		asyncHandler(updateCase)
+	);
+
+	// Edit a ManageList section question (save it to session)
+	router.post(
+		'/:section/:question/:manageListAction/:manageListItemId/:manageListQuestion',
+		getJourneyResponse,
+		getJourney,
+		validate,
+		validationErrorHandler,
+		buildSave(saveDataToSession)
 	);
 
 	// Deletes answer

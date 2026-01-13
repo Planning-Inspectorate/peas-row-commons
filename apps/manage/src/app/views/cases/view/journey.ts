@@ -1,5 +1,6 @@
 import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js';
 
 import type { Request, Response } from 'express';
 
@@ -57,7 +58,12 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.withdrawalDate)
 				.addQuestion(questions.abeyanceStartDate)
 				.addQuestion(questions.abeyanceEndDate),
-			new Section('Team', 'team').addQuestion(questions.caseOfficer)
+			new Section('Team', 'team')
+				.addQuestion(questions.caseOfficer)
+				.addQuestion(
+					questions.inspectorDetails,
+					new ManageListSection().addQuestion(questions.inspector).addQuestion(questions.inspectorAllocatedDate)
+				)
 		],
 		taskListUrl: '',
 		journeyTemplate: 'views/layouts/forms-question.njk',
