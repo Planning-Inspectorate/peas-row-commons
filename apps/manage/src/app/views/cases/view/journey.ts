@@ -1,5 +1,6 @@
 import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js';
 
 import type { Request, Response } from 'express';
 import { createProcedureSection } from './journey-utils.ts';
@@ -42,7 +43,12 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.location)
 				.addQuestion(questions.authority)
 				.addQuestion(questions.priority),
-			new Section('Team', 'team').addQuestion(questions.caseOfficer),
+			new Section('Team', 'team')
+				.addQuestion(questions.caseOfficer)
+				.addQuestion(
+					questions.inspectorDetails,
+					new ManageListSection().addQuestion(questions.inspector).addQuestion(questions.inspectorAllocatedDate)
+				),
 			new Section('Timetable', 'timetable')
 				.addQuestion(questions.receivedDate)
 				.addQuestion(questions.startDate)

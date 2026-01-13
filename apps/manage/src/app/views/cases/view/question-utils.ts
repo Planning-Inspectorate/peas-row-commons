@@ -646,7 +646,29 @@ export const TEAM_QUESTIONS = {
 		fieldName: 'caseOfficerId',
 		url: 'case-officer',
 		validators: [new RequiredValidator('Select a case officer')]
-	}
+	},
+	inspectorDetails: {
+		type: COMPONENT_TYPES.MANAGE_LIST,
+		title: 'Inspector(s)',
+		question: 'Check inspector details',
+		fieldName: 'inspectorDetails',
+		url: 'inspector-details',
+		showAnswersInSummary: true
+	},
+	inspector: {
+		type: COMPONENT_TYPES.SELECT,
+		title: 'Inspector',
+		question: 'Who is the inspector?',
+		fieldName: 'inspectorEntraId',
+		url: 'inspector',
+		validators: [new RequiredValidator('Select an inspector')]
+	},
+	inspectorAllocatedDate: dateQuestion({
+		fieldName: 'inspectorAllocatedDate',
+		title: 'Inspector allocated date',
+		question: 'What date was the inspector appointed?',
+		url: 'inspector-allocated-date'
+	})
 };
 
 /**
@@ -665,6 +687,10 @@ export function createTeamQuestions(
 		...teamQuestions,
 		caseOfficer: {
 			...teamQuestions.caseOfficer,
+			options
+		},
+		inspector: {
+			...teamQuestions.inspector,
 			options
 		}
 	};

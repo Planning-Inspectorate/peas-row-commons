@@ -106,7 +106,8 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		...mappedNotes,
 		siteAddress,
 		receivedDateDisplay: formatInTimeZone(caseRow.receivedDate, 'Europe/London', 'dd MMM yyyy'),
-		receivedDateSortable: new Date(caseRow.receivedDate)?.getTime()
+		receivedDateSortable: new Date(caseRow.receivedDate)?.getTime(),
+		inspectorDetails: caseRow.Inspectors
 	};
 }
 
