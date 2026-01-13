@@ -7,6 +7,7 @@ import { createDocumentsViewModel } from './view-model.ts';
 import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
+import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 
 export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
@@ -96,13 +97,17 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			pageNumber
 		);
 
+		// We now generate this in TS rather than inside of Nunjucls
+		const paginationItems = getPaginationModel(req, totalPages, pageNumber);
+
 		const paginationParams = {
 			selectedItemsPerPage,
 			pageNumber,
 			totalPages,
 			resultsStartNumber,
 			resultsEndNumber,
-			totalDocuments
+			totalDocuments,
+			uiItems: paginationItems
 		};
 
 		const subFoldersViewModel = subFolders ? createFoldersViewModel(subFolders) : [];

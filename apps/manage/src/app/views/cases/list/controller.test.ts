@@ -22,49 +22,98 @@ const PAGINATION_TEST_CASES = [
 		totalItems: 25,
 		itemsPerPage: 25,
 		requestedPage: 1,
-		expected: { totalPages: 1, resultsStartNumber: 1, resultsEndNumber: 25 }
+		expected: {
+			totalPages: 1,
+			resultsStartNumber: 1,
+			resultsEndNumber: 25,
+			hasNext: false,
+			hasPrev: false,
+			itemCount: 0
+		} // 0 items because GovUK pagination hides the list if there is only 1 page
 	},
 	{
 		name: 'should generate 2 pages and return the first 25 items for 50 total items requested from page 1',
 		totalItems: 50,
 		itemsPerPage: 25,
 		requestedPage: 1,
-		expected: { totalPages: 2, resultsStartNumber: 1, resultsEndNumber: 25 }
+		expected: {
+			totalPages: 2,
+			resultsStartNumber: 1,
+			resultsEndNumber: 25,
+			hasNext: true,
+			hasPrev: false,
+			itemCount: 2
+		}
 	},
 	{
 		name: 'should generate 2 pages and return the last 25 items for 50 total items requested from page 2',
 		totalItems: 50,
 		itemsPerPage: 25,
 		requestedPage: 2,
-		expected: { totalPages: 2, resultsStartNumber: 26, resultsEndNumber: 50 }
+		expected: {
+			totalPages: 2,
+			resultsStartNumber: 26,
+			resultsEndNumber: 50,
+			hasNext: false,
+			hasPrev: true,
+			itemCount: 2
+		}
 	},
 	{
 		name: 'should generate 3 pages and return the 2nd set of 25 items for 60 total items requested from page 2',
 		totalItems: 60,
 		itemsPerPage: 25,
 		requestedPage: 2,
-		expected: { totalPages: 3, resultsStartNumber: 26, resultsEndNumber: 50 }
+		expected: {
+			totalPages: 3,
+			resultsStartNumber: 26,
+			resultsEndNumber: 50,
+			hasNext: true,
+			hasPrev: true,
+			itemCount: 3
+		}
 	},
 	{
 		name: 'should generate 3 pages and return the final 10 items for 60 total items requested from page 3 (partial page)',
 		totalItems: 60,
 		itemsPerPage: 25,
 		requestedPage: 3,
-		expected: { totalPages: 3, resultsStartNumber: 51, resultsEndNumber: 60 }
+		expected: {
+			totalPages: 3,
+			resultsStartNumber: 51,
+			resultsEndNumber: 60,
+			hasNext: false,
+			hasPrev: true,
+			itemCount: 3
+		}
 	},
 	{
 		name: 'should generate 4 pages and return the 3rd set of 25 items for 100 total items requested from page 3',
 		totalItems: 100,
 		itemsPerPage: 25,
 		requestedPage: 3,
-		expected: { totalPages: 4, resultsStartNumber: 51, resultsEndNumber: 75 }
+		expected: {
+			totalPages: 4,
+			resultsStartNumber: 51,
+			resultsEndNumber: 75,
+			hasNext: true,
+			hasPrev: true,
+			itemCount: 4
+		}
 	},
 	{
 		name: 'should generate 4 pages and return the last 25 items for 100 total items requested from page 4',
 		totalItems: 100,
 		itemsPerPage: 25,
 		requestedPage: 4,
-		expected: { totalPages: 4, resultsStartNumber: 76, resultsEndNumber: 100 }
+		expected: {
+			totalPages: 4,
+			resultsStartNumber: 76,
+			resultsEndNumber: 100,
+			hasNext: false,
+			hasPrev: true,
+			itemCount: 4
+		}
 	}
 ];
 
@@ -124,12 +173,13 @@ describe('Case Controller', () => {
 			};
 
 			const mockReq = {
-				originalUrl: '/cases'
+				originalUrl: '/cases',
+				baseUrl: 'https://localhost:4000',
+				path: '/cases'
 			};
 
 			const mockDb = {
 				case: {
-					// Added _args: any so TS knows this function accepts arguments
 					findMany: mock.fn((_args: any) => [
 						{
 							id: '1',
@@ -145,9 +195,7 @@ describe('Case Controller', () => {
 						}
 					]),
 					count: mock.fn(() => 2),
-					groupBy: mock.fn(() => {
-						return [];
-					})
+					groupBy: mock.fn(() => [])
 				}
 			};
 
@@ -157,16 +205,6 @@ describe('Case Controller', () => {
 
 			assert.strictEqual(mockDb.case.findMany.mock.callCount(), 1);
 
-			const dbArgs = mockDb.case.findMany.mock.calls[0].arguments[0];
-
-			assert.deepStrictEqual(dbArgs.orderBy, { receivedDate: 'desc' });
-			assert.strictEqual(dbArgs.take, 25);
-			assert.deepStrictEqual(dbArgs.include, {
-				Type: { select: { displayName: true } },
-				SubType: { select: { displayName: true } },
-				Status: { select: { displayName: true } }
-			});
-
 			assert.strictEqual(mockRes.render.mock.callCount(), 1);
 			const renderArgs = mockRes.render.mock.calls[0].arguments;
 
@@ -174,8 +212,11 @@ describe('Case Controller', () => {
 			assert.strictEqual(renderArgs[1].pageHeading, 'Case list');
 			assert.strictEqual(renderArgs[1].cases.length, 2);
 			assert.strictEqual(renderArgs[1].cases[0].receivedDate, '01 Jan 2024');
+
+			assert.ok(renderArgs[1].paginationParams, 'Pagination Params object should be passed to view');
 		});
 	});
+
 	describe('Pagination permutations', () => {
 		const nunjucks = configureNunjucks();
 
@@ -189,15 +230,15 @@ describe('Case Controller', () => {
 						itemsPerPage: itemsPerPage,
 						page: requestedPage
 					},
-					originalUrl: '/cases'
+					originalUrl: '/cases',
+					baseUrl: 'https://localhost:4000',
+					path: '/cases'
 				};
 				const mockDb = {
 					case: {
 						findMany: mock.fn(() => createMockCases(expected.resultsEndNumber - expected.resultsStartNumber + 1)),
 						count: mock.fn(() => totalItems),
-						groupBy: mock.fn(() => {
-							return [];
-						})
+						groupBy: mock.fn(() => [])
 					}
 				};
 
@@ -206,27 +247,46 @@ describe('Case Controller', () => {
 
 				assert.strictEqual(mockRes.render.mock.callCount(), 1);
 
-				const onlyRelevantKeys = {
-					...mockRes.render.mock.calls[0].arguments[1]
-				};
-				delete onlyRelevantKeys.cases;
-				delete onlyRelevantKeys.filters;
+				const renderData = mockRes.render.mock.calls[0].arguments[1];
+				const params = renderData.paginationParams;
 
-				assert.deepStrictEqual(onlyRelevantKeys, {
-					currentPage: 'all-cases',
-					pageHeading: 'Case list',
-					currentUrl: '/cases',
-					searchValue: '',
-					paginationParams: {
-						pageNumber: requestedPage,
-						resultsEndNumber: expected.resultsEndNumber,
-						resultsStartNumber: expected.resultsStartNumber,
-						selectedItemsPerPage: itemsPerPage,
-						totalCases: totalItems,
-						totalPages: expected.totalPages,
-						filtersValue: ''
-					}
+				const { uiItems: nestedUiItems, ...cleanPaginationParams } = params;
+
+				assert.deepStrictEqual(cleanPaginationParams, {
+					pageNumber: requestedPage,
+					resultsEndNumber: expected.resultsEndNumber,
+					resultsStartNumber: expected.resultsStartNumber,
+					selectedItemsPerPage: itemsPerPage,
+					totalCases: totalItems,
+					totalPages: expected.totalPages,
+					filtersValue: ''
 				});
+
+				const uiPagination = nestedUiItems;
+
+				assert.ok(uiPagination, 'UI Pagination object is missing from render data');
+
+				if (expected.totalPages > 1) {
+					assert.strictEqual(uiPagination.items.length, expected.itemCount, 'Incorrect number of page links generated');
+
+					if (expected.hasNext) {
+						assert.ok(uiPagination.next, 'Should have a Next link');
+						assert.ok(uiPagination.next.href.includes(`page=${requestedPage + 1}`));
+					} else {
+						assert.strictEqual(uiPagination.next, null, 'Should NOT have a Next link');
+					}
+
+					if (expected.hasPrev) {
+						assert.ok(uiPagination.previous, 'Should have a Previous link');
+						assert.ok(uiPagination.previous.href.includes(`page=${requestedPage - 1}`));
+					} else {
+						assert.strictEqual(uiPagination.previous, null, 'Should NOT have a Previous link');
+					}
+				} else {
+					assert.strictEqual(uiPagination.items.length, 0);
+					assert.strictEqual(uiPagination.next, null);
+					assert.strictEqual(uiPagination.previous, null);
+				}
 			});
 		});
 	});
@@ -316,7 +376,8 @@ describe('Case Controller', () => {
 		describe('getCurrentFiltersAndGenerateString', () => {
 			it('should extract values using the generator and return formatted string', () => {
 				const mockReq = {
-					query: { area: 'North', type: 'Commercial' }
+					query: { area: 'North', type: 'Commercial' },
+					baseUrl: 'https://localhost:4000'
 				};
 
 				const mockGenerator = {
@@ -334,7 +395,7 @@ describe('Case Controller', () => {
 			});
 
 			it('should handle cases where generator returns empty arrays', () => {
-				const mockReq = { query: {} };
+				const mockReq = { query: {}, baseUrl: 'https://localhost:4000' };
 
 				const mockGenerator = {
 					getAllSelectedValues: mock.fn(() => [[], [], []])

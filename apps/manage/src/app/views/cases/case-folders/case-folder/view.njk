@@ -1,11 +1,11 @@
 {% extends "views/layouts/main.njk" %}
 
+{% from "govuk/components/pagination/macro.njk" import govukPagination %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
 
-{% import "views/pagination/pagination.njk" as pagination %}
 {% import "views/pagination/pagination-options.njk" as paginationOptions %}
 
 {% set title = reference + " - Case Folder" %}
@@ -76,8 +76,10 @@
                     {{ documentsTable(documents) }}
                 </div>
             </div>
-            {# if pageNumber and totalPages values are both 1 then pagination options not shown #}
-            {{ pagination.renderPagination(paginationParams.pageNumber, paginationParams.totalPages, currentUrl) }}
+            {# if uiItems.items is <=1 then pagination options not shown #}            
+            {% if paginationParams.uiItems.items.length > 1 %}
+                {{ govukPagination(paginationParams.uiItems) }}
+            {% endif %}
         {% else %}
             <p class="govuk-body">This folder contains 0 documents</p>
         {% endif %}
