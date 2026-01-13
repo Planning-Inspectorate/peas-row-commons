@@ -78,6 +78,8 @@ model Case {
   /// The band for the inspector
   inspectorBandId          String?
   InspectorBand            InspectorBand?                @relation(fields: [inspectorBandId], references: [id])
+  /// Inspectors allocated to case
+  Inspectors               Inspector[]
 }
 
 model CaseworkArea {
@@ -282,4 +284,12 @@ model InspectorBand {
   id          String  @id
   displayName String?
   Case        Case[]
+}
+
+model Inspector {
+  id                     String   @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  inspectorEntraId       String
+  inspectorAllocatedDate DateTime
+  caseId                 String   @db.UniqueIdentifier
+  Case                   Case     @relation(fields: [caseId], references: [id])
 }
