@@ -11,6 +11,7 @@ import type { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/c
 
 import { formatInTimeZone } from 'date-fns-tz';
 import type { Request } from 'express';
+import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 
 const FILTER_KEYS = {
 	AREA: 'area',
@@ -74,6 +75,9 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			pageNumber
 		);
 
+		// We now generate this in TS rather than inside of Nunjucls
+		const paginationItems = getPaginationModel(req, totalPages, pageNumber);
+
 		const paginationParams = {
 			selectedItemsPerPage,
 			pageNumber,
@@ -81,7 +85,8 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			resultsStartNumber,
 			resultsEndNumber,
 			totalCases,
-			filtersValue: currentFiltersString
+			filtersValue: currentFiltersString,
+			uiItems: paginationItems
 		};
 
 		return res.render('views/cases/list/view.njk', {
