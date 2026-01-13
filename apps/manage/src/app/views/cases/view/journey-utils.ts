@@ -19,6 +19,13 @@ const isAdminType = (response: JourneyResponse, typeQuestion: any) =>
 const isEitherInquiryOrHearing = (response: JourneyResponse, typeQuestion: any) =>
 	isInquiryType(response, typeQuestion) || isHearingType(response, typeQuestion);
 
+const hasTypeChosen = (response: JourneyResponse, typeQuestion: any) =>
+	isInquiryType(response, typeQuestion) ||
+	isHearingType(response, typeQuestion) ||
+	isSpecificType(response, typeQuestion, PROCEDURES_ID.SITE_VISIT) ||
+	isSpecificType(response, typeQuestion, PROCEDURES_ID.ADMIN_IN_HOUSE) ||
+	isSpecificType(response, typeQuestion, PROCEDURES_ID.WRITTEN_REPS);
+
 export function createProcedureSection(suffix: string, questions: ReturnType<typeof createProcedureQuestions>) {
 	const sectionName = `Procedure ${suffix === 'One' ? '1' : suffix === 'Two' ? '2' : '3'}`;
 	const sectionUrl = `procedure-${suffix.toLowerCase()}`;
@@ -29,11 +36,17 @@ export function createProcedureSection(suffix: string, questions: ReturnType<typ
 	return (
 		new Section(sectionName, sectionUrl)
 			/**
-			 * All procedures have type, status and site visit questions
+			 * Type is shown first alone.
 			 */
 			.addQuestion(question('Type'))
+
+			/**
+			 * Status & Site visit: Every procedure with a type sees these
+			 */
+			.startMultiQuestionCondition(conditionId('TYPE-CHOSEN'), (r) => hasTypeChosen(r, question('Type')))
 			.addQuestion(question('Status'))
 			.addQuestion(question('SiteVisitDate'))
+			.endMultiQuestionCondition(conditionId('TYPE-CHOSEN'))
 
 			/**
 			 * Hearing target dates
