@@ -1,0 +1,28 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- CreateTable
+CREATE TABLE [dbo].[Inspector] (
+    [id] UNIQUEIDENTIFIER NOT NULL CONSTRAINT [Inspector_id_df] DEFAULT newid(),
+    [inspectorEntraId] NVARCHAR(1000) NOT NULL,
+    [inspectorAllocatedDate] DATETIME2 NOT NULL,
+    [caseId] UNIQUEIDENTIFIER NOT NULL,
+    CONSTRAINT [Inspector_pkey] PRIMARY KEY CLUSTERED ([id])
+);
+
+-- AddForeignKey
+ALTER TABLE [dbo].[Inspector] ADD CONSTRAINT [Inspector_caseId_fkey] FOREIGN KEY ([caseId]) REFERENCES [dbo].[Case]([id]) ON DELETE NO ACTION ON UPDATE CASCADE;
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH
