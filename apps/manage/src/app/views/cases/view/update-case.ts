@@ -8,6 +8,8 @@ import type { Logger } from 'pino';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { yesNoToBoolean } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
 import { handleProcedureGeneric } from './procedure-utils.ts';
+import { JOURNEY_ID } from './journey.ts';
+import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 
 interface HandlerParams {
 	req: Request;
@@ -46,6 +48,9 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 		logger.info({ fields: Object.keys(rawAnswers) }, 'update case input');
 
 		await updateCaseData(id, db, logger, formattedAnswersForQuery);
+
+		// We clear the session after we have updated the case to avoid ghost data
+		clearDataFromSession({ req, journeyId: JOURNEY_ID });
 
 		addSessionData(req, id, { updated: true });
 
@@ -155,6 +160,7 @@ function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Pri
 	handleApplicant(flatData, prismaPayload);
 	handleAuthority(flatData, prismaPayload);
 	handleAddress(flatData, prismaPayload);
+	handleInspectors(flatData, prismaPayload);
 
 	['One', 'Two', 'Three'].forEach((suffix) => {
 		handleProcedureGeneric(caseId, flatData, prismaPayload, suffix);
@@ -167,6 +173,27 @@ function handleBooleans(flatData: Record<string, any>) {
 	if (Object.hasOwn(flatData, 'isFencingPermanent')) {
 		flatData.isFencingPermanent = yesNoToBoolean(flatData.isFencingPermanent);
 	}
+}
+
+/**
+ * Handles the creation and deletion of inspectors.
+ */
+function handleInspectors(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (!Object.hasOwn(flatData, 'inspectorDetails')) return;
+
+	const newInspectors = flatData.inspectorDetails.map(
+		(inspector: { inspectorEntraId: string; inspectorAllocatedDate: string }) => ({
+			inspectorEntraId: inspector.inspectorEntraId,
+			inspectorAllocatedDate: inspector.inspectorAllocatedDate
+		})
+	);
+
+	prismaPayload.Inspectors = {
+		deleteMany: {},
+		create: newInspectors
+	};
+
+	delete flatData.inspectorDetails;
 }
 
 /**

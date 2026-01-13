@@ -94,7 +94,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 						InquiryVenue: true,
 						ConferenceVenue: true
 					}
-				}
+				},
+				Inspectors: true
 			}
 		});
 
@@ -111,11 +112,13 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 
 		const answers = caseToViewModel(caseToView, groupMembers);
 
+		const finalAnswers = combineSessionAndDbData(res, answers);
+
 		const questions = getQuestions(groupMembers);
 
 		// put these on locals for the list controller
 		res.locals.originalAnswers = { ...answers };
-		res.locals.journeyResponse = new JourneyResponse(JOURNEY_ID, 'ref', answers);
+		res.locals.journeyResponse = new JourneyResponse(JOURNEY_ID, 'ref', finalAnswers);
 		res.locals.journey = createJourney(questions, res.locals.journeyResponse, req);
 
 		if (req.originalUrl !== req.baseUrl) {
@@ -126,4 +129,31 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 
 		if (next) next();
 	};
+}
+
+/**
+ * Combines session data with Db data, spefically needed for ManageList
+ * where we might have data from the database alongside session data that
+ * hasn't yet been saved.
+ */
+function combineSessionAndDbData(res: Response, answers: Record<string, any>) {
+	const finalAnswers = { ...answers };
+	if (!res.locals.journeyResponse?.answers) return finalAnswers;
+
+	const sessionAnswers = res.locals.journeyResponse.answers;
+
+	Object.keys(sessionAnswers).forEach((key) => {
+		const dbValue = answers[key];
+		const sessionValue = sessionAnswers[key];
+
+		// If it is an array of items then we should merge them, otherwise
+		// just replace it. E.g. 3 Inspectors in DB, I add a new one in session
+		// UI should show 4 Inspectors.
+		if (Array.isArray(dbValue) && Array.isArray(sessionValue)) {
+			finalAnswers[key] = [...dbValue, ...sessionValue];
+		} else {
+			finalAnswers[key] = sessionValue;
+		}
+	});
+	return finalAnswers;
 }
