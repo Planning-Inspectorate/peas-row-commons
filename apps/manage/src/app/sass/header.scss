@@ -33,8 +33,9 @@ $pins-colours-mhclg-green: map.get(
 	margin-bottom: 5px;
 }
 
-.pins-header-navigation {
+nav.govuk-header__navigation.pins-header-navigation {
 	text-align: left;
+	padding: 0;
 
 	.govuk-header__navigation-list {
 		.govuk-header__navigation-item {
