@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { stringToKebab, checkAnswerlength, checkRequiredAnswer } from './strings.ts';
+import { stringToKebab, checkAnswerlength, checkRequiredAnswer, toCamelCase } from './strings.ts';
 
 describe('String Utils', () => {
 	describe('stringToKebab', () => {
@@ -95,6 +95,32 @@ describe('String Utils', () => {
 				text: errorMsg,
 				href: pageLink
 			});
+		});
+	});
+
+	describe('toCamelCase', () => {
+		it('should convert PascalCase to camelCase', () => {
+			assert.strictEqual(toCamelCase('ProcedureOne'), 'procedureOne');
+			assert.strictEqual(toCamelCase('HearingVenue'), 'hearingVenue');
+		});
+
+		it('should leave existing camelCase strings unchanged', () => {
+			assert.strictEqual(toCamelCase('procedureOne'), 'procedureOne');
+			assert.strictEqual(toCamelCase('myVariable'), 'myVariable');
+		});
+
+		it('should handle single character strings', () => {
+			assert.strictEqual(toCamelCase('A'), 'a');
+			assert.strictEqual(toCamelCase('z'), 'z');
+		});
+
+		it('should handle empty strings gracefully', () => {
+			assert.strictEqual(toCamelCase(''), '');
+		});
+
+		it('should only affect the first character', () => {
+			assert.strictEqual(toCamelCase('ALLCAPS'), 'aLLCAPS');
+			assert.strictEqual(toCamelCase('With Spaces'), 'with Spaces');
 		});
 	});
 });

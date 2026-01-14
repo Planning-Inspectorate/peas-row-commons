@@ -6,6 +6,7 @@ import {
 import type { CaseListFields, CaseNoteFields, CaseOfficer } from './types.ts';
 import { formatInTimeZone } from 'date-fns-tz';
 import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
+import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address.ts';
 
 function formatValue(value: any) {
 	if (typeof value === 'boolean') {
@@ -15,20 +16,6 @@ function formatValue(value: any) {
 }
 
 const NESTED_SECTIONS: (keyof CaseListFields)[] = ['Dates', 'Costs', 'Abeyance', 'Notes', 'Decision'];
-
-/**
- * Standardises address objects from Prisma (line1) to UI (addressLine1)
- */
-function mapAddress(address: any) {
-	if (!address) return null;
-	return {
-		addressLine1: address.line1,
-		addressLine2: address.line2,
-		townCity: address.townCity,
-		county: address.county,
-		postcode: address.postcode
-	};
-}
 
 /**
  * Flattens the Procedures array into procedureOne..., procedureTwo... fields
@@ -54,7 +41,7 @@ function mapProcedures(procedures: any[]) {
 			const uiKey = `${prefix}${suffixKey}`;
 
 			if (key.endsWith('Venue') && typeof value === 'object') {
-				flattened[uiKey] = mapAddress(value);
+				flattened[uiKey] = mapAddressDbToViewModel(value);
 			} else {
 				flattened[uiKey] = formatValue(value);
 			}
@@ -109,7 +96,7 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		}
 	}
 
-	const siteAddress = mapAddress(caseRow.SiteAddress);
+	const siteAddress = mapAddressDbToViewModel(caseRow.SiteAddress);
 
 	const mappedNotes = mapNotes(caseRow.Notes || [], groupMembers);
 

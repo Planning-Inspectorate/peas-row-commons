@@ -4,17 +4,20 @@ import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journe
 import { createProcedureQuestions } from './question-utils.ts';
 import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 
-const isSpecificType = (response: JourneyResponse, questionObj: any, typeToCheck: string) =>
-	questionHasAnswer(response, questionObj, typeToCheck);
-
 const isHearingType = (response: JourneyResponse, typeQuestion: any) =>
-	isSpecificType(response, typeQuestion, PROCEDURES_ID.HEARING);
+	questionHasAnswer(response, typeQuestion, PROCEDURES_ID.HEARING);
 
 const isInquiryType = (response: JourneyResponse, typeQuestion: any) =>
-	isSpecificType(response, typeQuestion, PROCEDURES_ID.INQUIRY);
+	questionHasAnswer(response, typeQuestion, PROCEDURES_ID.INQUIRY);
 
 const isAdminType = (response: JourneyResponse, typeQuestion: any) =>
-	isSpecificType(response, typeQuestion, PROCEDURES_ID.ADMIN_IN_HOUSE);
+	questionHasAnswer(response, typeQuestion, PROCEDURES_ID.ADMIN_IN_HOUSE);
+
+const isSiteVisitType = (response: JourneyResponse, typeQuestion: any) =>
+	questionHasAnswer(response, typeQuestion, PROCEDURES_ID.ADMIN_IN_HOUSE);
+
+const isWrittenRepsType = (response: JourneyResponse, typeQuestion: any) =>
+	questionHasAnswer(response, typeQuestion, PROCEDURES_ID.ADMIN_IN_HOUSE);
 
 const isEitherInquiryOrHearing = (response: JourneyResponse, typeQuestion: any) =>
 	isInquiryType(response, typeQuestion) || isHearingType(response, typeQuestion);
@@ -22,9 +25,9 @@ const isEitherInquiryOrHearing = (response: JourneyResponse, typeQuestion: any) 
 const hasTypeChosen = (response: JourneyResponse, typeQuestion: any) =>
 	isInquiryType(response, typeQuestion) ||
 	isHearingType(response, typeQuestion) ||
-	isSpecificType(response, typeQuestion, PROCEDURES_ID.SITE_VISIT) ||
-	isSpecificType(response, typeQuestion, PROCEDURES_ID.ADMIN_IN_HOUSE) ||
-	isSpecificType(response, typeQuestion, PROCEDURES_ID.WRITTEN_REPS);
+	isSiteVisitType(response, typeQuestion) ||
+	isAdminType(response, typeQuestion) ||
+	isWrittenRepsType(response, typeQuestion);
 
 export function createProcedureSection(suffix: string, questions: ReturnType<typeof createProcedureQuestions>) {
 	const sectionName = `Procedure ${suffix === 'One' ? '1' : suffix === 'Two' ? '2' : '3'}`;
