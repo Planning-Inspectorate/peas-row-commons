@@ -1,7 +1,6 @@
 import OptionsQuestion from '@planning-inspectorate/dynamic-forms/src/questions/options-question.js';
 import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import type { Request } from 'express';
 import type { QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 
@@ -116,16 +115,12 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 	 * that text to be saved, whilst also setting any old text associated with
 	 * an unselected field to null
 	 */
-	override async getDataToSave(
-		req: Request,
-		journeyResponse: JourneyResponse
-	): Promise<{ answers: Record<string, unknown> }> {
+	override async getDataToSave(req: Request): Promise<{ answers: Record<string, unknown> }> {
 		const responseToSave: { answers: Record<string, unknown> } = { answers: {} };
 		const { body } = req;
 
 		const mainValue = body[this.fieldName]?.trim();
 		responseToSave.answers[this.fieldName] = mainValue;
-		journeyResponse.answers[this.fieldName] = mainValue;
 
 		Object.entries(this.conditionalMapping).forEach(([optionValue, targetDbName]) => {
 			const proxyUiName = `${this.fieldName}_${optionValue}_text`;
@@ -135,12 +130,10 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 			if (mainValue === optionValue) {
 				const conditionalToSave = textValue || null;
 				responseToSave.answers[targetDbName] = conditionalToSave;
-				journeyResponse.answers[targetDbName] = conditionalToSave;
 			} else {
 				// Make sure to set any other options answers to null to avoid
 				// DB having 2+ different text fields in columns
 				responseToSave.answers[targetDbName] = null;
-				journeyResponse.answers[targetDbName] = null;
 			}
 		});
 
