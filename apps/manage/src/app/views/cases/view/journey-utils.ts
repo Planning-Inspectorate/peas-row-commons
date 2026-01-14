@@ -14,10 +14,10 @@ const isAdminType = (response: JourneyResponse, typeQuestion: any) =>
 	questionHasAnswer(response, typeQuestion, PROCEDURES_ID.ADMIN_IN_HOUSE);
 
 const isSiteVisitType = (response: JourneyResponse, typeQuestion: any) =>
-	questionHasAnswer(response, typeQuestion, PROCEDURES_ID.ADMIN_IN_HOUSE);
+	questionHasAnswer(response, typeQuestion, PROCEDURES_ID.SITE_VISIT);
 
 const isWrittenRepsType = (response: JourneyResponse, typeQuestion: any) =>
-	questionHasAnswer(response, typeQuestion, PROCEDURES_ID.ADMIN_IN_HOUSE);
+	questionHasAnswer(response, typeQuestion, PROCEDURES_ID.WRITTEN_REPS);
 
 const isEitherInquiryOrHearing = (response: JourneyResponse, typeQuestion: any) =>
 	isInquiryType(response, typeQuestion) || isHearingType(response, typeQuestion);
