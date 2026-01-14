@@ -80,6 +80,8 @@ model Case {
   InspectorBand            InspectorBand?                @relation(fields: [inspectorBandId], references: [id])
   /// Inspectors allocated to case
   Inspectors               Inspector[]
+  /// Objectors linked to a case
+  Objectors                Objector[]
 }
 
 model CaseworkArea {
@@ -121,13 +123,14 @@ model CaseProcedure {
 /// Address represents an address of a property or place
 model Address {
   /// internal identifier
-  id       String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  id       String     @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   line1    String?
   line2    String?
   townCity String?
   county   String?
   postcode String?
   Case     Case[]
+  Objector Objector[]
 }
 
 /// Dates that are associated with a case, a couple more generic ones are
@@ -292,4 +295,26 @@ model Inspector {
   inspectorAllocatedDate DateTime
   caseId                 String   @db.UniqueIdentifier
   Case                   Case     @relation(fields: [caseId], references: [id])
+}
+
+model Objector {
+  id               String          @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  orgName          String?
+  firstName        String?
+  lastName         String?
+  telephoneNumber  String?
+  email            String?
+  addressId        String?         @db.UniqueIdentifier
+  Address          Address?        @relation(fields: [addressId], references: [id])
+  objectorStatusId String?
+  ObjectorStatus   ObjectorStatus? @relation(fields: [objectorStatusId], references: [id])
+  caseId           String          @db.UniqueIdentifier
+  Case             Case            @relation(fields: [caseId], references: [id])
+}
+
+model ObjectorStatus {
+  /// unique machine-readable name, not generated, e.g. "admissable"
+  id          String     @id
+  displayName String?
+  Objector    Objector[]
 }

@@ -7,3 +7,4 @@ export { PRIORITIES } from './priority.ts';
 export { ADVERTISED_MODIFICATIONS } from './advertised-modification.ts';
 export { CASE_STATUSES } from './status.ts';
 export { INSPECTOR_BANDS } from './inspector-bands.ts';
+export { OBJECTOR_STATUSES } from './objector-status.ts';
