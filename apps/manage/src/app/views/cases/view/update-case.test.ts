@@ -105,7 +105,7 @@ describe('Update Case Controller', () => {
 	describe('mapCasePayload (Transformation Logic)', () => {
 		it('should keep main table fields at root level', () => {
 			const input = { name: 'My Case', reference: 'REF001' };
-			const result = mapCasePayload(input);
+			const result = mapCasePayload(input, 'case-123');
 
 			assert.strictEqual(result.name, 'My Case');
 			assert.strictEqual(result.reference, 'REF001');
@@ -114,7 +114,7 @@ describe('Update Case Controller', () => {
 
 		it('should nest Date fields into "Dates" upsert object', () => {
 			const input = { startDate: '2025-01-01', expiryDate: '2025-12-31' };
-			const result = mapCasePayload(input);
+			const result = mapCasePayload(input, 'case-123');
 
 			const datesUpdate = (result as any).Dates;
 
@@ -132,7 +132,7 @@ describe('Update Case Controller', () => {
 				name: 'Main Field',
 				startDate: '2025-01-01'
 			};
-			const result = mapCasePayload(input);
+			const result = mapCasePayload(input, 'case-123');
 
 			assert.strictEqual(result.name, 'Main Field');
 			assert.strictEqual((result as any).Dates.upsert.create.startDate, '2025-01-01');
@@ -142,7 +142,7 @@ describe('Update Case Controller', () => {
 			const input = {
 				applicantName: 'John Doe'
 			};
-			const result = mapCasePayload(input);
+			const result = mapCasePayload(input, 'case-123');
 
 			const applicantUpdate = (result as any).Applicant;
 			assert.ok(applicantUpdate, 'Should have Applicant property');
@@ -156,7 +156,7 @@ describe('Update Case Controller', () => {
 			const input = {
 				authorityName: 'Local Council'
 			};
-			const result = mapCasePayload(input);
+			const result = mapCasePayload(input, 'case-123');
 
 			const authorityUpdate = (result as any).Authority;
 			assert.ok(authorityUpdate, 'Should have Authority property');
@@ -176,7 +176,7 @@ describe('Update Case Controller', () => {
 					postcode: 'SW1 1AA'
 				}
 			};
-			const result = mapCasePayload(input);
+			const result = mapCasePayload(input, 'case-123');
 
 			const addressUpdate = (result as any).SiteAddress;
 			assert.ok(addressUpdate, 'Should have SiteAddress property');
@@ -191,7 +191,7 @@ describe('Update Case Controller', () => {
 		it('should skip applicant transformation if fields are incomplete', () => {
 			const input = {};
 
-			const result = mapCasePayload(input);
+			const result = mapCasePayload(input, 'case-123');
 
 			assert.strictEqual((result as any).Applicant, undefined);
 			assert.strictEqual((result as any).applicantName, undefined);
