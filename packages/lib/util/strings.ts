@@ -36,3 +36,8 @@ export function checkRequiredAnswer(value: string, errorMessage: string, pageLin
 		};
 	}
 }
+
+/**
+ * Converts string to camelCase
+ */
+export const toCamelCase = (str: string) => str.charAt(0).toLowerCase() + str.slice(1);

@@ -35,7 +35,7 @@ interface DateQuestionProps {
 	viewData?: Record<string, unknown>;
 	question?: string;
 	url?: string;
-	hasTime?: boolean;
+	isDateTime?: boolean;
 }
 
 export function dateQuestion({
@@ -46,14 +46,14 @@ export function dateQuestion({
 	viewData = {},
 	question,
 	url,
-	hasTime = false
+	isDateTime = false
 }: DateQuestionProps) {
 	if (!title) {
 		title = camelCaseToSentenceCase(fieldName);
 	}
 
 	return {
-		type: hasTime ? CUSTOM_COMPONENTS.OPTIONAL_TIME_DATE_TIME : COMPONENT_TYPES.DATE,
+		type: isDateTime ? CUSTOM_COMPONENTS.OPTIONAL_TIME_DATE_TIME : COMPONENT_TYPES.DATE,
 		title: title,
 		question: question || `What is the ${title?.toLowerCase()}?`,
 		hint: hint,
@@ -1035,7 +1035,7 @@ export const createProcedureQuestions = (suffix: string) => {
 					}
 				]
 			},
-			hasTime: true
+			isDateTime: true
 		}),
 		[`${prefix}HearingFormat`]: {
 			type: COMPONENT_TYPES.RADIO,
@@ -1260,7 +1260,7 @@ export const createProcedureQuestions = (suffix: string) => {
 					}
 				]
 			},
-			hasTime: true
+			isDateTime: true
 		}),
 		[`${prefix}PreInquiryFormat`]: {
 			type: COMPONENT_TYPES.RADIO,
@@ -1312,7 +1312,7 @@ export const createProcedureQuestions = (suffix: string) => {
 					}
 				]
 			},
-			hasTime: true
+			isDateTime: true
 		}),
 		[`${prefix}CmcFormat`]: {
 			type: COMPONENT_TYPES.RADIO,

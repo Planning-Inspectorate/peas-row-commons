@@ -1,4 +1,6 @@
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { mapAddressViewModelToDb } from '@pins/peas-row-commons-lib/util/address.ts';
+import { toCamelCase } from '@pins/peas-row-commons-lib/util/strings.ts';
 
 /**
  * This module handles the Utils for upserting Procedures.
@@ -9,25 +11,6 @@ import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.t
  * passes into the BE keys that don't map to any DB columns and therefore
  * need extra pre-processing.
  */
-
-/**
- * Converts string to camelCase
- */
-const toCamelCase = (str: string) => str.charAt(0).toLowerCase() + str.slice(1);
-
-/**
- * Handles the addresses data structure for Procedures.
- */
-const mapAddressPayload = (addressData: Record<string, any>) => {
-	if (!addressData || typeof addressData !== 'object') return undefined;
-	return {
-		line1: addressData.addressLine1 || '',
-		line2: addressData.addressLine2 || '',
-		townCity: addressData.townCity || '',
-		county: addressData.county || '',
-		postcode: addressData.postcode || ''
-	};
-};
 
 /**
  * Decides whether a field is a nested Venue relation (address) or a normal
@@ -44,7 +27,7 @@ function processProcedureField(
 
 	// If it ends with 'Venue' we can assume it is a joined Address field(s)
 	if (rawFieldName.endsWith('Venue') && typeof value === 'object' && value !== null) {
-		const address = mapAddressPayload(value);
+		const address = mapAddressViewModelToDb(value);
 
 		if (address) {
 			createData[rawFieldName] = { create: address };
