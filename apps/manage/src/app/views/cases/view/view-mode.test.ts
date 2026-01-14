@@ -139,6 +139,19 @@ describe('view-model', () => {
 			const result: any = caseToViewModel(input as any, groupMembers);
 			assert.strictEqual(result.siteAddress, null);
 		});
+
+		it('should pass through Inspectors data to inspectorDetails', () => {
+			const mockInspectors = [{ id: 'insp-1', name: 'Inspector Gadget' }];
+			const input = {
+				id: '123',
+				receivedDate: new Date(),
+				Inspectors: mockInspectors
+			};
+
+			const result: any = caseToViewModel(input as any, groupMembers);
+
+			assert.strictEqual(result.inspectorDetails, mockInspectors);
+		});
 	});
 
 	describe('mapNotes', () => {
