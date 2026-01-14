@@ -1,6 +1,11 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { dateISOStringToDisplayTime12hr, dateISOStringToDisplayDate, getDayFromISODate } from './dates.ts';
+import {
+	dateISOStringToDisplayTime12hr,
+	dateISOStringToDisplayDate,
+	getDayFromISODate,
+	safeConvertTo24Hour
+} from './dates.ts';
 
 describe('Date Helpers', () => {
 	describe('dateISOStringToDisplayTime12hr', () => {
@@ -80,6 +85,22 @@ describe('Date Helpers', () => {
 
 		it('should return empty string for missing input', () => {
 			assert.strictEqual(getDayFromISODate(null as any), '');
+		});
+	});
+	describe('safeConvertTo24Hour', () => {
+		it('should convert 12am to 0', () => {
+			const result = safeConvertTo24Hour(12, 'am');
+			assert.strictEqual(result, 0);
+		});
+
+		it('should convert 12pm to 12', () => {
+			const result = safeConvertTo24Hour(12, 'pm');
+			assert.strictEqual(result, 12);
+		});
+
+		it('should convert 1pm to 13', () => {
+			const result = safeConvertTo24Hour(1, 'pm');
+			assert.strictEqual(result, 13);
 		});
 	});
 });

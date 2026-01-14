@@ -37,3 +37,15 @@ export function dateISOStringToDisplayDate(dateISOString: Date, fallback = '') {
 export function getDayFromISODate(isoDate: Date) {
 	return formatLondonDate(isoDate, 'EEEE');
 }
+
+/**
+ * Converts an hour to its 24 hour equivalent based on a period.
+ *
+ * If no period then returns the number as is, as fallback
+ */
+export function safeConvertTo24Hour(hour: string | number, period: string): number {
+	const hourValue = Number(hour);
+	if (period === 'am') return hourValue === 12 ? 0 : hourValue;
+	if (period === 'pm') return hourValue === 12 ? 12 : hourValue + 12;
+	return hourValue;
+}

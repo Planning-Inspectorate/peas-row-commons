@@ -2,9 +2,9 @@ import DateTimeQuestion from '@planning-inspectorate/dynamic-forms/src/component
 import { parseDateInput, formatDateForDisplay } from '@planning-inspectorate/dynamic-forms/src/lib/date-utils.js';
 import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import type { Request } from 'express';
 import type { QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import { safeConvertTo24Hour } from '@pins/peas-row-commons-lib/util/dates.ts';
 
 /**
  * Custom component that behaves the same as DateTimeQuestion but allows
@@ -43,10 +43,7 @@ export default class OptionalTimeDateTimeInput extends DateTimeQuestion {
 	 * Same functionality as parent, expect it runs safeConvertTo24Hour
 	 * which allows the user to select no AM/PM
 	 */
-	override async getDataToSave(
-		req: Request,
-		journeyResponse: JourneyResponse
-	): Promise<{ answers: Record<string, unknown> }> {
+	override async getDataToSave(req: Request): Promise<{ answers: Record<string, unknown> }> {
 		const dayInput = req.body[`${this.fieldName}_day`];
 		const monthInput = req.body[`${this.fieldName}_month`];
 		const yearInput = req.body[`${this.fieldName}_year`];
@@ -54,7 +51,7 @@ export default class OptionalTimeDateTimeInput extends DateTimeQuestion {
 		const minutesInput = req.body[`${this.fieldName}_minutes`];
 		const periodInput = req.body[`${this.fieldName}_period`];
 
-		const hourToSave = this.safeConvertTo24Hour(hourInput, periodInput);
+		const hourToSave = safeConvertTo24Hour(hourInput, periodInput);
 
 		const minuteToSave = minutesInput || 0;
 
@@ -68,7 +65,6 @@ export default class OptionalTimeDateTimeInput extends DateTimeQuestion {
 			minute: minuteToSave
 		});
 
-		journeyResponse.answers[this.fieldName] = responseToSave.answers[this.fieldName];
 		return responseToSave;
 	}
 
@@ -99,15 +95,5 @@ export default class OptionalTimeDateTimeInput extends DateTimeQuestion {
 				action: this.getAction(sectionSegment, journey, answer)
 			}
 		];
-	}
-
-	/**
-	 * Converts time to 24 hour.
-	 */
-	safeConvertTo24Hour(hour: string | number, period: string): number {
-		const hourValue = Number(hour);
-		if (period === 'am') return hourValue === 12 ? 0 : hourValue;
-		if (period === 'pm') return hourValue === 12 ? 12 : hourValue + 12;
-		return hourValue;
 	}
 }
