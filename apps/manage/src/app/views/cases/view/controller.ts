@@ -89,7 +89,12 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 						ConferenceVenue: true
 					}
 				},
-				Inspectors: true
+				Inspectors: true,
+				Contacts: {
+					include: {
+						Address: true
+					}
+				}
 			}
 		});
 

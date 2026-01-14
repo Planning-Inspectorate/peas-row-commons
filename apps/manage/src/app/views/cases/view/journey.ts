@@ -62,6 +62,14 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.proposalLetterDate)
 				.addQuestion(questions.expiryDate)
 				.addQuestion(questions.partiesDecisionNotificationDeadlineDate),
+			new Section('Key contacts', 'key-contacts').addQuestion(
+				questions.objectorDetails,
+				new ManageListSection()
+					.addQuestion(questions.objectorName)
+					.addQuestion(questions.objectorAddress)
+					.addQuestion(questions.objectorContactDetails)
+					.addQuestion(questions.objectorStatus)
+			),
 			...procedureSections,
 			new Section('Outcome', 'outcome')
 				.addQuestion(questions.decisionType)

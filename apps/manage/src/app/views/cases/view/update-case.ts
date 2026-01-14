@@ -10,6 +10,7 @@ import { yesNoToBoolean } from '@planning-inspectorate/dynamic-forms/src/compone
 import { handleProcedureGeneric } from './procedure-utils.ts';
 import { JOURNEY_ID } from './journey.ts';
 import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -161,6 +162,7 @@ function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Pri
 	handleAuthority(flatData, prismaPayload);
 	handleAddress(flatData, prismaPayload);
 	handleInspectors(flatData, prismaPayload);
+	handleObjectors(flatData, prismaPayload);
 
 	['One', 'Two', 'Three'].forEach((suffix) => {
 		handleProcedureGeneric(caseId, flatData, prismaPayload, suffix);
@@ -194,6 +196,44 @@ function handleInspectors(flatData: Record<string, any>, prismaPayload: Prisma.C
 	};
 
 	delete flatData.inspectorDetails;
+}
+
+/**
+ * Takes the UI view data and converts into the format needed for the database,
+ * by taking the unique keys and mapping them to their generic counterparts.
+ */
+function handleObjectors(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (!Object.hasOwn(flatData, 'objectorDetails')) return;
+
+	const newObjectors = flatData.objectorDetails.map((objector: Record<string, any>) => ({
+		ContactType: { connect: { id: CONTACT_TYPE_ID.OBJECTOR } },
+		firstName: objector.objectorFirstName,
+		lastName: objector.objectorLastName,
+		orgName: objector.objectorOrgName,
+		telephoneNumber: objector.objectorTelephoneNumber,
+		email: objector.objectorEmail,
+		ObjectorStatus: { connect: { id: objector.objectorStatusId } },
+		Address: objector.objectorAddress
+			? {
+					create: {
+						line1: objector.objectorAddress.addressLine1,
+						line2: objector.objectorAddress.addressLine2,
+						townCity: objector.objectorAddress.townCity,
+						county: objector.objectorAddress.county,
+						postcode: objector.objectorAddress.postcode
+					}
+				}
+			: undefined
+	}));
+
+	prismaPayload.Contacts = {
+		deleteMany: {
+			contactTypeId: CONTACT_TYPE_ID.OBJECTOR
+		},
+		create: newObjectors
+	};
+
+	delete flatData.objectorDetails;
 }
 
 /**

@@ -7,6 +7,7 @@ import type { CaseListFields, CaseNoteFields, CaseOfficer } from './types.ts';
 import { formatInTimeZone } from 'date-fns-tz';
 import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
 import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address.ts';
+import { mapObjectors } from '@pins/peas-row-commons-lib/util/contact.ts';
 
 function formatValue(value: any) {
 	if (typeof value === 'boolean') {
@@ -100,6 +101,8 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 
 	const mappedNotes = mapNotes(caseRow.Notes || [], groupMembers);
 
+	const mappedObjectors = mapObjectors(caseRow.Contacts || []);
+
 	return {
 		...sanitisedData,
 		...mappedProcedures,
@@ -107,7 +110,8 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		siteAddress,
 		receivedDateDisplay: formatInTimeZone(caseRow.receivedDate, 'Europe/London', 'dd MMM yyyy'),
 		receivedDateSortable: new Date(caseRow.receivedDate)?.getTime(),
-		inspectorDetails: caseRow.Inspectors
+		inspectorDetails: caseRow.Inspectors,
+		objectorDetails: mappedObjectors
 	};
 }
 
