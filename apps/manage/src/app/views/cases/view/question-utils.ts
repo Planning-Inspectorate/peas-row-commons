@@ -20,12 +20,21 @@ import {
 	PROCEDURE_EVENT_FORMATS,
 	INQUIRY_OR_CONFERENCES,
 	ADMIN_PROCEDURES,
-	SITE_VISITS
+	SITE_VISITS,
+	OBJECTOR_STATUSES
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
 import type { CaseOfficer } from './types.ts';
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/outcome.ts';
+import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
+
+type RadioOption = { text: string; value: string } | { divider: string };
+
+// Adds a divider 'Or' between options
+export const OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER = OBJECTOR_STATUSES.map(
+	(s) => ({ text: s.displayName, value: s.id }) as RadioOption
+).toSpliced(-1, 0, { divider: 'or' });
 
 interface DateQuestionProps {
 	fieldName: string;
@@ -1657,6 +1666,127 @@ export const createProcedureQuestions = (suffix: string) => {
 	};
 };
 
+export const KEY_CONTACTS_QUESTIONS = {
+	objectorDetails: {
+		type: COMPONENT_TYPES.MANAGE_LIST,
+		title: 'Objector(s)',
+		question: 'Check objector details',
+		fieldName: 'objectorDetails',
+		url: 'objector-details'
+	},
+	objectorName: {
+		type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
+		title: 'Objector',
+		question: 'Who is the objector?',
+		fieldName: 'objectorName',
+		url: 'objector-name',
+		hint: 'Enter the name of the individual, the organisation, or both.',
+		inputFields: [
+			{
+				fieldName: 'objectorFirstName',
+				label: 'First name'
+			},
+			{
+				fieldName: 'objectorLastName',
+				label: 'Last name'
+			},
+			{
+				fieldName: 'objectorOrgName',
+				label: 'Objector company or organisation name'
+			}
+		],
+		validators: [
+			new MultiFieldInputValidator({
+				fields: [
+					{
+						fieldName: 'objectorFirstName',
+						required: false,
+						errorMessage: 'Enter objector first name',
+						maxLength: {
+							maxLength: 250,
+							maxLengthMessage: 'Objector first name must be less than 250 characters'
+						}
+					},
+					{
+						fieldName: 'objectorLastName',
+						required: false,
+						errorMessage: 'Enter objector last name',
+						maxLength: {
+							maxLength: 250,
+							maxLengthMessage: 'Objector last name must be less than 250 characters'
+						}
+					},
+					{
+						fieldName: 'objectorOrgName',
+						required: false,
+						maxLength: {
+							maxLength: 250,
+							maxLengthMessage: 'Company or organisation name must be less than 250 characters'
+						}
+					}
+				]
+			})
+		]
+	},
+	objectorAddress: {
+		type: COMPONENT_TYPES.ADDRESS,
+		title: 'Objector address details',
+		question: 'Objector address details',
+		hint: 'Optional',
+		fieldName: 'objectorAddress',
+		url: 'objector-address',
+		validators: [new AddressValidator()]
+	},
+	objectorContactDetails: {
+		type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
+		title: 'Objector contact details',
+		question: 'Objector contact details (optional)',
+		fieldName: 'objectorContactDetails',
+		url: 'objector-contact-details',
+		inputFields: [
+			{
+				fieldName: 'objectorEmail',
+				label: 'Email address'
+			},
+			{
+				fieldName: 'objectorTelephoneNumber',
+				label: 'Phone number'
+			}
+		],
+		validators: [
+			new MultiFieldInputValidator({
+				fields: [
+					{
+						fieldName: 'objectorEmail',
+						required: false,
+						maxLength: {
+							maxLength: 250,
+							maxLengthMessage: 'Objector email must be less than 250 characters'
+						}
+					},
+					{
+						fieldName: 'objectorTelephoneNumber',
+						required: false,
+						maxLength: {
+							maxLength: 15,
+							maxLengthMessage: 'Objector phone number must be less than 15 characters'
+						}
+					}
+				]
+			})
+		]
+	},
+	objectorStatus: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Objector status',
+		question: 'What is the objector status?',
+		fieldName: 'objectorStatusId',
+		url: 'objector-status',
+		validators: [new RequiredValidator("Select the status of the objector, or 'Not applicable'")],
+		options: OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER
+	}
+};
+
 // All questions, exported for testing.
 export const ALL_QUESTIONS = {
 	...DATE_QUESTIONS,
@@ -1667,5 +1797,6 @@ export const ALL_QUESTIONS = {
 	...TEAM_QUESTIONS,
 	...OVERVIEW_QUESTIONS,
 	...OUTCOME_QUESTIONS,
-	...createProcedureQuestions('One')
+	...createProcedureQuestions('One'),
+	...KEY_CONTACTS_QUESTIONS
 };

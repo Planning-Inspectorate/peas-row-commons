@@ -82,6 +82,8 @@ model Case {
   primaryProcedureStep     String?                       @db.NVarChar(50)
   /// Inspectors allocated to case
   Inspectors               Inspector[]
+  /// Contacts linked to a case
+  Contacts                 Contact[]
 }
 
 model CaseworkArea {
@@ -125,6 +127,7 @@ model Address {
   ConferenceProcedure Procedure[] @relation("ProcedureConferenceVenue")
   HearingProcedure    Procedure[] @relation("ProcedureHearingVenue")
   InquiryProcedure    Procedure[] @relation("ProcedureInquiryVenue")
+  Contact             Contact[]
 }
 
 /// Dates that are associated with a case, a couple more generic ones are
@@ -490,4 +493,40 @@ model Inspector {
   inspectorAllocatedDate DateTime
   caseId                 String   @db.UniqueIdentifier
   Case                   Case     @relation(fields: [caseId], references: [id])
+}
+
+model Contact {
+  id String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+
+  /// Generic columns
+  orgName         String?
+  firstName       String?
+  lastName        String?
+  telephoneNumber String?
+  email           String?
+  addressId       String?  @db.UniqueIdentifier
+  Address         Address? @relation(fields: [addressId], references: [id])
+
+  /// Objector specific colummns
+  objectorStatusId String?
+  ObjectorStatus   ObjectorStatus? @relation(fields: [objectorStatusId], references: [id])
+
+  contactTypeId String?
+  ContactType   ContactType? @relation(fields: [contactTypeId], references: [id])
+  caseId        String       @db.UniqueIdentifier
+  Case          Case         @relation(fields: [caseId], references: [id])
+}
+
+model ContactType {
+  /// unique machine-readable name, not generated, e.g. "objector"
+  id          String    @id
+  displayName String?
+  Contacts    Contact[]
+}
+
+model ObjectorStatus {
+  /// unique machine-readable name, not generated, e.g. "admissable"
+  id          String    @id
+  displayName String?
+  Contacts    Contact[]
 }

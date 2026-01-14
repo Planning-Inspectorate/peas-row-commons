@@ -154,6 +154,11 @@ describe('case details journey', () => {
 				]
 			},
 			{
+				title: 'Key contacts',
+				segment: 'key-contacts',
+				questions: ['objectorDetails']
+			},
+			{
 				title: 'Procedure 1',
 				segment: 'procedure-one',
 				questions: PROCEDURE_QUESTIONS.map((question) => `procedureOne${question}`)
@@ -202,7 +207,7 @@ describe('case details journey', () => {
 			}
 		];
 
-		assert.strictEqual(journey.sections.length, 11, 'Journey should have exactly 11 sections');
+		assert.strictEqual(journey.sections.length, 12, 'Journey should have exactly 12 sections');
 
 		expectedStructure.forEach((expected, sIndex) => {
 			const actualSection = journey.sections[sIndex];

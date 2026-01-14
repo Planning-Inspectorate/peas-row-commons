@@ -14,3 +14,5 @@ export { PROCEDURE_EVENT_FORMATS } from './procedure-event-format.ts';
 export { INQUIRY_OR_CONFERENCES } from './inquiry-or-conference.ts';
 export { ADMIN_PROCEDURES } from './admin-procedure-types.ts';
 export { SITE_VISITS } from './site-visit-types.ts';
+export { OBJECTOR_STATUSES } from './objector-status.ts';
+export { CONTACT_TYPES } from './contact-types.ts';
