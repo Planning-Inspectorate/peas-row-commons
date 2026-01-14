@@ -196,5 +196,27 @@ describe('Update Case Controller', () => {
 			assert.strictEqual((result as any).Applicant, undefined);
 			assert.strictEqual((result as any).applicantName, undefined);
 		});
+
+		it('should transform inspectorDetails into Inspectors deleteMany/create payload', () => {
+			const input = {
+				inspectorDetails: [
+					{ inspectorEntraId: '123', inspectorAllocatedDate: '2025-01-01' },
+					{ inspectorEntraId: '456', inspectorAllocatedDate: '2025-02-01' }
+				]
+			};
+
+			const result = mapCasePayload(input);
+
+			const inspectorsUpdate = (result as any).Inspectors;
+			assert.ok(inspectorsUpdate, 'Should have Inspectors property');
+
+			assert.deepStrictEqual(inspectorsUpdate.deleteMany, {});
+			assert.strictEqual(inspectorsUpdate.create.length, 2);
+
+			assert.strictEqual(inspectorsUpdate.create[0].inspectorEntraId, '123');
+			assert.strictEqual(inspectorsUpdate.create[0].inspectorAllocatedDate, '2025-01-01');
+
+			assert.strictEqual((result as any).inspectorDetails, undefined);
+		});
 	});
 });
