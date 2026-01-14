@@ -83,7 +83,7 @@ describe('Conditional Options Question', () => {
 				my_radio_field_maybe_text: 'Should be ignored'
 			};
 
-			const result = await question.getDataToSave(req as any, mockJourney as any);
+			const result = await question.getDataToSave(req as any);
 
 			assert.strictEqual(result.answers['my_radio_field'], 'yes');
 
@@ -100,7 +100,7 @@ describe('Conditional Options Question', () => {
 				my_radio_field_yes_text: 'Leftover text'
 			};
 
-			const result = await question.getDataToSave(req as any, mockJourney as any);
+			const result = await question.getDataToSave(req as any);
 
 			assert.strictEqual(result.answers['my_radio_field'], 'no');
 			assert.strictEqual(result.answers['yes_details_db_field'], null);
@@ -116,7 +116,7 @@ describe('Conditional Options Question', () => {
 				my_radio_field_yes_text: 'Old yes text'
 			};
 
-			const result = await question.getDataToSave(req as any, mockJourney as any);
+			const result = await question.getDataToSave(req as any);
 
 			assert.strictEqual(result.answers['maybe_reason_db_field'], 'Unsure reason');
 
