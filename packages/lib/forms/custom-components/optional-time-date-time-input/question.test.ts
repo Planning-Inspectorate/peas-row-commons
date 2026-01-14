@@ -38,23 +38,6 @@ describe('Optional Time Date Time Input', () => {
 		question.getAction = () => ({ href: '#', text: 'Change' });
 	});
 
-	describe('safeConvertTo24Hour', () => {
-		it('should convert 12am to 0', () => {
-			const result = question.safeConvertTo24Hour(12, 'am');
-			assert.strictEqual(result, 0);
-		});
-
-		it('should convert 12pm to 12', () => {
-			const result = question.safeConvertTo24Hour(12, 'pm');
-			assert.strictEqual(result, 12);
-		});
-
-		it('should convert 1pm to 13', () => {
-			const result = question.safeConvertTo24Hour(1, 'pm');
-			assert.strictEqual(result, 13);
-		});
-	});
-
 	describe('getDataToSave', () => {
 		it('should save correctly with AM time', async () => {
 			mockReq.body = {
@@ -66,13 +49,11 @@ describe('Optional Time Date Time Input', () => {
 				event_date_period: 'am'
 			};
 
-			const result = await question.getDataToSave(mockReq, mockResponse);
+			const result = await question.getDataToSave(mockReq);
 
 			const savedDate = new Date(result.answers.event_date as string);
 			assert.strictEqual(savedDate.getUTCHours(), 10);
 			assert.strictEqual(savedDate.getUTCMinutes(), 30);
-
-			assert.strictEqual(mockResponse.answers.event_date, result.answers.event_date);
 		});
 
 		it('should save correctly with PM time', async () => {
@@ -85,7 +66,7 @@ describe('Optional Time Date Time Input', () => {
 				event_date_period: 'pm'
 			};
 
-			const result = await question.getDataToSave(mockReq, mockResponse);
+			const result = await question.getDataToSave(mockReq);
 
 			const savedDate = new Date(result.answers.event_date as string);
 			assert.strictEqual(savedDate.getUTCHours(), 14);
