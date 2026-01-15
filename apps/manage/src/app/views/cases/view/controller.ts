@@ -132,11 +132,20 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 }
 
 /**
- * Combines session data with Db data, spefically needed for ManageList
- * where we might have data from the database alongside session data that
- * hasn't yet been saved.
+ * Combines session data with Db data.
+ * Merges arrays by matching IDs to prevent duplication of updated items.
+ *
+ * Should only combine if we are dealing with arrays on both ends (i.e. a ManageList),
+ * normal data fields should behave as expected and just return the answers from the DB.
+ *
+ * Example:
+ *
+ * - You have added 3 inspectors
+ * - You want to change inspector 2's name
+ * - Previosly: doing so will show UI with the original 3 (as it is pulling the data from DB)
+ * - Now: it will correctly show 3 inspectors with 2's name changed
  */
-function combineSessionAndDbData(res: Response, answers: Record<string, any>) {
+export function combineSessionAndDbData(res: Response, answers: Record<string, any>) {
 	const finalAnswers = { ...answers };
 	if (!res.locals.journeyResponse?.answers) return finalAnswers;
 
@@ -146,14 +155,39 @@ function combineSessionAndDbData(res: Response, answers: Record<string, any>) {
 		const dbValue = answers[key];
 		const sessionValue = sessionAnswers[key];
 
-		// If it is an array of items then we should merge them, otherwise
-		// just replace it. E.g. 3 Inspectors in DB, I add a new one in session
-		// UI should show 4 Inspectors.
 		if (Array.isArray(dbValue) && Array.isArray(sessionValue)) {
-			finalAnswers[key] = [...dbValue, ...sessionValue];
+			finalAnswers[key] = mergeArraysById(dbValue, sessionValue);
 		} else {
 			finalAnswers[key] = sessionValue;
 		}
 	});
 	return finalAnswers;
+}
+
+/**
+ * Helper to merge two arrays
+ *
+ * If a session item has an ID that matches a DB item, it is merged with it to overwrite the different keys.
+ *
+ * If no match is found, it is appended as a new item.
+ *
+ * This is needed to avoid edited data being treated as a new piece of data.
+ */
+export function mergeArraysById(dbArray: any[], sessionArray: any[], idKey = 'id') {
+	const merged = [...dbArray];
+
+	sessionArray.forEach((sessionItem) => {
+		const existingIndex = merged.findIndex(
+			(dbItem) => dbItem[idKey] && sessionItem[idKey] && dbItem[idKey] === sessionItem[idKey]
+		);
+
+		if (existingIndex !== -1) {
+			// If not found (-1) spread the two items together such that the new session data overwrites the key
+			merged[existingIndex] = { ...merged[existingIndex], ...sessionItem };
+		} else {
+			merged.push(sessionItem);
+		}
+	});
+
+	return merged;
 }
