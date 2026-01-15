@@ -205,7 +205,7 @@ describe('Update Case Controller', () => {
 				]
 			};
 
-			const result = mapCasePayload(input);
+			const result = mapCasePayload(input, 'case-123');
 
 			const inspectorsUpdate = (result as any).Inspectors;
 			assert.ok(inspectorsUpdate, 'Should have Inspectors property');
