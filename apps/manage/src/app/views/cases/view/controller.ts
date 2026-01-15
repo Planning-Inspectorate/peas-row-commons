@@ -172,6 +172,9 @@ export function combineSessionAndDbData(res: Response, answers: Record<string, a
  * If no match is found, it is appended as a new item.
  *
  * This is needed to avoid edited data being treated as a new piece of data.
+ *
+ * Without this, the example from combineSessionAndDbData would show 4 inspectors (3 DB inspectors + 1 session inspector),
+ * where the session inspector should have replaced one of the 3 inspectors from DB.
  */
 export function mergeArraysById(dbArray: any[], sessionArray: any[], idKey = 'id') {
 	const merged = [...dbArray];
