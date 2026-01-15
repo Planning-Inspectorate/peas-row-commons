@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { dateQuestion, camelCaseToKebabCase, camelCaseToSentenceCase } from './question-utils.ts';
+import { dateQuestion, camelCaseToKebabCase, camelCaseToSentenceCase, ALL_QUESTIONS } from './question-utils.ts';
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 
 describe('questions utils', () => {
@@ -63,6 +63,29 @@ describe('questions utils', () => {
 
 			assert.ok(kebab);
 			assert.strictEqual(kebab, 'this-is-an-example');
+		});
+	});
+
+	describe('Question Configuration Data', () => {
+		const getDuplicates = (arr: string[]) => arr.filter((item, index) => arr.indexOf(item) !== index);
+
+		it('should have unique URLs for every question', () => {
+			const questions = Object.values(ALL_QUESTIONS);
+
+			const urls = questions.map((q: any) => q.url).filter((url) => typeof url === 'string' && url !== '');
+
+			const duplicates = getDuplicates(urls);
+			const uniqueDuplicates = [...new Set(duplicates)];
+
+			if (uniqueDuplicates.length > 0) {
+				console.error('Collision detected! The following URLs are used more than once:', uniqueDuplicates);
+			}
+
+			assert.strictEqual(
+				duplicates.length,
+				0,
+				`Found ${duplicates.length} duplicate URLs (see console). Routes will clash.`
+			);
 		});
 	});
 });

@@ -1630,3 +1630,16 @@ export const createProcedureQuestions = (suffix: string) => {
 		}
 	};
 };
+
+// All questions, exported for testing.
+export const ALL_QUESTIONS = {
+	...DATE_QUESTIONS,
+	...DOCUMENTS_QUESTIONS,
+	...COSTS_QUESTIONS,
+	...ABEYANCE_QUESTIONS,
+	...CASE_DETAILS_QUESTIONS,
+	...TEAM_QUESTIONS,
+	...OVERVIEW_QUESTIONS,
+	...OUTCOME_QUESTIONS,
+	...createProcedureQuestions('One')
+};
