@@ -1286,7 +1286,7 @@ export const createProcedureQuestions = (suffix: string) => {
 		[`${prefix}PreInquiryNoteSent`]: dateQuestion({
 			fieldName: `${prefix}PreInquiryNoteSentDate`,
 			title: 'Pre inquiry meeting note sent',
-			question: 'When was the pre inquiry meeting management note sent? (optional)',
+			question: 'When was the pre inquiry meeting note sent? (optional)',
 			url: 'pre-inquiry-note-sent',
 			viewData: {
 				extraActionButtons: [
@@ -1472,13 +1472,13 @@ export const createProcedureQuestions = (suffix: string) => {
 			fieldName: `${prefix}PartiesNotifiedOfInquiryDate`,
 			title: 'Date parties must be notified of inquiry',
 			question: 'When must parties be notified of the inquiry? (optional)',
-			url: 'party-notified-date',
+			url: 'party-notified-inquiry-date',
 			viewData: {
 				extraActionButtons: [
 					{
 						text: 'Remove and save',
 						type: 'submit',
-						formaction: 'party-notified-date/remove'
+						formaction: 'party-notified-inquiry-date/remove'
 					}
 				]
 			}
@@ -1487,13 +1487,13 @@ export const createProcedureQuestions = (suffix: string) => {
 			fieldName: `${prefix}PartiesNotifiedOfHearingDate`,
 			title: 'Date parties must be notified of hearing',
 			question: 'When must parties be notified of the hearing? (optional)',
-			url: 'party-notified-date',
+			url: 'party-notified-hearing-date',
 			viewData: {
 				extraActionButtons: [
 					{
 						text: 'Remove and save',
 						type: 'submit',
-						formaction: 'party-notified-date/remove'
+						formaction: 'party-notified-hearing-date/remove'
 					}
 				]
 			}
