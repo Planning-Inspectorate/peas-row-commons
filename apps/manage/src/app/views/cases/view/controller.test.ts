@@ -1,6 +1,11 @@
 import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
-import { buildViewCaseDetails, validateIdFormat, buildGetJourneyMiddleware } from './controller.ts';
+import {
+	buildViewCaseDetails,
+	validateIdFormat,
+	buildGetJourneyMiddleware,
+	combineSessionAndDbData
+} from './controller.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 
 describe('Case Controller', () => {
@@ -124,6 +129,78 @@ describe('Case Controller', () => {
 			assert.strictEqual(next.mock.callCount(), 1);
 			assert.ok(mockRes.locals.journey);
 			assert.strictEqual(mockRes.locals.backLinkUrl, '/case-1');
+		});
+	});
+
+	describe('combineSessionAndDbData & mergeArraysById', () => {
+		const mockRes: any = { locals: { journeyResponse: { answers: {} } } };
+
+		it('should return DB answers unchanged if no session answers exist', () => {
+			const dbData = { name: 'DB Name' };
+			const emptyRes: any = { locals: {} };
+
+			const result = combineSessionAndDbData(emptyRes, dbData);
+			assert.deepStrictEqual(result, dbData);
+		});
+
+		it('should overwrite scalar values (strings/bools) from session', () => {
+			const dbData = { name: 'Old Name', isValid: true };
+			mockRes.locals.journeyResponse.answers = { name: 'New Name' };
+
+			const result = combineSessionAndDbData(mockRes, dbData);
+
+			assert.strictEqual(result.name, 'New Name');
+			assert.strictEqual(result.isValid, true);
+		});
+
+		it('should APPEND new items to arrays if IDs do not match (Create Scenario)', () => {
+			const dbData = {
+				inspectors: [{ id: '1', name: 'Inspector A' }]
+			};
+
+			mockRes.locals.journeyResponse.answers = {
+				inspectors: [{ id: '2', name: 'Inspector B' }]
+			};
+
+			const result = combineSessionAndDbData(mockRes, dbData);
+
+			assert.strictEqual(result.inspectors.length, 2);
+			assert.strictEqual(result.inspectors[0].name, 'Inspector A');
+			assert.strictEqual(result.inspectors[1].name, 'Inspector B');
+		});
+
+		it('should MERGE existing items in arrays if IDs match (Update Scenario)', () => {
+			const dbData = {
+				inspectors: [
+					{ id: '1', name: 'Inspector A', role: 'Lead' },
+					{ id: '2', name: 'Inspector B', role: 'Assistant' }
+				]
+			};
+
+			mockRes.locals.journeyResponse.answers = {
+				inspectors: [{ id: '2', name: 'Inspector B (Updated)' }]
+			};
+
+			const result = combineSessionAndDbData(mockRes, dbData);
+
+			assert.strictEqual(result.inspectors.length, 2, 'Should not increase array length on update');
+
+			const updatedItem = result.inspectors[1];
+			assert.strictEqual(updatedItem.id, '2');
+			assert.strictEqual(updatedItem.name, 'Inspector B (Updated)');
+
+			assert.strictEqual(updatedItem.role, 'Assistant', 'Should merge objects, not replace entirely');
+		});
+
+		it('should handle items without IDs by appending them', () => {
+			const dbData = { tags: [{ label: 'Urgent' }] };
+
+			mockRes.locals.journeyResponse.answers = { tags: [{ label: 'Review' }] };
+
+			const result = combineSessionAndDbData(mockRes, dbData);
+
+			assert.strictEqual(result.tags.length, 2);
+			assert.strictEqual(result.tags[1].label, 'Review');
 		});
 	});
 });
