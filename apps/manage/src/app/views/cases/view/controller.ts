@@ -10,6 +10,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { getQuestions } from './questions.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
+import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 
 export function buildViewCaseDetails(): AsyncRequestHandler {
 	return async (req, res) => {
@@ -25,14 +26,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 
 		const caseUpdated = readSessionData(req, id, 'updated', false);
 
-		// Clear updated flag if present so that we only see it once.
-		clearSessionData(req, id, 'updated');
-
-		const errors = readSessionData(req, id, 'updateErrors', [], 'cases');
-		if (!(typeof errors === 'boolean') && errors.length > 0) {
-			res.locals.errorSummary = errors;
-		}
-		clearSessionData(req, id, 'updateErrors', 'cases');
+		clearAllSessionData(req, res, id);
 
 		const baseUrl = req.baseUrl;
 
@@ -67,7 +61,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 	const groupId = service.authConfig.groups.applicationAccess;
 
 	return async (req, res, next) => {
-		const id = req.params.id;
+		const { id, section, manageListQuestion } = req.params;
 
 		if (!id) {
 			throw new Error('id param required');
@@ -121,9 +115,9 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 		res.locals.journeyResponse = new JourneyResponse(JOURNEY_ID, 'ref', finalAnswers);
 		res.locals.journey = createJourney(questions, res.locals.journeyResponse, req);
 
-		if (req.originalUrl !== req.baseUrl) {
-			// back link goes to details page
-			// only if not on the details page
+		// Set backlink to case details page when on a normal question only
+		// (not a manage list)
+		if (section && !manageListQuestion) {
 			res.locals.backLinkUrl = req.baseUrl;
 		}
 
@@ -193,4 +187,23 @@ export function mergeArraysById(dbArray: any[], sessionArray: any[], idKey = 'id
 	});
 
 	return merged;
+}
+
+/**
+ * Clears the session data for the Journey as well
+ * as for any specifically added session data like
+ * error flags.
+ */
+function clearAllSessionData(req: Request, res: Response, id: string) {
+	// We clear the journey session to avoid ghost data from partially saved answers
+	clearDataFromSession({ req, journeyId: JOURNEY_ID });
+
+	// Clear updated flag if present so that we only see it once.
+	clearSessionData(req, id, 'updated');
+
+	const errors = readSessionData(req, id, 'updateErrors', [], 'cases');
+	if (!(typeof errors === 'boolean') && errors.length > 0) {
+		res.locals.errorSummary = errors;
+	}
+	clearSessionData(req, id, 'updateErrors', 'cases');
 }

@@ -106,7 +106,11 @@ describe('Case Controller', () => {
 		});
 
 		it('should add a back link if on an edit page', async () => {
-			const mockReq: any = { params: { id: 'case-1' }, baseUrl: '/case-1', originalUrl: '/case-1/edit' };
+			const mockReq: any = {
+				params: { id: 'case-1', section: 'section' },
+				baseUrl: '/case-1',
+				originalUrl: '/case-1/edit'
+			};
 			const mockRes: any = { locals: {} };
 			const mockDb = {
 				case: {
