@@ -2,6 +2,58 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { createJourney, JOURNEY_ID } from './journey.ts';
 
+const PROCEDURE_QUESTIONS = [
+	'Type',
+	'Status',
+	'SiteVisitDate',
+	'HearingTargetDate',
+	'PartiesNotifiedOfHearingDate',
+	'InquiryTargetDate',
+	'PartiesNotifiedOfInquiryDate',
+	'ProofsReceivedDate',
+	'StatementsReceivedDate',
+	'CaseOfficerVerificationDate',
+	'InquiryOrConference',
+	'PreInquiryMeetingDate',
+	'PreInquiryFormat',
+	'PreInquiryNoteSent',
+	'CmcDate',
+	'CmcFormat',
+	'CmcVenue',
+	'CmcNoteSentDate',
+	'ConfirmedHearingDate',
+	'HearingFormat',
+	'HearingVenue',
+	'HearingDateNotificationDate',
+	'HearingVenueNotificationDate',
+	'EarliestHearingDate',
+	'HearingLength',
+	'HearingInTarget',
+	'HearingClosedDate',
+	'ConfirmedInquiryDate',
+	'InquiryFormat',
+	'InquiryVenue',
+	'InquiryDateNotificationDate',
+	'InquiryVenueNotificationDate',
+	'EarliestInquiryDate',
+	'InquiryLength',
+	'InquiryFinishedDate',
+	'InquiryInTarget',
+	'InquiryClosedDate',
+	'HearingPreparationTime',
+	'HearingTravelTime',
+	'HearingSittingTime',
+	'HearingReportingTime',
+	'InquiryPreparationTime',
+	'InquiryTravelTime',
+	'InquirySittingTime',
+	'InquiryReportingTime',
+	'InHouseDate',
+	'AdminType',
+	'OfferWrittenRepsDate',
+	'SiteVisitType'
+];
+
 describe('case details journey', () => {
 	it('should error if used with the wrong router structure', () => {
 		const mockQuestions = { reference: {} };
@@ -79,6 +131,11 @@ describe('case details journey', () => {
 				]
 			},
 			{
+				title: 'Team',
+				segment: 'team',
+				questions: ['caseOfficer']
+			},
+			{
 				title: 'Timetable',
 				segment: 'timetable',
 				questions: [
@@ -97,24 +154,19 @@ describe('case details journey', () => {
 				]
 			},
 			{
-				title: 'Documents',
-				segment: 'documents',
-				questions: ['filesLocation']
+				title: 'Procedure 1',
+				segment: 'procedure-one',
+				questions: PROCEDURE_QUESTIONS.map((question) => `procedureOne${question}`)
 			},
 			{
-				title: 'Costs',
-				segment: 'costs',
-				questions: ['rechargeable', 'finalCost', 'feeReceived', 'invoiceSent']
+				title: 'Procedure 2',
+				segment: 'procedure-two',
+				questions: PROCEDURE_QUESTIONS.map((question) => `procedureTwo${question}`)
 			},
 			{
-				title: 'Withdrawal or abeyance',
-				segment: 'withdrawal-abeyance',
-				questions: ['withdrawalDate', 'abeyanceStartDate', 'abeyanceEndDate']
-			},
-			{
-				title: 'Team',
-				segment: 'team',
-				questions: ['caseOfficer']
+				title: 'Procedure 3',
+				segment: 'procedure-three',
+				questions: PROCEDURE_QUESTIONS.map((question) => `procedureThree${question}`)
 			},
 			{
 				title: 'Outcome',
@@ -132,6 +184,21 @@ describe('case details journey', () => {
 					'decisionPublishedDate',
 					'isFencingPermanent'
 				]
+			},
+			{
+				title: 'Documents',
+				segment: 'documents',
+				questions: ['filesLocation']
+			},
+			{
+				title: 'Withdrawal or abeyance',
+				segment: 'withdrawal-abeyance',
+				questions: ['withdrawalDate', 'abeyanceStartDate', 'abeyanceEndDate']
+			},
+			{
+				title: 'Costs',
+				segment: 'costs',
+				questions: ['rechargeable', 'finalCost', 'feeReceived', 'invoiceSent']
 			}
 		];
 

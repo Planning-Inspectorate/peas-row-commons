@@ -42,6 +42,7 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.location)
 				.addQuestion(questions.authority)
 				.addQuestion(questions.priority),
+			new Section('Team', 'team').addQuestion(questions.caseOfficer),
 			new Section('Timetable', 'timetable')
 				.addQuestion(questions.receivedDate)
 				.addQuestion(questions.startDate)
@@ -55,17 +56,7 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.proposalLetterDate)
 				.addQuestion(questions.expiryDate)
 				.addQuestion(questions.partiesDecisionNotificationDeadlineDate),
-			new Section('Documents', 'documents').addQuestion(questions.filesLocation),
-			new Section('Costs', 'costs')
-				.addQuestion(questions.rechargeable)
-				.addQuestion(questions.finalCost)
-				.addQuestion(questions.feeReceived)
-				.addQuestion(questions.invoiceSent),
-			new Section('Withdrawal or abeyance', 'withdrawal-abeyance')
-				.addQuestion(questions.withdrawalDate)
-				.addQuestion(questions.abeyanceStartDate)
-				.addQuestion(questions.abeyanceEndDate),
-			new Section('Team', 'team').addQuestion(questions.caseOfficer),
+			...procedureSections,
 			new Section('Outcome', 'outcome')
 				.addQuestion(questions.decisionType)
 				.addQuestion(questions.decisionMaker)
@@ -78,7 +69,16 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.sealedOrderReturnedDate)
 				.addQuestion(questions.decisionPublishedDate)
 				.addQuestion(questions.isFencingPermanent),
-			...procedureSections
+			new Section('Documents', 'documents').addQuestion(questions.filesLocation),
+			new Section('Withdrawal or abeyance', 'withdrawal-abeyance')
+				.addQuestion(questions.withdrawalDate)
+				.addQuestion(questions.abeyanceStartDate)
+				.addQuestion(questions.abeyanceEndDate),
+			new Section('Costs', 'costs')
+				.addQuestion(questions.rechargeable)
+				.addQuestion(questions.finalCost)
+				.addQuestion(questions.feeReceived)
+				.addQuestion(questions.invoiceSent)
 		],
 		taskListUrl: '',
 		journeyTemplate: 'views/layouts/forms-question.njk',
