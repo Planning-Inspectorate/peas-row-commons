@@ -8,6 +8,7 @@ import { getPageData, getPaginationParams } from '../../../pagination/pagination
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
+import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 
 export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
@@ -121,7 +122,7 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			reference: caseRow?.reference,
 			folderName: currentFolder?.displayName,
 			backLinkUrl: parentFolder
-				? baseFoldersUrl + `/${parentFolder.id}/${encodeURIComponent(parentFolder.displayName)}`
+				? baseFoldersUrl + `/${parentFolder.id}/${stringToKebab(parentFolder.displayName)}`
 				: baseFoldersUrl,
 			baseFoldersUrl: baseFoldersUrl, // Used for creating the url of the sub-folders
 			subFolders: subFoldersViewModel,

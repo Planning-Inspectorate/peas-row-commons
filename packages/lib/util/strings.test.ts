@@ -26,6 +26,12 @@ describe('String Utils', () => {
 		it('should handle mixed inputs', () => {
 			assert.strictEqual(stringToKebab('Mixed_Case String'), 'mixed-case-string');
 		});
+
+		it('should handle unique characters', () => {
+			assert.strictEqual(stringToKebab('Weird / CHARS () (too)'), 'weird-chars-too');
+
+			assert.strictEqual(stringToKebab('MORE%% Unique &$& /// CHARS'), 'more-unique-chars');
+		});
 	});
 
 	describe('checkAnswerlength', () => {
