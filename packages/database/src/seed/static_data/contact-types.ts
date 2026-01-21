@@ -1,8 +1,32 @@
 import { CONTACT_TYPE_ID } from './ids/index.ts';
 
 export const CONTACT_TYPES = [
-	{
-		id: CONTACT_TYPE_ID.OBJECTOR,
-		displayName: 'Objector'
-	}
+	{ id: CONTACT_TYPE_ID.ACQUIRING_AUTHORITY, displayName: 'Acquiring authority' },
+	{ id: CONTACT_TYPE_ID.AGENT, displayName: 'Agent' },
+	{ id: CONTACT_TYPE_ID.CASE_OFFICER, displayName: 'Case Officer' },
+	{ id: CONTACT_TYPE_ID.COMMONS_REGISTRATION_AUTHORITY, displayName: 'Commons registration authority' },
+	{ id: CONTACT_TYPE_ID.CONSULTEE, displayName: 'Consultee' },
+	{ id: CONTACT_TYPE_ID.GOVERNMENT_AGENCY, displayName: 'Government Agency' },
+	{ id: CONTACT_TYPE_ID.INTERESTED_OWNER, displayName: 'Interested Owner' },
+	{ id: CONTACT_TYPE_ID.INTERESTED_PERSON_PARTY, displayName: 'Interested Person/Party' },
+	{ id: CONTACT_TYPE_ID.LANDOWNER, displayName: 'Landowner' },
+	{ id: CONTACT_TYPE_ID.LANDOWNER_AGENT, displayName: 'Landowner Agent' },
+	{ id: CONTACT_TYPE_ID.LOCAL_PLANNING_AUTHORITY, displayName: 'Local planning authority' },
+	{ id: CONTACT_TYPE_ID.LPA_AGENT, displayName: 'LPA Agent' },
+	{ id: CONTACT_TYPE_ID.LPA_CONTACT, displayName: 'LPA Contact' },
+	{ id: CONTACT_TYPE_ID.MEMBER_OF_PARLIAMENT, displayName: 'Member of Parliament' },
+	{ id: CONTACT_TYPE_ID.NATURAL_ENGLAND, displayName: 'Natural England' },
+	{ id: CONTACT_TYPE_ID.NOTIFIED_PARTY, displayName: 'Notified party' },
+	{ id: CONTACT_TYPE_ID.OBJECTOR, displayName: 'Objector' },
+	{ id: CONTACT_TYPE_ID.ORDER_MAKING_AUTHORITY, displayName: 'Order Making Authority' },
+	{ id: CONTACT_TYPE_ID.ORDER_MAKING_AUTHORITY_CONTACT, displayName: 'Order Making Authority Contact' },
+	{ id: CONTACT_TYPE_ID.OTHER_PARTY, displayName: 'Other Party' },
+	{ id: CONTACT_TYPE_ID.POTENTIAL_CLAIMANT, displayName: 'Potential claimant' },
+	{ id: CONTACT_TYPE_ID.PROGRAMME_OFFICER, displayName: 'Programme Officer' },
+	{ id: CONTACT_TYPE_ID.REPRESENTER, displayName: 'Representer' },
+	{ id: CONTACT_TYPE_ID.REPRESENTATIVE, displayName: 'Representative' },
+	{ id: CONTACT_TYPE_ID.SECRETARY_OF_STATE, displayName: 'Secretary of State' },
+	{ id: CONTACT_TYPE_ID.SPONSOR, displayName: 'Sponsor' },
+	{ id: CONTACT_TYPE_ID.TENANT, displayName: 'Tenant' },
+	{ id: CONTACT_TYPE_ID.THIRD_PARTY, displayName: 'Third Party' }
 ];
