@@ -21,10 +21,11 @@ import {
 	INQUIRY_OR_CONFERENCES,
 	ADMIN_PROCEDURES,
 	SITE_VISITS,
-	OBJECTOR_STATUSES
+	OBJECTOR_STATUSES,
+	CONTACT_TYPES
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
-import type { CaseOfficer } from './types.ts';
+import type { CaseOfficer, PersonConfig } from './types.ts';
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/outcome.ts';
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
@@ -1666,6 +1667,88 @@ export const createProcedureQuestions = (suffix: string) => {
 	};
 };
 
+const createPersonQuestions = ({ section, db, url, label }: PersonConfig) => {
+	const labelLower = label.toLowerCase();
+
+	return {
+		[`${section}Name`]: {
+			type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
+			title: label,
+			question: `Who is the ${labelLower}?`,
+			fieldName: `${section}Name`,
+			url: `${url}-name`,
+			hint: 'Enter the name of the individual, the organisation, or both.',
+			inputFields: [
+				{ fieldName: `${db}FirstName`, label: 'First name' },
+				{ fieldName: `${db}LastName`, label: 'Last name' },
+				{ fieldName: `${db}OrgName`, label: `${label} company or organisation name` }
+			],
+			validators: [
+				new MultiFieldInputValidator({
+					fields: [
+						{
+							fieldName: `${db}FirstName`,
+							required: false,
+							errorMessage: `Enter ${labelLower} first name`,
+							maxLength: { maxLength: 250, maxLengthMessage: `${label} first name must be less than 250 characters` }
+						},
+						{
+							fieldName: `${db}LastName`,
+							required: false,
+							errorMessage: `Enter ${labelLower} last name`,
+							maxLength: { maxLength: 250, maxLengthMessage: `${label} last name must be less than 250 characters` }
+						},
+						{
+							fieldName: `${db}OrgName`,
+							required: false,
+							maxLength: {
+								maxLength: 250,
+								maxLengthMessage: 'Company or organisation name must be less than 250 characters'
+							}
+						}
+					]
+				})
+			]
+		},
+		[`${section}Address`]: {
+			type: COMPONENT_TYPES.ADDRESS,
+			title: `${label} address details`,
+			question: `${label} address details`,
+			hint: 'Optional',
+			fieldName: `${db}Address`,
+			url: `${url}-address`,
+			validators: [new AddressValidator()]
+		},
+		[`${section}ContactDetails`]: {
+			type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
+			title: `${label === 'Contact' ? 'Contact details' : 'Objector contact details'}`,
+			question: `${label === 'Contact' ? 'What are the contact details?' : 'Objector contact details'} (optional)`,
+			fieldName: `${section}Details`,
+			url: `${url}-contact-details`,
+			inputFields: [
+				{ fieldName: `${db}Email`, label: 'Email address' },
+				{ fieldName: `${db}TelephoneNumber`, label: 'Phone number' }
+			],
+			validators: [
+				new MultiFieldInputValidator({
+					fields: [
+						{
+							fieldName: `${db}Email`,
+							required: false,
+							maxLength: { maxLength: 250, maxLengthMessage: `${label} email must be less than 250 characters` }
+						},
+						{
+							fieldName: `${db}TelephoneNumber`,
+							required: false,
+							maxLength: { maxLength: 15, maxLengthMessage: `${label} phone number must be less than 15 characters` }
+						}
+					]
+				})
+			]
+		}
+	};
+};
+
 export const KEY_CONTACTS_QUESTIONS = {
 	objectorDetails: {
 		type: COMPONENT_TYPES.MANAGE_LIST,
@@ -1674,108 +1757,12 @@ export const KEY_CONTACTS_QUESTIONS = {
 		fieldName: 'objectorDetails',
 		url: 'objector-details'
 	},
-	objectorName: {
-		type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
-		title: 'Objector',
-		question: 'Who is the objector?',
-		fieldName: 'objectorName',
-		url: 'objector-name',
-		hint: 'Enter the name of the individual, the organisation, or both.',
-		inputFields: [
-			{
-				fieldName: 'objectorFirstName',
-				label: 'First name'
-			},
-			{
-				fieldName: 'objectorLastName',
-				label: 'Last name'
-			},
-			{
-				fieldName: 'objectorOrgName',
-				label: 'Objector company or organisation name'
-			}
-		],
-		validators: [
-			new MultiFieldInputValidator({
-				fields: [
-					{
-						fieldName: 'objectorFirstName',
-						required: false,
-						errorMessage: 'Enter objector first name',
-						maxLength: {
-							maxLength: 250,
-							maxLengthMessage: 'Objector first name must be less than 250 characters'
-						}
-					},
-					{
-						fieldName: 'objectorLastName',
-						required: false,
-						errorMessage: 'Enter objector last name',
-						maxLength: {
-							maxLength: 250,
-							maxLengthMessage: 'Objector last name must be less than 250 characters'
-						}
-					},
-					{
-						fieldName: 'objectorOrgName',
-						required: false,
-						maxLength: {
-							maxLength: 250,
-							maxLengthMessage: 'Company or organisation name must be less than 250 characters'
-						}
-					}
-				]
-			})
-		]
-	},
-	objectorAddress: {
-		type: COMPONENT_TYPES.ADDRESS,
-		title: 'Objector address details',
-		question: 'Objector address details',
-		hint: 'Optional',
-		fieldName: 'objectorAddress',
-		url: 'objector-address',
-		validators: [new AddressValidator()]
-	},
-	objectorContactDetails: {
-		type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
-		title: 'Objector contact details',
-		question: 'Objector contact details (optional)',
-		fieldName: 'objectorContactDetails',
-		url: 'objector-contact-details',
-		inputFields: [
-			{
-				fieldName: 'objectorEmail',
-				label: 'Email address'
-			},
-			{
-				fieldName: 'objectorTelephoneNumber',
-				label: 'Phone number'
-			}
-		],
-		validators: [
-			new MultiFieldInputValidator({
-				fields: [
-					{
-						fieldName: 'objectorEmail',
-						required: false,
-						maxLength: {
-							maxLength: 250,
-							maxLengthMessage: 'Objector email must be less than 250 characters'
-						}
-					},
-					{
-						fieldName: 'objectorTelephoneNumber',
-						required: false,
-						maxLength: {
-							maxLength: 15,
-							maxLengthMessage: 'Objector phone number must be less than 15 characters'
-						}
-					}
-				]
-			})
-		]
-	},
+	...createPersonQuestions({
+		section: 'objector',
+		db: 'objector',
+		url: 'objector',
+		label: 'Objector'
+	}),
 	objectorStatus: {
 		type: COMPONENT_TYPES.RADIO,
 		title: 'Objector status',
@@ -1784,7 +1771,32 @@ export const KEY_CONTACTS_QUESTIONS = {
 		url: 'objector-status',
 		validators: [new RequiredValidator("Select the status of the objector, or 'Not applicable'")],
 		options: OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER
-	}
+	},
+	contactDetails: {
+		type: COMPONENT_TYPES.MANAGE_LIST,
+		title: 'Contact(s)',
+		question: 'Check contact details',
+		fieldName: 'contactDetails',
+		url: 'contact-details'
+	},
+	contactType: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Contact type',
+		question: 'What is your contact type?',
+		fieldName: 'contactTypeId',
+		url: 'contact-type',
+		validators: [new RequiredValidator('Select contact type')],
+		options: CONTACT_TYPES.filter((type) => type.id !== 'objector').map((type) => ({
+			text: type.displayName,
+			value: type.id
+		}))
+	},
+	...createPersonQuestions({
+		section: 'contact',
+		db: 'contact',
+		url: 'contact',
+		label: 'Contact'
+	})
 };
 
 // All questions, exported for testing.

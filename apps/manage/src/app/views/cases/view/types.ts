@@ -41,3 +41,10 @@ export type CaseOfficer = {
 	id: string;
 	displayName: string;
 };
+
+export interface PersonConfig {
+	section: string;
+	db: string;
+	url: string;
+	label: string;
+}
