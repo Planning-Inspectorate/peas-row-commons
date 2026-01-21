@@ -1,0 +1,27 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- CreateTable
+CREATE TABLE [dbo].[RelatedCase] (
+    [id] UNIQUEIDENTIFIER NOT NULL CONSTRAINT [RelatedCase_id_df] DEFAULT newid(),
+    [reference] NVARCHAR(1000),
+    [caseId] UNIQUEIDENTIFIER NOT NULL,
+    CONSTRAINT [RelatedCase_pkey] PRIMARY KEY CLUSTERED ([id])
+);
+
+-- AddForeignKey
+ALTER TABLE [dbo].[RelatedCase] ADD CONSTRAINT [RelatedCase_caseId_fkey] FOREIGN KEY ([caseId]) REFERENCES [dbo].[Case]([id]) ON DELETE NO ACTION ON UPDATE CASCADE;
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH

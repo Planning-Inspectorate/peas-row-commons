@@ -30,7 +30,8 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.act)
 				.addQuestion(questions.consentSought)
 				.addQuestion(questions.inspectorBand)
-				.addQuestion(questions.primaryProcedure),
+				.addQuestion(questions.primaryProcedure)
+				.addQuestion(questions.relatedCaseDetails, new ManageListSection().addQuestion(questions.addRelatedCase)),
 			new Section('Case details', 'case-details')
 				.addQuestion(questions.reference)
 				.addQuestion(questions.externalReference)

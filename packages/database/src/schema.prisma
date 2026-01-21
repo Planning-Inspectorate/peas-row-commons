@@ -84,6 +84,8 @@ model Case {
   Inspectors               Inspector[]
   /// Contacts linked to a case
   Contacts                 Contact[]
+  /// Related Cases to this case
+  RelatedCases             RelatedCase[]
 }
 
 model CaseworkArea {
@@ -529,4 +531,11 @@ model ObjectorStatus {
   id          String    @id
   displayName String?
   Contacts    Contact[]
+}
+
+model RelatedCase {
+  id        String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  reference String?
+  caseId    String  @db.UniqueIdentifier
+  Case      Case    @relation(fields: [caseId], references: [id])
 }

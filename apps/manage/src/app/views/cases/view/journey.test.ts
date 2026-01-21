@@ -111,7 +111,15 @@ describe('case details journey', () => {
 			{
 				title: 'Overview',
 				segment: 'overview',
-				questions: ['caseType', 'caseSubtype', 'act', 'consentSought', 'inspectorBand', 'primaryProcedure']
+				questions: [
+					'caseType',
+					'caseSubtype',
+					'act',
+					'consentSought',
+					'inspectorBand',
+					'primaryProcedure',
+					'relatedCaseDetails'
+				]
 			},
 			{
 				title: 'Case details',
