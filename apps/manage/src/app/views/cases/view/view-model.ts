@@ -88,6 +88,13 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		delete mergedData.Authority;
 	}
 
+	if (caseRow.RelatedCases?.length) {
+		mergedData.relatedCaseDetails = caseRow.RelatedCases.map((relatedCase) => ({
+			relatedCaseReference: relatedCase.reference
+		}));
+		delete mergedData.RelatedCases;
+	}
+
 	const mappedProcedures = mapProcedures(mergedData.Procedures || []);
 	delete mergedData.Procedures;
 

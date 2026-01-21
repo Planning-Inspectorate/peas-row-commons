@@ -163,12 +163,31 @@ function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Pri
 	handleAddress(flatData, prismaPayload);
 	handleInspectors(flatData, prismaPayload);
 	handleContacts(flatData, prismaPayload, CONTACT_MAPPINGS);
+	handleRelatedCases(flatData, prismaPayload);
 
 	['One', 'Two', 'Three'].forEach((suffix) => {
 		handleProcedureGeneric(caseId, flatData, prismaPayload, suffix);
 	});
 
 	handleBooleans(flatData);
+}
+
+/**
+ * Handles the deletion and creation of related cases
+ */
+function handleRelatedCases(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (!Object.hasOwn(flatData, 'relatedCaseDetails')) return;
+
+	const newRelatedCases = flatData.relatedCaseDetails.map((relatedCase: any) => ({
+		reference: relatedCase.relatedCaseReference
+	}));
+
+	prismaPayload.RelatedCases = {
+		deleteMany: {},
+		create: newRelatedCases
+	};
+
+	delete flatData.relatedCaseDetails;
 }
 
 function handleBooleans(flatData: Record<string, any>) {

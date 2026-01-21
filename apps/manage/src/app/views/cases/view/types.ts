@@ -30,7 +30,8 @@ export const caseListSelect = {
 		include: {
 			Address: true
 		}
-	}
+	},
+	RelatedCases: true
 } satisfies Prisma.CaseSelect;
 
 export type CaseListFields = Prisma.CaseGetPayload<{ select: typeof caseListSelect }>;

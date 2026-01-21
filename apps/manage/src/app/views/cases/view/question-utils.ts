@@ -645,6 +645,34 @@ export const OVERVIEW_QUESTIONS = {
 				}
 			]
 		}
+	},
+	relatedCaseDetails: {
+		type: COMPONENT_TYPES.MANAGE_LIST,
+		title: 'Related case(s)',
+		question: 'Check related case details',
+		fieldName: 'relatedCaseDetails',
+		url: 'check-related-cases',
+		showAnswersInSummary: true
+	},
+	addRelatedCase: {
+		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // Multi because we want an H1 header and an inline question too.
+		title: 'Add related case details',
+		question: 'Add related case details',
+		fieldName: 'addRelatedCase',
+		url: 'add-related-cases',
+		inputFields: [{ fieldName: 'relatedCaseReference', label: 'Related case reference' }],
+		validators: [
+			new MultiFieldInputValidator({
+				fields: [
+					{
+						fieldName: 'relatedCaseReference',
+						required: true,
+						errorMessage: 'Enter related case reference',
+						maxLength: { maxLength: 250, maxLengthMessage: 'Related case must be 250 characters or less' }
+					}
+				]
+			})
+		]
 	}
 };
 

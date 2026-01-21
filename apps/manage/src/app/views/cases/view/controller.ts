@@ -94,7 +94,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 					include: {
 						Address: true
 					}
-				}
+				},
+				RelatedCases: true
 			}
 		});
 
