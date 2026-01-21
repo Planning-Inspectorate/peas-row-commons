@@ -156,7 +156,7 @@ describe('case details journey', () => {
 			{
 				title: 'Key contacts',
 				segment: 'key-contacts',
-				questions: ['objectorDetails']
+				questions: ['objectorDetails', 'contactDetails']
 			},
 			{
 				title: 'Procedure 1',
