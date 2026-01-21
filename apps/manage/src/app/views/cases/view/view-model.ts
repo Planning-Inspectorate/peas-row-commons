@@ -7,7 +7,8 @@ import type { CaseListFields, CaseNoteFields, CaseOfficer } from './types.ts';
 import { formatInTimeZone } from 'date-fns-tz';
 import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
 import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address.ts';
-import { mapObjectors } from '@pins/peas-row-commons-lib/util/contact.ts';
+import { mapContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
 
 function formatValue(value: any) {
 	if (typeof value === 'boolean') {
@@ -101,7 +102,13 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 
 	const mappedNotes = mapNotes(caseRow.Notes || [], groupMembers);
 
-	const mappedObjectors = mapObjectors(caseRow.Contacts || []);
+	const objectors = (caseRow.Contacts || []).filter((contact) => contact.contactTypeId === CONTACT_TYPE_ID.OBJECTOR);
+	const genericContacts = (caseRow.Contacts || []).filter(
+		(contact) => contact.contactTypeId !== CONTACT_TYPE_ID.OBJECTOR
+	);
+
+	const mappedObjectors = mapContacts(objectors, 'objector');
+	const mappedContacts = mapContacts(genericContacts, 'contact');
 
 	return {
 		...sanitisedData,
@@ -111,7 +118,8 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		receivedDateDisplay: formatInTimeZone(caseRow.receivedDate, 'Europe/London', 'dd MMM yyyy'),
 		receivedDateSortable: new Date(caseRow.receivedDate)?.getTime(),
 		inspectorDetails: caseRow.Inspectors,
-		objectorDetails: mappedObjectors
+		objectorDetails: mappedObjectors,
+		contactDetails: mappedContacts
 	};
 }
 
