@@ -1,10 +1,10 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { mapObjectors } from './contact.ts';
+import { mapContacts } from './contact.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
 
-describe('mapObjectors', () => {
-	it('should filter objectors and map properties correctly', () => {
+describe('mapContacts', () => {
+	it('should map properties correctly', () => {
 		const mockContacts = [
 			{
 				id: 'obj-123',
@@ -16,18 +16,10 @@ describe('mapObjectors', () => {
 				email: 'john@example.com',
 				objectorStatusId: 'status-valid',
 				Address: { id: 'addr-1', line1: '1 High St' }
-			},
-			{
-				id: 'agent-456',
-				contactTypeId: 'agent',
-				firstName: 'Alice',
-				Address: null
 			}
-		];
+		] as any;
 
-		const result = mapObjectors(mockContacts);
-
-		assert.strictEqual(result.length, 1);
+		const result = mapContacts(mockContacts, 'objector');
 
 		const mapped = result[0];
 		assert.strictEqual(mapped.id, 'obj-123');
@@ -36,16 +28,5 @@ describe('mapObjectors', () => {
 		assert.strictEqual(mapped.objectorOrgName, 'Smith Co');
 
 		assert.ok(mapped.objectorAddress);
-	});
-
-	it('should return an empty array if no objectors exist', () => {
-		const mockContacts = [
-			{ id: '1', contactTypeId: 'agent', Address: null },
-			{ id: '2', contactTypeId: 'lpa', Address: null }
-		];
-
-		const result = mapObjectors(mockContacts);
-
-		assert.deepStrictEqual(result, []);
 	});
 });
