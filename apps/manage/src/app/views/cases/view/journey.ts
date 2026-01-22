@@ -74,10 +74,10 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(
 					questions.contactDetails,
 					new ManageListSection()
+						.addQuestion(questions.contactType)
 						.addQuestion(questions.contactName)
 						.addQuestion(questions.contactAddress)
 						.addQuestion(questions.contactContactDetails)
-						.addQuestion(questions.contactType)
 				),
 			...procedureSections,
 			new Section('Outcome', 'outcome')
