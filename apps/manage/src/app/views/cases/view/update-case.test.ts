@@ -218,5 +218,24 @@ describe('Update Case Controller', () => {
 
 			assert.strictEqual((result as any).inspectorDetails, undefined);
 		});
+
+		it('should transform relatedCaseDetails into RelatedCases deleteMany/create payload', () => {
+			const input = {
+				relatedCaseDetails: [{ relatedCaseReference: 'REF-123' }, { relatedCaseReference: 'REF-456' }]
+			};
+
+			const result = mapCasePayload(input, 'case-123');
+
+			const relatedCasesUpdate = (result as any).RelatedCases;
+			assert.ok(relatedCasesUpdate, 'Should have RelatedCases property');
+
+			assert.deepStrictEqual(relatedCasesUpdate.deleteMany, {});
+			assert.strictEqual(relatedCasesUpdate.create.length, 2);
+
+			assert.strictEqual(relatedCasesUpdate.create[0].reference, 'REF-123');
+			assert.strictEqual(relatedCasesUpdate.create[1].reference, 'REF-456');
+
+			assert.strictEqual((result as any).relatedCaseDetails, undefined);
+		});
 	});
 });

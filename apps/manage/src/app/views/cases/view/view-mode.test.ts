@@ -152,6 +152,20 @@ describe('view-model', () => {
 
 			assert.strictEqual(result.inspectorDetails, mockInspectors);
 		});
+
+		it('should pass through Related Case data to relatedCaseDetails', () => {
+			const mockRelations = [{ reference: 'DRO/123' }];
+			const mockOutcome = [{ relatedCaseReference: 'DRO/123' }];
+			const input = {
+				id: '123',
+				receivedDate: new Date(),
+				RelatedCases: mockRelations
+			};
+
+			const result: any = caseToViewModel(input as any, groupMembers);
+
+			assert.deepStrictEqual(result.relatedCaseDetails, mockOutcome);
+		});
 	});
 
 	describe('mapNotes', () => {
