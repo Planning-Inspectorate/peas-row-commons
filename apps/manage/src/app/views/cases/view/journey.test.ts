@@ -118,7 +118,8 @@ describe('case details journey', () => {
 					'consentSought',
 					'inspectorBand',
 					'primaryProcedure',
-					'relatedCaseDetails'
+					'relatedCaseDetails',
+					'linkedCaseDetails'
 				]
 			},
 			{

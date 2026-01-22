@@ -673,6 +673,42 @@ export const OVERVIEW_QUESTIONS = {
 				]
 			})
 		]
+	},
+	linkedCaseDetails: {
+		type: COMPONENT_TYPES.MANAGE_LIST,
+		title: 'Linked case(s)',
+		question: 'Check linked case details',
+		fieldName: 'linkedCaseDetails',
+		url: 'check-linked-cases',
+		showAnswersInSummary: true
+	},
+	linkedCaseReference: {
+		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // Multi because we want an H1 header and an inline question too.
+		title: 'Add linked case details',
+		question: 'Add linked case details',
+		fieldName: 'addlinkedCase',
+		url: 'linked-case-reference',
+		inputFields: [{ fieldName: 'linkedCaseReference', label: 'Linked case reference' }],
+		validators: [
+			new MultiFieldInputValidator({
+				fields: [
+					{
+						fieldName: 'linkedCaseReference',
+						required: true,
+						errorMessage: 'Enter linked case reference',
+						maxLength: { maxLength: 250, maxLengthMessage: 'Linked case must be 250 characters or less' }
+					}
+				]
+			})
+		]
+	},
+	isLead: {
+		type: COMPONENT_TYPES.BOOLEAN,
+		title: 'Is this the lead case?',
+		question: 'Is this the lead case?',
+		fieldName: 'linkedCaseIsLead',
+		url: 'is-lead',
+		validators: [new RequiredValidator('Select yes if this is the lead case')]
 	}
 };
 

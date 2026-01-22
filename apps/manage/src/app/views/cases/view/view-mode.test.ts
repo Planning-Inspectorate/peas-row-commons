@@ -154,8 +154,8 @@ describe('view-model', () => {
 		});
 
 		it('should pass through Related Case data to relatedCaseDetails', () => {
-			const mockRelations = [{ reference: 'DRO/123' }];
-			const mockOutcome = [{ relatedCaseReference: 'DRO/123' }];
+			const mockRelations = [{ reference: 'DRO/123', id: 1 }];
+			const mockOutcome = [{ relatedCaseReference: 'DRO/123', id: 1 }];
 			const input = {
 				id: '123',
 				receivedDate: new Date(),
@@ -165,6 +165,20 @@ describe('view-model', () => {
 			const result: any = caseToViewModel(input as any, groupMembers);
 
 			assert.deepStrictEqual(result.relatedCaseDetails, mockOutcome);
+		});
+
+		it('should pass through Linked Case data to linkedCaseDetails', () => {
+			const mockRelations = [{ reference: 'DRO/123', isLead: true, id: 1 }];
+			const mockOutcome = [{ linkedCaseReference: 'DRO/123', linkedCaseIsLead: 'yes', id: 1 }];
+			const input = {
+				id: '123',
+				receivedDate: new Date(),
+				LinkedCases: mockRelations
+			};
+
+			const result: any = caseToViewModel(input as any, groupMembers);
+
+			assert.deepStrictEqual(result.linkedCaseDetails, mockOutcome);
 		});
 	});
 

@@ -90,9 +90,19 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 
 	if (caseRow.RelatedCases?.length) {
 		mergedData.relatedCaseDetails = caseRow.RelatedCases.map((relatedCase) => ({
+			id: relatedCase.id,
 			relatedCaseReference: relatedCase.reference
 		}));
 		delete mergedData.RelatedCases;
+	}
+
+	if (caseRow.LinkedCases?.length) {
+		mergedData.linkedCaseDetails = caseRow.LinkedCases.map((linkedCase) => ({
+			id: linkedCase.id,
+			linkedCaseReference: linkedCase.reference,
+			linkedCaseIsLead: formatValue(linkedCase.isLead)
+		}));
+		delete mergedData.LinkedCases;
 	}
 
 	const mappedProcedures = mapProcedures(mergedData.Procedures || []);
