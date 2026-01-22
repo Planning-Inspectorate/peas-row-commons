@@ -86,6 +86,8 @@ model Case {
   Contacts                 Contact[]
   /// Related Cases to this case
   RelatedCases             RelatedCase[]
+  /// Cases linked to this case
+  LinkedCases              LinkedCase[]
 }
 
 model CaseworkArea {
@@ -536,6 +538,14 @@ model ObjectorStatus {
 model RelatedCase {
   id        String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   reference String?
+  caseId    String  @db.UniqueIdentifier
+  Case      Case    @relation(fields: [caseId], references: [id])
+}
+
+model LinkedCase {
+  id        String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  reference String?
+  isLead    Boolean @default(false)
   caseId    String  @db.UniqueIdentifier
   Case      Case    @relation(fields: [caseId], references: [id])
 }

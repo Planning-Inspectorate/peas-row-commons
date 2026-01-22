@@ -31,7 +31,8 @@ export const caseListSelect = {
 			Address: true
 		}
 	},
-	RelatedCases: true
+	RelatedCases: true,
+	LinkedCases: true
 } satisfies Prisma.CaseSelect;
 
 export type CaseListFields = Prisma.CaseGetPayload<{ select: typeof caseListSelect }>;

@@ -237,5 +237,30 @@ describe('Update Case Controller', () => {
 
 			assert.strictEqual((result as any).relatedCaseDetails, undefined);
 		});
+
+		it('should transform linkedCaseDetails into RelatedCases deleteMany/create payload', () => {
+			const input = {
+				linkedCaseDetails: [
+					{ linkedCaseReference: 'REF-123', linkedCaseIsLead: 'yes' },
+					{ linkedCaseReference: 'REF-456', linkedCaseIsLead: 'yes' }
+				]
+			};
+
+			const result = mapCasePayload(input, 'case-123');
+
+			const linkedCaseUpdate = (result as any).LinkedCases;
+			assert.ok(linkedCaseUpdate, 'Should have LinkedCases property');
+
+			assert.deepStrictEqual(linkedCaseUpdate.deleteMany, {});
+			assert.strictEqual(linkedCaseUpdate.create.length, 2);
+
+			assert.strictEqual(linkedCaseUpdate.create[0].reference, 'REF-123');
+			assert.strictEqual(linkedCaseUpdate.create[1].reference, 'REF-456');
+
+			assert.strictEqual(linkedCaseUpdate.create[0].isLead, true);
+			assert.strictEqual(linkedCaseUpdate.create[1].isLead, true);
+
+			assert.strictEqual((result as any).linkedCaseDetails, undefined);
+		});
 	});
 });
