@@ -1,5 +1,12 @@
 import ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
-import type { PreppedQuestion, QuestionViewModel, TableManageListQuestionParameters } from './types.ts';
+import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
+import type {
+	PreppedQuestion,
+	QuestionViewModel,
+	TableHeadCell,
+	TableManageListQuestionParameters,
+	TableRowCell
+} from './types.ts';
 
 export default class TableManageListQuestion extends ManageListQuestion {
 	section: Record<string, any> | undefined;
@@ -14,13 +21,13 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	 * Override to prepare table data (heads and rows)
 	 */
 	override addCustomDataToViewModel(viewModel: QuestionViewModel): void {
-		super.addCustomDataToViewModel(viewModel);
-
-		this.addButtonText(viewModel);
-
 		if (!this.section) {
 			throw new Error('Section not set for TableManageListQuestion');
 		}
+
+		super.addCustomDataToViewModel(viewModel);
+
+		this.addButtonText(viewModel);
 
 		const headers = this.createHeaders();
 		const rows = this.createRows(viewModel);
@@ -29,7 +36,14 @@ export default class TableManageListQuestion extends ManageListQuestion {
 		viewModel.question.tableRows = rows;
 	}
 
-	addButtonText(viewModel: QuestionViewModel) {
+	/**
+	 * Adds the text for the save, cancel and add buttons.
+	 *
+	 * At some point we may want to move this logic into the
+	 * instantiation of the classes so that each one can have
+	 * its own button text.
+	 */
+	addButtonText(viewModel: QuestionViewModel): void {
 		viewModel.continueButtonText = 'Save and continue';
 		viewModel.addMoreButtonText = 'Add details';
 		viewModel.cancelButtonText = 'Cancel';
@@ -38,10 +52,10 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	/**
 	 * Creates the table rows
 	 */
-	createRows(viewModel: QuestionViewModel) {
-		const answers = (viewModel.question.value as Array<Record<string, any>>) || [];
+	createRows(viewModel: QuestionViewModel): TableRowCell[][] {
+		const answers = viewModel.question.value || [];
 
-		const rows = answers.map((item) => {
+		const rows = answers.map((item: Record<string, any>) => {
 			return this.createRow(viewModel, item);
 		});
 
@@ -51,7 +65,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	/**
 	 * Creates the table row based on the questions asked
 	 */
-	createRow(viewModel: QuestionViewModel, item: Record<string, any>) {
+	createRow(viewModel: QuestionViewModel, item: Record<string, any>): TableRowCell[] {
 		const cells = this.section?.questions.map((question: any) => {
 			return this.createCell(question, item);
 		});
@@ -64,11 +78,14 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	}
 
 	/**
-	 * Creates the table headers based on the question asked
+	 * Creates the sortable table headers based on the question asked.
 	 */
-	createHeaders() {
+	createHeaders(): TableHeadCell[] {
 		const headers = this.section?.questions.map((question: any) => ({
-			text: question.viewData.tableHeader || question.title || question.question
+			text: question.viewData?.tableHeader || question.title || question.question,
+			attributes: {
+				'aria-sort': 'none'
+			}
 		}));
 
 		headers.push({
@@ -79,12 +96,12 @@ export default class TableManageListQuestion extends ManageListQuestion {
 		return headers;
 	}
 
-	createCell(question: PreppedQuestion, item: Record<string, any>) {
+	createCell(question: PreppedQuestion, item: Record<string, any>): TableRowCell {
 		const mockJourney = {
 			response: { answers: item },
 			getCurrentQuestionUrl: () => '',
 			answers: item
-		} as any;
+		};
 
 		if (question.shouldDisplay && !question.shouldDisplay({ answers: item })) {
 			return { text: '—' };
@@ -92,11 +109,17 @@ export default class TableManageListQuestion extends ManageListQuestion {
 
 		const formatted = question.formatAnswerForSummary('', mockJourney, item[question.fieldName]);
 
-		const cellContent = formatted.map((f: any) => f.value).join(', ');
+		const cellContent = formatted.map((answer) => answer.value).join(', ');
+
+		// Most things just sort by their cell, but dates need to be formatted into unix format (ms)
+		const sortValue = question instanceof DateQuestion ? new Date(cellContent)?.getTime() : cellContent;
 
 		return {
 			html: cellContent || '-',
-			classes: 'govuk-table__cell'
+			classes: 'govuk-table__cell',
+			attributes: {
+				'data-sort-value': sortValue
+			}
 		};
 	}
 
@@ -104,7 +127,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	 * Generates the HTML for the cell on the RHS that contains the two buttons
 	 * for changing and removing.
 	 */
-	generateActionsHtml(viewModel: QuestionViewModel, item: Record<string, any>) {
+	generateActionsHtml(viewModel: QuestionViewModel, item: Record<string, any>): string {
 		const originalUrlTrimmed = viewModel.util.trimTrailingSlash(viewModel.originalUrl);
 
 		const firstQuestionUrl = viewModel.question.firstQuestionUrl;

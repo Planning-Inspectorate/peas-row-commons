@@ -7,6 +7,7 @@ export interface TableHeadCell {
 	classes?: string;
 	colspan?: number;
 	rowspan?: number;
+	attributes?: Record<string, any>;
 }
 
 export interface TableRowCell {
@@ -16,6 +17,7 @@ export interface TableRowCell {
 	classes?: string;
 	colspan?: number;
 	rowspan?: number;
+	attributes?: Record<string, any>;
 }
 
 export interface TableManageListQuestionParameters {
