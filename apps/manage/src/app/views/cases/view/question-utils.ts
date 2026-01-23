@@ -647,12 +647,13 @@ export const OVERVIEW_QUESTIONS = {
 		}
 	},
 	relatedCaseDetails: {
-		type: COMPONENT_TYPES.MANAGE_LIST,
+		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
 		title: 'Related case(s)',
 		question: 'Check related case details',
 		fieldName: 'relatedCaseDetails',
 		url: 'check-related-cases',
-		showAnswersInSummary: true
+		showAnswersInSummary: true,
+		viewData: { emptyName: 'related case' }
 	},
 	addRelatedCase: {
 		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // Multi because we want an H1 header and an inline question too.
@@ -661,6 +662,7 @@ export const OVERVIEW_QUESTIONS = {
 		fieldName: 'addRelatedCase',
 		url: 'add-related-cases',
 		inputFields: [{ fieldName: 'relatedCaseReference', label: 'Related case reference' }],
+		viewData: { tableHeader: 'Related case reference' },
 		validators: [
 			new MultiFieldInputValidator({
 				fields: [
@@ -675,12 +677,13 @@ export const OVERVIEW_QUESTIONS = {
 		]
 	},
 	linkedCaseDetails: {
-		type: COMPONENT_TYPES.MANAGE_LIST,
+		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
 		title: 'Linked case(s)',
 		question: 'Check linked case details',
 		fieldName: 'linkedCaseDetails',
 		url: 'check-linked-cases',
-		showAnswersInSummary: true
+		showAnswersInSummary: true,
+		viewData: { emptyName: 'linked case' }
 	},
 	linkedCaseReference: {
 		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // Multi because we want an H1 header and an inline question too.
@@ -689,6 +692,7 @@ export const OVERVIEW_QUESTIONS = {
 		fieldName: 'addlinkedCase',
 		url: 'linked-case-reference',
 		inputFields: [{ fieldName: 'linkedCaseReference', label: 'Linked case reference' }],
+		viewData: { tableHeader: 'Linked case reference' },
 		validators: [
 			new MultiFieldInputValidator({
 				fields: [
@@ -703,11 +707,22 @@ export const OVERVIEW_QUESTIONS = {
 		]
 	},
 	isLead: {
-		type: COMPONENT_TYPES.BOOLEAN,
+		type: COMPONENT_TYPES.RADIO,
 		title: 'Is this the lead case?',
 		question: 'Is this the lead case?',
 		fieldName: 'linkedCaseIsLead',
 		url: 'is-lead',
+		viewData: { tableHeader: 'Lead?' },
+		options: [
+			{
+				text: 'Yes',
+				value: 'yes'
+			},
+			{
+				text: 'No',
+				value: 'no'
+			}
+		],
 		validators: [new RequiredValidator('Select yes if this is the lead case')]
 	}
 };
@@ -722,12 +737,13 @@ export const TEAM_QUESTIONS = {
 		validators: [new RequiredValidator('Select a case officer')]
 	},
 	inspectorDetails: {
-		type: COMPONENT_TYPES.MANAGE_LIST,
+		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
 		title: 'Inspector(s)',
 		question: 'Check inspector details',
 		fieldName: 'inspectorDetails',
 		url: 'inspector-details',
-		showAnswersInSummary: true
+		showAnswersInSummary: true,
+		viewData: { emptyName: 'inspector' }
 	},
 	inspector: {
 		type: COMPONENT_TYPES.SELECT,
@@ -735,13 +751,15 @@ export const TEAM_QUESTIONS = {
 		question: 'Who is the inspector?',
 		fieldName: 'inspectorEntraId',
 		url: 'inspector',
-		validators: [new RequiredValidator('Select an inspector')]
+		validators: [new RequiredValidator('Select an inspector')],
+		viewData: { tableHeader: 'Inspector name' }
 	},
 	inspectorAllocatedDate: dateQuestion({
 		fieldName: 'inspectorAllocatedDate',
 		title: 'Inspector allocated date',
 		question: 'What date was the inspector appointed?',
-		url: 'inspector-allocated-date'
+		url: 'inspector-allocated-date',
+		viewData: { tableHeader: 'Date appointed' }
 	})
 };
 
@@ -1742,6 +1760,7 @@ const createPersonQuestions = ({ section, db, url, label }: PersonConfig) => {
 			fieldName: `${section}Name`,
 			url: `${url}-name`,
 			hint: 'Enter the name of the individual, the organisation, or both.',
+			viewData: { tableHeader: 'Name' },
 			inputFields: [
 				{ fieldName: `${db}FirstName`, label: 'First name' },
 				{ fieldName: `${db}LastName`, label: 'Last name' },
@@ -1781,7 +1800,8 @@ const createPersonQuestions = ({ section, db, url, label }: PersonConfig) => {
 			hint: 'Optional',
 			fieldName: `${db}Address`,
 			url: `${url}-address`,
-			validators: [new AddressValidator()]
+			validators: [new AddressValidator()],
+			viewData: { tableHeader: 'Address' }
 		},
 		[`${section}ContactDetails`]: {
 			type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
@@ -1789,6 +1809,7 @@ const createPersonQuestions = ({ section, db, url, label }: PersonConfig) => {
 			question: `${label === 'Contact' ? 'What are the contact details?' : 'Objector contact details'} (optional)`,
 			fieldName: `${section}Details`,
 			url: `${url}-contact-details`,
+			viewData: { tableHeader: 'Contact' },
 			inputFields: [
 				{ fieldName: `${db}Email`, label: 'Email address' },
 				{ fieldName: `${db}TelephoneNumber`, label: 'Phone number' }
@@ -1815,11 +1836,12 @@ const createPersonQuestions = ({ section, db, url, label }: PersonConfig) => {
 
 export const KEY_CONTACTS_QUESTIONS = {
 	objectorDetails: {
-		type: COMPONENT_TYPES.MANAGE_LIST,
+		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
 		title: 'Objector(s)',
 		question: 'Check objector details',
 		fieldName: 'objectorDetails',
-		url: 'objector-details'
+		url: 'objector-details',
+		viewData: { emptyName: 'objector' }
 	},
 	...createPersonQuestions({
 		section: 'objector',
@@ -1834,14 +1856,16 @@ export const KEY_CONTACTS_QUESTIONS = {
 		fieldName: 'objectorStatusId',
 		url: 'objector-status',
 		validators: [new RequiredValidator("Select the status of the objector, or 'Not applicable'")],
-		options: OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER
+		options: OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER,
+		viewData: { tableHeader: 'Status' }
 	},
 	contactDetails: {
-		type: COMPONENT_TYPES.MANAGE_LIST,
+		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
 		title: 'Contact(s)',
 		question: 'Check contact details',
 		fieldName: 'contactDetails',
-		url: 'contact-details'
+		url: 'contact-details',
+		viewData: { emptyName: 'contact' }
 	},
 	contactType: {
 		type: COMPONENT_TYPES.RADIO,
@@ -1853,7 +1877,8 @@ export const KEY_CONTACTS_QUESTIONS = {
 		options: CONTACT_TYPES.filter((type) => type.id !== 'objector').map((type) => ({
 			text: type.displayName,
 			value: type.id
-		}))
+		})),
+		viewData: { tableHeader: 'Contact type' }
 	},
 	...createPersonQuestions({
 		section: 'contact',

@@ -89,6 +89,14 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/options-quest
 	}
 }
 
+declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js' {
+	export default class ManageListQuestion {
+		constructor(params: any);
+
+		addCustomDataToViewModel(viewModel: any);
+	}
+}
+
 declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' {
 	import { Request, Response } from 'express';
 	import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
