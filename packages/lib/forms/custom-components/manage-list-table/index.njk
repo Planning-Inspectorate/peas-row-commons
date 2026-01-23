@@ -1,0 +1,50 @@
+{% extends layoutTemplate %}
+
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+
+{% block dynQuestionContent %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <form action="" method="post" novalidate>
+                {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
+
+                {# If there is no data, we show a placeholder message and hide a couple buttons. #}
+                {% set hasData = question.tableRows|length !== 0 %}
+
+                <h1 class="govuk-heading-l">{{ question.question }}</h1>
+
+                {% if hasData %}
+                    {{ govukTable({
+                        head: question.tableHead,
+                        rows: question.tableRows
+                    }) }}
+                {% else %}
+                    <p class="govuk-body">No {{ emptyName }} details found</p>
+                {% endif %}
+
+                {{ govukButton({
+                    text: addMoreButtonText,
+                    href: util.trimTrailingSlash(originalUrl) + "/" + question.addAnotherLink,
+                    classes: "govuk-button--secondary"
+                }) }}
+
+                {% if hasData %}
+                    <div class="govuk-button-group">
+                        {{ govukButton({
+                            text: continueButtonText,
+                            type: "submit",
+                            attributes: { "data-cy":"button-save-and-continue"}
+                        }) }}
+
+                        {{ govukButton({
+                            text: cancelButtonText,
+                            href: backLinkUrl,
+                            classes: "govuk-button--secondary"
+                        }) }}
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+{% endblock %}
