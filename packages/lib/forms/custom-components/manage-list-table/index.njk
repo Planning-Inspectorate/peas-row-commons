@@ -16,6 +16,9 @@
 
                 {% if hasData %}
                     {{ govukTable({
+                        attributes: {
+                            "data-module": "moj-sortable-table"
+                        },
                         head: question.tableHead,
                         rows: question.tableRows
                     }) }}

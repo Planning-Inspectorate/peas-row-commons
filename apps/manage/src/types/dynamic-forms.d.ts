@@ -97,6 +97,12 @@ declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/
 	}
 }
 
+declare module '@planning-inspectorate/dynamic-forms/src/components/date/question.js' {
+	export default class DateQuestion {
+		constructor(params: any);
+	}
+}
+
 declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' {
 	import { Request, Response } from 'express';
 	import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
