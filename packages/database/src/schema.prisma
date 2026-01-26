@@ -53,8 +53,6 @@ model Case {
   filesLocation            String?
   Folders                  Folder[]
   Costs                    CaseCosts?
-  invoiceSentId            String?
-  InvoiceSent              CaseInvoiceSent?              @relation(fields: [invoiceSentId], references: [id])
   Abeyance                 CaseAbeyance?
   Notes                    CaseNote[]
   Documents                Document[]
@@ -180,20 +178,21 @@ model Folder {
 }
 
 model CaseCosts {
-  id           String   @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  id           String           @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   rechargeable Boolean?
   finalCost    Decimal?
   feeReceived  Boolean?
   invoiceSent  String?
-  caseId       String   @unique @db.UniqueIdentifier
-  Case         Case     @relation(fields: [caseId], references: [id])
+  InvoiceSent  CaseInvoiceSent? @relation(fields: [invoiceSent], references: [id])
+  caseId       String           @unique @db.UniqueIdentifier
+  Case         Case             @relation(fields: [caseId], references: [id])
 }
 
 model CaseInvoiceSent {
   /// unique machine-readable name, not generated, e.g. "interim"
-  id          String  @id
+  id          String      @id
   displayName String?
-  Case        Case[]
+  CaseCosts   CaseCosts[]
 }
 
 model CaseAbeyance {
