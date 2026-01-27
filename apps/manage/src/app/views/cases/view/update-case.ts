@@ -184,8 +184,9 @@ function handleLinkedCases(flatData: Record<string, any>, prismaPayload: Prisma.
 		isLead: yesNoToBoolean(linkedCase.linkedCaseIsLead)
 	}));
 
-	console.log(newLinkedCases);
-
+	// TODO: deleteMany wipes the current LinkedCases and then we replace
+	// them with the current cases + any new ones. This will need to change
+	// when we do case history.
 	prismaPayload.LinkedCases = {
 		deleteMany: {},
 		create: newLinkedCases
