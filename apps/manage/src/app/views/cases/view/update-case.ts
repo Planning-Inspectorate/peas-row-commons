@@ -182,6 +182,9 @@ function handleRelatedCases(flatData: Record<string, any>, prismaPayload: Prisma
 		reference: relatedCase.relatedCaseReference
 	}));
 
+	// TODO: deleteMany wipes the current RelatedCases and then we replace
+	// them with the current cases + any new ones. This will need to change
+	// when we do case history.
 	prismaPayload.RelatedCases = {
 		deleteMany: {},
 		create: newRelatedCases
@@ -209,6 +212,9 @@ function handleInspectors(flatData: Record<string, any>, prismaPayload: Prisma.C
 		})
 	);
 
+	// TODO: deleteMany wipes the current Inspectors and then we replace
+	// them with the current inspectors + any new ones. This will need to change
+	// when we do case history.
 	prismaPayload.Inspectors = {
 		deleteMany: {},
 		create: newInspectors
