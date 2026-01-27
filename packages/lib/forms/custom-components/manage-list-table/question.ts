@@ -43,7 +43,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	 * instantiation of the classes so that each one can have
 	 * its own button text.
 	 */
-	addButtonText(viewModel: QuestionViewModel): void {
+	private addButtonText(viewModel: QuestionViewModel): void {
 		viewModel.continueButtonText = 'Save and continue';
 		viewModel.addMoreButtonText = 'Add details';
 		viewModel.cancelButtonText = 'Cancel';
@@ -52,7 +52,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	/**
 	 * Creates the table rows
 	 */
-	createRows(viewModel: QuestionViewModel): TableRowCell[][] {
+	private createRows(viewModel: QuestionViewModel): TableRowCell[][] {
 		const answers = viewModel.question.value || [];
 
 		const rows = answers.map((item: Record<string, any>) => {
@@ -65,7 +65,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	/**
 	 * Creates the table row based on the questions asked
 	 */
-	createRow(viewModel: QuestionViewModel, item: Record<string, any>): TableRowCell[] {
+	private createRow(viewModel: QuestionViewModel, item: Record<string, any>): TableRowCell[] {
 		const cells = this.section?.questions.map((question: any) => {
 			return this.createCell(question, item);
 		});
