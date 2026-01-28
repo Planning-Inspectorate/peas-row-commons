@@ -26,7 +26,11 @@ export const caseListSelect = {
 	},
 	Applicant: true,
 	Authority: true,
-	Decision: true,
+	Decision: {
+		include: {
+			DecisionMaker: true
+		}
+	},
 	Procedures: true,
 	Inspectors: {
 		include: {
