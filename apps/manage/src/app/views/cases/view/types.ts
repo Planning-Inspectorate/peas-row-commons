@@ -8,7 +8,6 @@ export const caseListSelect = {
 	updatedDate: true,
 	receivedDate: true,
 	location: true,
-	caseOfficerId: true,
 	linkedCases: true,
 	Dates: true,
 	Costs: true,
@@ -20,19 +19,28 @@ export const caseListSelect = {
 		select: { displayName: true }
 	},
 	SiteAddress: true,
-	Notes: true,
+	Notes: {
+		include: {
+			Author: true
+		}
+	},
 	Applicant: true,
 	Authority: true,
 	Decision: true,
 	Procedures: true,
-	Inspectors: true,
+	Inspectors: {
+		include: {
+			Inspector: true
+		}
+	},
 	Contacts: {
 		include: {
 			Address: true
 		}
 	},
 	RelatedCases: true,
-	LinkedCases: true
+	LinkedCases: true,
+	CaseOfficer: true
 } satisfies Prisma.CaseSelect;
 
 export type CaseListFields = Prisma.CaseGetPayload<{ select: typeof caseListSelect }>;
