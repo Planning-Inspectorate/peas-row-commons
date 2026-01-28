@@ -110,6 +110,10 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		delete mergedData.CaseOfficer;
 	}
 
+	if (caseRow.Decision?.DecisionMaker) {
+		mergedData.decisionMakerId = caseRow.Decision.DecisionMaker.idpUserId;
+	}
+
 	const inspectors = caseRow.Inspectors.map((inspector) => ({
 		...inspector,
 		inspectorId: inspector.Inspector.idpUserId

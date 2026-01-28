@@ -85,7 +85,11 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				},
 				Authority: true,
 				Applicant: true,
-				Decision: true,
+				Decision: {
+					include: {
+						DecisionMaker: true
+					}
+				},
 				Procedures: {
 					include: {
 						HearingVenue: true,
