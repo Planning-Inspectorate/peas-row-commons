@@ -45,8 +45,8 @@ model Case {
   siteAddressId            String?                       @db.UniqueIdentifier
   SiteAddress              Address?                      @relation(fields: [siteAddressId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   location                 String?
-  /// Entra ID
-  caseOfficerId            String
+  caseOfficerId            String?                       @db.UniqueIdentifier
+  CaseOfficer              User?                         @relation("caseOfficer", fields: [caseOfficerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   linkedCases              String?
   Dates                    CaseDates?
   /// Physical location of real-world files
@@ -90,6 +90,18 @@ model Case {
   RelatedCases             RelatedCase[]
   /// Cases linked to this case
   LinkedCases              LinkedCase[]
+}
+
+model User {
+  id            String         @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  /// Identity provider Id, currently using Entra Id
+  idpUserId     String         @unique
+  /// Id from legacy system, in case no ipdUserId can be found in migration
+  legacyId      String?
+  CaseOfficer   Case[]         @relation("caseOfficer")
+  Author        CaseNote[]     @relation("author")
+  DecisionMaker CaseDecision[] @relation("decisionMaker")
+  Inspector     Inspector[]    @relation("inspector")
 }
 
 model CaseworkArea {
@@ -214,12 +226,13 @@ model CaseAbeyance {
 }
 
 model CaseNote {
-  id            String   @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  comment       String
-  createdAt     DateTime @default(now())
-  authorEntraId String
-  caseId        String   @db.UniqueIdentifier
-  Case          Case     @relation(fields: [caseId], references: [id])
+  id        String   @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  comment   String
+  createdAt DateTime @default(now())
+  authorId  String   @db.UniqueIdentifier
+  Author    User     @relation("author", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  caseId    String   @db.UniqueIdentifier
+  Case      Case     @relation(fields: [caseId], references: [id])
 }
 
 model CaseStatus {
@@ -296,8 +309,9 @@ model InspectorBand {
 
 model CaseDecision {
   id                           String        @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  /// Decision maker for the case, entra id
-  decisionMakerEntraId         String?
+  /// Decision maker for the case
+  decisionMakerId              String?       @db.UniqueIdentifier
+  DecisionMaker                User?         @relation("decisionMaker", fields: [decisionMakerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   /// The date the actual decision outcome was determinied
   outcomeDate                  DateTime?
   /// The date the decision was received 
@@ -497,7 +511,8 @@ model AdminProcedureType {
 
 model Inspector {
   id                     String   @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  inspectorEntraId       String
+  inspectorId            String   @db.UniqueIdentifier
+  Inspector              User     @relation("inspector", fields: [inspectorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   inspectorAllocatedDate DateTime
   caseId                 String   @db.UniqueIdentifier
   Case                   Case     @relation(fields: [caseId], references: [id])
