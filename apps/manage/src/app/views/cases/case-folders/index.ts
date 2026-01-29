@@ -4,11 +4,14 @@ import { validateIdFormat } from '../view/controller.ts';
 import { buildViewCaseFolders } from './controller.ts';
 import type { ManageService } from '#service';
 import { createRoutes as createSingleFolderRoutes } from './case-folder/index.ts';
+import { createRoutes as createCreateFolderRoutes } from './create-folder/index.ts';
 
 export function createRoutes(service: ManageService) {
 	const router = createRouter({ mergeParams: true });
-	const viewCaseFolders = buildViewCaseFolders(service);
-	const singleFolderRoutes = createSingleFolderRoutes(service);
+
+	const [viewCaseFolders] = createMiddlewares(service);
+
+	const [singleFolderRoutes, createFolderRoutes] = createRoutesToMount(service);
 
 	// Gets "all folders" page
 	router.get('/', validateIdFormat, asyncHandler(viewCaseFolders));
@@ -16,5 +19,23 @@ export function createRoutes(service: ManageService) {
 	// Mounts "individual folder" routes
 	router.use('/:folderId/:folderName', singleFolderRoutes);
 
+	// Mounts the "folder creation" routes
+	router.use('/create-folder', createFolderRoutes);
+
 	return router;
+}
+
+/**
+ * Creates the middleware functions needed for the endpoints
+ */
+function createMiddlewares(service: ManageService) {
+	return [buildViewCaseFolders(service)];
+}
+
+/**
+ * Creates the routes that we are mounting on the main route,
+ * folder creation and single folder view.
+ */
+function createRoutesToMount(service: ManageService) {
+	return [createSingleFolderRoutes(service), createCreateFolderRoutes(service)];
 }
