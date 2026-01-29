@@ -77,8 +77,8 @@ model Case {
   inspectorBandId          String?
   InspectorBand            InspectorBand?                @relation(fields: [inspectorBandId], references: [id])
   Decision                 CaseDecision?
-  /// Case ID for migration
-  LegacyCaseID             String?
+  /// Legacy Case ID for migration, will be removed after
+  legacyCaseId             String?
   Procedures               Procedure[]
   /// The primary procedure
   primaryProcedureStep     String?                       @db.NVarChar(50)
@@ -130,7 +130,8 @@ model Address {
   county              String?
   postcode            String?
   Case                Case[]
-  LegacyCaseID        String?
+  /// Legacy Case ID for migration, will be removed after
+  legacyCaseId        String?
   ConferenceProcedure Procedure[] @relation("ProcedureConferenceVenue")
   HearingProcedure    Procedure[] @relation("ProcedureHearingVenue")
   InquiryProcedure    Procedure[] @relation("ProcedureInquiryVenue")
