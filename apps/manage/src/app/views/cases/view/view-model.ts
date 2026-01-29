@@ -114,10 +114,11 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		mergedData.decisionMakerId = caseRow.Decision.DecisionMaker.idpUserId;
 	}
 
-	const inspectors = caseRow.Inspectors.map((inspector) => ({
-		...inspector,
-		inspectorId: inspector.Inspector.idpUserId
-	}));
+	const inspectors =
+		caseRow.Inspectors?.map((inspector) => ({
+			...inspector,
+			inspectorId: inspector.Inspector.idpUserId
+		})) || [];
 
 	const mappedProcedures = mapProcedures(mergedData.Procedures || []);
 	delete mergedData.Procedures;
