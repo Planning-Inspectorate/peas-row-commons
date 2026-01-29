@@ -14,7 +14,12 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 		name: answers.name,
 		receivedDate: answers.receivedDate,
 		externalReference: answers.externalReference,
-		caseOfficerId: answers.caseOfficerId,
+		CaseOfficer: {
+			connectOrCreate: {
+				where: { idpUserId: answers.caseOfficerId },
+				create: { idpUserId: answers.caseOfficerId }
+			}
+		},
 		location: answers.location,
 		Type: { connect: { id: caseType } },
 		Status: { connect: { id: CASE_STATUS_ID.NEW_CASE } } // All created cases start at "new-case"

@@ -105,6 +105,21 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		delete mergedData.LinkedCases;
 	}
 
+	if (caseRow.CaseOfficer) {
+		mergedData.caseOfficerId = caseRow.CaseOfficer.idpUserId;
+		delete mergedData.CaseOfficer;
+	}
+
+	if (caseRow.Decision?.DecisionMaker) {
+		mergedData.decisionMakerId = caseRow.Decision.DecisionMaker.idpUserId;
+	}
+
+	const inspectors =
+		caseRow.Inspectors?.map((inspector) => ({
+			...inspector,
+			inspectorId: inspector.Inspector.idpUserId
+		})) || [];
+
 	const mappedProcedures = mapProcedures(mergedData.Procedures || []);
 	delete mergedData.Procedures;
 
@@ -134,7 +149,7 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		siteAddress,
 		receivedDateDisplay: formatInTimeZone(caseRow.receivedDate, 'Europe/London', 'dd MMM yyyy'),
 		receivedDateSortable: new Date(caseRow.receivedDate)?.getTime(),
-		inspectorDetails: caseRow.Inspectors,
+		inspectorDetails: inspectors,
 		objectorDetails: mappedObjectors,
 		contactDetails: mappedContacts
 	};
@@ -152,7 +167,7 @@ export const mapNotes = (
 
 	return {
 		caseNotes: caseNotes.map((caseNote) => {
-			const user = groupMembers.caseOfficers.find((member) => member.id === caseNote.authorEntraId);
+			const user = groupMembers.caseOfficers.find((member) => member.id === caseNote.Author.idpUserId);
 
 			return {
 				date: dateISOStringToDisplayDate(caseNote.createdAt),

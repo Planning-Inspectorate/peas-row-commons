@@ -17,7 +17,6 @@ export const RELATION_MAP: Record<string, string[]> = {
 	Decision: [
 		'decisionTypeId',
 		'outcomeId',
-		'decisionMakerEntraId',
 		'outcomeDate',
 		'decisionReceivedDate',
 		'inTarget',

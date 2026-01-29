@@ -165,12 +165,57 @@ function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Pri
 	handleContacts(flatData, prismaPayload, CONTACT_MAPPINGS);
 	handleRelatedCases(flatData, prismaPayload);
 	handleLinkedCases(flatData, prismaPayload);
-
 	['One', 'Two', 'Three'].forEach((suffix) => {
 		handleProcedureGeneric(caseId, flatData, prismaPayload, suffix);
 	});
-
 	handleBooleans(flatData);
+	handleCaseOfficer(flatData, prismaPayload);
+	handleDecisionMaker(flatData, prismaPayload);
+}
+
+/**
+ * Handles connecting or creating a Decision Maker (User) nested inside the Case Decision.
+ */
+function handleDecisionMaker(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (flatData.decisionMakerId) {
+		const userConnection = {
+			connectOrCreate: {
+				where: { idpUserId: flatData.decisionMakerId },
+				create: { idpUserId: flatData.decisionMakerId }
+			}
+		};
+
+		if (!prismaPayload.Decision) {
+			prismaPayload.Decision = {
+				upsert: { create: {}, update: {} }
+			};
+		}
+
+		const decisionPayload = prismaPayload.Decision;
+
+		if (decisionPayload.upsert) {
+			decisionPayload.upsert.create.DecisionMaker = userConnection;
+			decisionPayload.upsert.update.DecisionMaker = userConnection;
+		}
+
+		delete flatData.decisionMakerId;
+	}
+}
+
+/**
+ * Handles connecting or creating a Case Officer based on their Entra ID.
+ */
+function handleCaseOfficer(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (flatData.caseOfficerId) {
+		prismaPayload.CaseOfficer = {
+			connectOrCreate: {
+				where: { idpUserId: flatData.caseOfficerId },
+				create: { idpUserId: flatData.caseOfficerId }
+			}
+		};
+
+		delete flatData.caseOfficerId;
+	}
 }
 
 /**
@@ -229,8 +274,13 @@ function handleInspectors(flatData: Record<string, any>, prismaPayload: Prisma.C
 	if (!Object.hasOwn(flatData, 'inspectorDetails')) return;
 
 	const newInspectors = flatData.inspectorDetails.map(
-		(inspector: { inspectorEntraId: string; inspectorAllocatedDate: string }) => ({
-			inspectorEntraId: inspector.inspectorEntraId,
+		(inspector: { inspectorId: string; inspectorAllocatedDate: string }) => ({
+			Inspector: {
+				connectOrCreate: {
+					where: { idpUserId: inspector.inspectorId },
+					create: { idpUserId: inspector.inspectorId }
+				}
+			},
 			inspectorAllocatedDate: inspector.inspectorAllocatedDate
 		})
 	);

@@ -40,9 +40,16 @@ async function createCaseNote(id: string, comment: string, authorId: string, db:
 
 			await $tx.caseNote.create({
 				data: {
-					caseId: id,
+					Case: {
+						connect: { id }
+					},
 					comment,
-					authorEntraId: authorId
+					Author: {
+						connectOrCreate: {
+							where: { idpUserId: authorId },
+							create: { idpUserId: authorId }
+						}
+					}
 				}
 			});
 		});

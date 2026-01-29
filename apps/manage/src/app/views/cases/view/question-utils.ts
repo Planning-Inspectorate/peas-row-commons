@@ -749,7 +749,7 @@ export const TEAM_QUESTIONS = {
 		type: COMPONENT_TYPES.SELECT,
 		title: 'Inspector',
 		question: 'Who is the inspector?',
-		fieldName: 'inspectorEntraId',
+		fieldName: 'inspectorId',
 		url: 'inspector',
 		validators: [new RequiredValidator('Select an inspector')],
 		viewData: { tableHeader: 'Inspector name' }
@@ -811,7 +811,7 @@ export const OUTCOME_QUESTIONS = {
 		type: COMPONENT_TYPES.SELECT,
 		title: 'Decision maker',
 		question: 'Who is the decision maker?',
-		fieldName: 'decisionMakerEntraId',
+		fieldName: 'decisionMakerId',
 		url: 'decision-maker',
 		validators: [new RequiredValidator('Select the decision maker')]
 	},

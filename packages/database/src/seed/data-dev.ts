@@ -64,7 +64,7 @@ export async function seedDev(dbClient: PrismaClient) {
 			create: {
 				reference,
 				name: `${scenario.nameTemplate} ${location} - Site ${i}`,
-				caseOfficerId: officer,
+				CaseOfficer: { connectOrCreate: { where: { idpUserId: officer }, create: { idpUserId: officer } } },
 				receivedDate,
 				location: i % 2 === 0 ? 'South West' : 'North East',
 				Type: { connect: { id: scenario.type } },
