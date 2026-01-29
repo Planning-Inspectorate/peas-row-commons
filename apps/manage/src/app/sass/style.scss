@@ -57,3 +57,17 @@ $font-family: arial, helvetica, sans-serif;
 		outline: 3px dashed #1d70b8;
 	}
 }
+
+.govuk-accordion.hide-controls {
+	.govuk-accordion__controls {
+		display: none;
+	}
+
+	.govuk-accordion__section-button {
+		border: none;
+	}
+
+	.govuk-table__cell {
+		border-bottom-style: none;
+	}
+}
