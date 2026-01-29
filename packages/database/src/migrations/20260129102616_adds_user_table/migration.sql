@@ -31,7 +31,7 @@ ALTER TABLE [dbo].[Inspector] ADD [inspectorId] UNIQUEIDENTIFIER NOT NULL;
 -- CreateTable
 CREATE TABLE [dbo].[User] (
     [id] UNIQUEIDENTIFIER NOT NULL CONSTRAINT [User_id_df] DEFAULT newid(),
-    [idpUserId] NVARCHAR(1000) NOT NULL,
+    [idpUserId] NVARCHAR(1000),
     [legacyId] NVARCHAR(1000),
     CONSTRAINT [User_pkey] PRIMARY KEY CLUSTERED ([id]),
     CONSTRAINT [User_idpUserId_key] UNIQUE NONCLUSTERED ([idpUserId])
