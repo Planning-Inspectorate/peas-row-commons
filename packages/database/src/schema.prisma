@@ -95,7 +95,7 @@ model Case {
 model User {
   id            String         @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   /// Identity provider Id, currently using Entra Id
-  idpUserId     String         @unique
+  idpUserId     String?        @unique
   /// Id from legacy system, in case no ipdUserId can be found in migration
   legacyId      String?
   CaseOfficer   Case[]         @relation("caseOfficer")
