@@ -262,5 +262,62 @@ describe('Update Case Controller', () => {
 
 			assert.strictEqual((result as any).linkedCaseDetails, undefined);
 		});
+
+		it('should transform decisionMakerId into Decision.DecisionMaker connectOrCreate payload', () => {
+			const input = {
+				decisionMakerId: 'user-auth0-123'
+			};
+			const result = mapCasePayload(input, 'case-123');
+
+			const decisionUpdate = (result as any).Decision;
+			assert.ok(decisionUpdate, 'Should have Decision property');
+			assert.ok(decisionUpdate.upsert, 'Should be an upsert');
+
+			const expectedUserConnection = {
+				connectOrCreate: {
+					where: { idpUserId: 'user-auth0-123' },
+					create: { idpUserId: 'user-auth0-123' }
+				}
+			};
+
+			assert.deepStrictEqual(decisionUpdate.upsert.create.DecisionMaker, expectedUserConnection);
+			assert.deepStrictEqual(decisionUpdate.upsert.update.DecisionMaker, expectedUserConnection);
+
+			assert.strictEqual((result as any).decisionMakerId, undefined);
+		});
+
+		it('should transform caseOfficerId into CaseOfficer connectOrCreate payload', () => {
+			const input = {
+				caseOfficerId: 'officer-456'
+			};
+			const result = mapCasePayload(input, 'case-123');
+
+			const caseOfficerUpdate = (result as any).CaseOfficer;
+			assert.ok(caseOfficerUpdate, 'Should have CaseOfficer property');
+
+			const expectedOfficerConnection = {
+				connectOrCreate: {
+					where: { idpUserId: 'officer-456' },
+					create: { idpUserId: 'officer-456' }
+				}
+			};
+
+			assert.deepStrictEqual(caseOfficerUpdate, expectedOfficerConnection);
+
+			assert.strictEqual((result as any).caseOfficerId, undefined);
+		});
+
+		it('should handle decisionMakerId merging with existing Decision updates', () => {
+			const input = {
+				decisionDate: '2025-05-01',
+				decisionMakerId: 'user-789'
+			};
+			const result = mapCasePayload(input, 'case-123');
+
+			const decisionUpdate = (result as any).Decision;
+
+			assert.strictEqual(decisionUpdate.upsert.create.DecisionMaker.connectOrCreate.where.idpUserId, 'user-789');
+			assert.strictEqual(decisionUpdate.upsert.update.DecisionMaker.connectOrCreate.where.idpUserId, 'user-789');
+		});
 	});
 });
