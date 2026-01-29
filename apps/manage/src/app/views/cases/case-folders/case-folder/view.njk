@@ -5,6 +5,7 @@
 {% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
+{% from "govuk/components/accordion/macro.njk" import govukAccordion %}
 
 {% import "views/pagination/pagination-options.njk" as paginationOptions %}
 
@@ -37,19 +38,6 @@
     </div>
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full">
-            <div class="pins-link-menu">
-                {% if subFolders|length !== 0 %}
-                    {% for folder in subFolders %}
-                        <a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}">
-                            {{ folder.displayName }}
-                        </a>
-                    {% endfor %}
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-full">
             {{ govukButton({
                 text: "Create subfolder",
                 href: currentUrl + "/create-folder",
@@ -57,7 +45,36 @@
             }) }}
         </div>
     </div>
-    <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            {% if subFolders|length !== 0 %}
+                {% set subFoldersHtml %}
+                    <div class="pins-link-menu">
+                        {% for folder in subFolders %}
+                            <a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}">
+                                {{ folder.displayName }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endset %}
+
+                {{ govukAccordion({
+                    id: "sub-folders-accordion",
+                    classes: "hide-controls",
+                    hideAllSections: true,
+                    showSectionText: "Show subfolders list",
+                    hideSectionText: "Hide subfolders list",
+                    items: [
+                        {
+                            content: {
+                                html: subFoldersHtml
+                            }
+                        }
+                    ]
+                }) }}
+            {% endif %}
+        </div>
+    </div>
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full">
             <p class="govuk-body govuk-!-font-weight-bold">Files</p>
