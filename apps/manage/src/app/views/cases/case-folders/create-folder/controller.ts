@@ -55,7 +55,7 @@ export function buildCreateFolders(service: ManageService): AsyncRequestHandler 
 				return notFoundHandler(req, res);
 			}
 
-			const nextDisplayOrder = await getNextDisplayOrder(db, folderId);
+			const nextDisplayOrder = await getNextDisplayOrder(db, folderId, id);
 
 			await createFolderRecord(db, {
 				name: folderName,
@@ -103,11 +103,12 @@ export async function getParentFolder(db: any, folderId: string | null, caseId: 
  * Calculates the next available display order for the new folder,
  * should be highested number in folder + 100.
  */
-export async function getNextDisplayOrder(db: any, parentFolderId: string | null) {
+export async function getNextDisplayOrder(db: any, parentFolderId: string | null, caseId: string) {
 	const aggregation = await db.folder.aggregate({
 		where: {
 			parentFolderId,
-			deletedAt: null
+			deletedAt: null,
+			caseId
 		},
 		_max: {
 			displayOrder: true
