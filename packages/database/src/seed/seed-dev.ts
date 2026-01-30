@@ -9,6 +9,10 @@ async function run() {
 	const dbClient = newDatabaseClient(config.db);
 
 	try {
+		// Deletes all inspectors and case notes
+		await dbClient.caseNote.deleteMany({});
+		await dbClient.inspector.deleteMany({});
+
 		await seedStaticData(dbClient);
 		await seedDev(dbClient);
 	} catch (error) {
