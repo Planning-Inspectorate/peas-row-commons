@@ -3,7 +3,24 @@ import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/cl
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { Request, Response, NextFunction, RequestHandler } from 'express';
 
-export function buildValidateFolder(service: ManageService, setSessionData = addSessionData): RequestHandler {
+type ValidationMode = 'create' | 'edit';
+
+/**
+ * Validates that a folder that is being:
+ * (a) created
+ * (b) renamed
+ * is valid based on a set of critera.
+ * e.g. name is not already taken, doesn't
+ * contain special characters.
+ *
+ * Functionality is almost the same but varies
+ * slightly for creating vs renaming (mode)
+ */
+export function buildValidateFolder(
+	service: ManageService,
+	mode: ValidationMode = 'create',
+	setSessionData = addSessionData
+): RequestHandler {
 	const { db } = service;
 
 	return async (req: Request, res: Response, next: NextFunction) => {
@@ -21,7 +38,11 @@ export function buildValidateFolder(service: ManageService, setSessionData = add
 			errors.folderName = syntaxError;
 		} else {
 			try {
-				const duplicateError = await getDuplicateError(db, id, folderId, folderName);
+				const duplicateError =
+					mode === 'create'
+						? await getDuplicateErrorsCreate(db, id, folderId, folderName)
+						: await getDuplicateErrorsRename(db, id, folderId, folderName);
+
 				if (duplicateError) {
 					errors.folderName = duplicateError;
 				}
@@ -85,7 +106,7 @@ export function getSyntaxError(folderName: string) {
  * Checks for duplicate folder names in the same case & folder, is case insensitive, so FoLdEr1 will throw a duplicate
  * match if folder1 already exists.
  */
-export async function getDuplicateError(
+export async function getDuplicateErrorsCreate(
 	db: PrismaClient,
 	caseId: string,
 	parentId: string | undefined,
@@ -97,6 +118,46 @@ export async function getDuplicateError(
 			parentFolderId: parentId,
 			displayName: folderName,
 			deletedAt: null
+		}
+	});
+
+	if (existingFolder && existingFolder.displayName.toLowerCase() === folderName.toLowerCase()) {
+		return {
+			text: 'Folder name already exists',
+			href: '#folderName'
+		};
+	}
+
+	return null;
+}
+
+/**
+ * Checks that you are not renaming a folder to an existing folder within the same parent
+ */
+export async function getDuplicateErrorsRename(
+	db: PrismaClient,
+	caseId: string,
+	currentFolderId: string,
+	folderName: string
+) {
+	const currentFolder = await db.folder.findUnique({
+		select: {
+			parentFolderId: true
+		},
+		where: {
+			id: currentFolderId
+		}
+	});
+
+	if (!currentFolder) throw new Error('Could not find folder for id');
+
+	const existingFolder = await db.folder.findFirst({
+		where: {
+			caseId: caseId,
+			parentFolderId: currentFolder.parentFolderId,
+			displayName: folderName,
+			deletedAt: null,
+			NOT: { id: currentFolderId }
 		}
 	});
 

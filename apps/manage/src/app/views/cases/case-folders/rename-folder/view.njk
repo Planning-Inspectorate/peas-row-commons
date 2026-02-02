@@ -1,0 +1,41 @@
+{% extends "views/layouts/main.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+
+{% set pageTitle = "Rename a folder" %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            
+            <form method="post" novalidate>
+                <span class="govuk-caption-l">Rename folder</span>
+
+                {{ govukInput({
+                    label: {
+                        text: "Folder name",
+                        classes: "govuk-label--l",
+                        isPageHeading: true
+                    },
+                    id: "folderName",
+                    name: "folderName",
+                    value: currentFolderName
+                }) }}
+
+                <div class="govuk-button-group">
+                    {{ govukButton({
+                        text: "Save and return"
+                    }) }}
+                </div>
+
+                <p class="govuk-body">
+                    <a class="govuk-link" href="{{ backLinkUrl }}">
+                        Cancel and return to folder
+                    </a>
+                </p>
+
+            </form>
+
+        </div>
+    </div>
+{% endblock %}

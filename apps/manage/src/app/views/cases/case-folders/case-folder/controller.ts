@@ -25,7 +25,7 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			throw new Error('folderId param required');
 		}
 
-		const [folderUpdated, folderCreated, folderDeleted] = readAndClearSessionData(req);
+		const [folderUpdated, folderCreated, folderDeleted, folderRenamed] = readAndClearSessionData(req);
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
@@ -127,21 +127,24 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			currentUrl: req.originalUrl,
 			documents: documentsViewModel,
 			paginationParams,
-			folderUpdated,
-			folderCreated,
-			folderDeleted
+			folderUpdates: {
+				folderUpdated,
+				folderCreated,
+				folderDeleted,
+				folderRenamed
+			}
 		});
 	};
 }
 
 /**
  * Reads session data for adding files (updating folder),
- * creating folders, and deleting folders, then wipes them from session
- * so that the user doesn't see it on refresh repeatedly.
+ * creating folders, and deleting folders, and renaming folders
+ * then wipes them from session so that the user doesn't see it on refresh repeatedly.
  *
  * We use the case id for creating and deleting because they are accessed
  * outside of the folder view, but folder updating is about uploading files
- * to a folder, so we use its own id.
+ * to a folder, so we use its own id, same with renaming.
  */
 function readAndClearSessionData(req: Request) {
 	const { id, folderId } = req.params;
@@ -149,10 +152,12 @@ function readAndClearSessionData(req: Request) {
 	const folderUpdated = readSessionData(req, folderId, 'updated', false, 'folder');
 	const folderCreated = readSessionData(req, id, 'created', false, 'folder');
 	const folderDeleted = readSessionData(req, id, 'deleted', false, 'folder');
+	const folderRenamed = readSessionData(req, folderId, 'renamed', false, 'folder');
 
 	clearSessionData(req, folderId, 'updated', 'folder');
 	clearSessionData(req, id, 'created', 'folder');
 	clearSessionData(req, id, 'deleted', 'folder');
+	clearSessionData(req, folderId, 'renamed', 'folder');
 
-	return [folderUpdated, folderCreated, folderDeleted];
+	return [folderUpdated, folderCreated, folderDeleted, folderRenamed];
 }
