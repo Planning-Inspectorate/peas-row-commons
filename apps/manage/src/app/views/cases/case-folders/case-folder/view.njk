@@ -16,24 +16,31 @@
 {% endblock %}
 
 {% block content %}
-    {% if folderUpdated %}
+    {% if folderUpdates.folderUpdated %}
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
             text: "Folder has been updated",
             type: "success"
         }) }}
     {% endif %}
-    {% if folderCreated %}
+    {% if folderUpdates.folderCreated %}
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
             text: "Folder created",
             type: "success"
         }) }}
     {% endif %}
-    {% if folderDeleted %}
+    {% if folderUpdates.folderDeleted %}
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
             text: "Folder deleted",
+            type: "success"
+        }) }}
+    {% endif %}
+    {% if folderUpdates.folderRenamed %}
+        {{ govukNotificationBanner({
+            classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
+            text: "Folder renamed",
             type: "success"
         }) }}
     {% endif %}
@@ -55,6 +62,12 @@
             {{ govukButton({
                 text: "Create subfolder",
                 href: currentUrl + "/create-folder",
+                classes: "govuk-button--secondary"
+            }) }}
+
+            {{ govukButton({
+                text: "Rename folder",
+                href: currentUrl + "/rename-folder",
                 classes: "govuk-button--secondary"
             }) }}
 
