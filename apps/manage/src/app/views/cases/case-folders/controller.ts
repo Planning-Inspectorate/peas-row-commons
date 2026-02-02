@@ -3,6 +3,7 @@ import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { createFoldersViewModel } from './view-model.ts';
+import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 
 export function buildViewCaseFolders(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
@@ -12,6 +13,11 @@ export function buildViewCaseFolders(service: ManageService): AsyncRequestHandle
 		if (!id) {
 			throw new Error('id param required');
 		}
+
+		const folderCreated = readSessionData(req, id, 'created', false, 'folder');
+
+		// Clear created flag if present so that we only see it once.
+		clearSessionData(req, id, 'created', 'folder');
 
 		let caseRow, folders;
 		try {
@@ -48,7 +54,8 @@ export function buildViewCaseFolders(service: ManageService): AsyncRequestHandle
 			backLinkUrl: `/cases/${id}`,
 			backLinkText: 'Back to case details',
 			folders: foldersViewModel,
-			currentUrl: req.originalUrl
+			currentUrl: req.originalUrl,
+			folderCreated
 		});
 	};
 }
