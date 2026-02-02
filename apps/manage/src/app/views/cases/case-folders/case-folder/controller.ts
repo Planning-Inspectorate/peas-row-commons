@@ -9,6 +9,7 @@ import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/ut
 import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
+import type { Request } from 'express';
 
 export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
@@ -24,15 +25,7 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			throw new Error('folderId param required');
 		}
 
-		const folderUpdated = readSessionData(req, folderId, 'updated', false, 'folder');
-
-		// Clear updated flag if present so that we only see it once.
-		clearSessionData(req, folderId, 'updated', 'folder');
-
-		const folderCreated = readSessionData(req, id, 'created', false, 'folder');
-
-		// Clear created flag if present so that we only see it once.
-		clearSessionData(req, id, 'created', 'folder');
+		const [folderUpdated, folderCreated, folderDeleted] = readAndClearSessionData(req);
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
@@ -50,7 +43,7 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 						}
 					},
 					ChildFolders: {
-						where: { caseId: id }
+						where: { caseId: id, deletedAt: null }
 					},
 					Documents: {
 						where: { caseId: id, deletedAt: null },
@@ -135,7 +128,31 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			documents: documentsViewModel,
 			paginationParams,
 			folderUpdated,
-			folderCreated
+			folderCreated,
+			folderDeleted
 		});
 	};
+}
+
+/**
+ * Reads session data for adding files (updating folder),
+ * creating folders, and deleting folders, then wipes them from session
+ * so that the user doesn't see it on refresh repeatedly.
+ *
+ * We use the case id for creating and deleting because they are accessed
+ * outside of the folder view, but folder updating is about uploading files
+ * to a folder, so we use its own id.
+ */
+function readAndClearSessionData(req: Request) {
+	const { id, folderId } = req.params;
+
+	const folderUpdated = readSessionData(req, folderId, 'updated', false, 'folder');
+	const folderCreated = readSessionData(req, id, 'created', false, 'folder');
+	const folderDeleted = readSessionData(req, id, 'deleted', false, 'folder');
+
+	clearSessionData(req, folderId, 'updated', 'folder');
+	clearSessionData(req, id, 'created', 'folder');
+	clearSessionData(req, id, 'deleted', 'folder');
+
+	return [folderUpdated, folderCreated, folderDeleted];
 }

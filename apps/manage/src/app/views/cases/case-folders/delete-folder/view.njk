@@ -1,0 +1,66 @@
+{% extends "views/layouts/main.njk" %}
+
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+
+{% block pageTitle %}
+    Folder - Delete Folder
+{% endblock %}
+
+{% block pageContent %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+
+            <form action="{{ currentUrl }}" method="post" novalidate>
+                {{ deleteTable(folders) }}
+
+                {{ govukWarningText({
+                    text: "This action cannot be undone.",
+                    iconFallbackText: "Warning"
+                }) }}
+
+                {{ govukButton({
+                    text: "Delete folder",
+                    classes: "govuk-button--warning"
+                }) }}
+                
+            </form>
+
+        </div>
+
+        <div class="govuk-grid-column-two-thirds">
+            <a class="govuk-link" href="{{ backLinkUrl }}">
+                Cancel and return to folder
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
+{% macro deleteTable(folderRows) %}
+    {% set folders = [] %}
+
+    {% for folder in folderRows %}
+        {% set folders = (folders.push([
+            {
+                text: folder.displayName
+            }
+        ]), folders) %}
+    {% endfor %}
+
+    {% set headers = [
+        {
+            text: 'Folder name',
+            classes: "govuk-!-width-one-fifth"
+        }
+    ] %}
+
+    {{ govukTable({
+        attributes: {
+            "data-module": "moj-sortable-table"
+        },
+        head: headers,
+        rows: folders
+    }) }}
+{% endmacro %}

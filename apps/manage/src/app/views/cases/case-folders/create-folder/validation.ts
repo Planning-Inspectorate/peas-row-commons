@@ -95,7 +95,8 @@ export async function getDuplicateError(
 		where: {
 			caseId: caseId,
 			parentFolderId: parentId,
-			displayName: folderName
+			displayName: folderName,
+			deletedAt: null
 		}
 	});
 
