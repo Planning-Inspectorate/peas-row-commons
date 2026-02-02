@@ -72,7 +72,7 @@ describe('buildViewCaseFolders', () => {
 
 			assert.strictEqual(mockDb.folder.findMany.mock.callCount(), 1);
 			assert.deepStrictEqual(mockDb.folder.findMany.mock.calls[0].arguments[0], {
-				where: { caseId: 'case-123', parentFolderId: null }
+				where: { caseId: 'case-123', deletedAt: null, parentFolderId: null }
 			});
 
 			assert.strictEqual(res.render.mock.callCount(), 1);

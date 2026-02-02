@@ -30,6 +30,13 @@
             type: "success"
         }) }}
     {% endif %}
+    {% if folderDeleted %}
+        {{ govukNotificationBanner({
+            classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
+            text: "Folder deleted",
+            type: "success"
+        }) }}
+    {% endif %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full govuk-!-margin-bottom-3">
             <h2 class="govuk-caption-l">
@@ -44,10 +51,16 @@
         </div>
     </div>
     <div class="govuk-grid-row">
-        <div class="govuk-grid-column-full">
+        <div class="govuk-grid-column-full govuk-button-group">
             {{ govukButton({
                 text: "Create subfolder",
                 href: currentUrl + "/create-folder",
+                classes: "govuk-button--secondary"
+            }) }}
+
+            {{ govukButton({
+                text: "Delete folder",
+                href: currentUrl + "/delete-folder",
                 classes: "govuk-button--secondary"
             }) }}
         </div>
