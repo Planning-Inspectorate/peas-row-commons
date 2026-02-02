@@ -3,7 +3,7 @@ import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/cl
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
-import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { Request } from 'express';
 
@@ -63,6 +63,8 @@ export function buildCreateFolders(service: ManageService): AsyncRequestHandler 
 				caseId: id,
 				order: nextDisplayOrder
 			});
+
+			addSessionData(req, id, { created: true }, 'folder');
 
 			const returnUrl = getRedirectUrl(id, parentFolder, folderId);
 

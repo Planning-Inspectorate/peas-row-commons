@@ -29,6 +29,11 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 		// Clear updated flag if present so that we only see it once.
 		clearSessionData(req, folderId, 'updated', 'folder');
 
+		const folderCreated = readSessionData(req, id, 'created', false, 'folder');
+
+		// Clear created flag if present so that we only see it once.
+		clearSessionData(req, id, 'created', 'folder');
+
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
 		let caseRow, currentFolder, subFolders, documents, totalDocuments, parentFolder;
@@ -129,7 +134,8 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			currentUrl: req.originalUrl,
 			documents: documentsViewModel,
 			paginationParams,
-			folderUpdated
+			folderUpdated,
+			folderCreated
 		});
 	};
 }
