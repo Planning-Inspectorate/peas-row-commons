@@ -410,17 +410,17 @@ export const CASE_DETAILS_QUESTIONS = {
 			})
 		]
 	},
-	internalReference: {
+	historicalReference: {
 		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
-		title: 'Internal reference',
-		question: 'What is the internal reference for the case?',
-		fieldName: 'internalReference',
-		url: 'internal-reference',
+		title: 'Historical reference',
+		question: 'What is the historical reference for the case?',
+		fieldName: 'historicalReference',
+		url: 'historical-reference',
 		validators: [
 			new StringValidator({
 				maxLength: {
 					maxLength: 50,
-					maxLengthMessage: 'Internal reference must be less than 50 characters'
+					maxLengthMessage: 'Historical reference must be less than 50 characters'
 				}
 			})
 		]

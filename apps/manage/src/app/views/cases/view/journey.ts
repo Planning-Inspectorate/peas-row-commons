@@ -39,7 +39,7 @@ export function createJourney(questions: Record<string, any>, response: Response
 			new Section('Case details', 'case-details')
 				.addQuestion(questions.reference)
 				.addQuestion(questions.externalReference)
-				.addQuestion(questions.internalReference)
+				.addQuestion(questions.historicalReference)
 				.addQuestion(questions.caseName)
 				.addQuestion(questions.caseStatus)
 				.addQuestion(questions.advertisedModificationStatus)

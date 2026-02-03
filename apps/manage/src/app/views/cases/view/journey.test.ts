@@ -128,7 +128,7 @@ describe('case details journey', () => {
 				questions: [
 					'reference',
 					'externalReference',
-					'internalReference',
+					'historicalReference',
 					'caseName',
 					'caseStatus',
 					'advertisedModificationStatus',
