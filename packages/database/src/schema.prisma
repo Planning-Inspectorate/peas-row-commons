@@ -39,8 +39,8 @@ model Case {
   reference                String                        @unique
   /// external identifier, optional unlike reference above
   externalReference        String?
-  /// internal reference, if existing case from Horizon
-  internalReference        String?
+  /// historical reference, if existing case from Horizon
+  historicalReference      String?
   name                     String
   siteAddressId            String?                       @db.UniqueIdentifier
   SiteAddress              Address?                      @relation(fields: [siteAddressId], references: [id], onUpdate: NoAction, onDelete: NoAction)
