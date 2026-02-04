@@ -330,6 +330,11 @@ declare module '@planning-inspectorate/dynamic-forms/src/validator/validator.js'
 	export default validate;
 }
 
+declare module '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js' {
+	const validate: any;
+	export default validate;
+}
+
 declare module '@planning-inspectorate/dynamic-forms/src/validator/validation-error-handler.js' {
 	export function validationErrorHandler(req: any, res: any, next: any): any;
 }
