@@ -1,0 +1,94 @@
+{% extends layoutTemplate %}
+
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{# Function that creates each "level" of nested radios, using recursion. #}
+{% macro renderFolderRadios(folders, fieldName, parentId, depth, selectedPath) %}
+    {% set items = [] %}
+
+    {% for folder in folders %}
+        {% set isChecked = false %}
+
+        {% if selectedPath and folder.id in selectedPath %}
+            {% set isChecked = true %}
+        {% endif %}
+
+        {% set conditionalHtml = "" %}
+
+        {% if folder.children and folder.children.length > 0 %}
+            {% set nextDepth = depth + 1 %}
+
+            {% set renderedChildren %}
+                {{ renderFolderRadios(folder.children, fieldName, folder.id, nextDepth, selectedPath) }}
+            {% endset %}
+            
+            {% set conditionalHtml = renderedChildren %}
+        {% endif %}
+
+        {% set item = {
+            value: folder.id,
+            text: folder.displayName,
+            checked: isChecked,
+            conditional: { html: conditionalHtml } if conditionalHtml else undefined,
+            attributes: {
+                "data-cy": "folder-radio-" + folder.id
+            }
+        } %}
+
+        {% set items = (items.push(item), items) %}
+    {% endfor %}
+
+    {# We need to set a unique name per set as they override each other otherwise. #}
+    {{ govukRadios({
+        name: fieldName + "_level_" + depth + "_" + parentId,
+        items: items,
+        attributes: {
+            "data-cy": "folder-level-" + depth
+        }
+    }) }}
+{% endmacro %}
+
+{% block dynQuestionContent %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <form action="" method="post" novalidate>
+                {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
+
+                <div class="govuk-form-group {{ 'govuk-form-group--error' if errors[question.fieldName] }}">
+                    <fieldset class="govuk-fieldset" aria-describedby="{{ question.fieldName }}-hint {{ question.fieldName }}-error">
+                        <legend class="govuk-fieldset__legend govuk-fieldset__legend--l">
+                            <h1 class="govuk-fieldset__heading">
+                                {{ question.question }}
+                            </h1>
+                        </legend>
+
+                        {% if question.hint %}
+                            <div id="{{ question.fieldName }}-hint" class="govuk-hint">{{ question.hint }}</div>
+                        {% endif %}
+
+                        {% if errors[question.fieldName] %}
+                            <p id="{{ question.fieldName }}-error" class="govuk-error-message">
+                                <span class="govuk-visually-hidden">Error:</span> {{ errors[question.fieldName].msg }}
+                            </p>
+                        {% endif %}
+
+                        {# If we have found folders, render, otherwise placeholder text. #}
+                        {% if question.folderList and question.folderList.length > 0 %}
+                            {{ renderFolderRadios(question.folderList, question.fieldName, "root", 0, question.selectedPath) }}
+                        {% else %}
+                            <p class="govuk-body">No folders found.</p>
+                        {% endif %}
+
+                    </fieldset>
+                </div>
+
+                {{ govukButton({
+                    text: "Select folder",
+                    type: "submit",
+                    attributes: { "data-cy":"button-save-and-continue" }
+                }) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}
