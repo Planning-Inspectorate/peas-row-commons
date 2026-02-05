@@ -9,7 +9,7 @@
         <div class="govuk-grid-column-two-thirds">
             
             <form method="post" novalidate>
-                <span class="govuk-caption-l">Rename folder</span>
+                <span class="govuk-caption-l" data-cy="page-caption">Rename folder</span>
 
                 {{ govukInput({
                     label: {
@@ -19,17 +19,23 @@
                     },
                     id: "folderName",
                     name: "folderName",
-                    value: currentFolderName
+                    value: currentFolderName,
+                    attributes: {
+                        "data-cy": "folder-name-input"
+                    }
                 }) }}
 
                 <div class="govuk-button-group">
                     {{ govukButton({
-                        text: "Save and return"
+                        text: "Save and return",
+                        attributes: {
+                            "data-cy": "save-button"
+                        }
                     }) }}
                 </div>
 
                 <p class="govuk-body">
-                    <a class="govuk-link" href="{{ backLinkUrl }}">
+                    <a class="govuk-link" href="{{ backLinkUrl }}" data-cy="cancel-link">
                         Cancel and return to folder
                     </a>
                 </p>
