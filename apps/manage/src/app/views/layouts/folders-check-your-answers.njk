@@ -1,0 +1,22 @@
+{% extends "views/layouts/main.njk" %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l" data-cy="page-heading">
+                {% if pageCaption %}
+                    <span class="govuk-caption-l govuk-!-margin-top-8" data-cy="page-caption">
+                        {{ pageCaption }}
+                    </span>
+                {% endif %}
+                {{ pageHeading | default('Check your answers') }}
+            </h1>
+
+            {% block dynTaskList %}{% endblock %}
+
+            <a class="govuk-link govuk-body" href="{{ cancelUrl }}" data-cy="cancel-link">
+                Cancel and return to folder
+            </a>
+        </div>
+    </div>
+{% endblock %}
