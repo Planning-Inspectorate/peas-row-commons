@@ -8,7 +8,6 @@ import {
 	FOLDER_TEMPLATES_MAP,
 	buildBreadcrumbItems,
 	type FolderBreadcrumb
-	buildFolderTree,
 } from './folder-utils.ts';
 import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/types.ts';
 

@@ -6,7 +6,6 @@ import {
 import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/types.ts';
 import type { FlatFolder, FolderNode } from './types.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
-import type { FlatFolder, FolderNode } from './types.ts';
 
 const ROW_FOLDERS_MAP = {
 	[CASE_TYPES_ID.COASTAL_ACCESS]: ROW_FOLDERS,
@@ -167,32 +166,4 @@ export function buildBreadcrumbItems(caseId: string, folderPath: FolderBreadcrum
 	});
 
 	return breadcrumbItems;
-}
-
-/**
- * Takes the flat folder data connected to case and builds the nested structure,
- * NB: not currently used anywhere beyonds tests, will be used in a following ticket.
- */
-export function buildFolderTree(flatFolders: FlatFolder[]): FolderNode[] {
-	const nodeMap = new Map<string, FolderNode>();
-	const roots: FolderNode[] = [];
-
-	for (const folder of flatFolders) {
-		nodeMap.set(folder.id, { ...folder, children: [] });
-	}
-
-	for (const folder of flatFolders) {
-		const node = nodeMap.get(folder.id);
-
-		if (!node) continue;
-
-		if (folder.parentFolderId && nodeMap.has(folder.parentFolderId)) {
-			const parent = nodeMap.get(folder.parentFolderId);
-			parent?.children.push(node);
-		} else {
-			roots.push(node);
-		}
-	}
-
-	return roots;
 }
