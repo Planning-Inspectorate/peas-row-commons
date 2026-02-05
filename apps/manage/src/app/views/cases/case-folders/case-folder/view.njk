@@ -6,6 +6,7 @@
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
 {% from "govuk/components/accordion/macro.njk" import govukAccordion %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 
 {% import "views/pagination/pagination-options.njk" as paginationOptions %}
 
@@ -20,14 +21,24 @@
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
             text: "Folder has been updated",
-            type: "success"
+            type: "success",
+            attributes: { "data-cy": "notification-folder-updated" }
         }) }}
     {% endif %}
     {% if folderUpdates.folderCreated %}
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
             text: "Folder created",
-            type: "success"
+            type: "success",
+            attributes: { "data-cy": "notification-folder-created" }
+        }) }}
+    {% endif %}
+    {% if folderUpdates.filesMoved %}
+        {{ govukNotificationBanner({
+            classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
+            text: "Selected file(s) moved to " + folderName + " folder",
+            type: "success",
+            attributes: { "data-cy": "notification-files-moved" }
         }) }}
     {% endif %}
     {% if folderUpdates.folderDeleted %}
@@ -46,13 +57,13 @@
     {% endif %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full govuk-!-margin-bottom-3">
-            <h2 class="govuk-caption-l">
+            <h2 class="govuk-caption-l" data-cy="case-reference">
                 {{ reference }}
             </h2>
-            <h1 class="govuk-heading-l">
+            <h1 class="govuk-heading-l" data-cy="page-heading">
                 {{ pageHeading }}
             </h1>
-            <h1 class="govuk-heading-m">
+            <h1 class="govuk-heading-m" data-cy="folder-name-heading">
                 {{ folderName }} folder
             </h1>
         </div>
@@ -62,7 +73,8 @@
             {{ govukButton({
                 text: "Create subfolder",
                 href: currentUrl + "/create-folder",
-                classes: "govuk-button--secondary"
+                classes: "govuk-button--secondary",
+                attributes: { "data-cy": "create-subfolder-btn" }
             }) }}
 
             {{ govukButton({
@@ -84,7 +96,7 @@
                 {% set subFoldersHtml %}
                     <div class="pins-link-menu">
                         {% for folder in subFolders %}
-                            <a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}">
+                            <a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}" data-cy="subfolder-link-{{ folder.id }}">
                                 {{ folder.displayName }}
                             </a>
                         {% endfor %}
@@ -103,63 +115,115 @@
                                 html: subFoldersHtml
                             }
                         }
-                    ]
+                    ],
+                    attributes: { "data-cy": "subfolders-accordion" }
                 }) }}
             {% endif %}
         </div>
     </div>
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-full">
-            <p class="govuk-body govuk-!-font-weight-bold">Files</p>
-            {{ govukButton({
-                text: "Upload files",
-                href: currentUrl + "/upload",
-                classes: "govuk-button--secondary"
-            }) }}
+
+    <div id="pagination" class="govuk-body">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-full">
+                <p class="govuk-body govuk-!-font-weight-bold">Files</p>
+                
+                <form action="{{ currentUrl }}/move-files" method="POST">
+                    {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
+
+                    <div class="govuk-button-group">
+                        {{ govukButton({
+                            text: "Upload files",
+                            href: currentUrl + "/upload",
+                            classes: "govuk-button--secondary",
+                            attributes: { "data-cy": "upload-files-btn" }
+                        }) }}
+
+                        {% if documents|length !== 0 %}
+                            {{ govukButton({
+                                text: "Move selected",
+                                classes: "govuk-button--secondary",
+                                attributes: { 
+                                    "data-module": "govuk-button",
+                                    "data-cy": "move-selected-btn" 
+                                }
+                            }) }}
+                        {% endif %}
+                    </div>
+
+                    <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+                    {% if documents|length !== 0 %}
+                        <p class="govuk-body govuk-clearfix">
+                            <p class="govuk-body" data-cy="pagination-results-text">
+                                Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalDocuments > paginationParams.resultsEndNumber else paginationParams.totalDocuments }}</strong>
+                                of <strong>{{ paginationParams.totalDocuments }}</strong> results
+                            </p>
+                            <p class="pins-pagination-options">
+                                {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalDocuments, paginationParams.pageNumber, paginationParams.searchValue) }}
+                            </p>
+                        </p>
+                        <div class="govuk-grid-row">
+                            <div class="govuk-grid-column-full">
+                                {{ documentsTable(documents) }}
+                            </div>
+                        </div>
+                        {# if uiItems.items is <=1 then pagination options not shown #} 
+                        {% if paginationParams.uiItems.items.length > 1 %}
+                            {{ govukPagination(paginationParams.uiItems) }}
+                        {% endif %}
+                    {% else %}
+                        <p class="govuk-body" data-cy="no-documents-message">This folder contains 0 documents</p>
+                    {% endif %}
+                </form>
+            </div>
         </div>
     </div>
-    <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-    <div id="pagination" class="govuk-body">
-        {% if documents|length !== 0 %}
-            <p class="govuk-body govuk-clearfix">
-                <p class="govuk-body">
-                    Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalDocuments > paginationParams.resultsEndNumber else paginationParams.totalDocuments }}</strong>
-                    of <strong>{{ paginationParams.totalDocuments }}</strong> results
-                </p>
-                <p class="pins-pagination-options">
-                    {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalDocuments, paginationParams.pageNumber, paginationParams.searchValue) }}
-                </p>
-            </p>
-            <div class="govuk-grid-row">
-                <div class="govuk-grid-column-full">
-                    {{ documentsTable(documents) }}
-                </div>
-            </div>
-            {# if uiItems.items is <=1 then pagination options not shown #}            
-            {% if paginationParams.uiItems.items.length > 1 %}
-                {{ govukPagination(paginationParams.uiItems) }}
-            {% endif %}
-        {% else %}
-            <p class="govuk-body">This folder contains 0 documents</p>
-        {% endif %}
-    </div>
+    <script type="module" {% if cspNonce %}nonce="{{ cspNonce }}"{% endif %}>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAll = document.getElementById('checkboxes-all');
+            const checkboxes = document.querySelectorAll('input[name="selectedFiles"]');
+
+            if (selectAll) {
+                selectAll.addEventListener('change', function(e) {
+                checkboxes.forEach(function(cb) {
+                    cb.checked = e.target.checked;
+                });
+                });
+
+                checkboxes.forEach(function(cb) {
+                cb.addEventListener('change', function() {
+                    const allChecked = Array.from(checkboxes).every(c => c.checked);
+                    selectAll.checked = allChecked;
+                });
+                });
+            }
+        });
+    </script>
 {% endblock %}
 
 {% macro documentsTable(documentsList) %}
     {% set rows = [] %}
     {% for doc in documentsList %}
+        {% set checkboxHtml %}
+            <div class="govuk-checkboxes__item govuk-checkboxes--small mo-checkbox-table-cell">
+                <input class="govuk-checkboxes__input" id="select-file-{{ doc.id }}" name="selectedFiles" type="checkbox" value="{{ doc.id }}" data-cy="file-checkbox-{{ doc.id }}">
+                <label class="govuk-label govuk-checkboxes__label" for="select-file-{{ doc.id }}">
+                    <span class="govuk-visually-hidden">Select {{ doc.fileName }}</span>
+                </label>
+            </div>
+        {% endset %}
         {% set fileLinkHtml %}
             {% if doc.isPreview %}
-                <a class="govuk-link govuk-!-font-weight-bold" href="{{ doc.downloadHref }}?preview=true" target="_blank">
+                <a class="govuk-link govuk-!-font-weight-bold" href="{{ doc.downloadHref }}?preview=true" target="_blank" data-cy="file-link-{{ doc.id }}">
                 {{ doc.fileName }}
                 </a>
             {% else %}
-                <p class="govuk-body govuk-!-font-weight-bold">
+                <p class="govuk-body govuk-!-font-weight-bold" data-cy="file-name-{{ doc.id }}">
                 {{ doc.fileName }}
                 </p>
             {% endif %}
         {% endset %}
         {% set rows = (rows.push([
+            { html: checkboxHtml },
             {
                 html: fileLinkHtml,
                 attributes: {
@@ -182,12 +246,21 @@
                 }
             },
             {
-                html: "<a class='govuk-link' href=" + doc.downloadHref + ">" + 'Download' + "</a>" + "| <a class='govuk-link' href=" + currentUrl + "/" + doc.id + "/delete" + ">Delete</a>"
+                html: "<a class='govuk-link' href=" + doc.downloadHref + " data-cy='download-file-" + doc.id + "'>Download</a> | <a class='govuk-link' href=" + currentUrl + "/" + doc.id + "/delete data-cy='delete-file-" + doc.id + "'>Delete</a>"
             }
         ]), rows) %}
     {% endfor %}
+    {% set selectAllHtml %}
+        <div class="govuk-checkboxes__item govuk-checkboxes--small mo-checkbox-table-cell">
+            <input type="checkbox" class="govuk-checkboxes__input" id="checkboxes-all" name="checkboxes-all" value="all" data-cy="select-all-files">
+            <label class="govuk-label govuk-checkboxes__label" for="checkboxes-all">
+                <span class="govuk-visually-hidden">Select all documents</span>
+            </label>
+        </div>
+    {% endset %}
 
     {% set headers = [
+        { html: selectAllHtml },
         {
             text: 'File name',
             attributes: { "aria-sort": "none" },
@@ -203,7 +276,7 @@
         },
         {
             text: 'Uploaded',
-            attributes: { "aria-sort": "descending" } 
+            attributes: { "aria-sort": "descending" }
         },
         {
             text: 'Actions'
@@ -212,7 +285,8 @@
 
     {{ govukTable({
         attributes: {
-            "data-module": "moj-sortable-table"
+            "data-module": "moj-sortable-table",
+            "data-cy": "documents-table"
         },
         head: headers,
         rows: rows

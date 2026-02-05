@@ -27,6 +27,12 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 
 		const [folderUpdated, folderCreated, folderDeleted, folderRenamed] = readAndClearSessionData(req);
 
+		const errorSummary = readSessionData(req, id, 'moveFilesErrors', false, 'folder');
+		clearSessionData(req, id, 'moveFilesErrors', 'folder');
+
+		const filesMoved = readSessionData(req, folderId, 'filesMoved', false, 'folder');
+		clearSessionData(req, folderId, 'filesMoved', 'folder');
+
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
 		let caseRow, currentFolder, subFolders, documents, totalDocuments, parentFolder;
@@ -131,8 +137,10 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 				folderUpdated,
 				folderCreated,
 				folderDeleted,
-				folderRenamed
-			}
+				folderRenamed,
+				filesMoved
+			},
+			errorSummary
 		});
 	};
 }

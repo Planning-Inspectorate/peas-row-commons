@@ -1,0 +1,62 @@
+{% extends "views/layouts/main.njk" %}
+
+{% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block pageTitle %}
+    Files - Move Files
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+
+            <h1 class="govuk-heading-l" data-cy="page-heading">{{ pageHeading }}</h1>
+
+            {{ moveTable(documents) }}
+
+            {% for doc in documents %}
+                <input type="hidden" name="documentsToMove[]" value="{{ doc.id }}">
+            {% endfor %}
+
+            {{ govukButton({
+                text: "Move selected",
+                href: currentUrl + "/move",
+                attributes: { "data-cy": "move-selected-btn" }
+            }) }}
+
+        </div>
+
+        <div class="govuk-grid-column-two-thirds">
+            <a class="govuk-link" href="{{ backLinkUrl }}" data-cy="cancel-link">
+                Cancel and return to folder
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
+{% macro moveTable(docRows) %}
+    {% set docs = [] %}
+
+    {% for doc in docRows %}
+        {% set docs = (docs.push([
+            {
+                html: "<span data-cy='file-name-" + doc.id + "'>" + doc.fileName + "</span>"
+            }
+        ]), docs) %}
+    {% endfor %}
+
+    {% set headers = [
+        {
+            text: 'File name',
+            classes: "govuk-!-width-full"
+        }
+    ] %}
+
+    {{ govukTable({
+        head: headers,
+        rows: docs,
+        attributes: { "data-cy": "move-files-table" }
+    }) }}
+{% endmacro %}
