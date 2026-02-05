@@ -25,13 +25,8 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			throw new Error('folderId param required');
 		}
 
-		const [folderUpdated, folderCreated, folderDeleted, folderRenamed] = readAndClearSessionData(req);
-
-		const errorSummary = readSessionData(req, id, 'moveFilesErrors', false, 'folder');
-		clearSessionData(req, id, 'moveFilesErrors', 'folder');
-
-		const filesMoved = readSessionData(req, folderId, 'filesMoved', false, 'folder');
-		clearSessionData(req, folderId, 'filesMoved', 'folder');
+		const [folderUpdated, folderCreated, folderDeleted, folderRenamed, filesMoved, errorSummary] =
+			readAndClearSessionData(req);
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
@@ -147,25 +142,31 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 
 /**
  * Reads session data for adding files (updating folder),
- * creating folders, and deleting folders, and renaming folders
+ * creating folders, deleting folders, renaming folders, moving files, errors
  * then wipes them from session so that the user doesn't see it on refresh repeatedly.
  *
  * We use the case id for creating and deleting because they are accessed
  * outside of the folder view, but folder updating is about uploading files
- * to a folder, so we use its own id, same with renaming.
+ * to a folder, so we use its own id, same with renaming and moving files.
  */
 function readAndClearSessionData(req: Request) {
 	const { id, folderId } = req.params;
 
 	const folderUpdated = readSessionData(req, folderId, 'updated', false, 'folder');
+	const folderRenamed = readSessionData(req, folderId, 'renamed', false, 'folder');
+	const filesMoved = readSessionData(req, folderId, 'filesMoved', false, 'folder');
 	const folderCreated = readSessionData(req, id, 'created', false, 'folder');
 	const folderDeleted = readSessionData(req, id, 'deleted', false, 'folder');
-	const folderRenamed = readSessionData(req, folderId, 'renamed', false, 'folder');
+
+	const errorSummary = readSessionData(req, id, 'moveFilesErrors', false, 'folder');
 
 	clearSessionData(req, folderId, 'updated', 'folder');
+	clearSessionData(req, folderId, 'renamed', 'folder');
+	clearSessionData(req, folderId, 'filesMoved', 'folder');
 	clearSessionData(req, id, 'created', 'folder');
 	clearSessionData(req, id, 'deleted', 'folder');
-	clearSessionData(req, folderId, 'renamed', 'folder');
 
-	return [folderUpdated, folderCreated, folderDeleted, folderRenamed];
+	clearSessionData(req, id, 'moveFilesErrors', 'folder');
+
+	return [folderUpdated, folderCreated, folderDeleted, folderRenamed, filesMoved, errorSummary];
 }
