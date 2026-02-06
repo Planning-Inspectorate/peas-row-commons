@@ -141,10 +141,6 @@ export function buildFolderTree(flatFolders: FlatFolder[]): FolderNode[] {
 /**
  * Builds breadcrumb items for the breadcrumbs component.
  * Structure: Manage case files > Folder > Subfolder > Subfolder
- *
- * @param caseId - The case ID for building URLs
- * @param folderPath - Array of folders from root to current (from getFolderPath)
- * @returns Array of breadcrumb items
  */
 export function buildBreadcrumbItems(caseId: string, folderPath: FolderBreadcrumb[]): BreadcrumbItem[] {
 	const baseFoldersUrl = `/cases/${caseId}/case-folders`;

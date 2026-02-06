@@ -149,10 +149,6 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 /**
  * Fetches the folder path (ancestry chain) from current folder up to root.
  * Returns folders in order from root to current folder.
- *
- * @param db - Prisma client instance
- * @param folderId - The current folder ID
- * @returns Array of folders from root to current folder
  */
 export async function getFolderPath(db: PrismaClient, folderId: string): Promise<FolderBreadcrumb[]> {
 	const folderPath: FolderBreadcrumb[] = [];
