@@ -2,8 +2,8 @@ import { Router as createRouter } from 'express';
 import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { validateIdFormat } from '../../view/controller.ts';
 import type { ManageService } from '#service';
-import { buildCreateFolders, buildViewCreateFolders } from './controller.ts';
 import { buildValidateFolder } from '../validation/validation.ts';
+import { buildRenameFolder, buildRenameFolderView } from './controller.ts';
 
 export function createRoutes(service: ManageService) {
 	const router = createRouter({ mergeParams: true });
@@ -12,8 +12,8 @@ export function createRoutes(service: ManageService) {
 
 	router
 		.route('/')
-		.get(validateIdFormat, asyncHandler(viewCreateCaseFolders)) // Gets the "create folder" view
-		.post(validateIdFormat, validateFolder, asyncHandler(createCaseFolders)); // Posts to create the folder
+		.get(validateIdFormat, asyncHandler(viewCreateCaseFolders)) // Gets the "rename folder" view
+		.post(validateIdFormat, validateFolder, asyncHandler(createCaseFolders)); // Posts to rename the folder
 
 	return router;
 }
@@ -22,5 +22,5 @@ export function createRoutes(service: ManageService) {
  * Creates the middlewares needed for the get and post for creating folders
  */
 function createMiddlewares(service: ManageService) {
-	return [buildViewCreateFolders(), buildCreateFolders(service), buildValidateFolder(service, 'create')];
+	return [buildRenameFolderView(service), buildRenameFolder(service), buildValidateFolder(service, 'edit')];
 }
