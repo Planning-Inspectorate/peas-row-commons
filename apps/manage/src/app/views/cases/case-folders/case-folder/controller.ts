@@ -3,6 +3,8 @@ import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { createFoldersViewModel } from '../view-model.ts';
+import { type FolderBreadcrumb, buildBreadcrumbItems } from '../folder-utils.ts';
+import type { PrismaClient, Folder } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { createDocumentsViewModel } from './view-model.ts';
 import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
@@ -90,6 +92,9 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			return notFoundHandler(req, res);
 		}
 
+		const folderPath = await getFolderPath(db, folderId);
+		const breadcrumbItems = buildBreadcrumbItems(id, folderPath);
+
 		const { totalPages, resultsStartNumber, resultsEndNumber } = getPageData(
 			totalDocuments || 0,
 			selectedItemsPerPage,
@@ -135,9 +140,45 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 				folderRenamed,
 				filesMoved
 			},
-			errorSummary
+			errorSummary,
+			breadcrumbItems
 		});
 	};
+}
+
+/**
+ * Fetches the folder path (ancestry chain) from current folder up to root.
+ * Returns folders in order from root to current folder.
+ *
+ * @param db - Prisma client instance
+ * @param folderId - The current folder ID
+ * @returns Array of folders from root to current folder
+ */
+export async function getFolderPath(db: PrismaClient, folderId: string): Promise<FolderBreadcrumb[]> {
+	const folderPath: FolderBreadcrumb[] = [];
+	let currentId: string | null = folderId;
+
+	// Walk up the tree via parentFolderId
+	while (currentId) {
+		const folder: Pick<Folder, 'id' | 'displayName' | 'parentFolderId'> | null = await db.folder.findUnique({
+			where: { id: currentId },
+			select: {
+				id: true,
+				displayName: true,
+				parentFolderId: true
+			}
+		});
+
+		if (!folder) {
+			break;
+		}
+
+		folderPath.push(folder);
+		currentId = folder.parentFolderId;
+	}
+
+	// Reverse so root folder is first
+	return folderPath.reverse();
 }
 
 /**
