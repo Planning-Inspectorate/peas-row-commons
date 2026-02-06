@@ -5,6 +5,7 @@
 {% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
+{% from "govuk/components/accordion/macro.njk" import govukAccordion %}
 
 {% import "views/pagination/pagination-options.njk" as paginationOptions %}
 
@@ -15,10 +16,31 @@
 {% endblock %}
 
 {% block content %}
-    {% if folderUpdated %}
+    {% if folderUpdates.folderUpdated %}
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
             text: "Folder has been updated",
+            type: "success"
+        }) }}
+    {% endif %}
+    {% if folderUpdates.folderCreated %}
+        {{ govukNotificationBanner({
+            classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
+            text: "Folder created",
+            type: "success"
+        }) }}
+    {% endif %}
+    {% if folderUpdates.folderDeleted %}
+        {{ govukNotificationBanner({
+            classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
+            text: "Folder deleted",
+            type: "success"
+        }) }}
+    {% endif %}
+    {% if folderUpdates.folderRenamed %}
+        {{ govukNotificationBanner({
+            classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
+            text: "Folder renamed",
             type: "success"
         }) }}
     {% endif %}
@@ -36,19 +58,56 @@
         </div>
     </div>
     <div class="govuk-grid-row">
-        <div class="govuk-grid-column-full">
-            <div class="pins-link-menu">
-                {% if subFolders|length !== 0 %}
-                    {% for folder in subFolders %}
-                        <a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}">
-                            {{ folder.displayName }}
-                        </a>
-                    {% endfor %}
-                {% endif %}
-            </div>
+        <div class="govuk-grid-column-full govuk-button-group">
+            {{ govukButton({
+                text: "Create subfolder",
+                href: currentUrl + "/create-folder",
+                classes: "govuk-button--secondary"
+            }) }}
+
+            {{ govukButton({
+                text: "Rename folder",
+                href: currentUrl + "/rename-folder",
+                classes: "govuk-button--secondary"
+            }) }}
+
+            {{ govukButton({
+                text: "Delete folder",
+                href: currentUrl + "/delete-folder",
+                classes: "govuk-button--secondary"
+            }) }}
         </div>
     </div>
-    <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            {% if subFolders|length !== 0 %}
+                {% set subFoldersHtml %}
+                    <div class="pins-link-menu">
+                        {% for folder in subFolders %}
+                            <a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}">
+                                {{ folder.displayName }}
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endset %}
+
+                {{ govukAccordion({
+                    id: "sub-folders-accordion",
+                    classes: "hide-controls",
+                    hideAllSections: true,
+                    showSectionText: "Show subfolders list",
+                    hideSectionText: "Hide subfolders list",
+                    items: [
+                        {
+                            content: {
+                                html: subFoldersHtml
+                            }
+                        }
+                    ]
+                }) }}
+            {% endif %}
+        </div>
+    </div>
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full">
             <p class="govuk-body govuk-!-font-weight-bold">Files</p>

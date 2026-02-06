@@ -78,10 +78,18 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				Dates: true,
 				Costs: true,
 				Abeyance: true,
-				Notes: true,
+				Notes: {
+					include: {
+						Author: true
+					}
+				},
 				Authority: true,
 				Applicant: true,
-				Decision: true,
+				Decision: {
+					include: {
+						DecisionMaker: true
+					}
+				},
 				Procedures: {
 					include: {
 						HearingVenue: true,
@@ -89,7 +97,19 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 						ConferenceVenue: true
 					}
 				},
-				Inspectors: true
+				Inspectors: {
+					include: {
+						Inspector: true
+					}
+				},
+				Contacts: {
+					include: {
+						Address: true
+					}
+				},
+				RelatedCases: true,
+				LinkedCases: true,
+				CaseOfficer: true
 			}
 		});
 

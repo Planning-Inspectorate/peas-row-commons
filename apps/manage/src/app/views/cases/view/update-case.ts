@@ -10,6 +10,7 @@ import { yesNoToBoolean } from '@planning-inspectorate/dynamic-forms/src/compone
 import { handleProcedureGeneric } from './procedure-utils.ts';
 import { JOURNEY_ID } from './journey.ts';
 import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
+import { CONTACT_MAPPINGS, handleContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -161,12 +162,103 @@ function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Pri
 	handleAuthority(flatData, prismaPayload);
 	handleAddress(flatData, prismaPayload);
 	handleInspectors(flatData, prismaPayload);
-
+	handleContacts(flatData, prismaPayload, CONTACT_MAPPINGS);
+	handleRelatedCases(flatData, prismaPayload);
+	handleLinkedCases(flatData, prismaPayload);
 	['One', 'Two', 'Three'].forEach((suffix) => {
 		handleProcedureGeneric(caseId, flatData, prismaPayload, suffix);
 	});
-
 	handleBooleans(flatData);
+	handleCaseOfficer(flatData, prismaPayload);
+	handleDecisionMaker(flatData, prismaPayload);
+}
+
+/**
+ * Handles connecting or creating a Decision Maker (User) nested inside the Case Decision.
+ */
+function handleDecisionMaker(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (flatData.decisionMakerId) {
+		const userConnection = {
+			connectOrCreate: {
+				where: { idpUserId: flatData.decisionMakerId },
+				create: { idpUserId: flatData.decisionMakerId }
+			}
+		};
+
+		if (!prismaPayload.Decision) {
+			prismaPayload.Decision = {
+				upsert: { create: {}, update: {} }
+			};
+		}
+
+		const decisionPayload = prismaPayload.Decision;
+
+		if (decisionPayload.upsert) {
+			decisionPayload.upsert.create.DecisionMaker = userConnection;
+			decisionPayload.upsert.update.DecisionMaker = userConnection;
+		}
+
+		delete flatData.decisionMakerId;
+	}
+}
+
+/**
+ * Handles connecting or creating a Case Officer based on their Entra ID.
+ */
+function handleCaseOfficer(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (flatData.caseOfficerId) {
+		prismaPayload.CaseOfficer = {
+			connectOrCreate: {
+				where: { idpUserId: flatData.caseOfficerId },
+				create: { idpUserId: flatData.caseOfficerId }
+			}
+		};
+
+		delete flatData.caseOfficerId;
+	}
+}
+
+/**
+ * Handles the deletion and creation of linked cases
+ */
+function handleLinkedCases(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (!Object.hasOwn(flatData, 'linkedCaseDetails')) return;
+
+	const newLinkedCases = flatData.linkedCaseDetails.map((linkedCase: any) => ({
+		reference: linkedCase.linkedCaseReference,
+		isLead: yesNoToBoolean(linkedCase.linkedCaseIsLead)
+	}));
+
+	// TODO: deleteMany wipes the current LinkedCases and then we replace
+	// them with the current cases + any new ones. This will need to change
+	// when we do case history.
+	prismaPayload.LinkedCases = {
+		deleteMany: {},
+		create: newLinkedCases
+	};
+
+	delete flatData.linkedCaseDetails;
+}
+
+/**
+ * Handles the deletion and creation of related cases
+ */
+function handleRelatedCases(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (!Object.hasOwn(flatData, 'relatedCaseDetails')) return;
+
+	const newRelatedCases = flatData.relatedCaseDetails.map((relatedCase: any) => ({
+		reference: relatedCase.relatedCaseReference
+	}));
+
+	// TODO: deleteMany wipes the current RelatedCases and then we replace
+	// them with the current cases + any new ones. This will need to change
+	// when we do case history.
+	prismaPayload.RelatedCases = {
+		deleteMany: {},
+		create: newRelatedCases
+	};
+
+	delete flatData.relatedCaseDetails;
 }
 
 function handleBooleans(flatData: Record<string, any>) {
@@ -182,12 +274,20 @@ function handleInspectors(flatData: Record<string, any>, prismaPayload: Prisma.C
 	if (!Object.hasOwn(flatData, 'inspectorDetails')) return;
 
 	const newInspectors = flatData.inspectorDetails.map(
-		(inspector: { inspectorEntraId: string; inspectorAllocatedDate: string }) => ({
-			inspectorEntraId: inspector.inspectorEntraId,
+		(inspector: { inspectorId: string; inspectorAllocatedDate: string }) => ({
+			Inspector: {
+				connectOrCreate: {
+					where: { idpUserId: inspector.inspectorId },
+					create: { idpUserId: inspector.inspectorId }
+				}
+			},
 			inspectorAllocatedDate: inspector.inspectorAllocatedDate
 		})
 	);
 
+	// TODO: deleteMany wipes the current Inspectors and then we replace
+	// them with the current inspectors + any new ones. This will need to change
+	// when we do case history.
 	prismaPayload.Inspectors = {
 		deleteMany: {},
 		create: newInspectors

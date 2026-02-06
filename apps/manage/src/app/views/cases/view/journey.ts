@@ -30,7 +30,12 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.act)
 				.addQuestion(questions.consentSought)
 				.addQuestion(questions.inspectorBand)
-				.addQuestion(questions.primaryProcedure),
+				.addQuestion(questions.primaryProcedure)
+				.addQuestion(questions.relatedCaseDetails, new ManageListSection().addQuestion(questions.addRelatedCase))
+				.addQuestion(
+					questions.linkedCaseDetails,
+					new ManageListSection().addQuestion(questions.linkedCaseReference).addQuestion(questions.isLead)
+				),
 			new Section('Case details', 'case-details')
 				.addQuestion(questions.reference)
 				.addQuestion(questions.externalReference)
@@ -62,6 +67,23 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.proposalLetterDate)
 				.addQuestion(questions.expiryDate)
 				.addQuestion(questions.partiesDecisionNotificationDeadlineDate),
+			new Section('Key contacts', 'key-contacts')
+				.addQuestion(
+					questions.objectorDetails,
+					new ManageListSection()
+						.addQuestion(questions.objectorName)
+						.addQuestion(questions.objectorAddress)
+						.addQuestion(questions.objectorContactDetails)
+						.addQuestion(questions.objectorStatus)
+				)
+				.addQuestion(
+					questions.contactDetails,
+					new ManageListSection()
+						.addQuestion(questions.contactType)
+						.addQuestion(questions.contactName)
+						.addQuestion(questions.contactAddress)
+						.addQuestion(questions.contactContactDetails)
+				),
 			...procedureSections,
 			new Section('Outcome', 'outcome')
 				.addQuestion(questions.decisionType)

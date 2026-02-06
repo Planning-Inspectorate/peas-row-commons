@@ -7,6 +7,8 @@ import type { CaseListFields, CaseNoteFields, CaseOfficer } from './types.ts';
 import { formatInTimeZone } from 'date-fns-tz';
 import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
 import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address.ts';
+import { mapContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
 
 function formatValue(value: any) {
 	if (typeof value === 'boolean') {
@@ -86,6 +88,38 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		delete mergedData.Authority;
 	}
 
+	if (caseRow.RelatedCases?.length) {
+		mergedData.relatedCaseDetails = caseRow.RelatedCases.map((relatedCase) => ({
+			id: relatedCase.id,
+			relatedCaseReference: relatedCase.reference
+		}));
+		delete mergedData.RelatedCases;
+	}
+
+	if (caseRow.LinkedCases?.length) {
+		mergedData.linkedCaseDetails = caseRow.LinkedCases.map((linkedCase) => ({
+			id: linkedCase.id,
+			linkedCaseReference: linkedCase.reference,
+			linkedCaseIsLead: formatValue(linkedCase.isLead)
+		}));
+		delete mergedData.LinkedCases;
+	}
+
+	if (caseRow.CaseOfficer) {
+		mergedData.caseOfficerId = caseRow.CaseOfficer.idpUserId;
+		delete mergedData.CaseOfficer;
+	}
+
+	if (caseRow.Decision?.DecisionMaker) {
+		mergedData.decisionMakerId = caseRow.Decision.DecisionMaker.idpUserId;
+	}
+
+	const inspectors =
+		caseRow.Inspectors?.map((inspector) => ({
+			...inspector,
+			inspectorId: inspector.Inspector.idpUserId
+		})) || [];
+
 	const mappedProcedures = mapProcedures(mergedData.Procedures || []);
 	delete mergedData.Procedures;
 
@@ -100,6 +134,14 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 
 	const mappedNotes = mapNotes(caseRow.Notes || [], groupMembers);
 
+	const objectors = (caseRow.Contacts || []).filter((contact) => contact.contactTypeId === CONTACT_TYPE_ID.OBJECTOR);
+	const genericContacts = (caseRow.Contacts || []).filter(
+		(contact) => contact.contactTypeId !== CONTACT_TYPE_ID.OBJECTOR
+	);
+
+	const mappedObjectors = mapContacts(objectors, 'objector');
+	const mappedContacts = mapContacts(genericContacts, 'contact');
+
 	return {
 		...sanitisedData,
 		...mappedProcedures,
@@ -107,7 +149,9 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		siteAddress,
 		receivedDateDisplay: formatInTimeZone(caseRow.receivedDate, 'Europe/London', 'dd MMM yyyy'),
 		receivedDateSortable: new Date(caseRow.receivedDate)?.getTime(),
-		inspectorDetails: caseRow.Inspectors
+		inspectorDetails: inspectors,
+		objectorDetails: mappedObjectors,
+		contactDetails: mappedContacts
 	};
 }
 
@@ -123,7 +167,7 @@ export const mapNotes = (
 
 	return {
 		caseNotes: caseNotes.map((caseNote) => {
-			const user = groupMembers.caseOfficers.find((member) => member.id === caseNote.authorEntraId);
+			const user = groupMembers.caseOfficers.find((member) => member.id === caseNote.Author.idpUserId);
 
 			return {
 				date: dateISOStringToDisplayDate(caseNote.createdAt),

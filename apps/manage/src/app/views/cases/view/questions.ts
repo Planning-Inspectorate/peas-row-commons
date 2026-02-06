@@ -12,7 +12,8 @@ import {
 	createOutcomeQuestions,
 	OVERVIEW_QUESTIONS,
 	OUTCOME_QUESTIONS,
-	createProcedureQuestions
+	createProcedureQuestions,
+	KEY_CONTACTS_QUESTIONS
 } from './question-utils.ts';
 
 import type { CaseOfficer } from './types.ts';
@@ -38,7 +39,8 @@ export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }) {
 		...generateOutcomeQuestions,
 		...procedureOneQuestions,
 		...procedureTwoQuestions,
-		...procedureThreeQuestions
+		...procedureThreeQuestions,
+		...KEY_CONTACTS_QUESTIONS
 	};
 
 	const textOverrides = {

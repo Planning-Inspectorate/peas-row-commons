@@ -200,8 +200,8 @@ describe('Update Case Controller', () => {
 		it('should transform inspectorDetails into Inspectors deleteMany/create payload', () => {
 			const input = {
 				inspectorDetails: [
-					{ inspectorEntraId: '123', inspectorAllocatedDate: '2025-01-01' },
-					{ inspectorEntraId: '456', inspectorAllocatedDate: '2025-02-01' }
+					{ inspectorId: '123', inspectorAllocatedDate: '2025-01-01' },
+					{ inspectorId: '456', inspectorAllocatedDate: '2025-02-01' }
 				]
 			};
 
@@ -213,10 +213,111 @@ describe('Update Case Controller', () => {
 			assert.deepStrictEqual(inspectorsUpdate.deleteMany, {});
 			assert.strictEqual(inspectorsUpdate.create.length, 2);
 
-			assert.strictEqual(inspectorsUpdate.create[0].inspectorEntraId, '123');
+			assert.strictEqual(inspectorsUpdate.create[0].Inspector.connectOrCreate.create.idpUserId, '123');
 			assert.strictEqual(inspectorsUpdate.create[0].inspectorAllocatedDate, '2025-01-01');
 
 			assert.strictEqual((result as any).inspectorDetails, undefined);
+		});
+
+		it('should transform relatedCaseDetails into RelatedCases deleteMany/create payload', () => {
+			const input = {
+				relatedCaseDetails: [{ relatedCaseReference: 'REF-123' }, { relatedCaseReference: 'REF-456' }]
+			};
+
+			const result = mapCasePayload(input, 'case-123');
+
+			const relatedCasesUpdate = (result as any).RelatedCases;
+			assert.ok(relatedCasesUpdate, 'Should have RelatedCases property');
+
+			assert.deepStrictEqual(relatedCasesUpdate.deleteMany, {});
+			assert.strictEqual(relatedCasesUpdate.create.length, 2);
+
+			assert.strictEqual(relatedCasesUpdate.create[0].reference, 'REF-123');
+			assert.strictEqual(relatedCasesUpdate.create[1].reference, 'REF-456');
+
+			assert.strictEqual((result as any).relatedCaseDetails, undefined);
+		});
+
+		it('should transform linkedCaseDetails into RelatedCases deleteMany/create payload', () => {
+			const input = {
+				linkedCaseDetails: [
+					{ linkedCaseReference: 'REF-123', linkedCaseIsLead: 'yes' },
+					{ linkedCaseReference: 'REF-456', linkedCaseIsLead: 'yes' }
+				]
+			};
+
+			const result = mapCasePayload(input, 'case-123');
+
+			const linkedCaseUpdate = (result as any).LinkedCases;
+			assert.ok(linkedCaseUpdate, 'Should have LinkedCases property');
+
+			assert.deepStrictEqual(linkedCaseUpdate.deleteMany, {});
+			assert.strictEqual(linkedCaseUpdate.create.length, 2);
+
+			assert.strictEqual(linkedCaseUpdate.create[0].reference, 'REF-123');
+			assert.strictEqual(linkedCaseUpdate.create[1].reference, 'REF-456');
+
+			assert.strictEqual(linkedCaseUpdate.create[0].isLead, true);
+			assert.strictEqual(linkedCaseUpdate.create[1].isLead, true);
+
+			assert.strictEqual((result as any).linkedCaseDetails, undefined);
+		});
+
+		it('should transform decisionMakerId into Decision.DecisionMaker connectOrCreate payload', () => {
+			const input = {
+				decisionMakerId: 'user-auth0-123'
+			};
+			const result = mapCasePayload(input, 'case-123');
+
+			const decisionUpdate = (result as any).Decision;
+			assert.ok(decisionUpdate, 'Should have Decision property');
+			assert.ok(decisionUpdate.upsert, 'Should be an upsert');
+
+			const expectedUserConnection = {
+				connectOrCreate: {
+					where: { idpUserId: 'user-auth0-123' },
+					create: { idpUserId: 'user-auth0-123' }
+				}
+			};
+
+			assert.deepStrictEqual(decisionUpdate.upsert.create.DecisionMaker, expectedUserConnection);
+			assert.deepStrictEqual(decisionUpdate.upsert.update.DecisionMaker, expectedUserConnection);
+
+			assert.strictEqual((result as any).decisionMakerId, undefined);
+		});
+
+		it('should transform caseOfficerId into CaseOfficer connectOrCreate payload', () => {
+			const input = {
+				caseOfficerId: 'officer-456'
+			};
+			const result = mapCasePayload(input, 'case-123');
+
+			const caseOfficerUpdate = (result as any).CaseOfficer;
+			assert.ok(caseOfficerUpdate, 'Should have CaseOfficer property');
+
+			const expectedOfficerConnection = {
+				connectOrCreate: {
+					where: { idpUserId: 'officer-456' },
+					create: { idpUserId: 'officer-456' }
+				}
+			};
+
+			assert.deepStrictEqual(caseOfficerUpdate, expectedOfficerConnection);
+
+			assert.strictEqual((result as any).caseOfficerId, undefined);
+		});
+
+		it('should handle decisionMakerId merging with existing Decision updates', () => {
+			const input = {
+				decisionDate: '2025-05-01',
+				decisionMakerId: 'user-789'
+			};
+			const result = mapCasePayload(input, 'case-123');
+
+			const decisionUpdate = (result as any).Decision;
+
+			assert.strictEqual(decisionUpdate.upsert.create.DecisionMaker.connectOrCreate.where.idpUserId, 'user-789');
+			assert.strictEqual(decisionUpdate.upsert.update.DecisionMaker.connectOrCreate.where.idpUserId, 'user-789');
 		});
 	});
 });

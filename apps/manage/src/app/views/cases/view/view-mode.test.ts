@@ -141,7 +141,9 @@ describe('view-model', () => {
 		});
 
 		it('should pass through Inspectors data to inspectorDetails', () => {
-			const mockInspectors = [{ id: 'insp-1', name: 'Inspector Gadget' }];
+			const mockInspectors = [
+				{ id: 'insp-1', name: 'Inspector Gadget', Inspector: { idpUserId: 'test' }, inspectorId: 'test' }
+			];
 			const input = {
 				id: '123',
 				receivedDate: new Date(),
@@ -150,7 +152,35 @@ describe('view-model', () => {
 
 			const result: any = caseToViewModel(input as any, groupMembers);
 
-			assert.strictEqual(result.inspectorDetails, mockInspectors);
+			assert.deepStrictEqual(result.inspectorDetails, mockInspectors);
+		});
+
+		it('should pass through Related Case data to relatedCaseDetails', () => {
+			const mockRelations = [{ reference: 'DRO/123', id: 1 }];
+			const mockOutcome = [{ relatedCaseReference: 'DRO/123', id: 1 }];
+			const input = {
+				id: '123',
+				receivedDate: new Date(),
+				RelatedCases: mockRelations
+			};
+
+			const result: any = caseToViewModel(input as any, groupMembers);
+
+			assert.deepStrictEqual(result.relatedCaseDetails, mockOutcome);
+		});
+
+		it('should pass through Linked Case data to linkedCaseDetails', () => {
+			const mockRelations = [{ reference: 'DRO/123', isLead: true, id: 1 }];
+			const mockOutcome = [{ linkedCaseReference: 'DRO/123', linkedCaseIsLead: 'yes', id: 1 }];
+			const input = {
+				id: '123',
+				receivedDate: new Date(),
+				LinkedCases: mockRelations
+			};
+
+			const result: any = caseToViewModel(input as any, groupMembers);
+
+			assert.deepStrictEqual(result.linkedCaseDetails, mockOutcome);
 		});
 	});
 
@@ -163,12 +193,16 @@ describe('view-model', () => {
 				{
 					createdAt: dateOld,
 					comment: 'Old note',
-					userId: '123'
+					Author: {
+						idpUserId: '123'
+					}
 				},
 				{
 					createdAt: dateNew,
 					comment: 'New note',
-					userId: 'user_2'
+					Author: {
+						idpUserId: 'user_2'
+					}
 				}
 			];
 
@@ -181,7 +215,7 @@ describe('view-model', () => {
 			assert.strictEqual(result.caseNotes[0].userName, 'Unknown');
 
 			assert.strictEqual(result.caseNotes[1].commentText, 'Old note');
-			assert.strictEqual(result.caseNotes[1].userName, 'Unknown');
+			assert.strictEqual(result.caseNotes[1].userName, 'Oscar');
 
 			assert.ok(result.caseNotes[0].date);
 			assert.ok(result.caseNotes[0].dayOfWeek);
@@ -200,8 +234,8 @@ describe('view-model', () => {
 			const dateNew = new Date('2024-01-01');
 
 			const input = [
-				{ createdAt: dateOld, comment: 'A', userId: '1' },
-				{ createdAt: dateNew, comment: 'B', userId: '2' }
+				{ createdAt: dateOld, comment: 'A', Author: { idpUserId: '1' } },
+				{ createdAt: dateNew, comment: 'B', Author: { idpUserId: '2' } }
 			];
 
 			mapNotes(input as any, groupMembers);

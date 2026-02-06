@@ -20,12 +20,22 @@ import {
 	PROCEDURE_EVENT_FORMATS,
 	INQUIRY_OR_CONFERENCES,
 	ADMIN_PROCEDURES,
-	SITE_VISITS
+	SITE_VISITS,
+	OBJECTOR_STATUSES,
+	CONTACT_TYPES
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
-import type { CaseOfficer } from './types.ts';
+import type { CaseOfficer, PersonConfig } from './types.ts';
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/outcome.ts';
+import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
+
+type RadioOption = { text: string; value: string } | { divider: string };
+
+// Adds a divider 'Or' between options
+export const OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER = OBJECTOR_STATUSES.map(
+	(s) => ({ text: s.displayName, value: s.id }) as RadioOption
+).toSpliced(-1, 0, { divider: 'or' });
 
 interface DateQuestionProps {
 	fieldName: string;
@@ -635,6 +645,85 @@ export const OVERVIEW_QUESTIONS = {
 				}
 			]
 		}
+	},
+	relatedCaseDetails: {
+		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
+		title: 'Related case(s)',
+		question: 'Check related case details',
+		fieldName: 'relatedCaseDetails',
+		url: 'check-related-cases',
+		showAnswersInSummary: true,
+		viewData: { emptyName: 'related case' }
+	},
+	addRelatedCase: {
+		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // Multi because we want an H1 header and an inline question too.
+		title: 'Add related case details',
+		question: 'Add related case details',
+		fieldName: 'addRelatedCase',
+		url: 'add-related-cases',
+		inputFields: [{ fieldName: 'relatedCaseReference', label: 'Related case reference' }],
+		viewData: { tableHeader: 'Related case reference' },
+		validators: [
+			new MultiFieldInputValidator({
+				fields: [
+					{
+						fieldName: 'relatedCaseReference',
+						required: true,
+						errorMessage: 'Enter related case reference',
+						maxLength: { maxLength: 250, maxLengthMessage: 'Related case must be 250 characters or less' }
+					}
+				]
+			})
+		]
+	},
+	linkedCaseDetails: {
+		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
+		title: 'Linked case(s)',
+		question: 'Check linked case details',
+		fieldName: 'linkedCaseDetails',
+		url: 'check-linked-cases',
+		showAnswersInSummary: true,
+		viewData: { emptyName: 'linked case' }
+	},
+	linkedCaseReference: {
+		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // Multi because we want an H1 header and an inline question too.
+		title: 'Add linked case details',
+		question: 'Add linked case details',
+		fieldName: 'addlinkedCase',
+		url: 'linked-case-reference',
+		inputFields: [{ fieldName: 'linkedCaseReference', label: 'Linked case reference' }],
+		viewData: { tableHeader: 'Linked case reference' },
+		validators: [
+			new MultiFieldInputValidator({
+				fields: [
+					{
+						fieldName: 'linkedCaseReference',
+						required: true,
+						errorMessage: 'Enter linked case reference',
+						maxLength: { maxLength: 250, maxLengthMessage: 'Linked case must be 250 characters or less' }
+					}
+				]
+			})
+		]
+	},
+	isLead: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Is this the lead case?',
+		question: 'Is this the lead case?',
+		fieldName: 'linkedCaseIsLead',
+		url: 'is-lead',
+		viewData: { tableHeader: 'Lead?' },
+		options: [
+			{
+				text: 'Yes',
+				value: 'yes'
+			},
+			{
+				text: 'No',
+				value: 'no'
+			}
+		],
+		validators: [new RequiredValidator('Select yes if this is the lead case')]
 	}
 };
 
@@ -648,26 +737,29 @@ export const TEAM_QUESTIONS = {
 		validators: [new RequiredValidator('Select a case officer')]
 	},
 	inspectorDetails: {
-		type: COMPONENT_TYPES.MANAGE_LIST,
+		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
 		title: 'Inspector(s)',
 		question: 'Check inspector details',
 		fieldName: 'inspectorDetails',
 		url: 'inspector-details',
-		showAnswersInSummary: true
+		showAnswersInSummary: true,
+		viewData: { emptyName: 'inspector' }
 	},
 	inspector: {
 		type: COMPONENT_TYPES.SELECT,
 		title: 'Inspector',
 		question: 'Who is the inspector?',
-		fieldName: 'inspectorEntraId',
+		fieldName: 'inspectorId',
 		url: 'inspector',
-		validators: [new RequiredValidator('Select an inspector')]
+		validators: [new RequiredValidator('Select an inspector')],
+		viewData: { tableHeader: 'Inspector name' }
 	},
 	inspectorAllocatedDate: dateQuestion({
 		fieldName: 'inspectorAllocatedDate',
 		title: 'Inspector allocated date',
 		question: 'What date was the inspector appointed?',
-		url: 'inspector-allocated-date'
+		url: 'inspector-allocated-date',
+		viewData: { tableHeader: 'Date appointed' }
 	})
 };
 
@@ -719,7 +811,7 @@ export const OUTCOME_QUESTIONS = {
 		type: COMPONENT_TYPES.SELECT,
 		title: 'Decision maker',
 		question: 'Who is the decision maker?',
-		fieldName: 'decisionMakerEntraId',
+		fieldName: 'decisionMakerId',
 		url: 'decision-maker',
 		validators: [new RequiredValidator('Select the decision maker')]
 	},
@@ -1657,6 +1749,145 @@ export const createProcedureQuestions = (suffix: string) => {
 	};
 };
 
+const createPersonQuestions = ({ section, db, url, label }: PersonConfig) => {
+	const labelLower = label.toLowerCase();
+
+	return {
+		[`${section}Name`]: {
+			type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
+			title: label,
+			question: `Who is the ${labelLower}?`,
+			fieldName: `${section}Name`,
+			url: `${url}-name`,
+			hint: 'Enter the name of the individual, the organisation, or both.',
+			viewData: { tableHeader: 'Name' },
+			inputFields: [
+				{ fieldName: `${db}FirstName`, label: 'First name' },
+				{ fieldName: `${db}LastName`, label: 'Last name' },
+				{ fieldName: `${db}OrgName`, label: `${label} company or organisation name` }
+			],
+			validators: [
+				new MultiFieldInputValidator({
+					fields: [
+						{
+							fieldName: `${db}FirstName`,
+							required: false,
+							errorMessage: `Enter ${labelLower} first name`,
+							maxLength: { maxLength: 250, maxLengthMessage: `${label} first name must be less than 250 characters` }
+						},
+						{
+							fieldName: `${db}LastName`,
+							required: false,
+							errorMessage: `Enter ${labelLower} last name`,
+							maxLength: { maxLength: 250, maxLengthMessage: `${label} last name must be less than 250 characters` }
+						},
+						{
+							fieldName: `${db}OrgName`,
+							required: false,
+							maxLength: {
+								maxLength: 250,
+								maxLengthMessage: 'Company or organisation name must be less than 250 characters'
+							}
+						}
+					]
+				})
+			]
+		},
+		[`${section}Address`]: {
+			type: COMPONENT_TYPES.ADDRESS,
+			title: `${label} address details`,
+			question: `${label} address details`,
+			hint: 'Optional',
+			fieldName: `${db}Address`,
+			url: `${url}-address`,
+			validators: [new AddressValidator()],
+			viewData: { tableHeader: 'Address' }
+		},
+		[`${section}ContactDetails`]: {
+			type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
+			title: `${label === 'Contact' ? 'Contact details' : 'Objector contact details'}`,
+			question: `${label === 'Contact' ? 'What are the contact details?' : 'Objector contact details'} (optional)`,
+			fieldName: `${section}Details`,
+			url: `${url}-contact-details`,
+			viewData: { tableHeader: 'Contact' },
+			inputFields: [
+				{ fieldName: `${db}Email`, label: 'Email address' },
+				{ fieldName: `${db}TelephoneNumber`, label: 'Phone number' }
+			],
+			validators: [
+				new MultiFieldInputValidator({
+					fields: [
+						{
+							fieldName: `${db}Email`,
+							required: false,
+							maxLength: { maxLength: 250, maxLengthMessage: `${label} email must be less than 250 characters` }
+						},
+						{
+							fieldName: `${db}TelephoneNumber`,
+							required: false,
+							maxLength: { maxLength: 15, maxLengthMessage: `${label} phone number must be less than 15 characters` }
+						}
+					]
+				})
+			]
+		}
+	};
+};
+
+export const KEY_CONTACTS_QUESTIONS = {
+	objectorDetails: {
+		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
+		title: 'Objector(s)',
+		question: 'Check objector details',
+		fieldName: 'objectorDetails',
+		url: 'objector-details',
+		viewData: { emptyName: 'objector' }
+	},
+	...createPersonQuestions({
+		section: 'objector',
+		db: 'objector',
+		url: 'objector',
+		label: 'Objector'
+	}),
+	objectorStatus: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Objector status',
+		question: 'What is the objector status?',
+		fieldName: 'objectorStatusId',
+		url: 'objector-status',
+		validators: [new RequiredValidator("Select the status of the objector, or 'Not applicable'")],
+		options: OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER,
+		viewData: { tableHeader: 'Status' }
+	},
+	contactDetails: {
+		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
+		title: 'Contact(s)',
+		question: 'Check contact details',
+		fieldName: 'contactDetails',
+		url: 'contact-details',
+		viewData: { emptyName: 'contact' }
+	},
+	contactType: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Contact type',
+		question: 'What is your contact type?',
+		fieldName: 'contactTypeId',
+		url: 'contact-type',
+		validators: [new RequiredValidator('Select contact type')],
+		options: CONTACT_TYPES.filter((type) => type.id !== 'objector').map((type) => ({
+			text: type.displayName,
+			value: type.id
+		})),
+		viewData: { tableHeader: 'Contact type' }
+	},
+	...createPersonQuestions({
+		section: 'contact',
+		db: 'contact',
+		url: 'contact',
+		label: 'Contact'
+	})
+};
+
 // All questions, exported for testing.
 export const ALL_QUESTIONS = {
 	...DATE_QUESTIONS,
@@ -1667,5 +1898,6 @@ export const ALL_QUESTIONS = {
 	...TEAM_QUESTIONS,
 	...OVERVIEW_QUESTIONS,
 	...OUTCOME_QUESTIONS,
-	...createProcedureQuestions('One')
+	...createProcedureQuestions('One'),
+	...KEY_CONTACTS_QUESTIONS
 };
