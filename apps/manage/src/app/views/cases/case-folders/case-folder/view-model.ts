@@ -2,6 +2,7 @@ import { formatBytes } from '@pins/peas-row-commons-lib/util/upload.ts';
 import { formatInTimeZone } from 'date-fns-tz';
 import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
+import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 
 export interface DocumentViewModel {
 	id: string;
@@ -12,14 +13,21 @@ export interface DocumentViewModel {
 	date: string;
 	dateSort: number;
 	downloadHref: string;
-	folder?: {
+	caseId: string;
+	folder: {
 		id: string;
 		displayName: string;
 	};
 }
 
+export type DocumentWithFolder = Prisma.DocumentGetPayload<{
+	include: {
+		Folder: true;
+	};
+}>;
+
 export function createDocumentsViewModel(
-	documents: Prisma.DocumentModel[],
+	documents: DocumentWithFolder[],
 	previewMimeTypes: typeof PREVIEW_MIME_TYPES
 ): DocumentViewModel[] {
 	return documents.map((doc) => {
@@ -35,7 +43,12 @@ export function createDocumentsViewModel(
 			date: formatInTimeZone(doc.uploadedDate, 'Europe/London', 'dd MMM yyyy'),
 			dateSort: dateObj.getTime(),
 			downloadHref: `/documents/${doc.id}/download`,
-			isPreview: previewMimeTypes.includes(doc.mimeType)
+			isPreview: previewMimeTypes.includes(doc.mimeType),
+			caseId: doc.caseId,
+			folder: {
+				id: doc.Folder.id,
+				displayName: stringToKebab(doc.Folder.displayName)
+			}
 		};
 	});
 }
