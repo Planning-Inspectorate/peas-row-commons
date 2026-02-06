@@ -50,6 +50,9 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 						where: { caseId: id, deletedAt: null }
 					},
 					Documents: {
+						include: {
+							Folder: true
+						},
 						where: { caseId: id, deletedAt: null },
 						skip: skipSize,
 						take: pageSize
