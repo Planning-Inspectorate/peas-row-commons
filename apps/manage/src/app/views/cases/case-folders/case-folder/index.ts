@@ -13,7 +13,8 @@ import { createRoutes as createMoveFileRoutes } from '../../move-file/index.ts';
 export function createRoutes(service: ManageService) {
 	const router = createRouter({ mergeParams: true });
 
-	const [uploadRoutes, createFolderRoutes, deleteFolderRoutes, renameFolderRoutes, moveFileRoutes] = createRoutesToMount(service);
+	const [uploadRoutes, createFolderRoutes, deleteFolderRoutes, renameFolderRoutes, moveFileRoutes] =
+		createRoutesToMount(service);
 
 	const [viewCaseFolder, deleteFileView, deleteFileController] = createMiddlewares(service);
 
