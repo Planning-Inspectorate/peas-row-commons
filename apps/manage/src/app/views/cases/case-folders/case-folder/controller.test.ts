@@ -156,7 +156,7 @@ describe('buildViewCaseFolder', () => {
 			const mockDb = {
 				folder: {
 					findUnique: () => Promise.resolve(null),
-					findMany: () => Promise.resolve([])
+					findMany: () => Promise.resolve([]),
 				}
 			};
 
@@ -168,8 +168,13 @@ describe('buildViewCaseFolder', () => {
 		it('should return single folder when folder has no parent', async () => {
 			const mockDb = {
 				folder: {
-					findUnique: () => Promise.resolve({ caseId: 'case-1' }),
-					findMany: () => Promise.resolve([{ id: 'folder-1', displayName: 'Root Folder', parentFolderId: null }])
+					findMany: () => Promise.resolve([{ id: 'folder-1', displayName: 'Root Folder', parentFolderId: null }]),
+					findUnique: () =>
+						Promise.resolve({
+							id: 'folder-1',
+							displayName: 'Root Folder',
+							parentFolderId: null
+						})
 				}
 			};
 
@@ -189,9 +194,14 @@ describe('buildViewCaseFolder', () => {
 
 			const mockDb = {
 				folder: {
-					findUnique: () => Promise.resolve({ caseId: 'case-1' }),
+					findUnique: (args: { where: { id: string } }) => Promise.resolve(folders[args.where.id] ?? null),
 					findMany: () => Promise.resolve(allFolders)
 				}
+			}
+			const folders: Record<string, { id: string; displayName: string; parentFolderId: string | null }> = {
+				'folder-3': { id: 'folder-3', displayName: 'Subfolder', parentFolderId: 'folder-2' },
+				'folder-2': { id: 'folder-2', displayName: 'Documents', parentFolderId: 'folder-1' },
+				'folder-1': { id: 'folder-1', displayName: 'Root', parentFolderId: null }
 			};
 
 			const result = await getFolderPath(mockDb as any, 'folder-3');
@@ -210,9 +220,12 @@ describe('buildViewCaseFolder', () => {
 
 			const mockDb = {
 				folder: {
-					findUnique: () => Promise.resolve({ caseId: 'case-1' }),
+					findUnique: (args: { where: { id: string } }) => Promise.resolve(folders[args.where.id] ?? null),
 					findMany: () => Promise.resolve(allFolders)
-				}
+					}
+			};
+			const folders: Record<string, { id: string; displayName: string; parentFolderId: string | null }> = {
+				'folder-2': { id: 'folder-2', displayName: 'Orphan', parentFolderId: 'missing-folder' }
 			};
 
 			const result = await getFolderPath(mockDb as any, 'folder-2');
