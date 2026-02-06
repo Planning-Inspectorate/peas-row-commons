@@ -1,0 +1,73 @@
+{% extends "views/layouts/main.njk" %}
+{% from "views/layouts/components/search-bar.njk" import searchBar %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
+{% from "views/layouts/components/documents-table.njk" import documentsTable %}
+{% import "views/pagination/pagination-options.njk" as paginationOptions %}
+{% from "govuk/components/pagination/macro.njk" import govukPagination %}
+
+{% set title = "Search Files" %}
+
+{% block pageTitle %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-body">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full govuk-!-margin-bottom-3">
+            <h2 class="govuk-caption-l">
+                {{ reference }}
+            </h2>
+            <h1 class="govuk-heading-l">
+                {{ pageHeading }}
+            </h1>
+
+            <form id="search-bar-form" method="GET">
+                {{ searchBar({
+                    input: {
+                        label: {
+                            hidden: true
+                        },
+                        hint: {
+                            text: "To find a document, search by file name"
+                        },
+                        classes: "govuk-input govuk-input--width-30"
+                    },
+                    button: {
+                        text: "Search",
+                        classes: "govuk-button"
+                    },
+                    clearLink: "/"
+                }, searchValue) }}
+            </form>
+        </div>
+    </div>
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full" id="pagination">
+            {% if documents|length !== 0 %}
+                <p class="govuk-body govuk-clearfix">
+                    <p class="govuk-body" data-cy="pagination-results-text">
+                        Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalDocuments > paginationParams.resultsEndNumber else paginationParams.totalDocuments }}</strong>
+                        of <strong>{{ paginationParams.totalDocuments }}</strong> results
+                    </p>
+                    <p class="pins-pagination-options">
+                        {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalDocuments, paginationParams.pageNumber, paginationParams.searchValue) }}
+                    </p>
+                </p>
+                <div class="govuk-grid-row">
+                    <div class="govuk-grid-column-full">
+                        {{ documentsTable(documents, currentUrl, false, true) }}
+                    </div>
+                </div>
+                {# if uiItems.items is <=1 then pagination options not shown #} 
+                {% if paginationParams.uiItems.items.length > 1 %}
+                    {{ govukPagination(paginationParams.uiItems) }}
+                {% endif %}
+            {% else %}
+                <p class="govuk-body" data-cy="no-documents-message">This folder contains 0 documents</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

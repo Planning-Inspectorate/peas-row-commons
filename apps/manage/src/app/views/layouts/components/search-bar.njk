@@ -16,15 +16,23 @@
         {% endif %}
         <div class="row-inline">
             <input class="{{ options.input.classes or "govuk-input govuk-input--width-20" }}" id="search-input" value="{{ searchValue or "" }}" name="searchCriteria" type="text">
+
+            {# By default it will just reload the page with query params, but we can override this to redirect with formAction #}
+            {% set buttonAttributes = {} %}
+            {% if options.formAction %}
+                {% set buttonAttributes = { "formaction": options.formAction } %}
+            {% endif %}
+
             {{ govukButton({
                 text: options.button.text or 'Search',
                 id: 'search-button',
                 classes: options.button.classes,
-                type: 'submit'
+                type: 'submit',
+                attributes: buttonAttributes
             }) }}
         </div>
         {% if searchValue %}
-            <a class="govuk-link" href="/cases">Clear search</a>
+            <a class="govuk-link" href="{{ options.clearLink or '/cases' }}">Clear search</a>
         {% endif %}
     </div>
 {% endmacro %}
