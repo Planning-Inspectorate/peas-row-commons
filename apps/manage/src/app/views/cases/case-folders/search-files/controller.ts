@@ -13,6 +13,7 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 	const { db } = service;
 
 	return async (req, res) => {
+		const { id } = req.params;
 		const searchString = req.query?.searchCriteria?.toString().trim() || '';
 
 		let totalDocuments = 0;
@@ -29,7 +30,8 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 				db.document.count({
 					where: {
 						...searchCriteria,
-						deletedAt: null
+						deletedAt: null,
+						caseId: id
 					}
 				}),
 				db.document.findMany({
@@ -38,7 +40,8 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 					},
 					where: {
 						...searchCriteria,
-						deletedAt: null
+						deletedAt: null,
+						caseId: id
 					},
 					skip: skipSize,
 					take: pageSize
