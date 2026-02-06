@@ -38,7 +38,7 @@
                         text: "Search",
                         classes: "govuk-button"
                     },
-                    clearLink: "/"
+                    clearLink: backLinkUrl
                 }, searchValue) }}
             </form>
         </div>
@@ -52,7 +52,7 @@
                         of <strong>{{ paginationParams.totalDocuments }}</strong> results
                     </p>
                     <p class="pins-pagination-options">
-                        {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalDocuments, paginationParams.pageNumber, paginationParams.searchValue) }}
+                        {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalDocuments, paginationParams.pageNumber, searchValue) }}
                     </p>
                 </p>
                 <div class="govuk-grid-row">
@@ -65,7 +65,7 @@
                     {{ govukPagination(paginationParams.uiItems) }}
                 {% endif %}
             {% else %}
-                <p class="govuk-body" data-cy="no-documents-message">This folder contains 0 documents</p>
+                <p class="govuk-body govuk-!-font-weight-bold" data-cy="no-documents-message">No matching results found</p>
             {% endif %}
         </div>
     </div>

@@ -57,7 +57,7 @@
 
             {% if showFolderLink %}
                 <br>
-                <a class='govuk-link' href="/cases/{{ doc.caseId }}/case-folders/{{ doc.folder.id }}/{{ doc.folder.displayName | lower | replace(' ', '-') }}" data-cy="view-folder-{{ doc.id }}">View folder</a>
+                <a class='govuk-link' href="/cases/{{ doc.caseId }}/case-folders/{{ doc.folder.id }}/{{ doc.folder.displayName }}" data-cy="view-folder-{{ doc.id }}">View folder</a>
             {% endif %}
         {% endset %}
 

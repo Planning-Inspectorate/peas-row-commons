@@ -13,32 +13,43 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 	const { db } = service;
 
 	return async (req, res) => {
-		const searchString = req.query?.searchCriteria?.toString() || '';
-		const searchCriteria = createWhereClause(splitStringQueries(searchString), [
-			{ fields: ['fileName'], searchType: 'contains' }
-		]);
+		const searchString = req.query?.searchCriteria?.toString().trim() || '';
 
-		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
+		let totalDocuments = 0;
+		let documents: any[] = [];
 
-		const [totalDocuments, documents] = await db.$transaction([
-			db.document.count({
-				where: {
-					...searchCriteria,
-					deletedAt: null
-				}
-			}),
-			db.document.findMany({
-				where: {
-					...searchCriteria,
-					deletedAt: null
-				},
-				skip: skipSize,
-				take: pageSize
-			})
-		]);
+		if (searchString) {
+			const searchCriteria = createWhereClause(splitStringQueries(searchString), [
+				{ fields: ['fileName'], searchType: 'contains' }
+			]);
+
+			const { pageSize, skipSize } = getPaginationParams(req);
+
+			[totalDocuments, documents] = await db.$transaction([
+				db.document.count({
+					where: {
+						...searchCriteria,
+						deletedAt: null
+					}
+				}),
+				db.document.findMany({
+					include: {
+						Folder: true
+					},
+					where: {
+						...searchCriteria,
+						deletedAt: null
+					},
+					skip: skipSize,
+					take: pageSize
+				})
+			]);
+		}
+
+		const { selectedItemsPerPage, pageNumber, pageSize } = getPaginationParams(req);
 
 		const { totalPages, resultsStartNumber, resultsEndNumber } = getPageData(
-			totalDocuments || 0,
+			totalDocuments,
 			selectedItemsPerPage,
 			pageSize,
 			pageNumber
@@ -56,7 +67,7 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 			uiItems: paginationItems
 		};
 
-		const documentsViewModel = documents ? createDocumentsViewModel(documents, PREVIEW_MIME_TYPES) : [];
+		const documentsViewModel = documents.length > 0 ? createDocumentsViewModel(documents, PREVIEW_MIME_TYPES) : [];
 
 		const returnUrl = req.baseUrl.replace(/\/search-results\/?$/, '');
 

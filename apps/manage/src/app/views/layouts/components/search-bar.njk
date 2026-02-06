@@ -31,7 +31,8 @@
                 attributes: buttonAttributes
             }) }}
         </div>
-        {% if searchValue %}
+        {# If we have passed in a specific clearLink then when want to show this all the time, otherwise we only want it when we have searched. #}
+        {% if options.clearLink or searchValue %}
             <a class="govuk-link" href="{{ options.clearLink or '/cases' }}">Clear search</a>
         {% endif %}
     </div>

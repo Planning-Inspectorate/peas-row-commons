@@ -76,9 +76,14 @@ export function buildDeleteFileView(service: ManageService) {
 
 			// If we have already deleted this document then simply show success
 			if (context.document.deletedAt) {
+				// If we are returning to 'search-results' rather than 'folder'
+				// make sure this is reflected in messaging.
+				const returnMessage = context.backLinkUrl.includes('search-results') ? 'search results' : 'folder';
+
 				return res.render('views/cases/case-folders/case-folder/delete-file/success.njk', {
 					pageHeading: 'You have deleted the file',
-					folderUrl: context.backLinkUrl
+					folderUrl: context.backLinkUrl,
+					returnMessage
 				});
 			}
 
