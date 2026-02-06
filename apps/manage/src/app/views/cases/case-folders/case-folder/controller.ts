@@ -4,7 +4,7 @@ import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { createFoldersViewModel } from '../view-model.ts';
 import { type FolderBreadcrumb, buildBreadcrumbItems } from '../folder-utils.ts';
-import type { PrismaClient, Folder } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { createDocumentsViewModel } from './view-model.ts';
 import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
@@ -151,29 +151,36 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
  * Returns folders in order from root to current folder.
  */
 export async function getFolderPath(db: PrismaClient, folderId: string): Promise<FolderBreadcrumb[]> {
+	const currentFolder = await db.folder.findUnique({
+		where: { id: folderId },
+		select: { caseId: true }
+	});
+
+	if (!currentFolder?.caseId) return [];
+
+	const allFolders = await db.folder.findMany({
+		where: { caseId: currentFolder.caseId },
+		select: {
+			id: true,
+			displayName: true,
+			parentFolderId: true
+		}
+	});
+
+	const folderMap = new Map(allFolders.map((folder) => [folder.id, folder]));
+
+	// Walk up the tree in memory
 	const folderPath: FolderBreadcrumb[] = [];
 	let currentId: string | null = folderId;
 
-	// Walk up the tree via parentFolderId
 	while (currentId) {
-		const folder: Pick<Folder, 'id' | 'displayName' | 'parentFolderId'> | null = await db.folder.findUnique({
-			where: { id: currentId },
-			select: {
-				id: true,
-				displayName: true,
-				parentFolderId: true
-			}
-		});
-
-		if (!folder) {
-			break;
-		}
+		const folder = folderMap.get(currentId);
+		if (!folder) break;
 
 		folderPath.push(folder);
 		currentId = folder.parentFolderId;
 	}
 
-	// Reverse so root folder is first
 	return folderPath.reverse();
 }
 
