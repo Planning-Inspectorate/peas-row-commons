@@ -1,19 +1,11 @@
-type DateErrorState =
-	| 'allEmpty'
-	| 'dayOnly'
-	| 'monthOnly'
-	| 'yearOnly'
-	| 'dayMonthOnly'
-	| 'dayYearOnly'
-	| 'monthYearOnly'
-	| 'invalidDay'
-	| 'invalidMonth'
-	| 'invalidYear';
+import type { DateField } from '../types/standard.ts';
+import type { DateErrorState } from 'cypress/types/errors.ts';
+import { generateRandomDate } from '../pageUtilities/generate.utility.ts';
 
-type DateField = 'day' | 'month' | 'year';
+type DateString = 'day' | 'month' | 'year';
 
 type DateErrorExpectation = {
-	summary: Array<{ field: DateField; message: string }>;
+	summary: Array<{ field: DateString; message: string }>;
 	inline?: string;
 };
 
@@ -38,18 +30,32 @@ class ReceivedDatePage {
 		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
 	}
 
-	enterDate(day?: string, month?: string, year?: string): void {
-		if (day !== undefined) {
-			cy.get('#receivedDate_day').should('exist').and('be.visible').clear().type(day).should('have.value', day);
-		}
+	enterDate(day?: string, month?: string, year?: string): DateField {
+		const randomDate = generateRandomDate();
 
-		if (month !== undefined) {
-			cy.get('#receivedDate_month').should('exist').and('be.visible').clear().type(month).should('have.value', month);
-		}
+		const date: DateField = {
+			day: day ?? randomDate.day,
+			month: month ?? randomDate.month,
+			year: year ?? randomDate.year
+		};
 
-		if (year !== undefined) {
-			cy.get('#receivedDate_year').should('exist').and('be.visible').clear().type(year).should('have.value', year);
-		}
+		cy.get('#receivedDate_day').should('exist').and('be.visible').clear().type(date.day).should('have.value', date.day);
+
+		cy.get('#receivedDate_month')
+			.should('exist')
+			.and('be.visible')
+			.clear()
+			.type(date.month)
+			.should('have.value', date.month);
+
+		cy.get('#receivedDate_year')
+			.should('exist')
+			.and('be.visible')
+			.clear()
+			.type(date.year)
+			.should('have.value', date.year);
+
+		return date;
 	}
 
 	validateReceivedDateErrorState(state: DateErrorState): void {
@@ -117,7 +123,7 @@ class ReceivedDatePage {
 		cy.get('.govuk-error-summary__list li').should('have.length', expected.summary.length);
 
 		expected.summary.forEach((item) => {
-			const field: DateField = item.field;
+			const field: DateString = item.field;
 			const message: string = item.message;
 
 			cy.contains('.govuk-error-summary__list a', message)

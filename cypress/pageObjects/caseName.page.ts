@@ -1,3 +1,6 @@
+import type { Journeys } from '../types/journeys.ts';
+import { buildCaseName } from '../pageUtilities/generate.utility.ts';
+
 class CaseNamePage {
 	isPageDisplayed(): void {
 		cy.contains('label', 'What is the case name?').should('exist').and('be.visible');
@@ -7,8 +10,17 @@ class CaseNamePage {
 		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
 	}
 
-	enterCaseName(caseName: string): void {
-		cy.get('#name').should('exist').and('be.visible').clear().type(caseName).should('have.value', caseName);
+	enterCaseName(journey: Journeys, caseName?: string): string {
+		const valueToUse = caseName ?? buildCaseName(journey.name);
+
+		cy.get('[data-cy="case-name-input"]')
+			.should('exist')
+			.and('be.visible')
+			.clear()
+			.type(valueToUse)
+			.should('have.value', valueToUse);
+
+		return valueToUse;
 	}
 
 	isErrorDisplayed(): void {

@@ -1,3 +1,6 @@
+import type { Journeys } from '../types/journeys.ts';
+import { buildNameWithRandomSuffix } from '../pageUtilities/generate.utility.ts';
+
 class ExternalReferencePage {
 	isPageDisplayed(): void {
 		cy.contains('label', 'What is the external reference? (optional)').should('exist').and('be.visible');
@@ -7,13 +10,17 @@ class ExternalReferencePage {
 		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
 	}
 
-	enterExternalReference(reference: string): void {
+	enterExternalReference(journey: Journeys, reference?: string): string {
+		const valueToUse = reference ?? buildNameWithRandomSuffix(journey.name);
+
 		cy.get('#externalReference')
 			.should('exist')
 			.and('be.visible')
 			.clear()
-			.type(reference)
-			.should('have.value', reference);
+			.type(valueToUse)
+			.should('have.value', valueToUse);
+
+		return valueToUse;
 	}
 }
 
