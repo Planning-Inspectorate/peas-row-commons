@@ -7,7 +7,7 @@ import type { Request, Response } from 'express';
  * used inside of the main view but also when
  * re-rendering after an error with POST-ing
  */
-async function getDocumentContext(db: any, documentId: string) {
+async function getDocumentContext(db: any, documentId: string, req: Request) {
 	const document = await db.document.findUnique({
 		select: {
 			id: true,
@@ -28,8 +28,11 @@ async function getDocumentContext(db: any, documentId: string) {
 		throw new Error(`No document found for id: ${documentId}`);
 	}
 
-	const backLinkUrl = `/cases/${document.caseId}/case-folders/${document.Folder.id}/${document.Folder.displayName}`;
-	const currentUrl = `${backLinkUrl}/${documentId}/delete`;
+	// We no longer generate these from the folder id and case id because this
+	// controller is used in a couple routes and the backlink and currenUrl
+	// need to be dynamic for where they are called
+	const backLinkUrl = req.originalUrl.replace(`/${documentId}/delete`, '');
+	const currentUrl = req.originalUrl.split('?')[0];
 
 	return { document, backLinkUrl, currentUrl };
 }
@@ -69,13 +72,18 @@ export function buildDeleteFileView(service: ManageService) {
 		}
 
 		try {
-			const context = await getDocumentContext(db, documentId);
+			const context = await getDocumentContext(db, documentId, req);
 
 			// If we have already deleted this document then simply show success
 			if (context.document.deletedAt) {
+				// If we are returning to 'search-results' rather than 'folder'
+				// make sure this is reflected in messaging.
+				const returnMessage = context.backLinkUrl.includes('search-results') ? 'search results' : 'folder';
+
 				return res.render('views/cases/case-folders/case-folder/delete-file/success.njk', {
 					pageHeading: 'You have deleted the file',
-					folderUrl: context.backLinkUrl
+					folderUrl: context.backLinkUrl,
+					returnMessage
 				});
 			}
 
@@ -122,7 +130,7 @@ export function buildDeleteFileController(service: ManageService) {
 			const errorMessage = [{ text: 'Failed to delete document, please try again.' }];
 
 			try {
-				const context = await getDocumentContext(db, documentId);
+				const context = await getDocumentContext(db, documentId, req);
 				return renderConfirmationView(res, context, errorMessage);
 			} catch (fetchError) {
 				logger.error({ fetchError }, 'Failed to refetch document for error view');
