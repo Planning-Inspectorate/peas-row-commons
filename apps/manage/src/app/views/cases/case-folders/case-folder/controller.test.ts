@@ -174,7 +174,7 @@ describe('buildViewCaseFolder', () => {
 							id: 'folder-1',
 							displayName: 'Root Folder',
 							parentFolderId: null
-						})
+						}),
 				}
 			};
 
