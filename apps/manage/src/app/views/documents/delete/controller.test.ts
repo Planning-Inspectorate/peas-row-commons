@@ -78,7 +78,7 @@ describe('Delete File Controllers', () => {
 				assert.strictEqual(viewData.pageHeading, 'Delete file');
 				assert.deepStrictEqual(viewData.documents, [validDocument]);
 
-				assert.strictEqual(viewData.backLinkUrl, '/cases/case-1/case-folders/folder-1/Evidence');
+				assert.strictEqual(viewData.backLinkUrl, '/cases/1/folders/2/documents');
 			});
 
 			it('should render success view immediately if document is already deleted', async () => {
@@ -95,7 +95,7 @@ describe('Delete File Controllers', () => {
 				const [viewPath, viewData] = res.render.mock.calls[0].arguments;
 				assert.strictEqual(viewPath, 'views/cases/case-folders/case-folder/delete-file/success.njk');
 				assert.strictEqual(viewData.pageHeading, 'You have deleted the file');
-				assert.strictEqual(viewData.folderUrl, '/cases/case-1/case-folders/folder-1/Evidence');
+				assert.strictEqual(viewData.folderUrl, '/cases/1/folders/2/documents');
 			});
 		});
 
@@ -184,7 +184,7 @@ describe('Delete File Controllers', () => {
 
 				assert.strictEqual(viewPath, 'views/cases/case-folders/case-folder/delete-file/confirmation.njk');
 				assert.deepStrictEqual(viewData.documents, [validDocument]);
-				assert.strictEqual(viewData.backLinkUrl, '/cases/case-1/case-folders/folder-1/Evidence');
+				assert.strictEqual(viewData.backLinkUrl, '/cases/1/folders/2/documents');
 
 				assert.strictEqual(res.locals.errorSummary.length, 1);
 				assert.strictEqual(res.locals.errorSummary[0].text, 'Failed to delete document, please try again.');
