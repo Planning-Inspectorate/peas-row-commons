@@ -1,12 +1,11 @@
 {% extends "views/layouts/main.njk" %}
 
+{% from "views/layouts/components/documents-table.njk" import documentsTable %}
 {% from "govuk/components/pagination/macro.njk" import govukPagination %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/file-upload/macro.njk" import govukFileUpload %}
-{% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
 {% from "govuk/components/accordion/macro.njk" import govukAccordion %}
-{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
 
 {% import "views/pagination/pagination-options.njk" as paginationOptions %}
 
@@ -163,7 +162,7 @@
                         </p>
                         <div class="govuk-grid-row">
                             <div class="govuk-grid-column-full">
-                                {{ documentsTable(documents) }}
+                                {{ documentsTable(documents, currentUrl, true, false) }}
                             </div>
                         </div>
                         {# if uiItems.items is <=1 then pagination options not shown #} 
@@ -199,97 +198,3 @@
         });
     </script>
 {% endblock %}
-
-{% macro documentsTable(documentsList) %}
-    {% set rows = [] %}
-    {% for doc in documentsList %}
-        {% set checkboxHtml %}
-            <div class="govuk-checkboxes__item govuk-checkboxes--small mo-checkbox-table-cell">
-                <input class="govuk-checkboxes__input" id="select-file-{{ doc.id }}" name="selectedFiles" type="checkbox" value="{{ doc.id }}" data-cy="file-checkbox-{{ doc.id }}">
-                <label class="govuk-label govuk-checkboxes__label" for="select-file-{{ doc.id }}">
-                    <span class="govuk-visually-hidden">Select {{ doc.fileName }}</span>
-                </label>
-            </div>
-        {% endset %}
-        {% set fileLinkHtml %}
-            {% if doc.isPreview %}
-                <a class="govuk-link govuk-!-font-weight-bold" href="{{ doc.downloadHref }}?preview=true" target="_blank" data-cy="file-link-{{ doc.id }}">
-                {{ doc.fileName }}
-                </a>
-            {% else %}
-                <p class="govuk-body govuk-!-font-weight-bold" data-cy="file-name-{{ doc.id }}">
-                {{ doc.fileName }}
-                </p>
-            {% endif %}
-        {% endset %}
-        {% set rows = (rows.push([
-            { html: checkboxHtml },
-            {
-                html: fileLinkHtml,
-                attributes: {
-                    "data-sort-value": doc.fileName | lower
-                }
-            },
-            {
-                text: doc.fileType
-            },
-            {
-                text: doc.size,
-                attributes: {
-                    "data-sort-value": doc.sizeSort
-                }
-            },
-            {
-                text: doc.date,
-                attributes: {
-                    "data-sort-value": doc.dateSort
-                }
-            },
-            {
-                html: "<a class='govuk-link' href=" + doc.downloadHref + " data-cy='download-file-" + doc.id + "'>Download</a> | <a class='govuk-link' href=" + currentUrl + "/" + doc.id + "/delete data-cy='delete-file-" + doc.id + "'>Delete</a>"
-            }
-        ]), rows) %}
-    {% endfor %}
-    {% set selectAllHtml %}
-        <div class="govuk-checkboxes__item govuk-checkboxes--small mo-checkbox-table-cell">
-            <input type="checkbox" class="govuk-checkboxes__input" id="checkboxes-all" name="checkboxes-all" value="all" data-cy="select-all-files">
-            <label class="govuk-label govuk-checkboxes__label" for="checkboxes-all">
-                <span class="govuk-visually-hidden">Select all documents</span>
-            </label>
-        </div>
-    {% endset %}
-
-    {% set headers = [
-        { html: selectAllHtml },
-        {
-            text: 'File name',
-            attributes: { "aria-sort": "none" },
-            classes: "govuk-!-width-one-third"
-        },
-        {
-            text: 'File type',
-            attributes: { "aria-sort": "none" }
-        },
-        {
-            text: 'File size',
-            attributes: { "aria-sort": "none" }
-        },
-        {
-            text: 'Uploaded',
-            attributes: { "aria-sort": "descending" }
-        },
-        {
-            text: 'Actions'
-        }
-    ] %}
-
-    {{ govukTable({
-        attributes: {
-            "data-module": "moj-sortable-table",
-            "data-cy": "documents-table"
-        },
-        head: headers,
-        rows: rows
-    }) }}
-
-{% endmacro %}

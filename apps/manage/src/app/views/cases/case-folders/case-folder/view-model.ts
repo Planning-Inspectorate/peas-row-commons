@@ -12,6 +12,10 @@ export interface DocumentViewModel {
 	date: string;
 	dateSort: number;
 	downloadHref: string;
+	folder?: {
+		id: string;
+		displayName: string;
+	};
 }
 
 export function createDocumentsViewModel(
