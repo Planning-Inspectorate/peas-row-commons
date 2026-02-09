@@ -14,26 +14,32 @@
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
             text: "Folder created",
-            type: "success"
+            type: "success",
+            attributes: {
+                "data-cy": "notification-banner-created"
+            }
         }) }}
     {% endif %}
     {% if folderDeleted %}
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
             text: "Folder deleted",
-            type: "success"
+            type: "success",
+            attributes: {
+                "data-cy": "notification-banner-deleted"
+            }
         }) }}
     {% endif %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full govuk-!-margin-bottom-3">
-            <h2 class="govuk-caption-l">
+            <h2 class="govuk-caption-l" data-cy="page-caption">
                 {{ reference }}
             </h2>
-            <h1 class="govuk-heading-l">
+            <h1 class="govuk-heading-l" data-cy="page-heading">
                 {{ pageHeading }}
             </h1>
 
-            <form id="search-bar-form" method="GET">
+            <form id="search-bar-form" method="GET" data-cy="search-form">
                 {{ searchBar({
                     input: {
                         label: {
@@ -42,11 +48,17 @@
                         hint: {
                             text: "To find a document, search by file name"
                         },
-                        classes: "govuk-input govuk-input--width-30"
+                        classes: "govuk-input govuk-input--width-30",
+                        attributes: {
+                            "data-cy": "search-input"
+                        }
                     },
                     button: {
                         text: "Search",
-                        classes: "govuk-button"
+                        classes: "govuk-button",
+                        attributes: {
+                            "data-cy": "search-button"
+                        }
                     },
                     formAction: currentUrl + "/search-results"
                 }, searchValue) }}
@@ -55,7 +67,10 @@
             {{ govukButton({
                 text: "Create folder",
                 classes: "govuk-button--secondary",
-                href: currentUrl + "/create-folder"
+                href: currentUrl + "/create-folder",
+                attributes: {
+                    "data-cy": "create-folder-button"
+                }
             }) }}
 
             <hr class="govuk-section-break govuk-section-break--s govuk-section-break--visible">
@@ -63,12 +78,12 @@
     </div>
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full">
-            <div class="pins-link-menu">
+            <div class="pins-link-menu" data-cy="folder-list">
                 {% if folders|length == 0 %}
-                    <p class="govuk-body">There are no folders in this case</p>
+                    <p class="govuk-body" data-cy="no-folders-message">There are no folders in this case</p>
                 {% else %}
                     {% for folder in folders %}
-                        <a class="govuk-link govuk-heading-s" href="{{ currentUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}">
+                        <a class="govuk-link govuk-heading-s" href="{{ currentUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}" data-cy="folder-link-{{ folder.id }}">
                             {{ folder.displayName }}
                         </a>
                     {% endfor %}
