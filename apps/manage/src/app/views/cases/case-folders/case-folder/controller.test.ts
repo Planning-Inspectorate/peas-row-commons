@@ -65,7 +65,14 @@ describe('buildViewCaseFolder', () => {
 				parentFolderId: null,
 				Case: { reference: 'REF-123', name: 'Case Name' },
 				ChildFolders: [{ id: 'sub-1', displayName: 'Subfolder' }],
-				Documents: [{ id: 'doc-1', fileName: 'doc.pdf', uploadedDate: Date.now() }],
+				Documents: [
+					{
+						id: 'doc-1',
+						fileName: 'doc.pdf',
+						uploadedDate: Date.now(),
+						Folder: { id: 'folder-456', displayName: 'My Folder' }
+					}
+				],
 				_count: { Documents: 10 },
 				ParentFolder: { id: 'parent-999', displayName: 'Parent Folder' }
 			};

@@ -14,6 +14,7 @@ describe('createDocumentsViewModel', () => {
 			caseId: 'case-1',
 			folderId: 'folder-1',
 			mimeType: 'application/pdf',
+			Folder: { id: 'folder-1', displayName: 'My Folder' },
 			...overrides
 		}) as any;
 
