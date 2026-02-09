@@ -1,12 +1,14 @@
 import { describe, it, beforeEach, mock } from 'node:test';
 import assert from 'node:assert';
+import type { Request, Response } from 'express';
 import { buildFileSearchView } from './controller.ts';
+import type { MockDb, MockResponse } from '@pins/peas-row-commons-lib/testing/type.ts';
 
 describe('File Search View Controller', () => {
-	let mockReq: any;
-	let mockRes: any;
-	let mockDb: any;
-	let mockService: any;
+	let mockReq: { params: { id: string }; query: Record<string, string>; baseUrl: string; path: string };
+	let mockRes: MockResponse;
+	let mockDb: MockDb;
+	let mockService: { db: MockDb };
 
 	beforeEach(() => {
 		mockReq = {
@@ -30,27 +32,26 @@ describe('File Search View Controller', () => {
 				count: mock.fn(),
 				findMany: mock.fn()
 			},
-			$transaction: mock.fn(async (promises: Promise<any>[]) => Promise.all(promises))
+			$transaction: mock.fn(async (promises) => Promise.all(promises))
 		};
 
-		mockService = {
-			db: mockDb
-		};
+		mockService = { db: mockDb };
 	});
 
 	it('should render empty results without querying DB if search string is empty', async () => {
 		mockReq.query.searchCriteria = '';
 
-		const handler = buildFileSearchView(mockService);
-		await handler(mockReq, mockRes, () => {});
+		const handler = buildFileSearchView(mockService as any);
+
+		await handler(mockReq as unknown as Request, mockRes as unknown as Response, () => {});
 
 		assert.strictEqual(mockDb.document.count.mock.callCount(), 0);
 		assert.strictEqual(mockDb.document.findMany.mock.callCount(), 0);
 		assert.strictEqual(mockDb.$transaction.mock.callCount(), 0);
 
 		assert.strictEqual(mockRes.render.mock.callCount(), 1);
-		const [view, data] = mockRes.render.mock.calls[0].arguments;
 
+		const [view, data] = mockRes.render.mock.calls[0].arguments;
 		assert.strictEqual(view, 'views/cases/case-folders/search-files/view.njk');
 		assert.strictEqual(data.paginationParams.totalDocuments, 0);
 		assert.deepStrictEqual(data.documents, []);
@@ -60,30 +61,28 @@ describe('File Search View Controller', () => {
 	it('should query DB and render results if search string is provided', async () => {
 		mockReq.query.searchCriteria = 'letter';
 
-		mockDb.document.count.mock.mockImplementation(() => Promise.resolve(2));
-		mockDb.document.findMany.mock.mockImplementation(() =>
-			Promise.resolve([
-				{
-					id: 'doc-1',
-					fileName: 'letter_A.pdf',
-					uploadedDate: new Date(),
-					size: 1024,
-					mimeType: 'application/pdf',
-					Folder: { id: 'f1', displayName: 'General' }
-				},
-				{
-					id: 'doc-2',
-					fileName: 'letter_B.pdf',
-					uploadedDate: new Date(),
-					size: 2048,
-					mimeType: 'application/pdf',
-					Folder: { id: 'f1', displayName: 'General' }
-				}
-			])
-		);
+		mockDb.document.count.mock.mockImplementation(async () => 2);
+		mockDb.document.findMany.mock.mockImplementation(async () => [
+			{
+				id: 'doc-1',
+				fileName: 'letter_A.pdf',
+				uploadedDate: new Date(),
+				size: BigInt(1024),
+				mimeType: 'application/pdf',
+				Folder: { id: 'f1', displayName: 'General' }
+			},
+			{
+				id: 'doc-2',
+				fileName: 'letter_B.pdf',
+				uploadedDate: new Date(),
+				size: BigInt(2048),
+				mimeType: 'application/pdf',
+				Folder: { id: 'f1', displayName: 'General' }
+			}
+		]);
 
-		const handler = buildFileSearchView(mockService);
-		await handler(mockReq, mockRes, () => {});
+		const handler = buildFileSearchView(mockService as any);
+		await handler(mockReq as unknown as Request, mockRes as unknown as Response, () => {});
 
 		assert.strictEqual(mockDb.$transaction.mock.callCount(), 1);
 
