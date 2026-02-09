@@ -225,13 +225,15 @@ model CaseAbeyance {
 }
 
 model CaseNote {
-  id        String   @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  comment   String
-  createdAt DateTime @default(now())
-  authorId  String   @db.UniqueIdentifier
-  Author    User     @relation("author", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  caseId    String   @db.UniqueIdentifier
-  Case      Case     @relation(fields: [caseId], references: [id])
+  id           String   @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  comment      String
+  createdAt    DateTime @default(now())
+  authorId     String   @db.UniqueIdentifier
+  Author       User     @relation("author", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  caseId       String   @db.UniqueIdentifier
+  Case         Case     @relation(fields: [caseId], references: [id])
+  legacyCaseId String
+  noteType     String
 }
 
 model CaseStatus {
