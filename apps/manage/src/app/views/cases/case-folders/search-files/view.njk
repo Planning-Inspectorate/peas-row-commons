@@ -16,14 +16,14 @@
 <div class="govuk-body">
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full govuk-!-margin-bottom-3">
-            <h2 class="govuk-caption-l">
+            <h2 class="govuk-caption-l" data-cy="page-caption">
                 {{ reference }}
             </h2>
-            <h1 class="govuk-heading-l">
+            <h1 class="govuk-heading-l" data-cy="page-heading">
                 {{ pageHeading }}
             </h1>
 
-            <form id="search-bar-form" method="GET">
+            <form id="search-bar-form" method="GET" data-cy="search-form">
                 {{ searchBar({
                     input: {
                         label: {
@@ -32,11 +32,17 @@
                         hint: {
                             text: "To find a document, search by file name"
                         },
-                        classes: "govuk-input govuk-input--width-30"
+                        classes: "govuk-input govuk-input--width-30",
+                        attributes: {
+                            "data-cy": "search-input"
+                        }
                     },
                     button: {
                         text: "Search",
-                        classes: "govuk-button"
+                        classes: "govuk-button",
+                        attributes: {
+                            "data-cy": "search-button"
+                        }
                     },
                     clearLink: backLinkUrl
                 }, searchValue) }}
@@ -46,15 +52,15 @@
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full" id="pagination">
             {% if documents|length !== 0 %}
-                <p class="govuk-body govuk-clearfix">
+                <div class="govuk-body govuk-clearfix">
                     <p class="govuk-body" data-cy="pagination-results-text">
                         Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalDocuments > paginationParams.resultsEndNumber else paginationParams.totalDocuments }}</strong>
                         of <strong>{{ paginationParams.totalDocuments }}</strong> results
                     </p>
-                    <p class="pins-pagination-options">
+                    <div class="pins-pagination-options" data-cy="pagination-items-per-page">
                         {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalDocuments, paginationParams.pageNumber, searchValue) }}
-                    </p>
-                </p>
+                    </div>
+                </div>
                 <div class="govuk-grid-row">
                     <div class="govuk-grid-column-full">
                         {{ documentsTable(documents, currentUrl, false, true) }}
@@ -62,7 +68,9 @@
                 </div>
                 {# if uiItems.items is <=1 then pagination options not shown #} 
                 {% if paginationParams.uiItems.items.length > 1 %}
-                    {{ govukPagination(paginationParams.uiItems) }}
+                    <div data-cy="pagination-navigation">
+                        {{ govukPagination(paginationParams.uiItems) }}
+                    </div>
                 {% endif %}
             {% else %}
                 <p class="govuk-body govuk-!-font-weight-bold" data-cy="no-documents-message">No matching results found</p>

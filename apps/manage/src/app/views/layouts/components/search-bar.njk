@@ -15,7 +15,14 @@
             </div>
         {% endif %}
         <div class="row-inline">
-            <input class="{{ options.input.classes or "govuk-input govuk-input--width-20" }}" id="search-input" value="{{ searchValue or "" }}" name="searchCriteria" type="text">
+            <input
+                class="{{ options.input.classes or "govuk-input govuk-input--width-20" }}"
+                id="search-input"
+                value="{{ searchValue or "" }}"
+                name="searchCriteria"
+                type="text"
+                {% for attribute, value in options.input.attributes %} {{attribute}}="{{value}}" {% endfor %}
+            >
 
             {# By default it will just reload the page with query params, but we can override this to redirect with formAction #}
             {% set buttonAttributes = {} %}
