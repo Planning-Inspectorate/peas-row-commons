@@ -173,7 +173,8 @@ describe('buildViewCaseFolder', () => {
 						Promise.resolve({
 							id: 'folder-1',
 							displayName: 'Root Folder',
-							parentFolderId: null
+							parentFolderId: null,
+							caseId: 'case-123'
 						})
 				}
 			};
@@ -198,10 +199,13 @@ describe('buildViewCaseFolder', () => {
 					findMany: () => Promise.resolve(allFolders)
 				}
 			};
-			const folders: Record<string, { id: string; displayName: string; parentFolderId: string | null }> = {
-				'folder-3': { id: 'folder-3', displayName: 'Subfolder', parentFolderId: 'folder-2' },
-				'folder-2': { id: 'folder-2', displayName: 'Documents', parentFolderId: 'folder-1' },
-				'folder-1': { id: 'folder-1', displayName: 'Root', parentFolderId: null }
+			const folders: Record<
+				string,
+				{ id: string; displayName: string; parentFolderId: string | null; caseId: string | null }
+			> = {
+				'folder-3': { id: 'folder-3', displayName: 'Subfolder', parentFolderId: 'folder-2', caseId: 'case-123' },
+				'folder-2': { id: 'folder-2', displayName: 'Documents', parentFolderId: 'folder-1', caseId: 'case-123' },
+				'folder-1': { id: 'folder-1', displayName: 'Root', parentFolderId: null, caseId: 'case-123' }
 			};
 
 			const result = await getFolderPath(mockDb as any, 'folder-3');
@@ -224,8 +228,11 @@ describe('buildViewCaseFolder', () => {
 					findMany: () => Promise.resolve(allFolders)
 				}
 			};
-			const folders: Record<string, { id: string; displayName: string; parentFolderId: string | null }> = {
-				'folder-2': { id: 'folder-2', displayName: 'Orphan', parentFolderId: 'missing-folder' }
+			const folders: Record<
+				string,
+				{ id: string; displayName: string; parentFolderId: string | null; caseId: string | null }
+			> = {
+				'folder-2': { id: 'folder-2', displayName: 'Orphan', parentFolderId: 'missing-folder', caseId: 'case-123' }
 			};
 
 			const result = await getFolderPath(mockDb as any, 'folder-2');
