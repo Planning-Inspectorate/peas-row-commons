@@ -74,13 +74,25 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 
 		const returnUrl = req.baseUrl.replace(/\/search-results\/?$/, '');
 
+		const breadcrumbItems = [
+			{
+				text: 'Manage case files',
+				href: returnUrl
+			},
+			{
+				text: 'Search results'
+			}
+		];
+
 		return res.render('views/cases/case-folders/search-files/view.njk', {
 			pageHeading: 'Search results',
 			documents: documentsViewModel,
+			// We keep backlink url even though we have breadcrumbs, as it is used for the "clear" button too.
 			backLinkUrl: returnUrl,
 			currentUrl: req.baseUrl,
 			searchValue: searchString,
-			paginationParams
+			paginationParams,
+			breadcrumbItems
 		});
 	};
 }
