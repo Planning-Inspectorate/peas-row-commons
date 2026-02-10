@@ -4,7 +4,7 @@ import {
 	COMMON_LAND_FOLDERS
 } from '@pins/peas-row-commons-database/src/seed/static_data/folders.ts';
 import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/types.ts';
-import type { FlatFolder, FolderNode } from './types.ts';
+import type { BreadcrumbItem, FlatFolder, FolderBreadcrumb, FolderNode } from './types.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 
 const ROW_FOLDERS_MAP = {
@@ -40,23 +40,6 @@ type Folder = {
 	displayName: string;
 	displayOrder: number;
 	ChildFolders?: { create: Folder[] };
-};
-
-/**
- * Breadcrumb item structure for breadcrumbs component
- */
-export type BreadcrumbItem = {
-	text: string;
-	href?: string;
-};
-
-/**
- * Minimal folder info needed for breadcrumbs
- */
-export type FolderBreadcrumb = {
-	id: string;
-	displayName: string;
-	parentFolderId: string | null;
 };
 
 /**

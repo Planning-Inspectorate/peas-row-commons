@@ -156,7 +156,7 @@ describe('buildViewCaseFolder', () => {
 			const mockDb = {
 				folder: {
 					findUnique: () => Promise.resolve(null),
-					findMany: () => Promise.resolve([]),
+					findMany: () => Promise.resolve([])
 				}
 			};
 
@@ -174,7 +174,7 @@ describe('buildViewCaseFolder', () => {
 							id: 'folder-1',
 							displayName: 'Root Folder',
 							parentFolderId: null
-						}),
+						})
 				}
 			};
 
@@ -197,7 +197,7 @@ describe('buildViewCaseFolder', () => {
 					findUnique: (args: { where: { id: string } }) => Promise.resolve(folders[args.where.id] ?? null),
 					findMany: () => Promise.resolve(allFolders)
 				}
-			}
+			};
 			const folders: Record<string, { id: string; displayName: string; parentFolderId: string | null }> = {
 				'folder-3': { id: 'folder-3', displayName: 'Subfolder', parentFolderId: 'folder-2' },
 				'folder-2': { id: 'folder-2', displayName: 'Documents', parentFolderId: 'folder-1' },
@@ -222,7 +222,7 @@ describe('buildViewCaseFolder', () => {
 				folder: {
 					findUnique: (args: { where: { id: string } }) => Promise.resolve(folders[args.where.id] ?? null),
 					findMany: () => Promise.resolve(allFolders)
-					}
+				}
 			};
 			const folders: Record<string, { id: string; displayName: string; parentFolderId: string | null }> = {
 				'folder-2': { id: 'folder-2', displayName: 'Orphan', parentFolderId: 'missing-folder' }
