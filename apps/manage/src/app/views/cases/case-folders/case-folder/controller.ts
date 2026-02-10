@@ -3,7 +3,7 @@ import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { createFoldersViewModel } from '../view-model.ts';
-import { type FolderBreadcrumb, buildBreadcrumbItems } from '../folder-utils.ts';
+import { buildBreadcrumbItems } from '../folder-utils.ts';
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { createDocumentsViewModel } from './view-model.ts';
 import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
@@ -12,6 +12,7 @@ import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { Request } from 'express';
+import { FolderBreadcrumb } from '../types.ts';
 
 export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;

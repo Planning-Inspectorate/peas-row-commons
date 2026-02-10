@@ -6,10 +6,10 @@ import {
 	createFolders,
 	findFolders,
 	FOLDER_TEMPLATES_MAP,
-	buildBreadcrumbItems,
-	type FolderBreadcrumb
+	buildBreadcrumbItems
 } from './folder-utils.ts';
 import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/types.ts';
+import { FolderBreadcrumb } from './types.ts';
 
 describe('Folder creation utils', () => {
 	describe('findFolders', () => {
@@ -198,8 +198,8 @@ describe('Folder creation utils', () => {
 
 			assert.strictEqual(result.length, 1);
 			assert.strictEqual(result[0].id, '2');
-		})
-	})
+		});
+	});
 	describe('buildBreadcrumbItems', () => {
 		const caseId = 'case-123';
 
@@ -263,9 +263,9 @@ describe('Folder creation utils', () => {
 			assert.strictEqual(result[0].href, `/cases/${caseId}/case-folders`);
 			assert.strictEqual(result[1].text, 'Documents');
 			assert.strictEqual(result[1].href, undefined);
-		})
-	})
-	
+		});
+	});
+
 	describe('buildFolderTree', () => {
 		it('should return empty array for empty input', () => {
 			const result = buildFolderTree([]);
@@ -330,9 +330,9 @@ describe('Folder creation utils', () => {
 
 			assert.strictEqual(result.length, 1);
 			assert.strictEqual(result[0].id, '2');
-		})
-	})
-		
+		});
+	});
+
 	describe('buildBreadcrumbItems', () => {
 		const caseId = 'case-123';
 
