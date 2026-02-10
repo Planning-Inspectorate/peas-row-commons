@@ -12,7 +12,7 @@ import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { Request } from 'express';
-import { FolderBreadcrumb } from '../types.ts';
+import type { FolderBreadcrumb } from '../types.ts';
 
 export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
