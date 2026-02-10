@@ -90,7 +90,9 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/options-quest
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js' {
-	export default class ManageListQuestion {
+	import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+
+	export default class ManageListQuestion extends Question {
 		constructor(params: any);
 
 		addCustomDataToViewModel(viewModel: any);

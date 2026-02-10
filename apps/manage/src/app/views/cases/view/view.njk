@@ -76,4 +76,30 @@
             {% endfor %}
         </div>
     </div>
+
+    {# Script to handle the "Show more" buttons, hiding and displaying lists on view screen. #}
+	<script type="module" {% if cspNonce %}nonce="{{ cspNonce }}"{% endif %}>
+        function setupToggleButtons() {
+            document.querySelectorAll('.js-toggle-list-btn').forEach(btn => {
+                const list = document.getElementById(btn.getAttribute('data-list-id'));
+                const hiddenItems = list.querySelectorAll('.js-hidden-item');
+                const count = hiddenItems.length;
+
+                btn.innerText = `Show ${count} more`;
+
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+
+                    hiddenItems.forEach(item => item.classList.toggle('govuk-!-display-none', isExpanded));
+
+                    btn.setAttribute('aria-expanded', !isExpanded);
+                    btn.innerText = !isExpanded ? 'Hide' : `Show ${count} more`;
+                });
+            });
+        }
+
+		setupToggleButtons();
+	</script>
 {% endblock %}
