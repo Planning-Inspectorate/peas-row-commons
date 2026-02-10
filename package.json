@@ -57,8 +57,8 @@
     "redis": "^5.8.3"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.1.0",
-    "@commitlint/config-conventional": "^20.0.0",
+    "@commitlint/cli": "^20.4.1",
+    "@commitlint/config-conventional": "^20.4.1",
     "@microsoft/microsoft-graph-types": "^2.43.1",
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.18.2",
