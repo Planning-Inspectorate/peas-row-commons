@@ -9,7 +9,7 @@ import {
 	buildBreadcrumbItems
 } from './folder-utils.ts';
 import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/types.ts';
-import { FolderBreadcrumb } from './types.ts';
+import type { FolderBreadcrumb } from './types.ts';
 
 describe('Folder creation utils', () => {
 	describe('findFolders', () => {
