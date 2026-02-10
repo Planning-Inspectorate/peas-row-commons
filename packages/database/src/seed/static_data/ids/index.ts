@@ -16,4 +16,4 @@ export { ADMIN_PROCEDURES_ID } from './admin-procedure-type.ts';
 export { SITE_VISITS_ID } from './site-visit-type.ts';
 export { OBJECTOR_STATUS_ID } from './objector-status.ts';
 export { CONTACT_TYPE_ID } from './contact-type.ts';
-export * from './note-type.ts';
+export { NOTE_TYPE_ID } from './note-type.ts';

@@ -232,16 +232,18 @@ model CaseNote {
   Author       User     @relation("author", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   caseId       String   @db.UniqueIdentifier
   Case         Case     @relation(fields: [caseId], references: [id])
+  ///Legacy Horizon Case ID this note originated from used for migration
   legacyCaseId String?
   /// The type of this note (e.g. Case note, Sticky note, Important info)
-  noteTypeId   String   @db.UniqueIdentifier
-  noteType     NoteType @relation(fields: [noteTypeId], references: [id])
+  noteTypeId   String   @default("case-note")
+  NoteType     NoteType @relation(fields: [noteTypeId], references: [id])
 }
 
 model NoteType {
-  id          String     @id @db.UniqueIdentifier
-  displayName String
-  caseNotes   CaseNote[]
+  /// unique machine-readable name, not generated, e.g. "case-note"
+  id          String     @id
+  displayName String?
+  CaseNotes   CaseNote[]
 }
 
 model CaseStatus {
