@@ -232,8 +232,16 @@ model CaseNote {
   Author       User     @relation("author", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   caseId       String   @db.UniqueIdentifier
   Case         Case     @relation(fields: [caseId], references: [id])
-  legacyCaseId String
-  noteType     String
+  legacyCaseId String?
+  /// The type of this note (e.g. Case note, Sticky note, Important info)
+  noteTypeId   String   @db.UniqueIdentifier
+  noteType     NoteType @relation(fields: [noteTypeId], references: [id])
+}
+
+model NoteType {
+  id          String     @id @db.UniqueIdentifier
+  displayName String
+  caseNotes   CaseNote[]
 }
 
 model CaseStatus {
