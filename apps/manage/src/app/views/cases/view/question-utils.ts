@@ -1848,8 +1848,7 @@ export const KEY_CONTACTS_QUESTIONS = {
 		question: 'Check objector details',
 		fieldName: 'objectorDetails',
 		url: 'objector-details',
-		viewData: { emptyName: 'objector' },
-		validators: []
+		viewData: { emptyName: 'objector' }
 	},
 	...createPersonQuestions({
 		section: 'objector',
