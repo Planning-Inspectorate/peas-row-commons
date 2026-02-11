@@ -1,6 +1,6 @@
 import ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
 import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
-import type { PreppedQuestion, TableHeadCell, TableManageListQuestionParameters, TableRowCell } from './types.ts';
+import type { TableHeadCell, TableManageListQuestionParameters, TableRowCell } from './types.ts';
 import nunjucks from 'nunjucks';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
@@ -104,7 +104,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	 * Creates the table row based on the questions asked
 	 */
 	private createRow(viewModel: QuestionViewModel, item: Record<string, any>): TableRowCell[] {
-		const cells = this.section?.questions.map((question: PreppedQuestion) => {
+		const cells = this.section?.questions.map((question: Question) => {
 			return this.createCell(question, item);
 		});
 
@@ -124,7 +124,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 			attributes: {
 				'aria-sort': 'none'
 			}
-		}));
+		})) as unknown as TableHeadCell[];
 
 		headers.push({
 			text: 'Actions',
@@ -134,14 +134,14 @@ export default class TableManageListQuestion extends ManageListQuestion {
 		return headers;
 	}
 
-	createCell(question: PreppedQuestion, item: Record<string, any>): TableRowCell {
+	createCell(question: Question, item: Record<string, any>): TableRowCell {
 		const mockJourney = {
 			response: { answers: item },
 			getCurrentQuestionUrl: () => '',
 			answers: item
 		};
 
-		if (question.shouldDisplay && !question.shouldDisplay({ answers: item })) {
+		if (question.shouldDisplay && !question.shouldDisplay({ answers: item } as JourneyResponse)) {
 			return { text: '—' };
 		}
 

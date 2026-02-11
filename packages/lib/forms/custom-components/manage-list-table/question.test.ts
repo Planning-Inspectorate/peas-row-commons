@@ -2,8 +2,12 @@ import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import TableManageListQuestion from './question.ts';
 import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
-import type { PreppedQuestion } from './types.js';
-import type { QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type {
+	Question,
+	QuestionViewModel,
+	SummaryListItem
+} from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 
 describe('TableManageListQuestion', () => {
 	let tableQuestion: TableManageListQuestion;
@@ -22,7 +26,7 @@ describe('TableManageListQuestion', () => {
 				{ title: 'Name', viewData: { tableHeader: 'Full Name' }, fieldName: 'name' },
 				{ title: 'Date of Birth', fieldName: 'dob' }
 			]
-		};
+		} as unknown as Section;
 
 		mockViewModel = {
 			question: {
@@ -66,7 +70,7 @@ describe('TableManageListQuestion', () => {
 			const hiddenQuestion = {
 				fieldName: 'secret',
 				shouldDisplay: () => false
-			} as unknown as PreppedQuestion;
+			} as unknown as Question;
 
 			const result = tableQuestion.createCell(hiddenQuestion, { secret: 'hidden' });
 
@@ -78,7 +82,7 @@ describe('TableManageListQuestion', () => {
 			const mockQuestion = {
 				fieldName: 'name',
 				formatAnswerForSummary: () => [{ value: 'John' }, { value: 'Doe' }]
-			} as unknown as PreppedQuestion;
+			} as unknown as Question;
 
 			const result = tableQuestion.createCell(mockQuestion, { name: 'John Doe' });
 
@@ -92,7 +96,7 @@ describe('TableManageListQuestion', () => {
 				title: 'Date',
 				fieldName: 'dob',
 				question: 'What is the date of birth?'
-			} as any) as unknown as PreppedQuestion;
+			} as any) as unknown as Question;
 
 			dateQuestion.formatAnswerForSummary = () => [{ value: '1990-01-01' }] as any;
 
@@ -119,8 +123,8 @@ describe('TableManageListQuestion', () => {
 			tableQuestion.section!.questions[0].shouldDisplay = () => true;
 			tableQuestion.section!.questions[1].shouldDisplay = () => true;
 
-			tableQuestion.section!.questions[0].formatAnswerForSummary = () => [{ value: 'Ans 1' }];
-			tableQuestion.section!.questions[1].formatAnswerForSummary = () => [{ value: 'Ans 2' }];
+			tableQuestion.section!.questions[0].formatAnswerForSummary = () => [{ value: 'Ans 1' } as SummaryListItem];
+			tableQuestion.section!.questions[1].formatAnswerForSummary = () => [{ value: 'Ans 2' } as SummaryListItem];
 
 			tableQuestion.addCustomDataToViewModel(mockViewModel);
 
@@ -135,7 +139,7 @@ describe('TableManageListQuestion', () => {
 		});
 
 		it('should throw an error if section is not set', () => {
-			tableQuestion.section = undefined;
+			tableQuestion.section = undefined as unknown as Section;
 
 			assert.throws(() => {
 				tableQuestion.addCustomDataToViewModel(mockViewModel);
