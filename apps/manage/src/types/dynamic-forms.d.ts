@@ -91,10 +91,11 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/options-quest
 
 declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js' {
 	import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+	import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 	export default class ManageListQuestion extends Question {
 		constructor(params: any);
-		get section(): any;
-		set section(): any;
+		get section(): Section;
+		set section(): Section;
 		addCustomDataToViewModel(viewModel: any);
 	}
 }
@@ -254,8 +255,10 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/section.js' {
+	import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 	export class Section {
 		constructor(name: string, id: string);
+		questions: Question[];
 		addQuestion(question: any, manageSection?: any): Section;
 		withCondition(condition: (response: any) => boolean): Section;
 		startMultiQuestionCondition(key: string, condition: (response: any) => boolean): Section;
