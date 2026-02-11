@@ -22,7 +22,7 @@ declare module '@planning-inspectorate/dynamic-forms/src/journey/journey-respons
 	export declare class JourneyResponse {
 		referenceId: string;
 		journeyId: string;
-		answers: Record<string, unknown>;
+		answers: Record<string, Record<string, unknown>[]>;
 		LPACode?: string;
 
 		constructor(journeyId: string, referenceId: string, answers: Record<string, unknown> | null, lpaCode?: string);
@@ -91,10 +91,10 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/options-quest
 
 declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js' {
 	import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-
 	export default class ManageListQuestion extends Question {
 		constructor(params: any);
-
+		get section(): any;
+		set section(): any;
 		addCustomDataToViewModel(viewModel: any);
 	}
 }
@@ -211,7 +211,12 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 
 		renderAction(res: Response, viewModel: QuestionViewModel): void;
 
-		checkForValidationErrors(req: Request, sectionObj: Section, journey: Journey): QuestionViewModel | undefined;
+		checkForValidationErrors(
+			req: Request,
+			sectionObj: Section,
+			journey: Journey,
+			manageListQuestion: Question
+		): QuestionViewModel | undefined;
 
 		getDataToSave(req: Request, journeyResponse: JourneyResponse): Promise<{ answers: Record<string, unknown> }>;
 
@@ -235,6 +240,16 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 		fieldIsRequired(inputField: string): boolean;
 
 		isAnswered(journeyResponse: JourneyResponse, fieldName?: string): boolean;
+
+		toViewModel(options: {
+			params: RouteParams;
+			manageListQuestion?: ManageListQuestion;
+			section: Section;
+			journey: Journey;
+			customViewData?: Record<string, unknown>;
+			payload?: unknown;
+			question?: Question;
+		}): QuestionViewModel;
 	}
 }
 

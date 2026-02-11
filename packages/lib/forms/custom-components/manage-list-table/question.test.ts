@@ -2,7 +2,8 @@ import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import TableManageListQuestion from './question.ts';
 import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
-import type { QuestionViewModel, PreppedQuestion } from './types.js';
+import type { PreppedQuestion } from './types.js';
+import type { QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 
 describe('TableManageListQuestion', () => {
 	let tableQuestion: TableManageListQuestion;
@@ -138,7 +139,7 @@ describe('TableManageListQuestion', () => {
 
 			assert.throws(() => {
 				tableQuestion.addCustomDataToViewModel(mockViewModel);
-			}, /Section not set for TableManageListQuestion/);
+			}, /manage list section not set/);
 		});
 	});
 });
