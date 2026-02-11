@@ -1,19 +1,14 @@
 import ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
 import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
-import type {
-	PreppedQuestion,
-	QuestionViewModel,
-	TableHeadCell,
-	TableManageListQuestionParameters,
-	TableRowCell
-} from './types.ts';
+import type { PreppedQuestion, TableHeadCell, TableManageListQuestionParameters, TableRowCell } from './types.ts';
 import nunjucks from 'nunjucks';
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import type { Question, QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type { Request } from 'express';
 
 export default class TableManageListQuestion extends ManageListQuestion {
-	section: Record<string, any> | undefined;
 	viewFolder: string;
 	summaryLimit: number;
 	showAnswersInSummary: boolean;
@@ -24,6 +19,40 @@ export default class TableManageListQuestion extends ManageListQuestion {
 		this.showAnswersInSummary = params.showAnswersInSummary || false;
 
 		this.viewFolder = 'custom-components/manage-list-table';
+	}
+
+	/**
+	 * Override for parent.
+	 *
+	 * Only difference is that for payload we pass in the journey response answers.
+	 * This is because for Manage List questions, we don't have the data
+	 * stored in the body from an input like a regular question, so body
+	 * does not contain anything useful and it won't repopulate the screen.
+	 */
+	checkForValidationErrors(
+		req: Request,
+		section: Section,
+		journey: Journey,
+		manageListQuestion: Question
+	): QuestionViewModel | undefined {
+		const { body = {}, originalUrl } = req;
+		const { errors = {}, errorSummary = [] } = body;
+
+		if (Object.keys(errors).length > 0) {
+			return this.toViewModel({
+				params: req.params,
+				section,
+				journey,
+				customViewData: {
+					errors,
+					errorSummary,
+					originalUrl
+				},
+				// Use stored answers instead of body for Manage List repopulation
+				payload: journey.response.answers,
+				question: manageListQuestion
+			});
+		}
 	}
 
 	/**

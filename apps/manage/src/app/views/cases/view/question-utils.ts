@@ -29,6 +29,7 @@ import type { CaseOfficer, PersonConfig } from './types.ts';
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/outcome.ts';
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
+import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/validator.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
 
@@ -743,7 +744,13 @@ export const TEAM_QUESTIONS = {
 		fieldName: 'inspectorDetails',
 		url: 'inspector-details',
 		showAnswersInSummary: true,
-		viewData: { emptyName: 'inspector' }
+		viewData: { emptyName: 'inspector' },
+		validators: [
+			new ManageListItemsCompleteValidator({
+				inspectorId: "Select 'Inspector name'",
+				inspectorAllocatedDate: "Add 'Date appointed'"
+			})
+		]
 	},
 	inspector: {
 		type: COMPONENT_TYPES.SELECT,
@@ -1841,7 +1848,8 @@ export const KEY_CONTACTS_QUESTIONS = {
 		question: 'Check objector details',
 		fieldName: 'objectorDetails',
 		url: 'objector-details',
-		viewData: { emptyName: 'objector' }
+		viewData: { emptyName: 'objector' },
+		validators: []
 	},
 	...createPersonQuestions({
 		section: 'objector',
