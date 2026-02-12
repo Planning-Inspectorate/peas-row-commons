@@ -21,7 +21,8 @@ export const caseListSelect = {
 	SiteAddress: true,
 	Notes: {
 		include: {
-			Author: true
+			Author: true,
+			NoteType: true
 		}
 	},
 	Applicant: true,

@@ -80,7 +80,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				Abeyance: true,
 				Notes: {
 					include: {
-						Author: true
+						Author: true,
+						NoteType: true
 					}
 				},
 				Authority: true,
