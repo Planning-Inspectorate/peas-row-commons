@@ -3,6 +3,7 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { Prisma, PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import type { Logger } from 'pino';
+import { NOTE_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/note-type.ts';
 
 export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
@@ -49,6 +50,10 @@ async function createCaseNote(id: string, comment: string, authorId: string, db:
 							where: { idpUserId: authorId },
 							create: { idpUserId: authorId }
 						}
+					},
+					// All user created notes are "case-note"s
+					NoteType: {
+						connect: { id: NOTE_TYPE_ID.CASE_NOTE }
 					}
 				}
 			});
