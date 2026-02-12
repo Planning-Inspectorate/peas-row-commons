@@ -37,7 +37,7 @@
     "@prisma/adapter-mssql": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "accessible-autocomplete": "^3.0.1",
-    "body-parser": "^2.2.0",
+    "body-parser": "^2.2.2",
     "cfb": "^1.2.2",
     "connect-redis": "^9.0.0",
     "date-fns": "^4.1.0",
