@@ -677,7 +677,7 @@ export const OVERVIEW_QUESTIONS = {
 		]
 	},
 	linkedCaseDetails: {
-		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
+		type: CUSTOM_COMPONENTS.LINKED_CASES_LIST,
 		title: 'Linked case(s)',
 		question: 'Check linked case details',
 		fieldName: 'linkedCaseDetails',
