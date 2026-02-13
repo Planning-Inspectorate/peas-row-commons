@@ -6,6 +6,14 @@ export const CASE_STATUSES = [
 		displayName: 'New case'
 	},
 	{
+		id: CASE_STATUS_ID.VALIDATED,
+		displayName: 'Validated'
+	},
+	{
+		id: CASE_STATUS_ID.INVALID,
+		displayName: 'Invalid'
+	},
+	{
 		id: CASE_STATUS_ID.INITIAL_CHECKS_VALIDATION,
 		displayName: 'Initial checks / validation'
 	},
@@ -14,8 +22,8 @@ export const CASE_STATUSES = [
 		displayName: 'Rejected'
 	},
 	{
-		id: CASE_STATUS_ID.SEND_LETTER,
-		displayName: 'Send letter'
+		id: CASE_STATUS_ID.INFORM_PARTIES,
+		displayName: 'Inform parties'
 	},
 	{
 		id: CASE_STATUS_ID.ALLOCATE_INSPECTOR,
@@ -26,6 +34,10 @@ export const CASE_STATUSES = [
 		displayName: 'Arrange event'
 	},
 	{
+		id: CASE_STATUS_ID.IN_PROGRESS,
+		displayName: 'In progress'
+	},
+	{
 		id: CASE_STATUS_ID.EXCHANGE_CORRESPONDENCE,
 		displayName: 'Exchange correspondence'
 	},
@@ -34,8 +46,12 @@ export const CASE_STATUSES = [
 		displayName: 'Ready for inspector'
 	},
 	{
-		id: CASE_STATUS_ID.CHECK_DECISION,
-		displayName: 'Check decision'
+		id: CASE_STATUS_ID.EVENT,
+		displayName: 'Event'
+	},
+	{
+		id: CASE_STATUS_ID.DECISION_RECOMMENDATION_ISSUED,
+		displayName: 'Decision/recommendation issued'
 	},
 	{
 		id: CASE_STATUS_ID.DESPATCH,
@@ -48,5 +64,25 @@ export const CASE_STATUSES = [
 	{
 		id: CASE_STATUS_ID.CLOSED,
 		displayName: 'Closed'
+	},
+	{
+		id: CASE_STATUS_ID.CANCELLED,
+		displayName: 'Cancelled'
+	},
+	{
+		id: CASE_STATUS_ID.PAUSED_ON_HOLD,
+		displayName: 'Paused/on hold'
+	},
+	{
+		id: CASE_STATUS_ID.WITHDRAWN,
+		displayName: 'Withdrawn'
+	},
+	{
+		id: CASE_STATUS_ID.IN_ABEYANCE,
+		displayName: 'In abeyance'
+	},
+	{
+		id: CASE_STATUS_ID.CLOSED_OPENED_IN_ERROR,
+		displayName: 'Closed - opened in error'
 	}
 ];
