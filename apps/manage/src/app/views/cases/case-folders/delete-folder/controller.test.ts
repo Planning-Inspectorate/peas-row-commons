@@ -98,7 +98,13 @@ describe('Delete Folder Controller', () => {
 				}
 			};
 
-			const mockService = { db: mockDb, logger: { error: () => {} } };
+			const mockService = {
+				db: mockDb,
+				logger: { error: () => {} },
+				audit: {
+					record: () => Promise.resolve()
+				}
+			};
 
 			const req = {
 				params: { folderId: 'folder-123', id: 'case-1' },
@@ -138,7 +144,13 @@ describe('Delete Folder Controller', () => {
 				error: mock.fn()
 			};
 
-			const mockService = { db: mockDb, logger: mockLogger };
+			const mockService = {
+				db: mockDb,
+				logger: mockLogger,
+				audit: {
+					record: () => Promise.resolve()
+				}
+			};
 
 			const req = { params: { folderId: 'folder-123', id: 'case-1' } };
 			const res = {
@@ -154,6 +166,56 @@ describe('Delete Folder Controller', () => {
 
 			assert.strictEqual(res.render.mock.callCount(), 1);
 			assert.strictEqual(res.locals.errorSummary[0].text, 'Failed to delete folder, please try again.');
+		});
+	});
+
+	describe('buildDeleteFolderController (audit recording)', () => {
+		it('should record audit event when folder is deleted', async () => {
+			let recordedAudit: any = null;
+
+			const mockService = {
+				db: {
+					folder: {
+						findUnique: () =>
+							Promise.resolve({
+								id: 'folder-123',
+								displayName: 'Target Folder',
+								caseId: 'case-1',
+								ParentFolder: null
+							}),
+						update: () => Promise.resolve({})
+					}
+				},
+				audit: {
+					record: (entry: any) => {
+						recordedAudit = entry;
+						return Promise.resolve();
+					}
+				},
+				logger: {
+					error: () => {},
+					info: () => {}
+				}
+			};
+
+			const req = {
+				params: { id: 'case-1', folderId: 'folder-123' },
+				session: { account: { localAccountId: 'user-456' } }
+			};
+
+			const res = {
+				redirect: () => {},
+				render: () => {},
+				locals: {}
+			};
+
+			const handler = buildDeleteFolderController(mockService as any);
+			await handler(req as any, res as any);
+
+			assert.strictEqual(recordedAudit.caseId, 'case-1');
+			assert.strictEqual(recordedAudit.action, 'FOLDER_DELETED');
+			assert.strictEqual(recordedAudit.userId, 'user-456');
+			assert.deepStrictEqual(recordedAudit.metadata, { folderName: 'Target Folder' });
 		});
 	});
 });

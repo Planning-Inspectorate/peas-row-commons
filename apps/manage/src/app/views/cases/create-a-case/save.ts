@@ -5,12 +5,13 @@ import { mapAnswersToCaseInput, resolveCaseTypeIds } from './case-mapper.ts';
 import { buildReferencePrefix } from './case-codes.ts';
 import { JOURNEY_ID } from './journey.ts';
 import { createFolders, findFolders, FOLDER_TEMPLATES_MAP } from '../case-folders/folder-utils.ts';
+import { AUDIT_ACTIONS } from '../../../audit/index.ts';
 
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 
 import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 
-export function buildSaveController({ db, logger }: ManageService) {
+export function buildSaveController({ db, logger, audit }: ManageService) {
 	return async (req: Request, res: Response) => {
 		const journeyResponse = res.locals?.journeyResponse;
 
@@ -22,9 +23,10 @@ export function buildSaveController({ db, logger }: ManageService) {
 
 		let reference, id;
 		try {
-			await db.$transaction(async ($tx) => {
+			const caseObj = await db.$transaction(async ($tx) => {
 				const { typeId, subtypeId } = resolveCaseTypeIds(answers);
 				const prefix = buildReferencePrefix(typeId, subtypeId);
+
 				reference = await generateCaseReference($tx, prefix);
 
 				logger.info({ reference }, 'creating a new case');
@@ -41,6 +43,15 @@ export function buildSaveController({ db, logger }: ManageService) {
 				await createFolders(foldersToCreate, id, $tx);
 
 				logger.info({ reference }, 'created folders for case');
+
+				return created;
+			});
+
+			await audit.record({
+				caseId: caseObj.id,
+				action: AUDIT_ACTIONS.CASE_CREATED,
+				userId: req?.session?.account?.localAccountId || 'unknown',
+				metadata: { reference: caseObj.reference }
 			});
 		} catch (error: any) {
 			wrapPrismaError({

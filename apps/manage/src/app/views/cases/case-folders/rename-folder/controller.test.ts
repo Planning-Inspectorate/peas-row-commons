@@ -37,7 +37,10 @@ describe('Rename Folder Controller', () => {
 
 		mockService = {
 			db: mockDb,
-			logger: { error: mock.fn() }
+			logger: { error: mock.fn() },
+			audit: {
+				record: mock.fn(() => Promise.resolve())
+			}
 		};
 	});
 
@@ -127,6 +130,48 @@ describe('Rename Folder Controller', () => {
 			mockReq.session = { folders: { 'case-123': { createFolderErrors: ['Error'] } } };
 			const result = getSessionErrors(mockReq, 'case-123');
 			assert.deepStrictEqual(result, ['Error']);
+		});
+	});
+
+	describe('buildRenameFolder (audit recording)', () => {
+		it('should record audit event when folder is renamed', async () => {
+			let recordedAudit: any = null;
+
+			const mockService = {
+				db: {
+					folder: {
+						update: () => Promise.resolve({})
+					}
+				},
+				audit: {
+					record: (entry: any) => {
+						recordedAudit = entry;
+						return Promise.resolve();
+					}
+				},
+				logger: {
+					error: () => {}
+				}
+			};
+
+			const req = {
+				baseUrl: '/cases/case-1/case-folders/folder-123/rename-folder',
+				params: { id: 'case-1', folderId: 'folder-123' },
+				body: { folderName: 'Renamed Folder' },
+				session: { account: { localAccountId: 'user-789' } }
+			};
+
+			const res = {
+				redirect: () => {}
+			};
+
+			const handler = buildRenameFolder(mockService as any);
+			await handler(req as any, res as any, () => {});
+
+			assert.strictEqual(recordedAudit.caseId, 'case-1');
+			assert.strictEqual(recordedAudit.action, 'FOLDER_RENAMED');
+			assert.strictEqual(recordedAudit.userId, 'user-789');
+			assert.deepStrictEqual(recordedAudit.metadata, { folderName: 'Renamed Folder' });
 		});
 	});
 });

@@ -1,0 +1,80 @@
+{% extends "views/layouts/main.njk" %}
+{% set title = reference + " - Case history" %}
+
+{% block pageTitle %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <h2 class="govuk-caption-l" data-cy="page-caption">
+                {{ reference }}
+            </h2>
+            <h1 class="govuk-heading-l" data-cy="page-heading">
+                {{ pageHeading }}
+            </h1>
+
+            {% if rows | length == 0 %}
+                <p class="govuk-body" data-cy="no-history-message">There is no case history to display</p>
+            {% else %}
+                <table class="govuk-table" data-cy="case-history-table">
+                    <thead class="govuk-table__header">
+                        <tr class="govuk-table__row">
+                            <th scope="col" class="govuk-table__header">Date and time</th>
+                            <th scope="col" class="govuk-table__header">Details</th>
+                            <th scope="col" class="govuk-table__header">User</th>
+                        </tr>
+                    </thead>
+                    <tbody class="govuk-table__body">
+                        {% for row in rows %}
+                            <tr class="govuk-table__row" data-cy="history-row-{{ loop.index0 }}">
+                                <td class="govuk-table__cell" data-cy="history-date-{{ loop.index0 }}">
+                                    {{ row.date }}<br>{{ row.time }}
+                                </td>
+                                <td class="govuk-table__cell" data-cy="history-details-{{ loop.index0 }}">
+                                    {{ row.details }}
+                                </td>
+                                <td class="govuk-table__cell" data-cy="history-user-{{ loop.index0 }}">
+                                    {{ row.user }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                {% if pagination.totalPages > 1 %}
+                    <nav class="govuk-pagination" data-cy="pagination">
+                        {% if pagination.currentPage > 0 %}
+                            <div class="govuk-pagination__prev">
+                                <a class="govuk-link govuk-pagination__link"
+                                   href="?page={{ pagination.currentPage - 1 }}"
+                                   rel="prev"
+                                   data-cy="pagination-prev">
+                                    <svg class="govuk-pagination__icon govuk-pagination__icon--prev" xmlns="http://www.w3.org/2000/svg" height="13" width="15" aria-hidden="true" focusable="false" viewBox="0 0 15 13">
+                                        <path d="m6.5938-0.0078125-6.7266 6.7266 6.7441 6.4062 1.377-1.449-4.1856-3.9768h12.896v-2h-12.984l4.2931-4.293-1.414-1.414z"></path>
+                                    </svg>
+                                    <span class="govuk-pagination__link-title">Previous<span class="govuk-visually-hidden"> page</span></span>
+                                </a>
+                            </div>
+                        {% endif %}
+
+                        {% if pagination.currentPage < pagination.totalPages - 1 %}
+                            <div class="govuk-pagination__next">
+                                <a class="govuk-link govuk-pagination__link"
+                                   href="?page={{ pagination.currentPage + 1 }}"
+                                   rel="next"
+                                   data-cy="pagination-next">
+                                    <span class="govuk-pagination__link-title">Next<span class="govuk-visually-hidden"> page</span></span>
+                                    <svg class="govuk-pagination__icon govuk-pagination__icon--next" xmlns="http://www.w3.org/2000/svg" height="13" width="15" aria-hidden="true" focusable="false" viewBox="0 0 15 13">
+                                        <path d="m8.107-0.0078125-1.4136 1.414 4.2926 4.293h-12.986v2h12.896l-4.1855 3.9766 1.377 1.4492 6.7441-6.4062-6.7246-6.7266z"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                        {% endif %}
+                    </nav>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

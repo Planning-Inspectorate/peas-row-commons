@@ -6,6 +6,7 @@ import { type InitEntraClient } from '@pins/peas-row-commons-lib/graph/types.ts'
 import { initBlobStore } from '@pins/peas-row-commons-lib/blob-store/index.ts';
 import { initLogger } from '@pins/peas-row-commons-lib/util/logger.ts';
 import { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
+import { buildAuditService, type AuditService } from './audit/index.ts';
 
 /**
  * This class encapsulates all the services and clients for the application
@@ -20,6 +21,8 @@ export class ManageService extends BaseService {
 
 	blobStoreClient: BlobStorageClient | null;
 
+	audit: AuditService;
+
 	constructor(config: Config) {
 		super(config);
 		this.#config = config;
@@ -30,6 +33,8 @@ export class ManageService extends BaseService {
 		this.getEntraClient = buildInitEntraClient(!config.auth.disabled, entraGroupCache);
 
 		this.blobStoreClient = initBlobStore(config.blobStore, logger);
+
+		this.audit = buildAuditService(this.db, logger);
 	}
 
 	get blobStore() {

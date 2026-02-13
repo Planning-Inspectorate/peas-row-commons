@@ -2,6 +2,7 @@ import type { ManageService } from '#service';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { RequestHandler } from 'express';
+import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
 
 /**
  * Controller used for the POST request when a user sends files to move,
@@ -49,7 +50,7 @@ export function buildHandleMoveSelection(): RequestHandler {
  * the end of the Journey ready to update.
  */
 export function buildViewMoveFiles(service: ManageService): RequestHandler {
-	const { db } = service;
+	const { db, audit } = service;
 
 	return async (req, res) => {
 		const fileIds = Array.isArray(req.session.moveFilesIds) ? req.session.moveFilesIds : [];
@@ -72,6 +73,12 @@ export function buildViewMoveFiles(service: ManageService): RequestHandler {
 		if (!documents) return notFoundHandler(req, res);
 
 		const returnUrl = req.baseUrl.replace(/\/move-files\/?$/, '');
+
+		await audit.record({
+			caseId: req.params.id,
+			action: AUDIT_ACTIONS.FILE_MOVED,
+			userId: req?.session?.account?.localAccountId || 'unknown'
+		});
 
 		return res.render('views/cases/move-file/view.njk', {
 			pageHeading: documents.length > 1 ? 'Move files' : 'Move file',

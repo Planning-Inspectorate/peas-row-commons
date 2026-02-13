@@ -1901,3 +1901,15 @@ export const ALL_QUESTIONS = {
 	...createProcedureQuestions('One'),
 	...KEY_CONTACTS_QUESTIONS
 };
+
+const FIELD_DISPLAY_NAMES: Record<string, string> = Object.fromEntries(
+	Object.values(ALL_QUESTIONS).map((q: any) => [q.fieldName, q.title])
+);
+
+/**
+ * Converts raw field names from answers into their human-readable
+ * display names from the questions config.
+ */
+export function getFieldDisplayNames(fieldNames: string[]): string {
+	return fieldNames.map((field) => FIELD_DISPLAY_NAMES[field] ?? field).join(', ');
+}

@@ -5,7 +5,8 @@ import {
 	getParentFolder,
 	getNextDisplayOrder,
 	createFolderRecord,
-	getRedirectUrl
+	getRedirectUrl,
+	buildCreateFolders
 } from './controller.ts';
 
 describe('Create Folders Helpers', () => {
@@ -110,6 +111,50 @@ describe('Create Folders Helpers', () => {
 			const req = { session: {} };
 			const result = getSessionErrors(req as any, 'case-1');
 			assert.strictEqual(result, null);
+		});
+	});
+
+	describe('buildCreateFolders (audit recording)', () => {
+		it('should record audit event when folder is created', async () => {
+			let recordedAudit: any = null;
+
+			const mockService = {
+				db: {
+					folder: {
+						findUnique: () => Promise.resolve(null),
+						aggregate: () => Promise.resolve({ _max: { displayOrder: 0 } }),
+						create: () => Promise.resolve({ id: 'new-folder-id' })
+					}
+				},
+				audit: {
+					record: (entry: any) => {
+						recordedAudit = entry;
+						return Promise.resolve();
+					}
+				},
+				logger: {
+					error: () => {},
+					info: () => {}
+				}
+			};
+
+			const req = {
+				params: { id: 'case-1', folderId: null },
+				body: { folderName: 'Test Folder' },
+				session: { account: { localAccountId: 'user-123' } }
+			};
+
+			const res = {
+				redirect: () => {}
+			};
+
+			const controller = buildCreateFolders(mockService as any);
+			await controller(req as any, res as any, () => {});
+
+			assert.strictEqual(recordedAudit.caseId, 'case-1');
+			assert.strictEqual(recordedAudit.action, 'FOLDER_CREATED'); // or whatever AUDIT_ACTIONS.FOLDER_CREATED equals
+			assert.strictEqual(recordedAudit.userId, 'user-123');
+			assert.deepStrictEqual(recordedAudit.metadata, { folderName: 'Test Folder' });
 		});
 	});
 });

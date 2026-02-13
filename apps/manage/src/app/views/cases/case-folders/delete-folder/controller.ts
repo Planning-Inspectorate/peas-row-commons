@@ -4,6 +4,7 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { Request, Response } from 'express';
+import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
 
 /**
  * Grabs folder and meta data for displaying,
@@ -83,7 +84,7 @@ export function buildDeleteFolderView(service: ManageService) {
 }
 
 export function buildDeleteFolderController(service: ManageService) {
-	const { db, logger } = service;
+	const { db, logger, audit } = service;
 
 	return async (req: Request, res: Response) => {
 		const { id, folderId } = req.params;
@@ -98,6 +99,13 @@ export function buildDeleteFolderController(service: ManageService) {
 				data: {
 					deletedAt: new Date()
 				}
+			});
+
+			await audit.record({
+				caseId: id,
+				action: AUDIT_ACTIONS.FOLDER_DELETED,
+				userId: req?.session?.account?.localAccountId || 'unknown',
+				metadata: { folderName: context.folder.displayName }
 			});
 
 			// We add it with the id of the 'case' but not the folder, because we
