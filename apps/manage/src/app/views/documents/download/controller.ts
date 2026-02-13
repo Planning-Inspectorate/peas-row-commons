@@ -5,13 +5,14 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { Logger } from 'pino';
 import type { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
+import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
 
 /**
  * Builds the download document controller, fetches document from SQL, grabs blob from azure,
  * streams back to user.
  */
 export function buildDownloadDocument(service: ManageService): AsyncRequestHandler {
-	const { db, logger, blobStore } = service;
+	const { db, logger, blobStore, audit } = service;
 
 	return async (req: Request, res: Response) => {
 		const { documentId } = req.params;
@@ -26,6 +27,12 @@ export function buildDownloadDocument(service: ManageService): AsyncRequestHandl
 		if (!document) return;
 
 		await streamDocumentToResponse(res, blobStore, document, isPreview, logger);
+
+		await audit.record({
+			caseId: document.caseId,
+			action: AUDIT_ACTIONS.FILE_DOWNLOADED,
+			userId: req?.session?.account?.localAccountId || 'unknown'
+		});
 	};
 }
 

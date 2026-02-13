@@ -6,6 +6,7 @@ import type { Logger } from 'pino';
 import type { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
 import { randomUUID } from 'crypto';
 import type { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
 
 /**
  * Controller for uploading a new document to Azure Blob,
@@ -14,7 +15,7 @@ import type { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/c
  */
 export function uploadDocumentsController(service: ManageService) {
 	return async (req: Request, res: Response) => {
-		const { blobStore, logger, db } = service;
+		const { blobStore, logger, db, audit } = service;
 		const { id, folderId } = req.params;
 		const files = req.files as Express.Multer.File[];
 
@@ -35,6 +36,13 @@ export function uploadDocumentsController(service: ManageService) {
 
 		// Original file accessed for size (rather than having to parse BigInt from DB row)
 		const originalFile = files[0];
+
+		await audit.record({
+			caseId: id,
+			action: AUDIT_ACTIONS.FILE_UPLOADED,
+			userId: req?.session?.account?.localAccountId || 'unknown',
+			metadata: { fileName }
+		});
 
 		return res.json({
 			file: {
