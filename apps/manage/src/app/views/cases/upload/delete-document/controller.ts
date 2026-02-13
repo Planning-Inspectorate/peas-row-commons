@@ -16,6 +16,7 @@ export function deleteDocumentController(service: ManageService) {
 
 		try {
 			await deleteDraftDocument(service, documentId, req.sessionID);
+
 			return res.json({ success: true });
 		} catch (error) {
 			logger.error({ error, documentId }, 'Fatal error deleting document');

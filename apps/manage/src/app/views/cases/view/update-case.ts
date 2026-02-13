@@ -1,6 +1,6 @@
 import { ManageService } from '#service';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
-import { Prisma, PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { type Case, Prisma, PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { getRelationForField } from '@pins/peas-row-commons-lib/util/schema-map.ts';
 
 import type { Request, Response } from 'express';
@@ -12,6 +12,8 @@ import { JOURNEY_ID } from './journey.ts';
 import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 import { CONTACT_MAPPINGS, handleContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
+import { AUDIT_ACTIONS } from '../../../audit/index.ts';
+import { getFieldDisplayNames } from './question-utils.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -21,7 +23,7 @@ interface HandlerParams {
 
 export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 	return async ({ req, data }: HandlerParams) => {
-		const { db, logger } = service;
+		const { db, logger, audit } = service;
 		const { id } = req.params;
 
 		if (!id) {
@@ -51,6 +53,13 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 
 		await updateCaseData(id, db, logger, formattedAnswersForQuery);
 
+		await audit.record({
+			caseId: id,
+			action: AUDIT_ACTIONS.FIELD_UPDATED,
+			userId: req?.session?.account?.localAccountId || 'unknown',
+			metadata: { fieldName: getFieldDisplayNames(Object.keys(rawAnswers)) }
+		});
+
 		// We clear the session after we have updated the case to avoid ghost data
 		clearDataFromSession({ req, journeyId: JOURNEY_ID });
 
@@ -68,9 +77,9 @@ async function updateCaseData(
 	db: PrismaClient,
 	logger: Logger,
 	formattedAnswersForQuery: Prisma.CaseUpdateInput
-) {
+): Promise<Case> {
 	try {
-		await db.$transaction(async ($tx: Prisma.TransactionClient) => {
+		const caseObj = await db.$transaction(async ($tx: Prisma.TransactionClient) => {
 			const caseRow = await $tx.case.findUnique({
 				where: { id }
 			});
@@ -79,11 +88,15 @@ async function updateCaseData(
 				throw new Error('Case not found');
 			}
 
-			await $tx.case.update({
+			const updated = await $tx.case.update({
 				where: { id },
 				data: formattedAnswersForQuery
 			});
+
+			return updated;
 		});
+
+		return caseObj;
 	} catch (error: any) {
 		wrapPrismaError({
 			error,
@@ -91,6 +104,8 @@ async function updateCaseData(
 			message: 'updating case',
 			logParams: { id }
 		});
+
+		throw error;
 	}
 }
 

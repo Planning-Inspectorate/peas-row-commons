@@ -6,6 +6,7 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { Request } from 'express';
+import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
 
 /**
  * Controller to render the Create Folder view (get)
@@ -36,7 +37,7 @@ export function buildViewCreateFolders(): AsyncRequestHandler {
  * Controller to handle the folder creation logic (post)
  */
 export function buildCreateFolders(service: ManageService): AsyncRequestHandler {
-	const { db, logger } = service;
+	const { db, audit, logger } = service;
 
 	return async (req, res) => {
 		try {
@@ -62,6 +63,13 @@ export function buildCreateFolders(service: ManageService): AsyncRequestHandler 
 				parentId: folderId,
 				caseId: id,
 				order: nextDisplayOrder
+			});
+
+			await audit.record({
+				caseId: id,
+				action: AUDIT_ACTIONS.FOLDER_CREATED,
+				userId: req?.session?.account?.localAccountId || 'unknown',
+				metadata: { folderName }
 			});
 
 			addSessionData(req, id, { created: true }, 'folder');

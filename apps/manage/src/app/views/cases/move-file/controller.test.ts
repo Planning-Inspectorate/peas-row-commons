@@ -31,7 +31,10 @@ describe('Move Selection Controller', () => {
 		};
 
 		mockService = {
-			db: mockDb
+			db: mockDb,
+			audit: {
+				record: mock.fn(() => Promise.resolve())
+			}
 		};
 	});
 
@@ -137,6 +140,32 @@ describe('Move Selection Controller', () => {
 
 			assert.strictEqual(mockRes.status.mock.callCount(), 1);
 			assert.strictEqual(mockRes.status.mock.calls[0].arguments[0], 404);
+		});
+	});
+
+	describe('buildViewMoveFiles (audit recording)', () => {
+		it('should record audit event when viewing files to move', async () => {
+			let recordedAudit: any = null;
+
+			mockReq.session.moveFilesIds = ['file-1'];
+			mockReq.session.account = { localAccountId: 'user-555' };
+
+			const mockDocs = [{ id: 'file-1', fileName: 'test.pdf' }];
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve(mockDocs));
+
+			mockService.audit = {
+				record: (entry: any) => {
+					recordedAudit = entry;
+					return Promise.resolve();
+				}
+			};
+
+			const handler = buildViewMoveFiles(mockService);
+			await handler(mockReq, mockRes, () => {});
+
+			assert.strictEqual(recordedAudit.caseId, 'case-123');
+			assert.strictEqual(recordedAudit.action, 'FILE_MOVED');
+			assert.strictEqual(recordedAudit.userId, 'user-555');
 		});
 	});
 });

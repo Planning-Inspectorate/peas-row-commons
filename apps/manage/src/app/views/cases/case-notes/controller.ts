@@ -3,18 +3,25 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { Prisma, PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import type { Logger } from 'pino';
+import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
 
 export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler {
-	const { db, logger } = service;
+	const { db, logger, audit } = service;
 
 	return async (req, res) => {
 		const { id } = req.params;
 		const { comment } = req.body;
-		const userId = req?.session?.account?.localAccountId || 'unknown';
+		const userId = req?.session?.account?.localAccountId
 
 		logger.info({ comment }, 'case note creation');
 
 		await createCaseNote(id, comment, userId, db, logger);
+
+		await audit.record({
+			caseId: id,
+			action: AUDIT_ACTIONS.CASE_NOTE_ADDED,
+			userId: req?.session?.account?.localAccountId
+		});
 
 		logger.info({ id }, 'case note created');
 

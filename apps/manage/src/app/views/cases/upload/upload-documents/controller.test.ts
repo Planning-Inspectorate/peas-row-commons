@@ -59,7 +59,14 @@ describe('uploadDocumentsController', () => {
 
 			mockBlobStore.uploadStream.mock.mockImplementation(() => Promise.resolve());
 
-			const service = { db: mockDb, blobStore: mockBlobStore, logger: mockLogger };
+			const service = {
+				db: mockDb,
+				blobStore: mockBlobStore,
+				logger: mockLogger,
+				audit: {
+					record: () => Promise.resolve()
+				}
+			};
 
 			await uploadDocumentsController(service as any)(req as any, res as any);
 
@@ -113,7 +120,14 @@ describe('uploadDocumentsController', () => {
 				)
 			} as any;
 
-			const service = { db: mockDb, blobStore: mockBlobStore, logger: mockLogger };
+			const service = {
+				db: mockDb,
+				blobStore: mockBlobStore,
+				logger: mockLogger,
+				audit: {
+					record: () => Promise.resolve()
+				}
+			};
 			await uploadDocumentsController(service as any)(req as any, res as any);
 
 			const dbData = mockDb.draftDocument.create.mock.calls[0].arguments[0].data;
@@ -134,7 +148,14 @@ describe('uploadDocumentsController', () => {
 			const uploadError = new Error('Azure Network Error');
 			mockBlobStore.uploadStream.mock.mockImplementation(() => Promise.reject(uploadError));
 
-			const service = { db: mockDb, blobStore: mockBlobStore, logger: mockLogger };
+			const service = {
+				db: mockDb,
+				blobStore: mockBlobStore,
+				logger: mockLogger,
+				audit: {
+					record: () => Promise.resolve()
+				}
+			};
 
 			await assert.rejects(() => uploadDocumentsController(service as any)(req as any, res as any), {
 				message: 'Failed to upload file'
@@ -160,11 +181,79 @@ describe('uploadDocumentsController', () => {
 				$transaction: mock.fn(() => Promise.reject(dbError))
 			} as any;
 
-			const service = { db: mockDb, blobStore: mockBlobStore, logger: mockLogger };
+			const service = {
+				db: mockDb,
+				blobStore: mockBlobStore,
+				logger: mockLogger,
+				audit: {
+					record: () => Promise.resolve()
+				}
+			};
 
 			await assert.rejects(() => uploadDocumentsController(service as any)(req as any, res as any), dbError);
 
 			assert.strictEqual(mockBlobStore.uploadStream.mock.callCount(), 1);
+		});
+	});
+
+	describe('uploadDocumentsController (audit recording)', () => {
+		it('should record audit event when file is uploaded', async () => {
+			let recordedAudit: any = null;
+
+			const mockDb = {
+				draftDocument: { create: mock.fn() },
+				$transaction: mock.fn(() =>
+					Promise.resolve([
+						{
+							id: 'doc-1',
+							fileName: 'evidence.pdf',
+							blobName: 'case-1/uuid-xyz',
+							size: BigInt(1024)
+						}
+					])
+				)
+			} as any;
+
+			const mockBlobStore = {
+				uploadStream: () => Promise.resolve()
+			};
+
+			const service = {
+				db: mockDb,
+				blobStore: mockBlobStore,
+				logger: { info: () => {}, error: () => {}, warn: () => {} },
+				audit: {
+					record: (entry: any) => {
+						recordedAudit = entry;
+						return Promise.resolve();
+					}
+				}
+			};
+
+			const req = {
+				params: { id: 'case-1', folderId: 'folder-1' },
+				sessionID: 'session-abc',
+				files: [
+					{
+						originalname: 'evidence.pdf',
+						mimetype: 'application/pdf',
+						buffer: Buffer.from('fake-content'),
+						size: 1024
+					}
+				],
+				session: { account: { localAccountId: 'user-321' } }
+			};
+
+			const res = {
+				json: () => {}
+			};
+
+			await uploadDocumentsController(service as any)(req as any, res as any);
+
+			assert.strictEqual(recordedAudit.caseId, 'case-1');
+			assert.strictEqual(recordedAudit.action, 'FILE_UPLOADED');
+			assert.strictEqual(recordedAudit.userId, 'user-321');
+			assert.deepStrictEqual(recordedAudit.metadata, { fileName: 'evidence.pdf' });
 		});
 	});
 });
