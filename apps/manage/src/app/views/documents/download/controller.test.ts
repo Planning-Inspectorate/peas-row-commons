@@ -40,7 +40,14 @@ describe('buildDownloadDocument', () => {
 			...overrides
 		}) as any;
 
-	const service = { db: mockDb, logger: mockLogger, blobStore: mockBlobStore };
+	const service = {
+		db: mockDb,
+		logger: mockLogger,
+		blobStore: mockBlobStore,
+		audit: {
+			record: mock.fn(() => Promise.resolve())
+		}
+	};
 
 	beforeEach(() => {
 		mockDb.document.findUnique.mock.resetCalls();
@@ -254,6 +261,57 @@ describe('buildDownloadDocument', () => {
 
 			assert.strictEqual(mockLogger.error.mock.callCount(), 1);
 			assert.strictEqual(mockLogger.error.mock.calls[0].arguments[0].error, blobError);
+		});
+	});
+	describe('buildDownloadDocument (audit recording)', () => {
+		it('should record audit event when file is downloaded', async () => {
+			let recordedAudit: any = null;
+
+			const mockBlobStream = {
+				on: mock.fn(),
+				pipe: mock.fn()
+			};
+
+			mockDb.document.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({
+					id: 'doc-123',
+					caseId: 'case-1',
+					blobName: 'container/blob-uuid',
+					fileName: 'report.pdf'
+				})
+			);
+
+			mockBlobStore.downloadBlob.mock.mockImplementation(() =>
+				Promise.resolve({
+					readableStreamBody: mockBlobStream,
+					contentType: 'application/pdf',
+					contentLength: 5000
+				})
+			);
+
+			const service = {
+				db: mockDb,
+				logger: mockLogger,
+				blobStore: mockBlobStore,
+				audit: {
+					record: (entry: any) => {
+						recordedAudit = entry;
+						return Promise.resolve();
+					}
+				}
+			};
+
+			const req = mockReq({
+				params: { documentId: 'doc-123', id: 'case-1' },
+				session: { account: { localAccountId: 'user-999' } }
+			});
+			const res = mockRes();
+
+			await buildDownloadDocument(service as any)(req, res);
+
+			assert.strictEqual(recordedAudit.caseId, 'case-1');
+			assert.strictEqual(recordedAudit.action, 'FILE_DOWNLOADED');
+			assert.strictEqual(recordedAudit.userId, 'user-999');
 		});
 	});
 });

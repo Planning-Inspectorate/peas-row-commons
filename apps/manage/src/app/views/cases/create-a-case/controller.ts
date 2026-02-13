@@ -8,7 +8,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 	// with general access to the app.
 	const groupId = service.authConfig.groups.applicationAccess;
 
-	return async (req, res, next) => {
+	return async (req, _, next) => {
 		try {
 			const groupMembers = await getEntraGroupMembers({
 				logger,
