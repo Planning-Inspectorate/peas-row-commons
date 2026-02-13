@@ -11,6 +11,7 @@ import { handleProcedureGeneric } from './procedure-utils.ts';
 import { JOURNEY_ID } from './journey.ts';
 import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 import { CONTACT_MAPPINGS, handleContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
+import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -170,36 +171,62 @@ function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Pri
 	});
 	handleBooleans(flatData);
 	handleCaseOfficer(flatData, prismaPayload);
-	handleDecisionMaker(flatData, prismaPayload);
+	handleOutcomes(flatData, prismaPayload);
 }
 
-/**
- * Handles connecting or creating a Decision Maker (User) nested inside the Case Decision.
- */
-function handleDecisionMaker(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
-	if (flatData.decisionMakerId) {
-		const userConnection = {
-			connectOrCreate: {
-				where: { idpUserId: flatData.decisionMakerId },
-				create: { idpUserId: flatData.decisionMakerId }
-			}
+function handleOutcomes(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (!Object.hasOwn(flatData, 'outcomeDetails') || !Array.isArray(flatData.outcomeDetails)) {
+		return;
+	}
+
+	const mappedDecisions = flatData.outcomeDetails.map((item: any) => {
+		let resolvedDecisionMakerId: string | null = null;
+
+		if (item.decisionMakerTypeId === DECISION_MAKER_TYPE_ID.OFFICER) {
+			resolvedDecisionMakerId = item.decisionMakerOfficerId;
+		} else if (item.decisionMakerTypeId === DECISION_MAKER_TYPE_ID.INSPECTOR) {
+			resolvedDecisionMakerId = item.decisionMakerInspectorId;
+		}
+
+		const decisionData: any = {
+			outcomeDate: item.outcomeDate ? new Date(item.outcomeDate) : null,
+			decisionReceivedDate: item.decisionReceivedDate ? new Date(item.decisionReceivedDate) : null,
+			grantedWithConditionsComment: item.grantedWithConditionsComment || null,
+			otherComment: item.otherComment || null,
+			...(item.decisionTypeId && { DecisionType: { connect: { id: item.decisionTypeId } } }),
+			...(item.decisionMakerTypeId && { DecisionMakerType: { connect: { id: item.decisionMakerTypeId } } }),
+			...(item.outcomeId && { Outcome: { connect: { id: item.outcomeId } } })
 		};
 
-		if (!prismaPayload.Decision) {
-			prismaPayload.Decision = {
-				upsert: { create: {}, update: {} }
+		if (resolvedDecisionMakerId) {
+			decisionData.DecisionMaker = {
+				connectOrCreate: {
+					where: { idpUserId: resolvedDecisionMakerId },
+					create: { idpUserId: resolvedDecisionMakerId }
+				}
 			};
 		}
 
-		const decisionPayload = prismaPayload.Decision;
+		return decisionData;
+	});
 
-		if (decisionPayload.upsert) {
-			decisionPayload.upsert.create.DecisionMaker = userConnection;
-			decisionPayload.upsert.update.DecisionMaker = userConnection;
+	prismaPayload.Outcome = {
+		upsert: {
+			create: {
+				CaseDecisions: {
+					create: mappedDecisions
+				}
+			},
+			update: {
+				CaseDecisions: {
+					deleteMany: {},
+					create: mappedDecisions
+				}
+			}
 		}
+	};
 
-		delete flatData.decisionMakerId;
-	}
+	delete flatData.outcomeDetails;
 }
 
 /**

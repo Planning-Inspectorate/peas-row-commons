@@ -82,7 +82,8 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/options-quest
 			section: Section,
 			journey: Journey,
 			customViewData?: Record<string, unknown>,
-			payload?: Record<string, any>
+			payload?: Record<string, any>,
+			options?: Record<string, unknown>
 		): QuestionViewModel;
 
 		getDataToSave(req: Request, journeyResponse: JourneyResponse): Promise<{ answers: Record<string, unknown> }>;
@@ -199,6 +200,11 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 		editable: boolean;
 		viewData: Record<string, unknown>;
 
+		answerObjectFromJourneyResponse(
+			response: JourneyResponse,
+			options?: Record<string, unknown>
+		): Record<string, unknown>;
+
 		shouldDisplay: (response?: JourneyResponse) => boolean;
 
 		constructor(params: QuestionParameters, methodOverrides?: Record<string, any>);
@@ -312,7 +318,8 @@ declare module '@planning-inspectorate/dynamic-forms/src/validator/string-valida
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js' {
-	export default class DateValidator {
+	import Validator from '@planning-inspectorate/dynamic-forms/src/validator/validator.js';
+	export default class DateValidator extends Validator {
 		constructor(options: any);
 	}
 }

@@ -19,10 +19,10 @@ import {
 import type { CaseOfficer } from './types.ts';
 import { CUSTOM_COMPONENT_CLASSES } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 
-export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }) {
+export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }, inspectors: any) {
 	// We must generate team questions due to the varying nature of groupMembers
 	const generatedTeamQuestions = createTeamQuestions(TEAM_QUESTIONS, groupMembers);
-	const generateOutcomeQuestions = createOutcomeQuestions(OUTCOME_QUESTIONS, groupMembers);
+	const generateOutcomeQuestions = createOutcomeQuestions(OUTCOME_QUESTIONS, groupMembers, inspectors);
 
 	const procedureOneQuestions = createProcedureQuestions('One');
 	const procedureTwoQuestions = createProcedureQuestions('Two');

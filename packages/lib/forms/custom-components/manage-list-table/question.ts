@@ -103,7 +103,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	/**
 	 * Creates the table row based on the questions asked
 	 */
-	private createRow(viewModel: QuestionViewModel, item: Record<string, any>): TableRowCell[] {
+	protected createRow(viewModel: QuestionViewModel, item: Record<string, any>): TableRowCell[] {
 		const cells = this.section?.questions.map((question: Question) => {
 			return this.createCell(question, item);
 		});
