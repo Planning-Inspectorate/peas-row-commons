@@ -72,5 +72,9 @@ export const OUTCOMES = [
 	{
 		id: OUTCOME_ID.PROPOSE_NOT_TO_CONFIRM,
 		displayName: 'Propose not to confirm'
+	},
+	{
+		id: OUTCOME_ID.OTHER,
+		displayName: 'Other'
 	}
 ];

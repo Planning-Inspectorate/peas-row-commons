@@ -26,11 +26,6 @@ export const caseListSelect = {
 	},
 	Applicant: true,
 	Authority: true,
-	Decision: {
-		include: {
-			DecisionMaker: true
-		}
-	},
 	Procedures: true,
 	Inspectors: {
 		include: {
@@ -44,7 +39,18 @@ export const caseListSelect = {
 	},
 	RelatedCases: true,
 	LinkedCases: true,
-	CaseOfficer: true
+	CaseOfficer: true,
+	Outcome: {
+		include: {
+			CaseDecisions: {
+				include: {
+					DecisionMaker: true,
+					DecisionMakerType: true,
+					DecisionType: true
+				}
+			}
+		}
+	}
 } satisfies Prisma.CaseSelect;
 
 export type CaseListFields = Prisma.CaseGetPayload<{ select: typeof caseListSelect }>;

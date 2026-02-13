@@ -85,9 +85,15 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				},
 				Authority: true,
 				Applicant: true,
-				Decision: {
+				Outcome: {
 					include: {
-						DecisionMaker: true
+						CaseDecisions: {
+							include: {
+								DecisionMaker: true,
+								DecisionMakerType: true,
+								DecisionType: true
+							}
+						}
 					}
 				},
 				Procedures: {
@@ -128,7 +134,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 
 		const finalAnswers = combineSessionAndDbData(res, answers);
 
-		const questions = getQuestions(groupMembers);
+		const questions = getQuestions(groupMembers, answers.inspectorDetails);
 
 		// put these on locals for the list controller
 		res.locals.originalAnswers = { ...answers };
