@@ -74,7 +74,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	/**
 	 * Creates the table row based on the questions asked
 	 */
-	private createRow(viewModel: QuestionViewModel, item: Record<string, any>): TableRowCell[] {
+	protected createRow(viewModel: QuestionViewModel, item: Record<string, any>): TableRowCell[] {
 		const cells = this.section?.questions.map((question: PreppedQuestion) => {
 			return this.createCell(question, item);
 		});
@@ -199,7 +199,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	/**
 	 * Formats items to display in a list. Functionality very similar to parent.
 	 */
-	private formatItemAnswers(answer: Record<string, unknown>) {
+	protected formatItemAnswers(answer: Record<string, unknown>) {
 		if (!this.section || !this.section.questions || this.section.questions.length === 0) {
 			return [];
 		}

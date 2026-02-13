@@ -74,7 +74,7 @@ model Case {
   /// The band for the inspector
   inspectorBandId          String?
   InspectorBand            InspectorBand?                @relation(fields: [inspectorBandId], references: [id])
-  Decision                 CaseDecision?
+  Outcome                  CaseOutcome?
   /// Legacy Case ID for migration, will be removed after
   legacyCaseId             String?
   Procedures               Procedure[]
@@ -306,39 +306,59 @@ model InspectorBand {
   Case        Case[]
 }
 
+/// The main case outcome (1-1 relationship)
+model CaseOutcome {
+  id String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+
+  /// Relations
+  caseId String @unique @db.UniqueIdentifier
+  Case   Case   @relation(fields: [caseId], references: [id])
+
+  CaseDecisions CaseDecision[]
+
+  /// Dates
+  partiesNotifiedDate       DateTime?
+  orderDecisionDispatchDate DateTime?
+  sealedOrderReturnedDate   DateTime?
+  decisionPublishedDate     DateTime?
+}
+
+/// The many decisions that could be made for the outcome (1-many)
 model CaseDecision {
-  id                           String        @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  /// Decision maker for the case
-  decisionMakerId              String?       @db.UniqueIdentifier
-  DecisionMaker                User?         @relation("decisionMaker", fields: [decisionMakerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  /// The date the actual decision outcome was determinied
-  outcomeDate                  DateTime?
-  /// The date the decision was received 
-  decisionReceivedDate         DateTime?
-  /// Whether decision was received within the target timeframe
-  inTarget                     Boolean?
-  /// The date relevant parties (e.g. appellant) were notified of the decision.
-  partiesNotifiedDate          DateTime?
-  /// The date the decision regarding an order was dispatched
-  orderDecisionDispatchDate    DateTime?
-  /// The date the sealed order was returned
-  sealedOrderReturnedDate      DateTime?
-  /// The date the decision was published
-  decisionPublishedDate        DateTime?
-  /// Indicates if the fencing in question is deemed permanent
-  isFencingPermanent           Boolean?
-  /// Details explaining the permanent fencing decision
-  fencingPermanentComment      String?       @db.NVarChar(2000)
-  /// Details or specific conditions applied if the outcome is 'Granted with Conditions'
-  grantedWithConditionsComment String?       @db.NVarChar(2000)
-  /// Reasoning provided if the Inspector proposes NOT to confirm an order
-  proposeNotToConfirmComment   String?       @db.NVarChar(2000)
-  decisionTypeId               String?
-  DecisionType                 DecisionType? @relation(fields: [decisionTypeId], references: [id])
-  outcomeId                    String?
-  Outcome                      Outcome?      @relation(fields: [outcomeId], references: [id])
-  caseId                       String        @unique @db.UniqueIdentifier
-  Case                         Case          @relation(fields: [caseId], references: [id])
+  id            String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  caseOutcomeId String? @db.UniqueIdentifier
+
+  /// Parent Relation
+  CaseOutcome CaseOutcome? @relation(fields: [caseOutcomeId], references: [id])
+
+  /// Decision Maker (who)
+  decisionMakerTypeId String?
+  DecisionMakerType   DecisionMakerType? @relation(fields: [decisionMakerTypeId], references: [id])
+
+  decisionMakerId String? @db.UniqueIdentifier
+  DecisionMaker   User?   @relation("decisionMaker", fields: [decisionMakerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  /// Decision Details (what)
+  decisionTypeId String?
+  DecisionType   DecisionType? @relation(fields: [decisionTypeId], references: [id])
+
+  outcomeId String?
+  Outcome   Outcome? @relation(fields: [outcomeId], references: [id])
+
+  /// Timestamps (when)
+  outcomeDate          DateTime?
+  decisionReceivedDate DateTime?
+
+  /// Extra outcome comments
+  grantedWithConditionsComment String? @db.NVarChar(2000)
+  otherComment                 String? @db.NVarChar(2000)
+}
+
+model DecisionMakerType {
+  /// unique machine-readable name, not generated, e.g. "inspector"
+  id           String         @id
+  displayName  String?
+  CaseDecision CaseDecision[]
 }
 
 model DecisionType {
