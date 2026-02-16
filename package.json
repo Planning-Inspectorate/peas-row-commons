@@ -30,8 +30,8 @@
   "dependencies": {
     "@azure/functions": "^4.11.0",
     "@azure/identity": "^4.13.0",
-    "@azure/msal-node": "^3.8.4",
-    "@azure/storage-blob": "^12.29.1",
+    "@azure/msal-node": "^5.0.3",
+    "@azure/storage-blob": "^12.30.0",
     "@ministryofjustice/frontend": "^7.1.0",
     "@planning-inspectorate/dynamic-forms": "^3.3.3",
     "@prisma/adapter-mssql": "^7.3.0",
