@@ -15,7 +15,7 @@ resource "azurerm_storage_account" "documents" {
   https_traffic_only_enabled       = true
   allow_nested_items_to_be_public  = false
   cross_tenant_replication_enabled = false
-  public_network_access_enabled    = false
+  public_network_access_enabled    = true
 
   identity {
     type = "SystemAssigned"
