@@ -28,7 +28,7 @@ resource "azurerm_storage_container" "documents" {
   #checkov:skip=CKV2_AZURE_21 Logging not implemented yet
   name                  = "${local.service_name}-documents"
   storage_account_id    = azurerm_storage_account.documents.id
-  container_access_type = "private"
+  container_access_type = "blob"
 }
 
 resource "azurerm_private_endpoint" "documents" {
