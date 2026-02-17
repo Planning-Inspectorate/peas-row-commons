@@ -15,7 +15,7 @@ resource "azurerm_storage_account" "documents" {
   https_traffic_only_enabled       = true
   allow_nested_items_to_be_public  = false
   cross_tenant_replication_enabled = false
-  public_network_access_enabled    = true
+  public_network_access_enabled    = false
 
   identity {
     type = "SystemAssigned"
@@ -28,7 +28,7 @@ resource "azurerm_storage_container" "documents" {
   #checkov:skip=CKV2_AZURE_21 Logging not implemented yet
   name                  = "${local.service_name}-documents"
   storage_account_id    = azurerm_storage_account.documents.id
-  container_access_type = "blob"
+  container_access_type = "private"
 }
 
 resource "azurerm_private_endpoint" "documents" {
