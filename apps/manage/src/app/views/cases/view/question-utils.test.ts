@@ -1,6 +1,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { dateQuestion, camelCaseToKebabCase, camelCaseToSentenceCase, ALL_QUESTIONS } from './question-utils.ts';
+import {
+	dateQuestion,
+	camelCaseToKebabCase,
+	camelCaseToSentenceCase,
+	ALL_QUESTIONS,
+	handleOriginatorFormattingFn
+} from './question-utils.ts';
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 
 describe('questions utils', () => {
@@ -86,6 +92,80 @@ describe('questions utils', () => {
 				0,
 				`Found ${duplicates.length} duplicate URLs (see console). Routes will clash.`
 			);
+		});
+	});
+
+	describe('handleOriginatorFormattingFn', () => {
+		const TYPES = {
+			OFFICER: 'officer',
+			INSPECTOR: 'inspector',
+			SOS: 'secretary-of-state'
+		};
+
+		const createMockContext = (formatReturnValue: string | null = 'Formatted Name') => ({
+			mockJourney: {},
+			getQuestion: (_fieldName: string) => ({
+				formatAnswerForSummary: () => [{ value: formatReturnValue }]
+			})
+		});
+
+		it('should format Officer with name when answer is present', () => {
+			const row = { decisionMakerOfficerId: 'officer-123' };
+			const context = createMockContext('John Officer');
+
+			const result = handleOriginatorFormattingFn(TYPES.OFFICER, row, context as any);
+
+			assert.strictEqual(result, 'Officer<br>John Officer');
+		});
+
+		it('should return just the role "Officer" if the answer row is missing', () => {
+			const row = {};
+			const context = createMockContext();
+
+			const result = handleOriginatorFormattingFn(TYPES.OFFICER, row, context as any);
+
+			assert.strictEqual(result, 'Officer');
+		});
+
+		it('should format Inspector with name when answer is present', () => {
+			const row = { decisionMakerInspectorId: 'inspector-456' };
+			const context = createMockContext('Jane Inspector');
+
+			const result = handleOriginatorFormattingFn(TYPES.INSPECTOR, row, context as any);
+
+			assert.strictEqual(result, 'Inspector<br>Jane Inspector');
+		});
+
+		it('should return "Secretary of State" for SoS type', () => {
+			const row = {};
+			const context = createMockContext();
+
+			const result = handleOriginatorFormattingFn(TYPES.SOS, row, context as any);
+
+			assert.strictEqual(result, 'Secretary of State');
+		});
+
+		it('should return an em-dash "—" for unknown types', () => {
+			const row = {};
+			const context = createMockContext();
+
+			const result = handleOriginatorFormattingFn('unknown-type', row, context as any);
+
+			assert.strictEqual(result, '—');
+		});
+
+		it('should return just the role if formatting returns empty value', () => {
+			const row = { decisionMakerOfficerId: 'officer-123' };
+			const context = {
+				mockJourney: {},
+				getQuestion: () => ({
+					formatAnswerForSummary: () => []
+				})
+			};
+
+			const result = handleOriginatorFormattingFn(TYPES.OFFICER, row, context as any);
+
+			assert.strictEqual(result, 'Officer<br>');
 		});
 	});
 });

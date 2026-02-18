@@ -93,6 +93,9 @@ interface DateQuestionProps {
 	question?: string;
 	url?: string;
 	isDateTime?: boolean;
+	/**
+	 * Needed when we want dates to be optional.
+	 */
 	overrideValidator?: typeof BaseValidator;
 }
 

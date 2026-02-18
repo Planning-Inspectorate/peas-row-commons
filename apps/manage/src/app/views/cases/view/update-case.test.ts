@@ -263,29 +263,6 @@ describe('Update Case Controller', () => {
 			assert.strictEqual((result as any).linkedCaseDetails, undefined);
 		});
 
-		it('should transform decisionMakerId into Decision.DecisionMaker connectOrCreate payload', () => {
-			const input = {
-				decisionMakerId: 'user-auth0-123'
-			};
-			const result = mapCasePayload(input, 'case-123');
-
-			const decisionUpdate = (result as any).Decision;
-			assert.ok(decisionUpdate, 'Should have Decision property');
-			assert.ok(decisionUpdate.upsert, 'Should be an upsert');
-
-			const expectedUserConnection = {
-				connectOrCreate: {
-					where: { idpUserId: 'user-auth0-123' },
-					create: { idpUserId: 'user-auth0-123' }
-				}
-			};
-
-			assert.deepStrictEqual(decisionUpdate.upsert.create.DecisionMaker, expectedUserConnection);
-			assert.deepStrictEqual(decisionUpdate.upsert.update.DecisionMaker, expectedUserConnection);
-
-			assert.strictEqual((result as any).decisionMakerId, undefined);
-		});
-
 		it('should transform caseOfficerId into CaseOfficer connectOrCreate payload', () => {
 			const input = {
 				caseOfficerId: 'officer-456'
@@ -307,17 +284,89 @@ describe('Update Case Controller', () => {
 			assert.strictEqual((result as any).caseOfficerId, undefined);
 		});
 
-		it('should handle decisionMakerId merging with existing Decision updates', () => {
+		it('should transform outcomeDetails into Outcome upsert payload with Officer decision maker', () => {
 			const input = {
-				decisionDate: '2025-05-01',
-				decisionMakerId: 'user-789'
+				outcomeDetails: [
+					{
+						decisionMakerTypeId: 'officer',
+						decisionMakerOfficerId: 'officer-123',
+						outcomeId: 'allowed',
+						outcomeDate: '2025-03-15',
+						decisionReceivedDate: '2025-03-16'
+					}
+				]
 			};
+
 			const result = mapCasePayload(input, 'case-123');
+			const outcomePayload = (result as any).Outcome;
 
-			const decisionUpdate = (result as any).Decision;
+			assert.ok(outcomePayload);
+			assert.deepStrictEqual(outcomePayload.upsert.update.CaseDecisions.deleteMany, {});
 
-			assert.strictEqual(decisionUpdate.upsert.create.DecisionMaker.connectOrCreate.where.idpUserId, 'user-789');
-			assert.strictEqual(decisionUpdate.upsert.update.DecisionMaker.connectOrCreate.where.idpUserId, 'user-789');
+			const decision = outcomePayload.upsert.create.CaseDecisions.create[0];
+
+			assert.strictEqual(decision.DecisionMaker.connectOrCreate.create.idpUserId, 'officer-123');
+			assert.strictEqual(decision.Outcome.connect.id, 'allowed');
+			assert.deepStrictEqual(decision.outcomeDate, new Date('2025-03-15'));
+			assert.deepStrictEqual(decision.decisionReceivedDate, new Date('2025-03-16'));
+			assert.strictEqual((result as any).outcomeDetails, undefined);
+		});
+
+		it('should handle Inspector decision maker correctly', () => {
+			const input = {
+				outcomeDetails: [
+					{
+						decisionMakerTypeId: 'inspector',
+						decisionMakerInspectorId: 'inspector-999',
+						outcomeId: 'dismissed'
+					}
+				]
+			};
+
+			const result = mapCasePayload(input, 'case-123');
+			const decision = (result as any).Outcome.upsert.create.CaseDecisions.create[0];
+
+			assert.strictEqual(decision.DecisionMaker.connectOrCreate.create.idpUserId, 'inspector-999');
+			assert.strictEqual(decision.Outcome.connect.id, 'dismissed');
+		});
+
+		it('should map conditional comments correctly', () => {
+			const input = {
+				outcomeDetails: [
+					{
+						grantedWithConditionsComment: 'Conditions applied',
+						otherComment: 'Specific reasoning here'
+					}
+				]
+			};
+
+			const result = mapCasePayload(input, 'case-123');
+			const decision = (result as any).Outcome.upsert.create.CaseDecisions.create[0];
+
+			assert.strictEqual(decision.grantedWithConditionsComment, 'Conditions applied');
+			assert.strictEqual(decision.otherComment, 'Specific reasoning here');
+		});
+
+		it('should map multiple decisions if array contains multiple items', () => {
+			const input = {
+				outcomeDetails: [{ outcomeId: 'outcome-1' }, { outcomeId: 'outcome-2' }]
+			};
+
+			const result = mapCasePayload(input, 'case-123');
+			const decisions = (result as any).Outcome.upsert.create.CaseDecisions.create;
+
+			assert.strictEqual(decisions.length, 2);
+			assert.strictEqual(decisions[0].Outcome.connect.id, 'outcome-1');
+			assert.strictEqual(decisions[1].Outcome.connect.id, 'outcome-2');
+		});
+
+		it('should ignore outcomeDetails if it is not an array', () => {
+			const input = {
+				outcomeDetails: 'invalid-string'
+			};
+
+			const result = mapCasePayload(input, 'case-123');
+			assert.strictEqual((result as any).Outcome, undefined);
 		});
 	});
 });

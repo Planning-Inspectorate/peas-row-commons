@@ -104,11 +104,17 @@ export function createJourney(questions: Record<string, any>, response: Response
 						.addQuestion(questions.decisionType)
 						.addQuestion(questions.decisionMakerType)
 
+						/**
+						 * Inspector gets its own question of currently selected inspectors on case
+						 */
 						.addQuestion(questions.decisionMakerInspector)
 						.withCondition((response: JourneyResponse) =>
 							questionHasAnswer(response, questions.decisionMakerType, DECISION_MAKER_TYPE_ID.INSPECTOR)
 						)
 
+						/**
+						 * Case officer likewise gets its own question of users in general.
+						 */
 						.addQuestion(questions.decisionMakerOfficer)
 						.withCondition((response: JourneyResponse) =>
 							questionHasAnswer(response, questions.decisionMakerType, DECISION_MAKER_TYPE_ID.OFFICER)

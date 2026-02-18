@@ -174,48 +174,46 @@ function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Pri
 	handleOutcomes(flatData, prismaPayload);
 }
 
-function handleOutcomes(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+/**
+ * Handles the creation and deletion of numerous outcomes + the single level data stored on the
+ * 1-1 join table.
+ */
+export function handleOutcomes(flatData: Record<string, unknown>, prismaPayload: Prisma.CaseUpdateInput) {
 	if (!Object.hasOwn(flatData, 'outcomeDetails') || !Array.isArray(flatData.outcomeDetails)) {
 		return;
 	}
 
-	const mappedDecisions = flatData.outcomeDetails.map((item: any) => {
-		let resolvedDecisionMakerId: string | null = null;
+	const mappedDecisions = flatData.outcomeDetails.map((item) => {
+		const decisionMakerId =
+			item.decisionMakerTypeId === DECISION_MAKER_TYPE_ID.OFFICER
+				? item.decisionMakerOfficerId
+				: item.decisionMakerTypeId === DECISION_MAKER_TYPE_ID.INSPECTOR
+					? item.decisionMakerInspectorId
+					: null;
 
-		if (item.decisionMakerTypeId === DECISION_MAKER_TYPE_ID.OFFICER) {
-			resolvedDecisionMakerId = item.decisionMakerOfficerId;
-		} else if (item.decisionMakerTypeId === DECISION_MAKER_TYPE_ID.INSPECTOR) {
-			resolvedDecisionMakerId = item.decisionMakerInspectorId;
-		}
-
-		const decisionData: any = {
+		return {
 			outcomeDate: item.outcomeDate ? new Date(item.outcomeDate) : null,
 			decisionReceivedDate: item.decisionReceivedDate ? new Date(item.decisionReceivedDate) : null,
 			grantedWithConditionsComment: item.grantedWithConditionsComment || null,
 			otherComment: item.otherComment || null,
 			...(item.decisionTypeId && { DecisionType: { connect: { id: item.decisionTypeId } } }),
 			...(item.decisionMakerTypeId && { DecisionMakerType: { connect: { id: item.decisionMakerTypeId } } }),
-			...(item.outcomeId && { Outcome: { connect: { id: item.outcomeId } } })
-		};
-
-		if (resolvedDecisionMakerId) {
-			decisionData.DecisionMaker = {
-				connectOrCreate: {
-					where: { idpUserId: resolvedDecisionMakerId },
-					create: { idpUserId: resolvedDecisionMakerId }
+			...(item.outcomeId && { Outcome: { connect: { id: item.outcomeId } } }),
+			...(decisionMakerId && {
+				DecisionMaker: {
+					connectOrCreate: {
+						where: { idpUserId: decisionMakerId },
+						create: { idpUserId: decisionMakerId }
+					}
 				}
-			};
-		}
-
-		return decisionData;
+			})
+		};
 	});
 
 	prismaPayload.Outcome = {
 		upsert: {
 			create: {
-				CaseDecisions: {
-					create: mappedDecisions
-				}
+				CaseDecisions: { create: mappedDecisions }
 			},
 			update: {
 				CaseDecisions: {
