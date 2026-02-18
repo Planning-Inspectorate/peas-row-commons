@@ -63,7 +63,7 @@ describe('ManageListItemsCompleteValidator', () => {
 
 		it('should fail and return the mapped error message if a required field is empty', async () => {
 			const validator = new ManageListItemsCompleteValidator({
-				childName: 'Please enter the child name'
+				childName: 'Child name'
 			});
 
 			const mockQuestion = {
@@ -85,12 +85,12 @@ describe('ManageListItemsCompleteValidator', () => {
 			const result = await validationChain.run(req);
 
 			assert.strictEqual(result.context.errors.length, 1);
-			assert.strictEqual(result.context.errors[0].msg, 'Please enter the child name');
+			assert.strictEqual(result.context.errors[0].msg, "Add 'Child name'");
 		});
 
 		it('should pass if a field is missing BUT shouldDisplay returns false (conditionally hidden)', async () => {
 			const validator = new ManageListItemsCompleteValidator({
-				childName: 'Please enter the child name'
+				childName: 'child name'
 			});
 
 			const mockQuestion = {
@@ -116,8 +116,8 @@ describe('ManageListItemsCompleteValidator', () => {
 
 		it('should aggregate and deduplicate multiple errors across rows and fields', async () => {
 			const validator = new ManageListItemsCompleteValidator({
-				childName: 'Name is required',
-				childAge: 'Age is required'
+				childName: 'Name',
+				childAge: 'Age'
 			});
 
 			const mockQuestion = {
@@ -146,12 +146,12 @@ describe('ManageListItemsCompleteValidator', () => {
 			const result = await validationChain.run(req);
 
 			assert.strictEqual(result.context.errors.length, 1);
-			assert.strictEqual(result.context.errors[0].msg, 'Name is required, Age is required');
+			assert.strictEqual(result.context.errors[0].msg, "Add 'Name', 'Age'");
 		});
 
 		it('should fail if the saved value is an object but all its values are empty (e.g. empty address)', async () => {
 			const validator = new ManageListItemsCompleteValidator({
-				childAddress: 'Address is required'
+				childAddress: 'Address'
 			});
 
 			const mockQuestion = {
@@ -173,7 +173,7 @@ describe('ManageListItemsCompleteValidator', () => {
 			const result = await validationChain.run(req);
 
 			assert.strictEqual(result.context.errors.length, 1);
-			assert.strictEqual(result.context.errors[0].msg, 'Address is required');
+			assert.strictEqual(result.context.errors[0].msg, "Add 'Address'");
 		});
 	});
 });

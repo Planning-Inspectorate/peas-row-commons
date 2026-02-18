@@ -798,8 +798,8 @@ export const TEAM_QUESTIONS = {
 		viewData: { emptyName: 'inspector' },
 		validators: [
 			new ManageListItemsCompleteValidator({
-				inspectorId: "Select 'Inspector name'",
-				inspectorAllocatedDate: "Add 'Date appointed'"
+				inspectorId: 'Inspector name',
+				inspectorAllocatedDate: 'Date appointed'
 			})
 		]
 	},
@@ -863,6 +863,16 @@ export const OUTCOME_QUESTIONS = {
 			{ header: 'Outcome', fieldName: 'outcomeId' },
 			{ header: 'Outcome date', fieldName: 'outcomeDate' },
 			{ header: 'Outcome received date', fieldName: 'decisionReceivedDate' }
+		],
+		validators: [
+			new ManageListItemsCompleteValidator({
+				decisionTypeId: 'Decision type',
+				decisionMakerTypeId: 'Decision maker type',
+				decisionMakerInspectorId: 'Inspector',
+				decisionMakerOfficerId: 'Officer',
+				outcomeId: 'Outcome',
+				outcomeDate: 'Outcome date'
+			})
 		]
 	},
 	decisionType: {
