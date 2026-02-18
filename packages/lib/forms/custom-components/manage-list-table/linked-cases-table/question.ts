@@ -7,7 +7,7 @@ import TableManageListQuestion from '../question.ts';
  */
 export default class LinkedCasesListQuestion extends TableManageListQuestion {
 	protected override formatItemAnswers(answer: Record<string, unknown>) {
-		const reference = answer.linkedCaseReference;
+		const reference = answer.linkedCaseReference as string;
 		const isLead = answer.linkedCaseIsLead === 'yes';
 
 		const formattedValue = isLead ? `${reference} (Lead)` : reference;
