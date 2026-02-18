@@ -5,8 +5,6 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
 import { createCaseHistoryViewModel } from './view-model.ts';
 
-const PAGE_SIZE = 50;
-
 export function buildViewCaseHistory(service: ManageService): AsyncRequestHandler {
 	const { db, audit, logger, getEntraClient } = service;
 	const groupId = service.authConfig.groups.applicationAccess;
@@ -17,8 +15,6 @@ export function buildViewCaseHistory(service: ManageService): AsyncRequestHandle
 		if (!id) {
 			throw new Error('id param required');
 		}
-
-		const page = Math.max(0, Number(req.query.page ?? 0));
 
 		let caseRow;
 		try {
@@ -42,13 +38,7 @@ export function buildViewCaseHistory(service: ManageService): AsyncRequestHandle
 			return notFoundHandler(req, res);
 		}
 
-		const [events, totalCount] = await Promise.all([
-			audit.getAllForCase(id, {
-				skip: page * PAGE_SIZE,
-				take: PAGE_SIZE
-			}),
-			audit.countForCase(id)
-		]);
+		const events = await audit.getAllForCase(id);
 
 		const groupMembers = await getEntraGroupMembers({
 			logger,
@@ -65,19 +55,13 @@ export function buildViewCaseHistory(service: ManageService): AsyncRequestHandle
 		}));
 
 		const rows = createCaseHistoryViewModel(eventsWithUserNames);
-		const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
 		return res.render('views/cases/case-history/view.njk', {
 			pageHeading: 'Case history',
 			reference: caseRow.reference,
 			backLinkUrl: `/cases/${id}`,
 			backLinkText: 'Back to case details',
-			rows,
-			pagination: {
-				currentPage: page,
-				totalPages,
-				totalCount
-			}
+			rows
 		});
 	};
 }

@@ -116,9 +116,6 @@ describe('buildViewCaseHistory', () => {
 			assert.strictEqual(viewData.backLinkText, 'Back to case details');
 
 			assert.strictEqual(viewData.rows.length, 2);
-			assert.strictEqual(viewData.pagination.currentPage, 0);
-			assert.strictEqual(viewData.pagination.totalPages, 1);
-			assert.strictEqual(viewData.pagination.totalCount, 2);
 		});
 
 		it('should resolve user display names from entra group members', async () => {
@@ -173,75 +170,6 @@ describe('buildViewCaseHistory', () => {
 
 			const viewData = res.render.mock.calls[0].arguments[1];
 			assert.strictEqual(viewData.rows[0].user, 'Unknown User');
-		});
-
-		it('should pass correct skip and take for page 0', async () => {
-			const req = mockReq({ query: {} });
-			const res = mockRes();
-
-			mockDb.case.findUnique.mock.mockImplementation(() =>
-				Promise.resolve({ name: 'Test Case', reference: 'REF-001' })
-			);
-			mockAudit.getAllForCase.mock.mockImplementation(() => Promise.resolve([]));
-			mockAudit.countForCase.mock.mockImplementation(() => Promise.resolve(0));
-
-			await buildViewCaseHistory(buildService() as any)(req, res);
-
-			const auditArgs = mockAudit.getAllForCase.mock.calls[0].arguments;
-			assert.strictEqual(auditArgs[0], 'case-123');
-			assert.deepStrictEqual(auditArgs[1], { skip: 0, take: 50 });
-		});
-
-		it('should pass correct skip and take for page 2', async () => {
-			const req = mockReq({ query: { page: '2' } });
-			const res = mockRes();
-
-			mockDb.case.findUnique.mock.mockImplementation(() =>
-				Promise.resolve({ name: 'Test Case', reference: 'REF-001' })
-			);
-			mockAudit.getAllForCase.mock.mockImplementation(() => Promise.resolve([]));
-			mockAudit.countForCase.mock.mockImplementation(() => Promise.resolve(150));
-
-			await buildViewCaseHistory(buildService() as any)(req, res);
-
-			const auditArgs = mockAudit.getAllForCase.mock.calls[0].arguments;
-			assert.deepStrictEqual(auditArgs[1], { skip: 100, take: 50 });
-
-			const viewData = res.render.mock.calls[0].arguments[1];
-			assert.strictEqual(viewData.pagination.currentPage, 2);
-			assert.strictEqual(viewData.pagination.totalPages, 3);
-		});
-
-		it('should clamp negative page values to 0', async () => {
-			const req = mockReq({ query: { page: '-5' } });
-			const res = mockRes();
-
-			mockDb.case.findUnique.mock.mockImplementation(() =>
-				Promise.resolve({ name: 'Test Case', reference: 'REF-001' })
-			);
-			mockAudit.getAllForCase.mock.mockImplementation(() => Promise.resolve([]));
-			mockAudit.countForCase.mock.mockImplementation(() => Promise.resolve(0));
-
-			await buildViewCaseHistory(buildService() as any)(req, res);
-
-			const auditArgs = mockAudit.getAllForCase.mock.calls[0].arguments;
-			assert.deepStrictEqual(auditArgs[1], { skip: 0, take: 50 });
-		});
-
-		it('should calculate totalPages correctly', async () => {
-			const req = mockReq();
-			const res = mockRes();
-
-			mockDb.case.findUnique.mock.mockImplementation(() =>
-				Promise.resolve({ name: 'Test Case', reference: 'REF-001' })
-			);
-			mockAudit.getAllForCase.mock.mockImplementation(() => Promise.resolve([]));
-			mockAudit.countForCase.mock.mockImplementation(() => Promise.resolve(125));
-
-			await buildViewCaseHistory(buildService() as any)(req, res);
-
-			const viewData = res.render.mock.calls[0].arguments[1];
-			assert.strictEqual(viewData.pagination.totalPages, 3);
 		});
 	});
 
