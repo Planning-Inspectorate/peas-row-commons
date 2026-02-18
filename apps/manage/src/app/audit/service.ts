@@ -22,10 +22,17 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 			try {
 				await db.caseHistory.create({
 					data: {
-						caseId: entry.caseId,
+						Case: {
+							connect: { id: entry.caseId }
+						},
 						action: entry.action,
 						metadata: JSON.stringify(entry.metadata ?? {}),
-						userId: entry.userId
+						User: {
+							connectOrCreate: {
+								where: { idpUserId: entry.userId },
+								create: { idpUserId: entry.userId }
+							}
+						}
 					}
 				});
 			} catch (error) {
