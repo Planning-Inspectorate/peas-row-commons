@@ -1,6 +1,6 @@
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { Logger } from 'pino';
-import type { AuditEntry, AuditEvent, AuditQueryOptions } from './types.ts';
+import { parseMetadata, type AuditEntry, type AuditEvent, type AuditQueryOptions } from './types.ts';
 import type { CaseOfficer } from '../views/cases/view/types.ts';
 
 /**
@@ -57,7 +57,7 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 				// Parse the metadata JSON string into an object
 				return events.map((event) => ({
 					...event,
-					metadata: event.metadata ? JSON.parse(event.metadata) : null
+					metadata: parseMetadata(event.metadata)
 				}));
 			} catch (error) {
 				logger.error(
@@ -112,7 +112,7 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 
 				return {
 					...event,
-					metadata: event?.metadata ? JSON.parse(event.metadata) : null
+					metadata: parseMetadata(event.metadata)
 				};
 			} catch (error) {
 				logger.error(
