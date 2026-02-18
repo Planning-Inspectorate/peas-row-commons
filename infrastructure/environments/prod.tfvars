@@ -3,7 +3,7 @@ apps_config = {
     sku                      = "P1v3"
     per_site_scaling_enabled = false
     worker_count             = 1
-    zone_balancing_enabled   = true
+    zone_balancing_enabled   = false
   }
   auth = {
     client_id                = "a303b5b2-f679-4787-929b-01943f72aa41"
