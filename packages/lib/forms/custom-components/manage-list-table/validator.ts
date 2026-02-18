@@ -33,7 +33,8 @@ export default class ManageListItemsCompleteValidator extends BaseValidator {
 
 			if (allErrors.length > 0) {
 				const dedupedErrors = [...new Set(allErrors)];
-				throw new Error(dedupedErrors.join(', '));
+				const formattedMessage = `Add ${dedupedErrors.map((e) => `'${e}'`).join(', ')}`;
+				throw new Error(formattedMessage);
 			}
 
 			return true;
