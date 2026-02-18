@@ -33,7 +33,13 @@ describe('Delete File Controllers', () => {
 			...overrides
 		}) as any;
 
-	const service = { db: mockDb, logger: mockLogger };
+	const service = {
+		db: mockDb,
+		logger: mockLogger,
+		audit: {
+			record: () => Promise.resolve()
+		}
+	};
 
 	beforeEach(() => {
 		mockDb.document.findUnique.mock.resetCalls();

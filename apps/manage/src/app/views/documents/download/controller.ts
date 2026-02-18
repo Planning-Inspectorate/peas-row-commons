@@ -5,13 +5,14 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { Logger } from 'pino';
 import type { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
+import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
 
 /**
  * Builds the download document controller, fetches document from SQL, grabs blob from azure,
  * streams back to user.
  */
 export function buildDownloadDocument(service: ManageService): AsyncRequestHandler {
-	const { db, logger, blobStore } = service;
+	const { db, logger, blobStore, audit } = service;
 
 	return async (req: Request, res: Response) => {
 		const { documentId } = req.params;
@@ -24,6 +25,19 @@ export function buildDownloadDocument(service: ManageService): AsyncRequestHandl
 		const document = await fetchDocumentMetadata(db, documentId, logger);
 
 		if (!document) return;
+
+		// Since downloadStream.pipe(res) is async, the function returns before the
+		// stream completes. We listen for 'finish' so the audit event is only
+		// recorded when the response has been fully sent to the client.
+		// If the stream errors or the client aborts, 'finish' won't fire,
+		// so only successful downloads are audited.
+		res.on('finish', async () => {
+			await audit.record({
+				caseId: document.caseId,
+				action: AUDIT_ACTIONS.FILE_DOWNLOADED,
+				userId: req?.session?.account?.localAccountId || 'unknown'
+			});
+		});
 
 		await streamDocumentToResponse(res, blobStore, document, isPreview, logger);
 	};

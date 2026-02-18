@@ -9,6 +9,7 @@ import { ManageService } from '#service';
 import { createRoutes as createCaseNotesRoutes } from '../case-notes/index.ts';
 
 import { createRoutes as createCaseDocumentsRoutes } from '../case-folders/index.ts';
+import { createRoutes as createCaseHistoryRoutes } from '../case-history/index.ts';
 import {
 	buildGetJourneyResponseFromSession,
 	saveDataToSession
@@ -29,8 +30,13 @@ export function createRoutes(service: ManageService) {
 
 	const caseDocumentsRoutes = createCaseDocumentsRoutes(service);
 
+	const caseHistoryRoutes = createCaseHistoryRoutes(service);
+
 	// View case documents page, /:id/case-documents
 	router.use('/case-folders', caseDocumentsRoutes);
+
+	// View case history page, /:id/case-history
+	router.use('/case-history', caseHistoryRoutes);
 
 	// View case
 	router.get('/', validateIdFormat, getJourney, asyncHandler(viewCaseDetails));

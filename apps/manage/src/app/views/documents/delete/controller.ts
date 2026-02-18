@@ -1,6 +1,7 @@
 import type { ManageService } from '#service';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import type { Request, Response } from 'express';
+import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
 
 /**
  * Grabs document and meta data for displaying,
@@ -108,7 +109,7 @@ export function buildDeleteFileView(service: ManageService) {
  * try again.
  */
 export function buildDeleteFileController(service: ManageService) {
-	const { db, logger } = service;
+	const { db, logger, audit } = service;
 
 	return async (req: Request, res: Response) => {
 		const { documentId } = req.params;
@@ -121,6 +122,12 @@ export function buildDeleteFileController(service: ManageService) {
 				data: {
 					deletedAt: new Date()
 				}
+			});
+
+			await audit.record({
+				caseId: req.params.id,
+				action: AUDIT_ACTIONS.FILE_DELETED,
+				userId: req?.session?.account?.localAccountId || 'unknown'
 			});
 
 			return res.redirect(req.originalUrl);

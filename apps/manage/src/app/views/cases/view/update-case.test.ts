@@ -23,7 +23,10 @@ const mockDb = {
 
 const mockService = {
 	db: mockDb as any,
-	logger: mockLogger()
+	logger: mockLogger(),
+	audit: {
+		record: mock.fn(() => Promise.resolve())
+	}
 };
 
 describe('Update Case Controller', () => {
@@ -60,7 +63,8 @@ describe('Update Case Controller', () => {
 
 			const handler = buildUpdateCase(mockService as any, true);
 
-			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123' }) as any);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
 
 			await handler({ req: req as any, res: {} as any, data });
 
@@ -74,7 +78,8 @@ describe('Update Case Controller', () => {
 			const req = { params: { id: 'case-123' }, session: {} };
 			const data = { answers: { name: 'New Name' } };
 
-			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123' }) as any);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
 
 			const handler = buildUpdateCase(mockService as any);
 			await handler({ req: req as any, res: {} as any, data });
@@ -318,6 +323,49 @@ describe('Update Case Controller', () => {
 
 			assert.strictEqual(decisionUpdate.upsert.create.DecisionMaker.connectOrCreate.where.idpUserId, 'user-789');
 			assert.strictEqual(decisionUpdate.upsert.update.DecisionMaker.connectOrCreate.where.idpUserId, 'user-789');
+		});
+	});
+
+	describe('buildUpdateCase (audit recording)', () => {
+		it('should record FIELD_UPDATED audit event with display name', async () => {
+			let recordedAudit: any = null;
+
+			const mockService = {
+				db: {
+					$transaction: async (callback: any) =>
+						callback({
+							case: {
+								findUnique: () => Promise.resolve({ id: 'case-1', reference: 'REF-001' }),
+								update: () => Promise.resolve({ id: 'case-1', reference: 'REF-001' })
+							}
+						})
+				},
+				audit: {
+					record: (entry: any) => {
+						recordedAudit = entry;
+						return Promise.resolve();
+					}
+				},
+				logger: {
+					error: () => {},
+					info: () => {}
+				}
+			};
+
+			const req = {
+				params: { id: 'case-1' },
+				session: { account: { localAccountId: 'user-123' } }
+			};
+
+			const data = { answers: { name: 'Updated Name' } };
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(recordedAudit.caseId, 'case-1');
+			assert.strictEqual(recordedAudit.action, 'FIELD_UPDATED');
+			assert.strictEqual(recordedAudit.userId, 'user-123');
+			assert.deepStrictEqual(recordedAudit.metadata, { fieldName: 'Case name' });
 		});
 	});
 });

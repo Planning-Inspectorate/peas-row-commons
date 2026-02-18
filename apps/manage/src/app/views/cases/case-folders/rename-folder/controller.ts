@@ -5,6 +5,7 @@ import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { Request } from 'express';
+import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
 
 /**
  * Controller to render the Rename Folder view (get)
@@ -55,11 +56,11 @@ export function buildRenameFolderView(service: ManageService): AsyncRequestHandl
  * Controller to handle the folder renaming logic (post)
  */
 export function buildRenameFolder(service: ManageService): AsyncRequestHandler {
-	const { db, logger } = service;
+	const { db, logger, audit } = service;
 
 	return async (req, res) => {
 		try {
-			const { folderId } = req.params;
+			const { id, folderId } = req.params;
 
 			if (!folderId) {
 				throw new Error('folder id param required');
@@ -70,6 +71,13 @@ export function buildRenameFolder(service: ManageService): AsyncRequestHandler {
 			await renameFolderRecord(db, {
 				name: folderName,
 				folderId
+			});
+
+			await audit.record({
+				caseId: id,
+				action: AUDIT_ACTIONS.FOLDER_RENAMED,
+				userId: req?.session?.account?.localAccountId || 'unknown',
+				metadata: { folderName }
 			});
 
 			addSessionData(req, folderId, { renamed: true }, 'folder');

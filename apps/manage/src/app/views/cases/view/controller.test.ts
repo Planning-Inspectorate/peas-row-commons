@@ -6,6 +6,7 @@ import {
 	buildGetJourneyMiddleware,
 	combineSessionAndDbData
 } from './controller.ts';
+import * as entraGroups from '#util/entra-groups.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 
 describe('Case Controller', () => {
@@ -127,7 +128,17 @@ describe('Case Controller', () => {
 				authConfig: {
 					groups: []
 				},
-				getEntraClient: () => undefined
+				getEntraClient: () => ({
+					listAllGroupMembers: async () => [
+						{
+							id: 'user-1',
+							displayName: 'Test User'
+						}
+					]
+				}),
+				audit: {
+					getLastModifiedInfo: mock.fn(() => Promise.resolve({ date: null, by: null }))
+				}
 			} as any);
 			await assert.doesNotReject(() => middleware(mockReq, mockRes, next));
 			assert.strictEqual(next.mock.callCount(), 1);

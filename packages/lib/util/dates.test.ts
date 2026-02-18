@@ -4,7 +4,8 @@ import {
 	dateISOStringToDisplayTime12hr,
 	dateISOStringToDisplayDate,
 	getDayFromISODate,
-	safeConvertTo24Hour
+	safeConvertTo24Hour,
+	formatDateTime
 } from './dates.ts';
 
 describe('Date Helpers', () => {
@@ -101,6 +102,34 @@ describe('Date Helpers', () => {
 		it('should convert 1pm to 13', () => {
 			const result = safeConvertTo24Hour(1, 'pm');
 			assert.strictEqual(result, 13);
+		});
+	});
+
+	describe('formatDateTime', () => {
+		it('should return formatted date and time', () => {
+			const input = new Date('2026-02-11T14:31:00.000Z');
+			const result = formatDateTime(input);
+			assert.strictEqual(result.date, '11 February 2026');
+			assert.strictEqual(result.time, '2:31pm');
+		});
+
+		it('should handle midnight', () => {
+			const input = new Date('2026-01-15T00:00:00.000Z');
+			const result = formatDateTime(input);
+			assert.strictEqual(result.date, '15 January 2026');
+			assert.strictEqual(result.time, '12:00am');
+		});
+
+		it('should handle noon', () => {
+			const input = new Date('2026-06-01T12:00:00.000Z');
+			const result = formatDateTime(input);
+			assert.strictEqual(result.time, '1:00pm'); // BST: UTC+1
+		});
+
+		it('should return time in lowercase', () => {
+			const input = new Date('2026-03-15T09:05:00.000Z');
+			const result = formatDateTime(input);
+			assert.strictEqual(result.time, result.time.toLowerCase());
 		});
 	});
 });

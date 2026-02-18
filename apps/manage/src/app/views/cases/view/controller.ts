@@ -37,7 +37,9 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 			baseUrl,
 			backLinkUrl: res.locals.backLinkUrl || '/cases',
 			caseUpdated,
-			currentUrl: req.originalUrl
+			currentUrl: req.originalUrl,
+			lastModifiedDate: res.locals.lastModified?.date || null,
+			lastModifiedBy: res.locals.lastModified?.by || null
 		});
 	};
 }
@@ -124,6 +126,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 			groupId
 		});
 
+		const lastModified = await service.audit.getLastModifiedInfo(id, groupMembers);
+
 		const answers = caseToViewModel(caseToView, groupMembers);
 
 		const finalAnswers = combineSessionAndDbData(res, answers);
@@ -140,6 +144,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 		if (section && !manageListQuestion) {
 			res.locals.backLinkUrl = req.baseUrl;
 		}
+
+		res.locals.lastModified = lastModified;
 
 		if (next) next();
 	};

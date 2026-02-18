@@ -49,3 +49,26 @@ export function safeConvertTo24Hour(hour: string | number, period: string): numb
 	if (period === 'pm') return hourValue === 12 ? 12 : hourValue + 12;
 	return hourValue;
 }
+
+/**
+ * Formats a Date into the two-line format specified in the ticket:
+ *   Date: "11 February 2026"
+ *   Time: "2:31pm"
+ */
+export function formatDateTime(dateTime: Date): { date: string; time: string } {
+	const date = dateTime.toLocaleDateString('en-GB', {
+		day: 'numeric',
+		month: 'long',
+		year: 'numeric'
+	});
+
+	const time = dateTime
+		.toLocaleTimeString('en-GB', {
+			hour: 'numeric',
+			minute: '2-digit',
+			hour12: true
+		})
+		.toLowerCase();
+
+	return { date, time };
+}

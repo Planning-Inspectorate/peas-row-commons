@@ -1,0 +1,48 @@
+{% extends "views/layouts/main.njk" %}
+{% set title = reference + " - Case history" %}
+
+{% block pageTitle %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <h2 class="govuk-caption-l" data-cy="page-caption">
+                {{ reference }}
+            </h2>
+            <h1 class="govuk-heading-l" data-cy="page-heading">
+                {{ pageHeading }}
+            </h1>
+
+            {% if rows | length == 0 %}
+                <p class="govuk-body" data-cy="no-history-message">There is no case history to display</p>
+            {% else %}
+                <table class="govuk-table" data-cy="case-history-table">
+                    <thead class="govuk-table__header">
+                        <tr class="govuk-table__row">
+                            <th scope="col" class="govuk-table__header">Date and time</th>
+                            <th scope="col" class="govuk-table__header">Details</th>
+                            <th scope="col" class="govuk-table__header">User</th>
+                        </tr>
+                    </thead>
+                    <tbody class="govuk-table__body">
+                        {% for row in rows %}
+                            <tr class="govuk-table__row" data-cy="history-row-{{ loop.index0 }}">
+                                <td class="govuk-table__cell" data-cy="history-date-{{ loop.index0 }}">
+                                    {{ row.date }}<br>{{ row.time }}
+                                </td>
+                                <td class="govuk-table__cell" data-cy="history-details-{{ loop.index0 }}">
+                                    {{ row.details }}
+                                </td>
+                                <td class="govuk-table__cell" data-cy="history-user-{{ loop.index0 }}">
+                                    {{ row.user }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

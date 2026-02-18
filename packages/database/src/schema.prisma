@@ -55,6 +55,7 @@ model Case {
   Costs                    CaseCosts?
   Abeyance                 CaseAbeyance?
   Notes                    CaseNote[]
+  Audit                    CaseHistory[]
   Documents                Document[]
   DraftDocuments           DraftDocument[]
   statusId                 String?
@@ -100,6 +101,7 @@ model User {
   Author        CaseNote[]     @relation("author")
   DecisionMaker CaseDecision[] @relation("decisionMaker")
   Inspector     Inspector[]    @relation("inspector")
+  CaseHistory   CaseHistory[]  @relation("caseHistoryUser")
 }
 
 model CaseworkArea {
@@ -232,6 +234,19 @@ model CaseNote {
   Author    User     @relation("author", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   caseId    String   @db.UniqueIdentifier
   Case      Case     @relation(fields: [caseId], references: [id])
+}
+
+model CaseHistory {
+  id        String   @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  caseId    String   @db.UniqueIdentifier
+  Case      Case     @relation(fields: [caseId], references: [id])
+  action    String
+  metadata  String?  @db.NVarChar(Max)
+  userId    String   @db.UniqueIdentifier
+  User      User     @relation("caseHistoryUser", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt DateTime @default(now())
+
+  @@index([caseId, createdAt(sort: Desc)])
 }
 
 model CaseStatus {
