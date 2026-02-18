@@ -1,7 +1,7 @@
 import TableManageListQuestion from '../question.ts';
 import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
-import type { QuestionViewModel, TableHeadCell, TableManageListQuestionParameters, TableRowCell } from '../types.ts';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type { TableHeadCell, TableManageListQuestionParameters, TableRowCell } from '../types.ts';
+import type { Question, QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 
@@ -83,7 +83,7 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 	 * Sorts by string, unless item is a date or column is specified as a date, in which case
 	 * we need to do some conversion
 	 */
-	handleSorting(cellContent: string, col: TableColumn, linkedQuestion: Question, rawValue: string) {
+	handleSorting(cellContent: string, col: TableColumn, linkedQuestion: Question | undefined, rawValue: string) {
 		let sortValue: string | number = cellContent;
 
 		if (col.sortType === 'date' && rawValue) {
