@@ -225,13 +225,25 @@ model CaseAbeyance {
 }
 
 model CaseNote {
-  id        String   @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  comment   String
-  createdAt DateTime @default(now())
-  authorId  String   @db.UniqueIdentifier
-  Author    User     @relation("author", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  caseId    String   @db.UniqueIdentifier
-  Case      Case     @relation(fields: [caseId], references: [id])
+  id           String    @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  comment      String
+  createdAt    DateTime  @default(now())
+  authorId     String    @db.UniqueIdentifier
+  Author       User      @relation("author", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  caseId       String    @db.UniqueIdentifier
+  Case         Case      @relation(fields: [caseId], references: [id])
+  ///Legacy Horizon Case ID used for migration
+  legacyCaseId String?
+  /// The type of this note (e.g. Case note, Sticky note, Important info)
+  noteTypeId   String?
+  NoteType     NoteType? @relation(fields: [noteTypeId], references: [id])
+}
+
+model NoteType {
+  /// unique machine-readable name, not generated, e.g. "case-note"
+  id          String     @id
+  displayName String?
+  CaseNotes   CaseNote[]
 }
 
 model CaseStatus {
