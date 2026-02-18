@@ -186,17 +186,11 @@ describe('case details journey', () => {
 				title: 'Outcome',
 				segment: 'outcome',
 				questions: [
-					'decisionType',
-					'decisionMaker',
-					'outcome',
-					'inTarget',
-					'outcomeDate',
-					'decisionReceivedDate',
+					'outcomeDetails',
 					'partiesNotifiedDate',
 					'orderDecisionDispatchDate',
 					'sealedOrderReturnedDate',
-					'decisionPublishedDate',
-					'isFencingPermanent'
+					'decisionPublishedDate'
 				]
 			},
 			{

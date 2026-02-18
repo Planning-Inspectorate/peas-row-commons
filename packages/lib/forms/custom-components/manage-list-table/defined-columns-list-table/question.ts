@@ -54,7 +54,7 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 	/**
 	 * Creates each row.
 	 */
-	protected override createRow(viewModel: QuestionViewModel, item: Record<string, any>): TableRowCell[] {
+	override createRow(viewModel: QuestionViewModel, item: Record<string, any>): TableRowCell[] {
 		const cells = this.columns.map((col) => {
 			const linkedQuestion = this.section?.questions?.find((q: Question) => q.fieldName === col.fieldName);
 
@@ -95,7 +95,7 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 		return sortValue;
 	}
 
-	protected override formatItemAnswers(answer: Record<string, unknown>) {
+	override formatItemAnswers(answer: Record<string, unknown>) {
 		if (!this.columns || this.columns.length === 0) {
 			return [];
 		}
