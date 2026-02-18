@@ -23,7 +23,7 @@ export function buildSaveController({ db, logger, audit }: ManageService) {
 
 		let reference, id;
 		try {
-			const caseObj = await db.$transaction(async ($tx) => {
+			const createdCase = await db.$transaction(async ($tx) => {
 				const { typeId, subtypeId } = resolveCaseTypeIds(answers);
 				const prefix = buildReferencePrefix(typeId, subtypeId);
 
@@ -48,10 +48,10 @@ export function buildSaveController({ db, logger, audit }: ManageService) {
 			});
 
 			await audit.record({
-				caseId: caseObj.id,
+				caseId: createdCase.id,
 				action: AUDIT_ACTIONS.CASE_CREATED,
 				userId: req?.session?.account?.localAccountId || 'unknown',
-				metadata: { reference: caseObj.reference }
+				metadata: { reference: createdCase.reference }
 			});
 		} catch (error: any) {
 			wrapPrismaError({

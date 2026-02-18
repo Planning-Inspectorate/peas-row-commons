@@ -49,3 +49,7 @@ export interface AuditQueryOptions {
 	/** Number of records to return */
 	take?: number;
 }
+
+export function parseMetadata(metadata: string | null): Record<string, unknown> | null {
+	return metadata ? JSON.parse(metadata) : null;
+}

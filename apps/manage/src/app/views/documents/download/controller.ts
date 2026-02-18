@@ -26,13 +26,20 @@ export function buildDownloadDocument(service: ManageService): AsyncRequestHandl
 
 		if (!document) return;
 
-		await streamDocumentToResponse(res, blobStore, document, isPreview, logger);
-
-		await audit.record({
-			caseId: document.caseId,
-			action: AUDIT_ACTIONS.FILE_DOWNLOADED,
-			userId: req?.session?.account?.localAccountId || 'unknown'
+		// Since downloadStream.pipe(res) is async, the function returns before the
+		// stream completes. We listen for 'finish' so the audit event is only
+		// recorded when the response has been fully sent to the client.
+		// If the stream errors or the client aborts, 'finish' won't fire,
+		// so only successful downloads are audited.
+		res.on('finish', async () => {
+			await audit.record({
+				caseId: document.caseId,
+				action: AUDIT_ACTIONS.FILE_DOWNLOADED,
+				userId: req?.session?.account?.localAccountId || 'unknown'
+			});
 		});
+
+		await streamDocumentToResponse(res, blobStore, document, isPreview, logger);
 	};
 }
 

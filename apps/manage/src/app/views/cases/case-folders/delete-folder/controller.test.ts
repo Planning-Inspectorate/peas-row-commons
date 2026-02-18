@@ -1,6 +1,7 @@
 import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
 import { getRedirectUrl, buildDeleteFolderView, buildDeleteFolderController } from './controller.ts';
+import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
 
 describe('Delete Folder Controller', () => {
 	describe('getRedirectUrl', () => {
@@ -213,7 +214,7 @@ describe('Delete Folder Controller', () => {
 			await handler(req as any, res as any);
 
 			assert.strictEqual(recordedAudit.caseId, 'case-1');
-			assert.strictEqual(recordedAudit.action, 'FOLDER_DELETED');
+			assert.strictEqual(recordedAudit.action, AUDIT_ACTIONS.FOLDER_DELETED);
 			assert.strictEqual(recordedAudit.userId, 'user-456');
 			assert.deepStrictEqual(recordedAudit.metadata, { folderName: 'Target Folder' });
 		});

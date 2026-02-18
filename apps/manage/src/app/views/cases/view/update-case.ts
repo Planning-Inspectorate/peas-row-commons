@@ -76,9 +76,9 @@ async function updateCaseData(
 	db: PrismaClient,
 	logger: Logger,
 	formattedAnswersForQuery: Prisma.CaseUpdateInput
-): Promise<Case> {
+): Promise<Case | undefined> {
 	try {
-		const caseObj = await db.$transaction(async ($tx: Prisma.TransactionClient) => {
+		return await db.$transaction(async ($tx: Prisma.TransactionClient) => {
 			const caseRow = await $tx.case.findUnique({
 				where: { id }
 			});
@@ -87,15 +87,11 @@ async function updateCaseData(
 				throw new Error('Case not found');
 			}
 
-			const updated = await $tx.case.update({
+			return await $tx.case.update({
 				where: { id },
 				data: formattedAnswersForQuery
 			});
-
-			return updated;
 		});
-
-		return caseObj;
 	} catch (error: any) {
 		wrapPrismaError({
 			error,
@@ -103,8 +99,6 @@ async function updateCaseData(
 			message: 'updating case',
 			logParams: { id }
 		});
-
-		throw error;
 	}
 }
 
