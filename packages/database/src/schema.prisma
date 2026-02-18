@@ -55,7 +55,7 @@ model Case {
   Costs                    CaseCosts?
   Abeyance                 CaseAbeyance?
   Notes                    CaseNote[]
-  AuditEvents              AuditEvent[]
+  Audit                    CaseHistory[]
   Documents                Document[]
   DraftDocuments           DraftDocument[]
   statusId                 String?
