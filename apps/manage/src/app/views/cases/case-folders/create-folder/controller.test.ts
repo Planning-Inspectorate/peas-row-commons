@@ -8,6 +8,7 @@ import {
 	getRedirectUrl,
 	buildCreateFolders
 } from './controller.ts';
+import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
 
 describe('Create Folders Helpers', () => {
 	describe('getParentFolder', () => {
@@ -152,7 +153,7 @@ describe('Create Folders Helpers', () => {
 			await controller(req as any, res as any, () => {});
 
 			assert.strictEqual(recordedAudit.caseId, 'case-1');
-			assert.strictEqual(recordedAudit.action, 'FOLDER_CREATED'); // or whatever AUDIT_ACTIONS.FOLDER_CREATED equals
+			assert.strictEqual(recordedAudit.action, AUDIT_ACTIONS.FOLDER_CREATED);
 			assert.strictEqual(recordedAudit.userId, 'user-123');
 			assert.deepStrictEqual(recordedAudit.metadata, { folderName: 'Test Folder' });
 		});
