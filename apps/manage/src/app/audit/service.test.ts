@@ -6,7 +6,7 @@ import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 
 describe('Audit Service', () => {
 	const createMockDb = () => ({
-		auditEvent: {
+		caseHistory: {
 			create: mock.fn() as any,
 			findMany: mock.fn() as any,
 			findFirst: mock.fn() as any,
@@ -17,7 +17,7 @@ describe('Audit Service', () => {
 	describe('record', () => {
 		it('should create an audit event with correct data', async () => {
 			const mockDb = createMockDb();
-			mockDb.auditEvent.create.mock.mockImplementationOnce(() => Promise.resolve({ id: 'event-1' }));
+			mockDb.caseHistory.create.mock.mockImplementationOnce(() => Promise.resolve({ id: 'event-1' }));
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
@@ -31,9 +31,9 @@ describe('Audit Service', () => {
 
 			await service.record(entry);
 
-			assert.strictEqual(mockDb.auditEvent.create.mock.callCount(), 1);
+			assert.strictEqual(mockDb.caseHistory.create.mock.callCount(), 1);
 
-			const createCall = mockDb.auditEvent.create.mock.calls[0];
+			const createCall = mockDb.caseHistory.create.mock.calls[0];
 
 			assert.strictEqual(createCall.arguments[0].data.caseId, 'case-123');
 			assert.strictEqual(createCall.arguments[0].data.action, 'CASE_CREATED');
@@ -43,7 +43,7 @@ describe('Audit Service', () => {
 
 		it('should handle metadata being undefined', async () => {
 			const mockDb = createMockDb();
-			mockDb.auditEvent.create.mock.mockImplementationOnce(() => Promise.resolve({ id: 'event-1' }));
+			mockDb.caseHistory.create.mock.mockImplementationOnce(() => Promise.resolve({ id: 'event-1' }));
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
@@ -54,14 +54,14 @@ describe('Audit Service', () => {
 				userId: 'user-456'
 			});
 
-			const createCall = mockDb.auditEvent.create.mock.calls[0];
+			const createCall = mockDb.caseHistory.create.mock.calls[0];
 			assert.strictEqual(createCall.arguments[0].data.metadata, '{}');
 		});
 
 		it('should log error but not throw when database fails', async () => {
 			const mockDb = createMockDb();
 			const dbError = new Error('Database connection failed');
-			mockDb.auditEvent.create.mock.mockImplementationOnce(() => Promise.reject(dbError));
+			mockDb.caseHistory.create.mock.mockImplementationOnce(() => Promise.reject(dbError));
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
@@ -86,7 +86,7 @@ describe('Audit Service', () => {
 	describe('getAllForCase', () => {
 		it('should retrieve and parse audit events', async () => {
 			const mockDb = createMockDb();
-			mockDb.auditEvent.findMany.mock.mockImplementationOnce(() =>
+			mockDb.caseHistory.findMany.mock.mockImplementationOnce(() =>
 				Promise.resolve([
 					{
 						id: 'event-1',
@@ -121,28 +121,28 @@ describe('Audit Service', () => {
 
 		it('should use default pagination options', async () => {
 			const mockDb = createMockDb();
-			mockDb.auditEvent.findMany.mock.mockImplementationOnce(() => Promise.resolve([]));
+			mockDb.caseHistory.findMany.mock.mockImplementationOnce(() => Promise.resolve([]));
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
 
 			await service.getAllForCase('case-123');
 
-			const findManyCall = mockDb.auditEvent.findMany.mock.calls[0];
+			const findManyCall = mockDb.caseHistory.findMany.mock.calls[0];
 			assert.strictEqual(findManyCall.arguments[0].skip, 0);
 			assert.strictEqual(findManyCall.arguments[0].take, 50);
 		});
 
 		it('should accept custom pagination options', async () => {
 			const mockDb = createMockDb();
-			mockDb.auditEvent.findMany.mock.mockImplementationOnce(() => Promise.resolve([]));
+			mockDb.caseHistory.findMany.mock.mockImplementationOnce(() => Promise.resolve([]));
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
 
 			await service.getAllForCase('case-123', { skip: 10, take: 20 });
 
-			const findManyCall = mockDb.auditEvent.findMany.mock.calls[0];
+			const findManyCall = mockDb.caseHistory.findMany.mock.calls[0];
 			assert.strictEqual(findManyCall.arguments[0].skip, 10);
 			assert.strictEqual(findManyCall.arguments[0].take, 20);
 		});
@@ -150,7 +150,7 @@ describe('Audit Service', () => {
 		it('should return empty array and log error on failure', async () => {
 			const mockDb = createMockDb();
 			const dbError = new Error('Query failed');
-			mockDb.auditEvent.findMany.mock.mockImplementationOnce(() => Promise.reject(dbError));
+			mockDb.caseHistory.findMany.mock.mockImplementationOnce(() => Promise.reject(dbError));
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
@@ -168,7 +168,7 @@ describe('Audit Service', () => {
 	describe('countForCase', () => {
 		it('should return the count of audit events', async () => {
 			const mockDb = createMockDb();
-			mockDb.auditEvent.count.mock.mockImplementationOnce(() => Promise.resolve(42));
+			mockDb.caseHistory.count.mock.mockImplementationOnce(() => Promise.resolve(42));
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
@@ -176,13 +176,13 @@ describe('Audit Service', () => {
 			const count = await service.countForCase('case-123');
 
 			assert.strictEqual(count, 42);
-			assert.strictEqual(mockDb.auditEvent.count.mock.callCount(), 1);
+			assert.strictEqual(mockDb.caseHistory.count.mock.callCount(), 1);
 		});
 
 		it('should return 0 and log error on failure', async () => {
 			const mockDb = createMockDb();
 			const dbError = new Error('Count failed');
-			mockDb.auditEvent.count.mock.mockImplementationOnce(() => Promise.reject(dbError));
+			mockDb.caseHistory.count.mock.mockImplementationOnce(() => Promise.reject(dbError));
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
@@ -197,7 +197,7 @@ describe('Audit Service', () => {
 	describe('getLatestForCase', () => {
 		it('should retrieve and parse the latest audit event', async () => {
 			const mockDb = createMockDb();
-			mockDb.auditEvent.findFirst.mock.mockImplementationOnce(() =>
+			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() =>
 				Promise.resolve({
 					id: 'event-1',
 					caseId: 'case-123',
@@ -220,7 +220,7 @@ describe('Audit Service', () => {
 
 		it('should return null if no events exist', async () => {
 			const mockDb = createMockDb();
-			mockDb.auditEvent.findFirst.mock.mockImplementationOnce(() => Promise.resolve(null));
+			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() => Promise.resolve(null));
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
@@ -232,7 +232,7 @@ describe('Audit Service', () => {
 
 		it('should handle null metadata', async () => {
 			const mockDb = createMockDb();
-			mockDb.auditEvent.findFirst.mock.mockImplementationOnce(() =>
+			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() =>
 				Promise.resolve({
 					id: 'event-1',
 					caseId: 'case-123',
@@ -255,7 +255,7 @@ describe('Audit Service', () => {
 		it('should return null and log error on failure', async () => {
 			const mockDb = createMockDb();
 			const dbError = new Error('Query failed');
-			mockDb.auditEvent.findFirst.mock.mockImplementationOnce(() => Promise.reject(dbError));
+			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() => Promise.reject(dbError));
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
@@ -270,7 +270,7 @@ describe('Audit Service', () => {
 	describe('getLastModifiedInfo', () => {
 		it('should return formatted date and user display name', async () => {
 			const mockDb = createMockDb();
-			mockDb.auditEvent.findFirst.mock.mockImplementationOnce(() =>
+			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() =>
 				Promise.resolve({
 					createdAt: new Date('2025-01-15T14:30:00Z'),
 					userId: 'user-123'
@@ -295,7 +295,7 @@ describe('Audit Service', () => {
 
 		it('should return "Unknown" if user not found in group members', async () => {
 			const mockDb = createMockDb();
-			mockDb.auditEvent.findFirst.mock.mockImplementationOnce(() =>
+			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() =>
 				Promise.resolve({
 					createdAt: new Date('2025-01-15T14:30:00Z'),
 					userId: 'user-999'
@@ -316,7 +316,7 @@ describe('Audit Service', () => {
 
 		it('should return null values if no events exist', async () => {
 			const mockDb = createMockDb();
-			mockDb.auditEvent.findFirst.mock.mockImplementationOnce(() => Promise.resolve(null));
+			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() => Promise.resolve(null));
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
@@ -332,7 +332,7 @@ describe('Audit Service', () => {
 		it('should return null values and log error on failure', async () => {
 			const mockDb = createMockDb();
 			const dbError = new Error('Query failed');
-			mockDb.auditEvent.findFirst.mock.mockImplementationOnce(() => Promise.reject(dbError));
+			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() => Promise.reject(dbError));
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
@@ -348,7 +348,7 @@ describe('Audit Service', () => {
 
 		it('should handle empty caseOfficers array', async () => {
 			const mockDb = createMockDb();
-			mockDb.auditEvent.findFirst.mock.mockImplementationOnce(() =>
+			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() =>
 				Promise.resolve({
 					createdAt: new Date('2025-01-15T14:30:00Z'),
 					userId: 'user-123'
