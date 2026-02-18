@@ -20,7 +20,7 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 		 */
 		async record(entry: AuditEntry): Promise<void> {
 			try {
-				await db.auditEvent.create({
+				await db.caseHistory.create({
 					data: {
 						caseId: entry.caseId,
 						action: entry.action,
@@ -47,7 +47,7 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 			const { skip = 0, take = 50 } = options ?? {};
 
 			try {
-				const events = await db.auditEvent.findMany({
+				const events = await db.caseHistory.findMany({
 					where: { caseId },
 					orderBy: { createdAt: 'desc' },
 					skip,
@@ -79,7 +79,7 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 		 */
 		async countForCase(caseId: string): Promise<number> {
 			try {
-				return await db.auditEvent.count({
+				return await db.caseHistory.count({
 					where: { caseId }
 				});
 			} catch (error) {
@@ -101,7 +101,7 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 		 */
 		async getLatestForCase(caseId: string): Promise<AuditEvent | null> {
 			try {
-				const event = await db.auditEvent.findFirst({
+				const event = await db.caseHistory.findFirst({
 					where: { caseId },
 					orderBy: { createdAt: 'desc' }
 				});
@@ -138,7 +138,7 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 			by: string | null;
 		}> {
 			try {
-				const latest = await db.auditEvent.findFirst({
+				const latest = await db.caseHistory.findFirst({
 					where: { caseId },
 					orderBy: { createdAt: 'desc' },
 					select: {
