@@ -26,5 +26,8 @@ export const CONTACT_TYPE_ID = Object.freeze({
 	SECRETARY_OF_STATE: 'secretary-of-state',
 	SPONSOR: 'sponsor',
 	TENANT: 'tenant',
-	THIRD_PARTY: 'third-party'
+	THIRD_PARTY: 'third-party',
+	APPLICANT_APPELLANT: 'applicant-appellant',
+	INSPECTOR: 'inspector',
+	RELEVANT_AUTHORITY: 'relevant-authority'
 });

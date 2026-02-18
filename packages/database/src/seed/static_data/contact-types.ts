@@ -28,5 +28,8 @@ export const CONTACT_TYPES = [
 	{ id: CONTACT_TYPE_ID.SECRETARY_OF_STATE, displayName: 'Secretary of State' },
 	{ id: CONTACT_TYPE_ID.SPONSOR, displayName: 'Sponsor' },
 	{ id: CONTACT_TYPE_ID.TENANT, displayName: 'Tenant' },
-	{ id: CONTACT_TYPE_ID.THIRD_PARTY, displayName: 'Third Party' }
+	{ id: CONTACT_TYPE_ID.THIRD_PARTY, displayName: 'Third Party' },
+	{ id: CONTACT_TYPE_ID.APPLICANT_APPELLANT, displayName: 'Applicant/Appellant' },
+	{ id: CONTACT_TYPE_ID.INSPECTOR, displayName: 'Inspector' },
+	{ id: CONTACT_TYPE_ID.RELEVANT_AUTHORITY, displayName: 'Relevant authority' }
 ];
