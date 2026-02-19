@@ -855,6 +855,7 @@ export const OUTCOME_QUESTIONS = {
 		url: 'check-outcome-details',
 		viewData: { emptyName: 'outcome' },
 		columns: [
+			{ header: 'Type', fieldName: 'decisionTypeId' },
 			{
 				header: 'Originator',
 				fieldName: 'decisionMakerTypeId',
@@ -862,7 +863,7 @@ export const OUTCOME_QUESTIONS = {
 			},
 			{ header: 'Outcome', fieldName: 'outcomeId' },
 			{ header: 'Outcome date', fieldName: 'outcomeDate' },
-			{ header: 'Outcome received date', fieldName: 'decisionReceivedDate' }
+			{ header: 'Received date', fieldName: 'decisionReceivedDate' }
 		],
 		validators: [
 			new ManageListItemsCompleteValidator({
