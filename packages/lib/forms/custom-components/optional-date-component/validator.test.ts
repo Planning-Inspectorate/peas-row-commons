@@ -55,7 +55,6 @@ describe('OptionalDateValidator', () => {
 			const errors = await _runOptionalDateValidation(req as Request, question as any);
 
 			assert.ok(Object.keys(errors).length > 0);
-			console.log('quack', errors);
 			assert.strictEqual(errors[`${question.fieldName}_month`].msg, 'Test date must include a month and year');
 		});
 
