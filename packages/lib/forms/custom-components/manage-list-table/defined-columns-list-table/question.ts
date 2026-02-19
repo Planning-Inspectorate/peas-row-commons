@@ -8,7 +8,11 @@ import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/j
 export interface TableColumn {
 	header: string;
 	fieldName: string;
-	format?: (value: any, rowData: Record<string, any>, params: { getQuestion: any; mockJourney: any }) => string;
+	format?: (
+		value: string,
+		rowData: Record<string, unknown>,
+		params: { getQuestion: (fieldName: string) => Question | undefined; mockJourney: Journey }
+	) => string;
 	sortType?: 'date' | 'string' | 'number';
 }
 

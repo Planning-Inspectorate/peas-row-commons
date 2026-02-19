@@ -55,7 +55,7 @@ interface FormattingContext {
  */
 export const handleOriginatorFormattingFn = (
 	typeValue: string,
-	row: Record<string, any>,
+	row: Record<string, unknown>,
 	{ getQuestion, mockJourney }: FormattingContext
 ): string => {
 	const getFormattedName = (role: string, fieldName: string): string => {
