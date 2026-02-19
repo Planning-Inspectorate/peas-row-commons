@@ -62,6 +62,10 @@ export type CaseOfficer = {
 	displayName: string;
 };
 
+export type Inspector = {
+	id: string;
+};
+
 export interface PersonConfig {
 	section: string;
 	db: string;
