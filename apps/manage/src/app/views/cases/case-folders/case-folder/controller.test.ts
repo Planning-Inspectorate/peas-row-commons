@@ -1,6 +1,6 @@
 import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildViewCaseFolder } from './controller.ts';
+import { buildViewCaseFolder, getFolderPath } from './controller.ts';
 
 describe('buildViewCaseFolder', () => {
 	const mockLogger = {
@@ -62,9 +62,17 @@ describe('buildViewCaseFolder', () => {
 			const mockFolderData = {
 				id: 'folder-456',
 				displayName: 'My Folder',
+				parentFolderId: null,
 				Case: { reference: 'REF-123', name: 'Case Name' },
 				ChildFolders: [{ id: 'sub-1', displayName: 'Subfolder' }],
-				Documents: [{ id: 'doc-1', fileName: 'doc.pdf', uploadedDate: Date.now() }],
+				Documents: [
+					{
+						id: 'doc-1',
+						fileName: 'doc.pdf',
+						uploadedDate: Date.now(),
+						Folder: { id: 'folder-456', displayName: 'My Folder' }
+					}
+				],
 				_count: { Documents: 10 },
 				ParentFolder: { id: 'parent-999', displayName: 'Parent Folder' }
 			};
@@ -73,7 +81,8 @@ describe('buildViewCaseFolder', () => {
 
 			await buildViewCaseFolder(service as any)(req, res);
 
-			assert.strictEqual(mockDb.folder.findUnique.mock.callCount(), 1);
+			// Called twice: once for main query, once for getFolderPath
+			assert.strictEqual(mockDb.folder.findUnique.mock.callCount(), 2);
 
 			const dbArgs = mockDb.folder.findUnique.mock.calls[0].arguments[0];
 			assert.deepStrictEqual(dbArgs.where, { id: 'folder-456' });
@@ -92,6 +101,10 @@ describe('buildViewCaseFolder', () => {
 
 			assert.strictEqual(viewData.subFolders.length, 1);
 			assert.strictEqual(viewData.documents.length, 1);
+
+			// Verify breadcrumbs are included
+			assert.ok(viewData.breadcrumbItems);
+			assert.strictEqual(viewData.breadcrumbItems[0].text, 'Manage case files');
 		});
 
 		it('should render correct backlink when no parent folder exists', async () => {
@@ -142,6 +155,97 @@ describe('buildViewCaseFolder', () => {
 			await assert.rejects(() => buildViewCaseFolder(service as any)(req, res), dbError);
 
 			assert.strictEqual(mockLogger.error.mock.callCount(), 0);
+		});
+	});
+
+	describe('getFolderPath', () => {
+		it('should return empty array if folder is not found', async () => {
+			const mockDb = {
+				folder: {
+					findUnique: () => Promise.resolve(null),
+					findMany: () => Promise.resolve([])
+				}
+			};
+
+			const result = await getFolderPath(mockDb as any, 'non-existent-folder');
+
+			assert.deepStrictEqual(result, []);
+		});
+
+		it('should return single folder when folder has no parent', async () => {
+			const mockDb = {
+				folder: {
+					findMany: () => Promise.resolve([{ id: 'folder-1', displayName: 'Root Folder', parentFolderId: null }]),
+					findUnique: () =>
+						Promise.resolve({
+							id: 'folder-1',
+							displayName: 'Root Folder',
+							parentFolderId: null,
+							caseId: 'case-123'
+						})
+				}
+			};
+
+			const result = await getFolderPath(mockDb as any, 'folder-1');
+
+			assert.strictEqual(result.length, 1);
+			assert.strictEqual(result[0].id, 'folder-1');
+			assert.strictEqual(result[0].displayName, 'Root Folder');
+		});
+
+		it('should return folder path from root to current folder', async () => {
+			const allFolders = [
+				{ id: 'folder-1', displayName: 'Root', parentFolderId: null },
+				{ id: 'folder-2', displayName: 'Documents', parentFolderId: 'folder-1' },
+				{ id: 'folder-3', displayName: 'Subfolder', parentFolderId: 'folder-2' }
+			];
+
+			const mockDb = {
+				folder: {
+					findUnique: (args: { where: { id: string } }) => Promise.resolve(folders[args.where.id] ?? null),
+					findMany: () => Promise.resolve(allFolders)
+				}
+			};
+			const folders: Record<
+				string,
+				{ id: string; displayName: string; parentFolderId: string | null; caseId: string | null }
+			> = {
+				'folder-3': { id: 'folder-3', displayName: 'Subfolder', parentFolderId: 'folder-2', caseId: 'case-123' },
+				'folder-2': { id: 'folder-2', displayName: 'Documents', parentFolderId: 'folder-1', caseId: 'case-123' },
+				'folder-1': { id: 'folder-1', displayName: 'Root', parentFolderId: null, caseId: 'case-123' }
+			};
+
+			const result = await getFolderPath(mockDb as any, 'folder-3');
+
+			assert.strictEqual(result.length, 3);
+			assert.strictEqual(result[0].id, 'folder-1');
+			assert.strictEqual(result[0].displayName, 'Root');
+			assert.strictEqual(result[1].id, 'folder-2');
+			assert.strictEqual(result[1].displayName, 'Documents');
+			assert.strictEqual(result[2].id, 'folder-3');
+			assert.strictEqual(result[2].displayName, 'Subfolder');
+		});
+
+		it('should stop traversing if a parent folder is not found', async () => {
+			const allFolders = [{ id: 'folder-2', displayName: 'Orphan', parentFolderId: 'missing-folder' }];
+
+			const mockDb = {
+				folder: {
+					findUnique: (args: { where: { id: string } }) => Promise.resolve(folders[args.where.id] ?? null),
+					findMany: () => Promise.resolve(allFolders)
+				}
+			};
+			const folders: Record<
+				string,
+				{ id: string; displayName: string; parentFolderId: string | null; caseId: string | null }
+			> = {
+				'folder-2': { id: 'folder-2', displayName: 'Orphan', parentFolderId: 'missing-folder', caseId: 'case-123' }
+			};
+
+			const result = await getFolderPath(mockDb as any, 'folder-2');
+
+			assert.strictEqual(result.length, 1);
+			assert.strictEqual(result[0].id, 'folder-2');
 		});
 	});
 });

@@ -1,0 +1,23 @@
+<ul id="{{ uniqueId }}" data-cy="answer-list">
+    {% for question in answers %}
+        <li class="{% if loop.index0 >= limit %}govuk-!-display-none js-hidden-item{% endif %}" data-cy="answer-item">
+            {% for value in question %}
+                {{ value.answer }}{% if not loop.last %}<br>{% endif %}
+            {% endfor %}
+        </li>
+    {% endfor %}
+</ul>
+
+{% if enableToggle %}
+    <br>
+    <a href="#" 
+       class="govuk-link govuk-link--no-visited-state js-toggle-list-btn"
+       role="button" 
+       draggable="false"
+       aria-expanded="false" 
+       aria-controls="{{ uniqueId }}"
+       data-list-id="{{ uniqueId }}"
+       data-cy="expand-button">
+        Show more
+    </a>
+{% endif %}

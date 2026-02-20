@@ -9,6 +9,7 @@ import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms/src/co
 import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address.ts';
 import { mapContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
+import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
 
 function formatValue(value: any) {
 	if (typeof value === 'boolean') {
@@ -17,7 +18,7 @@ function formatValue(value: any) {
 	return value;
 }
 
-const NESTED_SECTIONS: (keyof CaseListFields)[] = ['Dates', 'Costs', 'Abeyance', 'Notes', 'Decision'];
+const NESTED_SECTIONS: (keyof CaseListFields)[] = ['Dates', 'Costs', 'Abeyance', 'Notes', 'Outcome'];
 
 /**
  * Flattens the Procedures array into procedureOne..., procedureTwo... fields
@@ -110,14 +111,21 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		delete mergedData.CaseOfficer;
 	}
 
-	if (caseRow.Decision?.DecisionMaker) {
-		mergedData.decisionMakerId = caseRow.Decision.DecisionMaker.idpUserId;
-	}
-
 	const inspectors =
 		caseRow.Inspectors?.map((inspector) => ({
 			...inspector,
 			inspectorId: inspector.Inspector.idpUserId
+		})) || [];
+
+	const outcomeDetails =
+		caseRow.Outcome?.CaseDecisions?.map((decision) => ({
+			...decision,
+			decisionMakerOfficerId:
+				decision.decisionMakerTypeId === DECISION_MAKER_TYPE_ID.OFFICER ? decision.DecisionMaker?.idpUserId : undefined,
+			decisionMakerInspectorId:
+				decision.decisionMakerTypeId === DECISION_MAKER_TYPE_ID.INSPECTOR
+					? decision.DecisionMaker?.idpUserId
+					: undefined
 		})) || [];
 
 	const mappedProcedures = mapProcedures(mergedData.Procedures || []);
@@ -151,7 +159,8 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		receivedDateSortable: new Date(caseRow.receivedDate)?.getTime(),
 		inspectorDetails: inspectors,
 		objectorDetails: mappedObjectors,
-		contactDetails: mappedContacts
+		contactDetails: mappedContacts,
+		outcomeDetails
 	};
 }
 

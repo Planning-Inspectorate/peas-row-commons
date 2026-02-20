@@ -2,6 +2,7 @@
 
 {% from "govuk/components/back-link/macro.njk" import govukBackLink %}
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/breadcrumbs/macro.njk" import govukBreadcrumbs %}
 {% from "views/layouts/components/header.njk" import header %}
 
 {% block head %}
@@ -26,7 +27,11 @@
 		document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');
 	</script>
 	{% block backLink %}
-		{% if backLinkUrl and backLinkText %}
+		{% if breadcrumbItems %}
+		    {{ govukBreadcrumbs({
+				items: breadcrumbItems
+			}) }}
+		{% elseif backLinkUrl and backLinkText %}
 			{{ govukBackLink({ text: backLinkText, href: backLinkUrl }) }}
 		{% elseif backLinkUrl %}
 			{{ govukBackLink({ href: backLinkUrl }) }}

@@ -24,6 +24,7 @@ export interface TableManageListQuestionParameters {
 	titleSingular?: string;
 	showManageListQuestions?: boolean;
 	showAnswersInSummary?: boolean;
+	summaryLimit?: number;
 }
 
 export interface PreppedQuestion {

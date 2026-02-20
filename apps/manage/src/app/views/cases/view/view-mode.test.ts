@@ -182,6 +182,64 @@ describe('view-model', () => {
 
 			assert.deepStrictEqual(result.linkedCaseDetails, mockOutcome);
 		});
+
+		it('should map nested Outcome.CaseDecisions to outcomeDetails with resolved decisionMaker IDs', () => {
+			const DECISION_MAKER_TYPE_ID = {
+				OFFICER: 'officer',
+				INSPECTOR: 'inspector'
+			};
+
+			const input = {
+				id: '123',
+				receivedDate: new Date(),
+				Outcome: {
+					CaseDecisions: [
+						{
+							id: 'dec-1',
+							decisionMakerTypeId: DECISION_MAKER_TYPE_ID.OFFICER,
+							DecisionMaker: { idpUserId: 'officer-99' },
+							otherField: 'some-value'
+						},
+						{
+							id: 'dec-2',
+							decisionMakerTypeId: DECISION_MAKER_TYPE_ID.INSPECTOR,
+							DecisionMaker: { idpUserId: 'inspector-00' }
+						},
+						{
+							id: 'dec-3',
+							decisionMakerTypeId: 'other-type',
+							DecisionMaker: { idpUserId: 'should-not-map' }
+						}
+					]
+				}
+			};
+
+			const result: any = caseToViewModel(input as any, groupMembers);
+
+			assert.ok(Array.isArray(result.outcomeDetails));
+			assert.strictEqual(result.outcomeDetails.length, 3);
+
+			assert.strictEqual(result.outcomeDetails[0].decisionMakerOfficerId, 'officer-99');
+			assert.strictEqual(result.outcomeDetails[0].decisionMakerInspectorId, undefined);
+			assert.strictEqual(result.outcomeDetails[0].otherField, 'some-value');
+
+			assert.strictEqual(result.outcomeDetails[1].decisionMakerInspectorId, 'inspector-00');
+			assert.strictEqual(result.outcomeDetails[1].decisionMakerOfficerId, undefined);
+
+			assert.strictEqual(result.outcomeDetails[2].decisionMakerOfficerId, undefined);
+			assert.strictEqual(result.outcomeDetails[2].decisionMakerInspectorId, undefined);
+		});
+
+		it('should return empty array for outcomeDetails if Outcome data is missing', () => {
+			const input = {
+				id: '123',
+				receivedDate: new Date(),
+				Outcome: null
+			};
+
+			const result: any = caseToViewModel(input as any, groupMembers);
+			assert.deepStrictEqual(result.outcomeDetails, []);
+		});
 	});
 
 	describe('mapNotes', () => {

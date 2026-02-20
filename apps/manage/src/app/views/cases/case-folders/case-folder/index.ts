@@ -8,11 +8,13 @@ import { buildDeleteFileController, buildDeleteFileView } from '../../../documen
 import { createRoutes as createCreateFolderRoutes } from '../create-folder/index.ts';
 import { createRoutes as createDeleteFolderRoutes } from '../delete-folder/index.ts';
 import { createRoutes as createRenameFolderRoutes } from '../rename-folder/index.ts';
+import { createRoutes as createMoveFileRoutes } from '../../move-file/index.ts';
 
 export function createRoutes(service: ManageService) {
 	const router = createRouter({ mergeParams: true });
 
-	const [uploadRoutes, createFolderRoutes, deleteFolderRoutes, renameFolderRoutes] = createRoutesToMount(service);
+	const [uploadRoutes, createFolderRoutes, deleteFolderRoutes, renameFolderRoutes, moveFileRoutes] =
+		createRoutesToMount(service);
 
 	const [viewCaseFolder, deleteFileView, deleteFileController] = createMiddlewares(service);
 
@@ -30,6 +32,9 @@ export function createRoutes(service: ManageService) {
 
 	// Mounts "delete folder" routes
 	router.use('/delete-folder', deleteFolderRoutes);
+
+	// Mounts "move files" routes
+	router.use('/move-files', moveFileRoutes);
 
 	// Gets "delete" view
 	router.get('/:documentId/delete', asyncHandler(deleteFileView));
@@ -56,6 +61,7 @@ function createRoutesToMount(service: ManageService) {
 		createUploadRoutes(service),
 		createCreateFolderRoutes(service),
 		createDeleteFolderRoutes(service),
-		createRenameFolderRoutes(service)
+		createRenameFolderRoutes(service),
+		createMoveFileRoutes(service)
 	];
 }

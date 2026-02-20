@@ -1,20 +1,58 @@
 import ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
 import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
-import type {
-	PreppedQuestion,
-	QuestionViewModel,
-	TableHeadCell,
-	TableManageListQuestionParameters,
-	TableRowCell
-} from './types.ts';
+import type { TableHeadCell, TableManageListQuestionParameters, TableRowCell } from './types.ts';
+import nunjucks from 'nunjucks';
+import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import type { Question, QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type { Request } from 'express';
 
 export default class TableManageListQuestion extends ManageListQuestion {
-	section: Record<string, any> | undefined;
 	viewFolder: string;
+	summaryLimit: number;
+	showAnswersInSummary: boolean;
 
 	constructor(params: TableManageListQuestionParameters) {
 		super(params);
+		this.summaryLimit = params.summaryLimit || 2;
+		this.showAnswersInSummary = params.showAnswersInSummary || false;
+
 		this.viewFolder = 'custom-components/manage-list-table';
+	}
+
+	/**
+	 * Override for parent.
+	 *
+	 * Only difference is that for payload we pass in the journey response answers.
+	 * This is because for Manage List questions, we don't have the data
+	 * stored in the body from an input like a regular question, so body
+	 * does not contain anything useful and it won't repopulate the screen.
+	 */
+	checkForValidationErrors(
+		req: Request,
+		section: Section,
+		journey: Journey,
+		manageListQuestion: Question
+	): QuestionViewModel | undefined {
+		const { body = {}, originalUrl } = req;
+		const { errors = {}, errorSummary = [] } = body;
+
+		if (Object.keys(errors).length > 0) {
+			return this.toViewModel({
+				params: req.params,
+				section,
+				journey,
+				customViewData: {
+					errors,
+					errorSummary,
+					originalUrl
+				},
+				// Use stored answers instead of body for Manage List repopulation
+				payload: journey.response.answers,
+				question: manageListQuestion
+			});
+		}
 	}
 
 	/**
@@ -65,8 +103,8 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	/**
 	 * Creates the table row based on the questions asked
 	 */
-	private createRow(viewModel: QuestionViewModel, item: Record<string, any>): TableRowCell[] {
-		const cells = this.section?.questions.map((question: any) => {
+	protected createRow(viewModel: QuestionViewModel, item: Record<string, any>): TableRowCell[] {
+		const cells = this.section?.questions.map((question: Question) => {
 			return this.createCell(question, item);
 		});
 
@@ -81,12 +119,12 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	 * Creates the sortable table headers based on the question asked.
 	 */
 	createHeaders(): TableHeadCell[] {
-		const headers = this.section?.questions.map((question: any) => ({
+		const headers = this.section?.questions.map((question: Question) => ({
 			text: question.viewData?.tableHeader || question.title || question.question,
 			attributes: {
 				'aria-sort': 'none'
 			}
-		}));
+		})) as unknown as TableHeadCell[];
 
 		headers.push({
 			text: 'Actions',
@@ -96,14 +134,14 @@ export default class TableManageListQuestion extends ManageListQuestion {
 		return headers;
 	}
 
-	createCell(question: PreppedQuestion, item: Record<string, any>): TableRowCell {
+	createCell(question: Question, item: Record<string, any>): TableRowCell {
 		const mockJourney = {
 			response: { answers: item },
 			getCurrentQuestionUrl: () => '',
 			answers: item
 		};
 
-		if (question.shouldDisplay && !question.shouldDisplay({ answers: item })) {
+		if (question.shouldDisplay && !question.shouldDisplay({ answers: item } as JourneyResponse)) {
 			return { text: '—' };
 		}
 
@@ -149,5 +187,74 @@ export default class TableManageListQuestion extends ManageListQuestion {
             </ul>`;
 
 		return actionsHtml;
+	}
+	/**
+	 * Overrides parent. Behaves in a very similar way but as unique functionality for passing in a
+	 * limit into the nunjucks, allowing for a UI toggle to hide and show items.
+	 */
+	formatAnswerForSummary(sectionSegment: string, journey: Journey, answer: Record<string, unknown>[] | null) {
+		const notStartedText = this.notStartedText || 'Not started';
+
+		let formattedAnswer = notStartedText;
+
+		if (answer && Array.isArray(answer)) {
+			if (this.showAnswersInSummary) {
+				const answers = answer.map((a) => this.formatItemAnswers(a));
+				const uniqueId = `list-${Math.floor(Math.random() * 100000)}`;
+
+				formattedAnswer = nunjucks.render('custom-components/manage-list-table/answer-summary-list.njk', {
+					answers,
+					limit: this.summaryLimit,
+					uniqueId,
+					enableToggle: answers.length > this.summaryLimit
+				});
+			} else if (answer.length > 0) {
+				formattedAnswer = `${answer.length} ${this.title}`;
+			}
+		}
+
+		const action = this.getAction(sectionSegment, journey, answer);
+		const key = this.title ?? this.question;
+
+		return [
+			{
+				key: key,
+				value: formattedAnswer,
+				action: action
+			}
+		];
+	}
+
+	/**
+	 * Formats items to display in a list. Functionality very similar to parent.
+	 */
+	protected formatItemAnswers(answer: Record<string, unknown>) {
+		if (!this.section || !this.section.questions || this.section.questions.length === 0) {
+			return [];
+		}
+
+		const mockJourney = {
+			getCurrentQuestionUrl() {
+				return '';
+			},
+			response: {
+				answers: answer
+			},
+			answers: answer
+		};
+
+		return this.section.questions
+			.filter((q: Question) => (q.shouldDisplay ? q.shouldDisplay({ answers: answer } as JourneyResponse) : true))
+			.map((q: Question) => {
+				const formatted = q
+					.formatAnswerForSummary('', mockJourney, answer[q.fieldName])
+					.map((a) => a.value)
+					.join(', ');
+
+				return {
+					question: q.title,
+					answer: formatted
+				};
+			});
 	}
 }

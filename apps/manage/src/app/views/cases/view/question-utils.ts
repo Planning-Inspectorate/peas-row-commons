@@ -1,4 +1,5 @@
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
+import BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
 import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
 import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
 import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js';
@@ -22,13 +23,18 @@ import {
 	ADMIN_PROCEDURES,
 	SITE_VISITS,
 	OBJECTOR_STATUSES,
-	CONTACT_TYPES
+	CONTACT_TYPES,
+	DECISION_MAKER_TYPES
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
 import type { CaseOfficer, PersonConfig } from './types.ts';
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/outcome.ts';
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
+import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/validator.ts';
+import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
+import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-components/optional-date-component/validator.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
 
@@ -36,6 +42,47 @@ type RadioOption = { text: string; value: string } | { divider: string };
 export const OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER = OBJECTOR_STATUSES.map(
 	(s) => ({ text: s.displayName, value: s.id }) as RadioOption
 ).toSpliced(-1, 0, { divider: 'or' });
+
+interface FormattingContext {
+	getQuestion: (fieldName: string) => Question | undefined;
+	mockJourney: any;
+}
+
+/**
+ * Formats the output of the Originator column, which could be
+ * an inspector, officer or secretary of state, and depending on
+ * answer will show a slightly different display.
+ */
+export const handleOriginatorFormattingFn = (
+	typeValue: string,
+	row: Record<string, unknown>,
+	{ getQuestion, mockJourney }: FormattingContext
+): string => {
+	const getFormattedName = (role: string, fieldName: string): string => {
+		const question = getQuestion(fieldName);
+
+		if (question && row[fieldName]) {
+			const formatted = question.formatAnswerForSummary('', mockJourney, row[fieldName]);
+			return `${role}<br>${formatted[0]?.value || ''}`;
+		}
+
+		return role;
+	};
+
+	switch (typeValue) {
+		case DECISION_MAKER_TYPE_ID.OFFICER:
+			return getFormattedName('Officer', 'decisionMakerOfficerId');
+
+		case DECISION_MAKER_TYPE_ID.INSPECTOR:
+			return getFormattedName('Inspector', 'decisionMakerInspectorId');
+
+		case DECISION_MAKER_TYPE_ID.SECRETARY_OF_STATE:
+			return 'Secretary of State';
+
+		default:
+			return '—';
+	}
+};
 
 interface DateQuestionProps {
 	fieldName: string;
@@ -46,6 +93,10 @@ interface DateQuestionProps {
 	question?: string;
 	url?: string;
 	isDateTime?: boolean;
+	/**
+	 * Needed when we want dates to be optional.
+	 */
+	overrideValidator?: typeof BaseValidator;
 }
 
 export function dateQuestion({
@@ -56,7 +107,8 @@ export function dateQuestion({
 	viewData = {},
 	question,
 	url,
-	isDateTime = false
+	isDateTime = false,
+	overrideValidator
 }: DateQuestionProps) {
 	if (!title) {
 		title = camelCaseToSentenceCase(fieldName);
@@ -69,7 +121,7 @@ export function dateQuestion({
 		hint: hint,
 		fieldName: fieldName,
 		url: url || camelCaseToKebabCase(fieldName),
-		validators: [new DateValidator(title)],
+		validators: [overrideValidator ? new overrideValidator(title) : new DateValidator(title)],
 		editable: editable,
 		viewData
 	};
@@ -410,17 +462,17 @@ export const CASE_DETAILS_QUESTIONS = {
 			})
 		]
 	},
-	internalReference: {
+	historicalReference: {
 		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
-		title: 'Internal reference',
-		question: 'What is the internal reference for the case?',
-		fieldName: 'internalReference',
-		url: 'internal-reference',
+		title: 'Historical reference',
+		question: 'What is the historical reference for the case?',
+		fieldName: 'historicalReference',
+		url: 'historical-reference',
 		validators: [
 			new StringValidator({
 				maxLength: {
 					maxLength: 50,
-					maxLengthMessage: 'Internal reference must be less than 50 characters'
+					maxLengthMessage: 'Historical reference must be less than 50 characters'
 				}
 			})
 		]
@@ -677,7 +729,7 @@ export const OVERVIEW_QUESTIONS = {
 		]
 	},
 	linkedCaseDetails: {
-		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
+		type: CUSTOM_COMPONENTS.LINKED_CASES_LIST,
 		title: 'Linked case(s)',
 		question: 'Check linked case details',
 		fieldName: 'linkedCaseDetails',
@@ -743,7 +795,13 @@ export const TEAM_QUESTIONS = {
 		fieldName: 'inspectorDetails',
 		url: 'inspector-details',
 		showAnswersInSummary: true,
-		viewData: { emptyName: 'inspector' }
+		viewData: { emptyName: 'inspector' },
+		validators: [
+			new ManageListItemsCompleteValidator({
+				inspectorId: 'Inspector name',
+				inspectorAllocatedDate: 'Date appointed'
+			})
+		]
 	},
 	inspector: {
 		type: COMPONENT_TYPES.SELECT,
@@ -789,31 +847,69 @@ export function createTeamQuestions(
 }
 
 export const OUTCOME_QUESTIONS = {
+	outcomeDetails: {
+		type: CUSTOM_COMPONENTS.DEFINED_COLUMNS_LIST,
+		title: 'Outcome(s)',
+		question: 'Check outcome details',
+		fieldName: 'outcomeDetails',
+		url: 'check-outcome-details',
+		viewData: { emptyName: 'outcome' },
+		columns: [
+			{ header: 'Type', fieldName: 'decisionTypeId' },
+			{
+				header: 'Originator',
+				fieldName: 'decisionMakerTypeId',
+				format: handleOriginatorFormattingFn
+			},
+			{ header: 'Outcome', fieldName: 'outcomeId' },
+			{ header: 'Outcome date', fieldName: 'outcomeDate' },
+			{ header: 'Received date', fieldName: 'decisionReceivedDate' }
+		],
+		validators: [
+			new ManageListItemsCompleteValidator({
+				decisionTypeId: 'Decision type',
+				decisionMakerTypeId: 'Decision maker type',
+				decisionMakerInspectorId: 'Inspector',
+				decisionMakerOfficerId: 'Officer',
+				outcomeId: 'Outcome',
+				outcomeDate: 'Outcome date'
+			})
+		]
+	},
 	decisionType: {
 		type: COMPONENT_TYPES.RADIO,
-		title: 'Type of decision or report',
+		title: 'Outcome type',
 		question: 'What is the type of decision or report?',
 		fieldName: 'decisionTypeId',
 		url: 'type-of-decision',
 		validators: [new RequiredValidator('Select a type of decision or report')],
-		options: DECISION_TYPES.map((status) => ({ text: status.displayName, value: status.id })),
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'type-of-decision/remove'
-				}
-			]
-		}
+		options: DECISION_TYPES.map((status) => ({ text: status.displayName, value: status.id }))
 	},
-	decisionMaker: {
-		type: COMPONENT_TYPES.SELECT,
+	decisionMakerType: {
+		type: COMPONENT_TYPES.RADIO,
 		title: 'Decision maker',
-		question: 'Who is the decision maker?',
-		fieldName: 'decisionMakerId',
-		url: 'decision-maker',
-		validators: [new RequiredValidator('Select the decision maker')]
+		question: 'Who is the decision maker or report writer?',
+		fieldName: 'decisionMakerTypeId',
+		url: 'decision-maker-type',
+		validators: [new RequiredValidator('Select the decision maker')],
+		options: DECISION_MAKER_TYPES.map((status) => ({ text: status.displayName, value: status.id }))
+	},
+	decisionMakerInspector: {
+		type: COMPONENT_TYPES.RADIO,
+		title: 'Who is the inspector?',
+		hint: 'If no inspectors are available, add them on the inspector page.',
+		question: 'Who is the inspector?',
+		fieldName: 'decisionMakerInspectorId',
+		url: 'inspector-decision-maker',
+		validators: [new RequiredValidator('Select the inspector')]
+	},
+	decisionMakerOfficer: {
+		type: COMPONENT_TYPES.SELECT,
+		title: 'Who is the officer?',
+		question: 'Who is the officer?',
+		fieldName: 'decisionMakerOfficerId',
+		url: 'officer-decision-maker',
+		validators: [new RequiredValidator('Select the officer')]
 	},
 	outcome: {
 		type: CUSTOM_COMPONENTS.CONDITIONAL_TEXT_OPTIONS,
@@ -836,10 +932,9 @@ export const OUTCOME_QUESTIONS = {
 				};
 			}
 
-			if (status.id === OUTCOME_ID.PROPOSE_NOT_TO_CONFIRM) {
+			if (status.id === OUTCOME_ID.OTHER) {
 				option.conditional = {
-					question: 'Other details',
-					fieldName: 'proposeNotToConfirmComment',
+					fieldName: 'otherComment',
 					type: 'textarea'
 				};
 			}
@@ -847,43 +942,18 @@ export const OUTCOME_QUESTIONS = {
 			return option;
 		})
 	},
-	inTarget: {
-		type: COMPONENT_TYPES.BOOLEAN,
-		title: 'In target?',
-		question: 'Was the decision received in the target timeframe?',
-		fieldName: 'inTarget',
-		url: 'in-target',
-		validators: [new RequiredValidator('Select yes if the decision was received in the target timeframe')]
-	},
 	outcomeDate: dateQuestion({
 		fieldName: 'outcomeDate',
 		title: 'Outcome date',
 		question: 'Outcome date',
-		hint: 'Date of the decision, proposal, report or recommendation. For example 27 3 2007.',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'outcome-date/remove'
-				}
-			]
-		}
+		hint: 'Date of the decision, proposal, report or recommendation. For example 27 3 2007.'
 	}),
 	decisionReceivedDate: dateQuestion({
 		fieldName: 'decisionReceivedDate',
 		title: 'Decision received',
 		question: 'Decision received (optional)',
 		hint: 'Required if the decision was determined external to PINS. For example 27 3 2007.',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'decision-received-date/remove'
-				}
-			]
-		}
+		overrideValidator: OptionalDateValidator
 	}),
 	partiesNotifiedDate: dateQuestion({
 		fieldName: 'partiesNotifiedDate',
@@ -940,29 +1010,7 @@ export const OUTCOME_QUESTIONS = {
 				}
 			]
 		}
-	}),
-	isFencingPermanent: {
-		type: CUSTOM_COMPONENTS.FENCING_PERMANENT,
-		title: 'Is fencing permanent',
-		question: 'Is the fencing permanent?',
-		fieldName: 'isFencingPermanent',
-		url: 'fencing-permanent',
-		validators: [new RequiredValidator('Select yes if the fencing is permanent')],
-		options: [
-			{
-				text: 'Yes',
-				value: 'yes'
-			},
-			{
-				text: 'No',
-				value: 'no',
-				conditional: {
-					fieldName: 'fencingPermanentComment',
-					type: 'textarea'
-				}
-			}
-		]
-	}
+	})
 };
 
 /**
@@ -971,17 +1019,27 @@ export const OUTCOME_QUESTIONS = {
  */
 export function createOutcomeQuestions(
 	outcomeQuestions: typeof OUTCOME_QUESTIONS,
-	groupMembers: { caseOfficers: CaseOfficer[] }
+	groupMembers: { caseOfficers: CaseOfficer[] },
+	inspectors: Record<string, unknown>[]
 ) {
-	const options = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
+	const officerOptions = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
+	officerOptions.unshift({ text: '', value: '' });
 
-	options.unshift({ text: '', value: '' });
+	const inspectorIds = inspectors?.map((inspector) => inspector.inspectorId);
+
+	const relevantInspectors = [...groupMembers.caseOfficers].filter((member) => inspectorIds.includes(member.id));
+
+	const inspectorOptions = relevantInspectors.map(referenceDataToRadioOptions);
 
 	return {
 		...outcomeQuestions,
-		decisionMaker: {
-			...outcomeQuestions.decisionMaker,
-			options
+		decisionMakerOfficer: {
+			...outcomeQuestions.decisionMakerOfficer,
+			options: officerOptions
+		},
+		decisionMakerInspector: {
+			...outcomeQuestions.decisionMakerInspector,
+			options: inspectorOptions
 		}
 	};
 }

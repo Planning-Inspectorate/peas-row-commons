@@ -4,6 +4,8 @@ import {
 	COMMON_LAND_FOLDERS
 } from '@pins/peas-row-commons-database/src/seed/static_data/folders.ts';
 import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/types.ts';
+import type { BreadcrumbItem, FlatFolder, FolderBreadcrumb, FolderNode } from './types.ts';
+import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 
 const ROW_FOLDERS_MAP = {
 	[CASE_TYPES_ID.COASTAL_ACCESS]: ROW_FOLDERS,
@@ -90,4 +92,61 @@ export function findFolders(
 	lookupMap: typeof FOLDER_TEMPLATES_MAP
 ) {
 	return lookupMap[typeId] || [];
+}
+
+/**
+ * Takes the flat folder data connected to case and builds the nested structure,
+ * NB: not currently used anywhere beyonds tests, will be used in a following ticket.
+ */
+export function buildFolderTree(flatFolders: FlatFolder[]): FolderNode[] {
+	const nodeMap = new Map<string, FolderNode>();
+	const roots: FolderNode[] = [];
+
+	for (const folder of flatFolders) {
+		nodeMap.set(folder.id, { ...folder, children: [] });
+	}
+
+	for (const folder of flatFolders) {
+		const node = nodeMap.get(folder.id);
+
+		if (!node) continue;
+
+		if (folder.parentFolderId && nodeMap.has(folder.parentFolderId)) {
+			const parent = nodeMap.get(folder.parentFolderId);
+			parent?.children.push(node);
+		} else {
+			roots.push(node);
+		}
+	}
+
+	return roots;
+}
+/**
+ * Builds breadcrumb items for the breadcrumbs component.
+ * Structure: Manage case files > Folder > Subfolder > Subfolder
+ */
+export function buildBreadcrumbItems(caseId: string, folderPath: FolderBreadcrumb[]): BreadcrumbItem[] {
+	const baseFoldersUrl = `/cases/${caseId}/case-folders`;
+
+	// Start with "Manage case files" which links to the root folders page
+	const breadcrumbItems: BreadcrumbItem[] = [
+		{
+			text: 'Manage case files',
+			href: baseFoldersUrl
+		}
+	];
+
+	// Add each folder in the path
+	// All folders except the last one get links
+	folderPath.forEach((folder, index) => {
+		const isLastItem = index === folderPath.length - 1;
+
+		breadcrumbItems.push({
+			text: folder.displayName,
+			// Last item (current page) shouldn't have a link per guidelines
+			href: isLastItem ? undefined : `${baseFoldersUrl}/${folder.id}/${stringToKebab(folder.displayName)}`
+		});
+	});
+
+	return breadcrumbItems;
 }

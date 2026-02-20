@@ -4,6 +4,10 @@ import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/comp
 
 import type { Request, Response } from 'express';
 import { createProcedureSection } from './journey-utils.ts';
+import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import { questionHasAnswer } from '@planning-inspectorate/dynamic-forms/src/components/utils/question-has-answer.js';
+import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
+import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 
 export const JOURNEY_ID = 'case-details';
 
@@ -20,6 +24,14 @@ export function createJourney(questions: Record<string, any>, response: Response
 		createProcedureSection('Two', questions),
 		createProcedureSection('Three', questions)
 	];
+
+	/**
+	 * Checks that a manage list has at least 1 answer (of anything)
+	 */
+	const manageListHasAnswer = (response: JourneyResponse, question: Question) => {
+		const answers = response.answers[question.fieldName];
+		return Array.isArray(answers) && !!answers.length;
+	};
 
 	return new Journey({
 		journeyId: JOURNEY_ID,
@@ -39,7 +51,7 @@ export function createJourney(questions: Record<string, any>, response: Response
 			new Section('Case details', 'case-details')
 				.addQuestion(questions.reference)
 				.addQuestion(questions.externalReference)
-				.addQuestion(questions.internalReference)
+				.addQuestion(questions.historicalReference)
 				.addQuestion(questions.caseName)
 				.addQuestion(questions.caseStatus)
 				.addQuestion(questions.advertisedModificationStatus)
@@ -86,17 +98,40 @@ export function createJourney(questions: Record<string, any>, response: Response
 				),
 			...procedureSections,
 			new Section('Outcome', 'outcome')
-				.addQuestion(questions.decisionType)
-				.addQuestion(questions.decisionMaker)
-				.addQuestion(questions.outcome)
-				.addQuestion(questions.inTarget)
-				.addQuestion(questions.outcomeDate)
-				.addQuestion(questions.decisionReceivedDate)
+				.addQuestion(
+					questions.outcomeDetails,
+					new ManageListSection()
+						.addQuestion(questions.decisionType)
+						.addQuestion(questions.decisionMakerType)
+
+						/**
+						 * Inspector gets its own question of currently selected inspectors on case
+						 */
+						.addQuestion(questions.decisionMakerInspector)
+						.withCondition((response: JourneyResponse) =>
+							questionHasAnswer(response, questions.decisionMakerType, DECISION_MAKER_TYPE_ID.INSPECTOR)
+						)
+
+						/**
+						 * Case officer likewise gets its own question of users in general.
+						 */
+						.addQuestion(questions.decisionMakerOfficer)
+						.withCondition((response: JourneyResponse) =>
+							questionHasAnswer(response, questions.decisionMakerType, DECISION_MAKER_TYPE_ID.OFFICER)
+						)
+
+						.addQuestion(questions.outcome)
+						.addQuestion(questions.outcomeDate)
+						.addQuestion(questions.decisionReceivedDate)
+				)
+				.startMultiQuestionCondition('outcome-details', (response) =>
+					manageListHasAnswer(response, questions.outcomeDetails)
+				)
 				.addQuestion(questions.partiesNotifiedDate)
 				.addQuestion(questions.orderDecisionDispatchDate)
 				.addQuestion(questions.sealedOrderReturnedDate)
 				.addQuestion(questions.decisionPublishedDate)
-				.addQuestion(questions.isFencingPermanent),
+				.endMultiQuestionCondition('outcome-details'),
 			new Section('Documents', 'documents').addQuestion(questions.filesLocation),
 			new Section('Withdrawal or abeyance', 'withdrawal-abeyance')
 				.addQuestion(questions.withdrawalDate)

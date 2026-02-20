@@ -22,7 +22,7 @@ declare module '@planning-inspectorate/dynamic-forms/src/journey/journey-respons
 	export declare class JourneyResponse {
 		referenceId: string;
 		journeyId: string;
-		answers: Record<string, unknown>;
+		answers: Record<string, Record<string, unknown>[]>;
 		LPACode?: string;
 
 		constructor(journeyId: string, referenceId: string, answers: Record<string, unknown> | null, lpaCode?: string);
@@ -82,7 +82,8 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/options-quest
 			section: Section,
 			journey: Journey,
 			customViewData?: Record<string, unknown>,
-			payload?: Record<string, any>
+			payload?: Record<string, any>,
+			options?: Record<string, unknown>
 		): QuestionViewModel;
 
 		getDataToSave(req: Request, journeyResponse: JourneyResponse): Promise<{ answers: Record<string, unknown> }>;
@@ -90,9 +91,12 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/options-quest
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js' {
-	export default class ManageListQuestion {
+	import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+	import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+	export default class ManageListQuestion extends Question {
 		constructor(params: any);
-
+		get section(): Section;
+		set section(): Section;
 		addCustomDataToViewModel(viewModel: any);
 	}
 }
@@ -196,6 +200,11 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 		editable: boolean;
 		viewData: Record<string, unknown>;
 
+		answerObjectFromJourneyResponse(
+			response: JourneyResponse,
+			options?: Record<string, unknown>
+		): Record<string, unknown>;
+
 		shouldDisplay: (response?: JourneyResponse) => boolean;
 
 		constructor(params: QuestionParameters, methodOverrides?: Record<string, any>);
@@ -209,7 +218,12 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 
 		renderAction(res: Response, viewModel: QuestionViewModel): void;
 
-		checkForValidationErrors(req: Request, sectionObj: Section, journey: Journey): QuestionViewModel | undefined;
+		checkForValidationErrors(
+			req: Request,
+			sectionObj: Section,
+			journey: Journey,
+			manageListQuestion: Question
+		): QuestionViewModel | undefined;
 
 		getDataToSave(req: Request, journeyResponse: JourneyResponse): Promise<{ answers: Record<string, unknown> }>;
 
@@ -233,12 +247,24 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 		fieldIsRequired(inputField: string): boolean;
 
 		isAnswered(journeyResponse: JourneyResponse, fieldName?: string): boolean;
+
+		toViewModel(options: {
+			params: RouteParams;
+			manageListQuestion?: ManageListQuestion;
+			section: Section;
+			journey: Journey;
+			customViewData?: Record<string, unknown>;
+			payload?: unknown;
+			question?: Question;
+		}): QuestionViewModel;
 	}
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/section.js' {
+	import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 	export class Section {
 		constructor(name: string, id: string);
+		questions: Question[];
 		addQuestion(question: any, manageSection?: any): Section;
 		withCondition(condition: (response: any) => boolean): Section;
 		startMultiQuestionCondition(key: string, condition: (response: any) => boolean): Section;
@@ -292,7 +318,8 @@ declare module '@planning-inspectorate/dynamic-forms/src/validator/string-valida
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js' {
-	export default class DateValidator {
+	import Validator from '@planning-inspectorate/dynamic-forms/src/validator/validator.js';
+	export default class DateValidator extends Validator {
 		constructor(options: any);
 	}
 }
@@ -326,6 +353,11 @@ declare module '@planning-inspectorate/dynamic-forms/src/controller.js' {
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/validator/validator.js' {
+	const validate: any;
+	export default validate;
+}
+
+declare module '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js' {
 	const validate: any;
 	export default validate;
 }

@@ -1,0 +1,81 @@
+{% extends "views/layouts/main.njk" %}
+{% from "views/layouts/components/search-bar.njk" import searchBar %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/notification-banner/macro.njk" import govukNotificationBanner %}
+{% from "views/layouts/components/documents-table.njk" import documentsTable %}
+{% import "views/pagination/pagination-options.njk" as paginationOptions %}
+{% from "govuk/components/pagination/macro.njk" import govukPagination %}
+
+{% set title = "Search Files" %}
+
+{% block pageTitle %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+<div class="govuk-body">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full govuk-!-margin-bottom-3">
+            <h2 class="govuk-caption-l" data-cy="page-caption">
+                {{ reference }}
+            </h2>
+            <h1 class="govuk-heading-l" data-cy="page-heading">
+                {{ pageHeading }}
+            </h1>
+
+            <form id="search-bar-form" method="GET" data-cy="search-form">
+                {{ searchBar({
+                    input: {
+                        label: {
+                            hidden: true
+                        },
+                        hint: {
+                            text: "To find a document, search by file name"
+                        },
+                        classes: "govuk-input govuk-input--width-30",
+                        attributes: {
+                            "data-cy": "search-input"
+                        }
+                    },
+                    button: {
+                        text: "Search",
+                        classes: "govuk-button",
+                        attributes: {
+                            "data-cy": "search-button"
+                        }
+                    },
+                    clearLink: backLinkUrl
+                }, searchValue) }}
+            </form>
+        </div>
+    </div>
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full" id="pagination">
+            {% if documents|length !== 0 %}
+                <div class="govuk-body govuk-clearfix">
+                    <p class="govuk-body" data-cy="pagination-results-text">
+                        Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalDocuments > paginationParams.resultsEndNumber else paginationParams.totalDocuments }}</strong>
+                        of <strong>{{ paginationParams.totalDocuments }}</strong> results
+                    </p>
+                    <div class="pins-pagination-options" data-cy="pagination-items-per-page">
+                        {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalDocuments, paginationParams.pageNumber, searchValue) }}
+                    </div>
+                </div>
+                <div class="govuk-grid-row">
+                    <div class="govuk-grid-column-full">
+                        {{ documentsTable(documents, currentUrl, false, true) }}
+                    </div>
+                </div>
+                {# if uiItems.items is <=1 then pagination options not shown #} 
+                {% if paginationParams.uiItems.items.length > 1 %}
+                    <div data-cy="pagination-navigation">
+                        {{ govukPagination(paginationParams.uiItems) }}
+                    </div>
+                {% endif %}
+            {% else %}
+                <p class="govuk-body govuk-!-font-weight-bold" data-cy="no-documents-message">No matching results found</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

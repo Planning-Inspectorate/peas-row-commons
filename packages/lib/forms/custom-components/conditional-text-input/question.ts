@@ -96,9 +96,10 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 		section: Section,
 		journey: Journey,
 		customViewData: Record<string, unknown>,
-		payload?: Record<string, any>
+		payload?: Record<string, any>,
+		options?: Record<string, unknown>
 	): QuestionViewModel {
-		const answers = journey.response.answers;
+		const answers = this.answerObjectFromJourneyResponse(journey.response, options);
 
 		Object.entries(this.conditionalMapping).forEach(([optionValue, targetDbName]) => {
 			const proxyUiName = `${this.fieldName}_${optionValue}_text`;
@@ -106,7 +107,7 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 			answers[proxyUiName] = payload ? payload[proxyUiName] : answers[targetDbName] || '';
 		});
 
-		return super.prepQuestionForRendering(section, journey, customViewData, payload);
+		return super.prepQuestionForRendering(section, journey, customViewData, payload, options);
 	}
 
 	/**

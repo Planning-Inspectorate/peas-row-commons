@@ -33,7 +33,7 @@
     "@azure/msal-node": "^3.8.4",
     "@azure/storage-blob": "^12.29.1",
     "@ministryofjustice/frontend": "^7.1.0",
-    "@planning-inspectorate/dynamic-forms": "^3.3.1",
+    "@planning-inspectorate/dynamic-forms": "^3.3.3",
     "@prisma/adapter-mssql": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "accessible-autocomplete": "^3.0.1",

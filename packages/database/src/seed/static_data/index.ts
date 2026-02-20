@@ -16,3 +16,4 @@ export { ADMIN_PROCEDURES } from './admin-procedure-types.ts';
 export { SITE_VISITS } from './site-visit-types.ts';
 export { OBJECTOR_STATUSES } from './objector-status.ts';
 export { CONTACT_TYPES } from './contact-types.ts';
+export { DECISION_MAKER_TYPES } from './decision-maker-types.ts';
