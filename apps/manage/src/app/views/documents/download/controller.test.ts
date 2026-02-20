@@ -266,6 +266,7 @@ describe('buildDownloadDocument', () => {
 	describe('buildDownloadDocument (audit recording)', () => {
 		it('should record audit event when file is downloaded', async () => {
 			let recordedAudit: any = null;
+			let finishCallback: Function;
 
 			const mockBlobStream = {
 				on: mock.fn(),
@@ -307,8 +308,15 @@ describe('buildDownloadDocument', () => {
 			});
 			const res = mockRes();
 
+			// Capture the 'finish' listener
+			res.on.mock.mockImplementation((event: string, cb: Function) => {
+				if (event === 'finish') finishCallback = cb;
+			});
+
 			await buildDownloadDocument(service as any)(req, res);
 
+			// Simulate the response finishing
+			await finishCallback!();
 			assert.strictEqual(recordedAudit.caseId, 'case-1');
 			assert.strictEqual(recordedAudit.action, 'FILE_DOWNLOADED');
 			assert.strictEqual(recordedAudit.userId, 'user-999');
