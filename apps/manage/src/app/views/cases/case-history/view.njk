@@ -1,4 +1,6 @@
 {% extends "views/layouts/main.njk" %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+
 {% set title = reference + " - Case history" %}
 
 {% block pageTitle %}
@@ -18,30 +20,35 @@
             {% if rows | length == 0 %}
                 <p class="govuk-body" data-cy="no-history-message">There is no case history to display</p>
             {% else %}
-                <table class="govuk-table" data-cy="case-history-table">
-                    <thead class="govuk-table__header">
-                        <tr class="govuk-table__row">
-                            <th scope="col" class="govuk-table__header">Date and time</th>
-                            <th scope="col" class="govuk-table__header">Details</th>
-                            <th scope="col" class="govuk-table__header">User</th>
-                        </tr>
-                    </thead>
-                    <tbody class="govuk-table__body">
-                        {% for row in rows %}
-                            <tr class="govuk-table__row" data-cy="history-row-{{ loop.index0 }}">
-                                <td class="govuk-table__cell" data-cy="history-date-{{ loop.index0 }}">
-                                    {{ row.date }}<br>{{ row.time }}
-                                </td>
-                                <td class="govuk-table__cell" data-cy="history-details-{{ loop.index0 }}">
-                                    {{ row.details }}
-                                </td>
-                                <td class="govuk-table__cell" data-cy="history-user-{{ loop.index0 }}">
-                                    {{ row.user }}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                {% set tableRows = [] %}
+                {% for row in rows %}
+                    {% set tableRows = (tableRows.push([
+                        {
+                            html: row.date + "<br>" + row.time,
+                            attributes: { "data-cy": "history-date-" + loop.index0 }
+                        },
+                        {
+                            text: row.details,
+                            attributes: { "data-cy": "history-details-" + loop.index0 }
+                        },
+                        {
+                            text: row.user,
+                            attributes: { "data-cy": "history-user-" + loop.index0 }
+                        }
+                    ]), tableRows) %}
+                {% endfor %}
+
+                {{ govukTable({
+                    attributes: {
+                        "data-cy": "case-history-table"
+                    },
+                    head: [
+                        { text: "Date and time" },
+                        { text: "Details" },
+                        { text: "User" }
+                    ],
+                    rows: tableRows
+                }) }}
             {% endif %}
         </div>
     </div>
