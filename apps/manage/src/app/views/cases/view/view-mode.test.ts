@@ -214,7 +214,7 @@ describe('view-model', () => {
 			assert.strictEqual(result.outcomeDetails[2].decisionMakerInspectorId, undefined);
 		});
 
-		it('should return empty array for outcomeDetails if Outcome data is missing', () => {
+		it('should return undefined for outcomeDetails if Outcome data is missing', () => {
 			const input = {
 				id: '123',
 				receivedDate: new Date(),
@@ -222,7 +222,7 @@ describe('view-model', () => {
 			};
 
 			const result: any = caseToViewModel(input as any, groupMembers);
-			assert.deepStrictEqual(result.outcomeDetails, []);
+			assert.deepStrictEqual(result.outcomeDetails, undefined);
 		});
 	});
 
