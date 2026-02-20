@@ -947,13 +947,13 @@ export const OUTCOME_QUESTIONS = {
 	outcomeDate: dateQuestion({
 		fieldName: 'outcomeDate',
 		title: 'Outcome date',
-		question: 'Outcome date',
+		question: 'What is the outcome date?',
 		hint: 'Date of the decision, proposal, report or recommendation. For example 27 3 2007.'
 	}),
 	decisionReceivedDate: dateQuestion({
 		fieldName: 'decisionReceivedDate',
-		title: 'Decision received',
-		question: 'Decision received (optional)',
+		title: 'Outcome received date',
+		question: 'When was the outcome received? (optional)',
 		hint: 'Required if the decision was determined external to PINS. For example 27 3 2007.',
 		overrideValidator: OptionalDateValidator
 	}),
