@@ -51,4 +51,4 @@ class CaseTypePage {
 	}
 }
 
-export default CaseTypePage;
+export default new CaseTypePage();

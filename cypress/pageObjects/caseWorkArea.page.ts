@@ -25,4 +25,4 @@ class CaseworkAreaPage {
 	}
 }
 
-export default CaseworkAreaPage;
+export default new CaseworkAreaPage();

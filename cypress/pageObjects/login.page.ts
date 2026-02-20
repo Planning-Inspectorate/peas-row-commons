@@ -1,5 +1,37 @@
-class MicrosoftLoginPage {
+import CommonUtility from 'cypress/pageUtilities/common.utility.ts';
+
+class LoginPage {
 	private readonly origin = 'https://login.microsoftonline.com';
+
+	loginToTestEnviroment(): void {
+		CommonUtility.clearBrowserState();
+
+		// cy.intercept(
+		// 	{
+		// 		method: 'GET',
+		// 		hostname: 'login.microsoftonline.com',
+		// 		pathname: /\/oauth2\/v2\.0\/authorize$/,
+		// 		query: { sso_reload: 'true' }
+		// 	},
+		// 	(req) => {
+		// 		req.reply({
+		// 			statusCode: 204,
+		// 			body: ''
+		// 		});
+		// 	}
+		// );
+
+		// cy.visit('/', { failOnStatusCode: false });
+
+		// cy.location('origin', { timeout: 60000 }).should('include', 'https://login.microsoftonline.com');
+
+		// this.isPageVisible('signIn');
+		// this.enterCredential('email');
+		// this.clickButton('next');
+		// this.isPageVisible('enterPassword');
+		// this.enterCredential('password');
+		// this.clickButton('signIn');
+	}
 
 	isPageVisible(page: 'signIn' | 'enterPassword'): void {
 		const expected = {
@@ -80,4 +112,4 @@ class MicrosoftLoginPage {
 	}
 }
 
-export default MicrosoftLoginPage;
+export default new LoginPage();

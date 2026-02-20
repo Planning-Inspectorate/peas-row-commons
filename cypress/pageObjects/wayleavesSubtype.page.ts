@@ -31,4 +31,4 @@ class WayleavesSubtypePage {
 	}
 }
 
-export default WayleavesSubtypePage;
+export default new WayleavesSubtypePage();

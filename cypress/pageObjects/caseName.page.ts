@@ -37,4 +37,4 @@ class CaseNamePage {
 	}
 }
 
-export default CaseNamePage;
+export default new CaseNamePage();

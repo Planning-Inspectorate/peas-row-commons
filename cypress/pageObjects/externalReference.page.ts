@@ -24,4 +24,4 @@ class ExternalReferencePage {
 	}
 }
 
-export default ExternalReferencePage;
+export default new ExternalReferencePage();

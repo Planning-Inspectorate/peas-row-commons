@@ -44,4 +44,4 @@ class SiteAddressPage {
 	}
 }
 
-export default SiteAddressPage;
+export default new SiteAddressPage();

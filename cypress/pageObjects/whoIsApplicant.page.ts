@@ -51,4 +51,4 @@ class WhoApplicantPage {
 	}
 }
 
-export default WhoApplicantPage;
+export default new WhoApplicantPage();

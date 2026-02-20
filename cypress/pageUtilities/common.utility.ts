@@ -1,4 +1,13 @@
 class CommonUtility {
+	clearBrowserState(): void {
+		cy.clearCookies();
+		cy.clearLocalStorage();
+		cy.window().then((win) => {
+			win.sessionStorage.clear();
+		});
+		Cypress.session.clearAllSavedSessions();
+	}
+
 	acceptCookiesIfVisible(): void {
 		const bannerSel = '#global-cookie-message';
 
@@ -53,4 +62,4 @@ class CommonUtility {
 	}
 }
 
-export default CommonUtility;
+export default new CommonUtility();

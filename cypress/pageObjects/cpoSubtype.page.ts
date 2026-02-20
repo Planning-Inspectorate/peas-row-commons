@@ -31,4 +31,4 @@ class CpoSubtypePage {
 	}
 }
 
-export default CpoSubtypePage;
+export default new CpoSubtypePage();

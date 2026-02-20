@@ -52,4 +52,4 @@ class SosSubtypePage {
 	}
 }
 
-export default SosSubtypePage;
+export default new SosSubtypePage();

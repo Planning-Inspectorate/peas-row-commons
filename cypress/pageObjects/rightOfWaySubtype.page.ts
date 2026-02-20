@@ -48,4 +48,4 @@ class RightOfWaySubtypePage {
 	}
 }
 
-export default RightOfWaySubtypePage;
+export default new RightOfWaySubtypePage();

@@ -27,4 +27,4 @@ class DroughtSubtypePage {
 	}
 }
 
-export default DroughtSubtypePage;
+export default new DroughtSubtypePage();

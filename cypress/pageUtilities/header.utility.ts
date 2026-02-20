@@ -42,4 +42,4 @@ class HeaderUtility {
 	}
 }
 
-export default HeaderUtility;
+export default new HeaderUtility();

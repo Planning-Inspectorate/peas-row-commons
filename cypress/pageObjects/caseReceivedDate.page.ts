@@ -138,4 +138,4 @@ class ReceivedDatePage {
 	}
 }
 
-export default ReceivedDatePage;
+export default new ReceivedDatePage();

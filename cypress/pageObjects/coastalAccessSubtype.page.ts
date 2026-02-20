@@ -33,4 +33,4 @@ class CommonLandSubtypePage {
 	}
 }
 
-export default CommonLandSubtypePage;
+export default new CommonLandSubtypePage();

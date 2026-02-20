@@ -1,4 +1,6 @@
 class CasesPage {
+	isPageDisplayed() {}
+
 	clickAnchorNavigationLink(
 		section:
 			| 'overview'
@@ -397,4 +399,4 @@ class CasesPage {
 	}
 }
 
-export default CasesPage;
+export default new CasesPage();
