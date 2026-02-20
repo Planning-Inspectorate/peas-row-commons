@@ -57,6 +57,7 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 				const events = await db.caseHistory.findMany({
 					where: { caseId },
 					orderBy: { createdAt: 'desc' },
+					include: { User: { select: { idpUserId: true } } },
 					skip,
 					take
 				});
@@ -150,7 +151,7 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 					orderBy: { createdAt: 'desc' },
 					select: {
 						createdAt: true,
-						userId: true
+						User: { select: { idpUserId: true } }
 					}
 				});
 
@@ -164,7 +165,7 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 					year: 'numeric'
 				});
 
-				const user = groupMembers.caseOfficers.find((member) => member.id === latest.userId);
+				const user = groupMembers.caseOfficers.find((member) => member.id === latest.User?.idpUserId);
 
 				return {
 					date,

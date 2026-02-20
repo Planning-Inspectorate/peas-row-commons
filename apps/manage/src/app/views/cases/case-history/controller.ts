@@ -47,11 +47,20 @@ export function buildViewCaseHistory(service: ManageService): AsyncRequestHandle
 			groupId
 		});
 
+		logger.info(
+			{
+				eventUserIds: events.map((e) => e.userId),
+				groupMemberIds: groupMembers.caseOfficers.map((m) => ({ id: m.id, displayName: m.displayName })),
+				sessionUserId: req?.session?.account?.localAccountId
+			},
+			'user ID comparison'
+		);
+
 		const userMap = new Map(groupMembers.caseOfficers.map((member) => [member.id, member.displayName]));
 
 		const eventsWithUserNames = events.map((event) => ({
 			...event,
-			userName: userMap.get(event.userId) ?? 'Unknown User'
+			userName: userMap.get(event.User?.idpUserId ?? '') ?? 'Unknown User'
 		}));
 
 		const rows = createCaseHistoryViewModel(eventsWithUserNames);
