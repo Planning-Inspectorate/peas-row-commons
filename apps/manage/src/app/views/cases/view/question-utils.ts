@@ -848,8 +848,8 @@ export function createTeamQuestions(
 
 export const OUTCOME_QUESTIONS = {
 	outcomeDetails: {
-		type: CUSTOM_COMPONENTS.DEFINED_COLUMNS_LIST,
-		title: 'Outcome(s)',
+		type: CUSTOM_COMPONENTS.OUTCOMES_LIST,
+		title: 'Type of decision or report',
 		question: 'Check outcome details',
 		fieldName: 'outcomeDetails',
 		url: 'check-outcome-details',
@@ -874,7 +874,9 @@ export const OUTCOME_QUESTIONS = {
 				outcomeId: 'Outcome',
 				outcomeDate: 'Outcome date'
 			})
-		]
+		],
+		showAnswersInSummary: true,
+		summaryLimit: 3
 	},
 	decisionType: {
 		type: COMPONENT_TYPES.RADIO,
@@ -896,7 +898,7 @@ export const OUTCOME_QUESTIONS = {
 	},
 	decisionMakerInspector: {
 		type: COMPONENT_TYPES.RADIO,
-		title: 'Who is the inspector?',
+		title: 'Inspector',
 		hint: 'If no inspectors are available, add them on the inspector page.',
 		question: 'Who is the inspector?',
 		fieldName: 'decisionMakerInspectorId',
@@ -905,7 +907,7 @@ export const OUTCOME_QUESTIONS = {
 	},
 	decisionMakerOfficer: {
 		type: COMPONENT_TYPES.SELECT,
-		title: 'Who is the officer?',
+		title: 'Officer',
 		question: 'Who is the officer?',
 		fieldName: 'decisionMakerOfficerId',
 		url: 'officer-decision-maker',
