@@ -31,14 +31,18 @@ describe('Audit Service', () => {
 
 			await service.record(entry);
 
-			assert.strictEqual(mockDb.caseHistory.create.mock.callCount(), 1);
-
 			const createCall = mockDb.caseHistory.create.mock.calls[0];
+			const data = createCall.arguments[0].data;
 
-			assert.strictEqual(createCall.arguments[0].data.caseId, 'case-123');
-			assert.strictEqual(createCall.arguments[0].data.action, 'CASE_CREATED');
-			assert.strictEqual(createCall.arguments[0].data.userId, 'user-456');
-			assert.strictEqual(createCall.arguments[0].data.metadata, JSON.stringify({ caseName: 'Test Case' }));
+			assert.deepStrictEqual(data.Case, { connect: { id: 'case-123' } });
+			assert.strictEqual(data.action, 'CASE_CREATED');
+			assert.deepStrictEqual(data.User, {
+				connectOrCreate: {
+					where: { idpUserId: 'user-456' },
+					create: { idpUserId: 'user-456' }
+				}
+			});
+			assert.strictEqual(data.metadata, JSON.stringify({ caseName: 'Test Case' }));
 		});
 
 		it('should handle metadata being undefined', async () => {

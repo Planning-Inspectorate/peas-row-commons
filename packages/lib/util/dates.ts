@@ -56,19 +56,8 @@ export function safeConvertTo24Hour(hour: string | number, period: string): numb
  *   Time: "2:31pm"
  */
 export function formatDateTime(dateTime: Date): { date: string; time: string } {
-	const date = dateTime.toLocaleDateString('en-GB', {
-		day: 'numeric',
-		month: 'long',
-		year: 'numeric'
-	});
-
-	const time = dateTime
-		.toLocaleTimeString('en-GB', {
-			hour: 'numeric',
-			minute: '2-digit',
-			hour12: true
-		})
-		.toLowerCase();
+	const date = formatLondonDate(dateTime, 'd MMMM yyyy');
+	const time = formatLondonDate(dateTime, 'h:mmaaa');
 
 	return { date, time };
 }
