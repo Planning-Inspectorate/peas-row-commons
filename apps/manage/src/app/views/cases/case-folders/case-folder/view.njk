@@ -71,20 +71,20 @@
         <div class="govuk-grid-column-full govuk-button-group">
             {{ govukButton({
                 text: "Create subfolder",
-                href: currentUrl + "/create-folder",
+                href: currentPath + "/create-folder",
                 classes: "govuk-button--secondary",
                 attributes: { "data-cy": "create-subfolder-btn" }
             }) }}
 
             {{ govukButton({
                 text: "Rename folder",
-                href: currentUrl + "/rename-folder",
+                href: currentPath + "/rename-folder",
                 classes: "govuk-button--secondary"
             }) }}
 
             {{ govukButton({
                 text: "Delete folder",
-                href: currentUrl + "/delete-folder",
+                href: currentPath + "/delete-folder",
                 classes: "govuk-button--secondary"
             }) }}
         </div>
@@ -126,13 +126,13 @@
             <div class="govuk-grid-column-full">
                 <p class="govuk-body govuk-!-font-weight-bold">Files</p>
                 
-                <form action="{{ currentUrl }}/move-files" method="POST">
+                <form action="{{ currentPath }}/move-files" method="POST">
                     {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
 
                     <div class="govuk-button-group">
                         {{ govukButton({
                             text: "Upload files",
-                            href: currentUrl + "/upload",
+                            href: currentPath + "/upload",
                             classes: "govuk-button--secondary",
                             attributes: { "data-cy": "upload-files-btn" }
                         }) }}

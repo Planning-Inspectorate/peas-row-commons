@@ -135,6 +135,7 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			baseFoldersUrl: baseFoldersUrl, // Used for creating the url of the sub-folders
 			subFolders: subFoldersViewModel,
 			currentUrl: req.originalUrl,
+			currentPath: req.originalUrl.split('?')[0], // Clean path needed for generating hrefs (without query params)
 			documents: documentsViewModel,
 			paginationParams,
 			folderUpdates: {
