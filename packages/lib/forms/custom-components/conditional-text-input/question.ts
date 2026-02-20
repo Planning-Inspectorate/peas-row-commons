@@ -144,13 +144,56 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 	/**
 	 * Formats answer in the same way that a 'radio' option might, using the
 	 * text value and not the key capitalised.
+	 *
+	 * Additionally, will display any conditional text if added too.
 	 */
 	override formatAnswerForSummary(sectionSegment: string, journey: Journey, answer: string | null) {
-		if (answer) {
-			const selectedOption = this.options.find((option) => option.value === answer);
-			const selectedText = selectedOption?.text || '';
-			return super.formatAnswerForSummary(sectionSegment, journey, selectedText, false);
+		if (!answer) {
+			return super.formatAnswerForSummary(sectionSegment, journey, answer);
 		}
-		return super.formatAnswerForSummary(sectionSegment, journey, answer);
+
+		const selectedOption = this.options.find((option) => option.value === answer);
+		let displayText = selectedOption?.text || answer;
+
+		const conditionalDbName = this.conditionalMapping[answer];
+
+		if (conditionalDbName) {
+			const conditionalText = this.setConditionalText(conditionalDbName, journey);
+
+			if (typeof conditionalText === 'string' && conditionalText.trim() !== '') {
+				displayText = `${displayText}\n${conditionalText.trim()}`;
+			}
+		}
+
+		return super.formatAnswerForSummary(sectionSegment, journey, displayText, false);
+	}
+
+	/**
+	 * Grabs the conditional text from journey response answers.
+	 *
+	 * If not found there it will double check to make sure we aren't
+	 * in a cloned question, in which case the data structure will be
+	 * flat with a predetermined key.
+	 */
+	setConditionalText(conditionalDbName: string, journey: Journey) {
+		let conditionalText: unknown;
+
+		if (journey?.response?.answers && conditionalDbName in journey.response.answers) {
+			conditionalText = journey.response.answers[conditionalDbName];
+		} else if (this.fieldName.includes('_')) {
+			// If we are in a cloned / flattened question, then its key will
+			// follow format <parent>_<index>_<fieldName>
+			const match = this.fieldName.match(/^([a-zA-Z0-9]+)_(\d+)_/);
+			if (match) {
+				const listName = match[1];
+				const index = parseInt(match[2], 10);
+				const listData = journey?.response?.answers?.[listName];
+				if (Array.isArray(listData) && listData[index]) {
+					conditionalText = listData[index][conditionalDbName];
+				}
+			}
+		}
+
+		return conditionalText;
 	}
 }

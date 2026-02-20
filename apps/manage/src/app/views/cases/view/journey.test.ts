@@ -183,7 +183,7 @@ describe('case details journey', () => {
 				questions: PROCEDURE_QUESTIONS.map((question) => `procedureThree${question}`)
 			},
 			{
-				title: 'Outcome',
+				title: 'Outcome overview',
 				segment: 'outcome',
 				questions: [
 					'outcomeDetails',

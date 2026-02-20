@@ -107,6 +107,12 @@ declare module '@planning-inspectorate/dynamic-forms/src/components/date/questio
 	}
 }
 
+declare module '@planning-inspectorate/dynamic-forms/src/components/radio/question.js' {
+	export default class RadioQuestion {
+		constructor(params: any);
+	}
+}
+
 declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' {
 	import { Request, Response } from 'express';
 	import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';

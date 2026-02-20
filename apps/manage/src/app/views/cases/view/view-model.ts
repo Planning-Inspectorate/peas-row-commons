@@ -126,7 +126,7 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 				decision.decisionMakerTypeId === DECISION_MAKER_TYPE_ID.INSPECTOR
 					? decision.DecisionMaker?.idpUserId
 					: undefined
-		})) || [];
+		})) || undefined;
 
 	const mappedProcedures = mapProcedures(mergedData.Procedures || []);
 	delete mergedData.Procedures;

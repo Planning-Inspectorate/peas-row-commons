@@ -848,8 +848,8 @@ export function createTeamQuestions(
 
 export const OUTCOME_QUESTIONS = {
 	outcomeDetails: {
-		type: CUSTOM_COMPONENTS.DEFINED_COLUMNS_LIST,
-		title: 'Outcome(s)',
+		type: CUSTOM_COMPONENTS.OUTCOMES_LIST,
+		title: 'Type of decision or report',
 		question: 'Check outcome details',
 		fieldName: 'outcomeDetails',
 		url: 'check-outcome-details',
@@ -874,7 +874,9 @@ export const OUTCOME_QUESTIONS = {
 				outcomeId: 'Outcome',
 				outcomeDate: 'Outcome date'
 			})
-		]
+		],
+		showAnswersInSummary: true,
+		summaryLimit: 3
 	},
 	decisionType: {
 		type: COMPONENT_TYPES.RADIO,
@@ -896,7 +898,7 @@ export const OUTCOME_QUESTIONS = {
 	},
 	decisionMakerInspector: {
 		type: COMPONENT_TYPES.RADIO,
-		title: 'Who is the inspector?',
+		title: 'Inspector',
 		hint: 'If no inspectors are available, add them on the inspector page.',
 		question: 'Who is the inspector?',
 		fieldName: 'decisionMakerInspectorId',
@@ -905,7 +907,7 @@ export const OUTCOME_QUESTIONS = {
 	},
 	decisionMakerOfficer: {
 		type: COMPONENT_TYPES.SELECT,
-		title: 'Who is the officer?',
+		title: 'Officer',
 		question: 'Who is the officer?',
 		fieldName: 'decisionMakerOfficerId',
 		url: 'officer-decision-maker',
@@ -945,13 +947,13 @@ export const OUTCOME_QUESTIONS = {
 	outcomeDate: dateQuestion({
 		fieldName: 'outcomeDate',
 		title: 'Outcome date',
-		question: 'Outcome date',
+		question: 'What is the outcome date?',
 		hint: 'Date of the decision, proposal, report or recommendation. For example 27 3 2007.'
 	}),
 	decisionReceivedDate: dateQuestion({
 		fieldName: 'decisionReceivedDate',
-		title: 'Decision received',
-		question: 'Decision received (optional)',
+		title: 'Outcome received date',
+		question: 'When was the outcome received? (optional)',
 		hint: 'Required if the decision was determined external to PINS. For example 27 3 2007.',
 		overrideValidator: OptionalDateValidator
 	}),
