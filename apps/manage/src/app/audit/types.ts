@@ -35,7 +35,7 @@ export interface AuditEvent {
 	caseId: string;
 	action: string;
 	metadata: Record<string, unknown> | null;
-	userId?: string;
+	userId: string | null;
 	User?: { idpUserId: string | null } | null;
 	createdAt: Date;
 }
