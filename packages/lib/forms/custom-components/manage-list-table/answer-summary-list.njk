@@ -1,8 +1,13 @@
 <ul id="{{ uniqueId }}" data-cy="answer-list">
     {% for question in answers %}
         <li class="{% if loop.index0 >= limit %}govuk-!-display-none js-hidden-item{% endif %}" data-cy="answer-item">
+            {# Joiner because we dont want it to appear on first item #}
+            {% set br = joiner("<br>") %}
+            
             {% for value in question %}
-                {{ value.answer | safe }}{% if not loop.last %}<br>{% endif %}
+                {% if value.answer %}
+                    {{ br() | safe }}{{ value.answer | safe }}
+                {% endif %}
             {% endfor %}
         </li>
     {% endfor %}

@@ -50,7 +50,18 @@ export const CONTACT_MAPPINGS = [
 		prefix: 'contact',
 		dynamicTypeField: 'contactTypeId',
 		hasStatus: false,
-		deleteFilter: { contactTypeId: { not: CONTACT_TYPE_ID.OBJECTOR } }
+		deleteFilter: {
+			contactTypeId: {
+				notIn: [CONTACT_TYPE_ID.OBJECTOR, CONTACT_TYPE_ID.APPLICANT_APPELLANT]
+			}
+		}
+	},
+	{
+		sourceKey: 'applicantDetails',
+		prefix: 'applicant',
+		fixedTypeId: CONTACT_TYPE_ID.APPLICANT_APPELLANT,
+		hasStatus: false,
+		deleteFilter: { contactTypeId: CONTACT_TYPE_ID.APPLICANT_APPELLANT }
 	}
 ];
 
@@ -63,7 +74,7 @@ export function handleContacts(
 	prismaPayload: Prisma.CaseUpdateInput,
 	contactMappings: typeof CONTACT_MAPPINGS
 ) {
-	const deleteFilters: { contactTypeId: string | { not: string } }[] = [];
+	const deleteFilters: { contactTypeId: string | { notIn: string[] } }[] = [];
 	const allNewContacts: Prisma.ContactCreateWithoutCaseInput[] = [];
 
 	contactMappings.forEach((config) => {
@@ -71,7 +82,7 @@ export function handleContacts(
 
 		const items = flatData[config.sourceKey];
 		const { prefix } = config;
-
+		console.log('quack', items);
 		const mappedContacts = items
 			.map((item: Record<string, any>) => {
 				// If there is a fixed type id, e.g. in Objector, use that

@@ -241,7 +241,7 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 		},
 		applicantDetails: {
 			type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
-			title: 'Applicant/Appellant/Server',
+			title: 'Who is the applicant or appellant?',
 			question: 'Check applicant or appellant details',
 			fieldName: 'applicantDetails',
 			url: 'applicant-details',

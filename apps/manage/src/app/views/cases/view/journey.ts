@@ -84,6 +84,13 @@ export function createJourney(questions: Record<string, any>, response: JourneyR
 				.addQuestion(questions.caseName)
 				.addQuestion(questions.caseStatus)
 				.addQuestion(questions.advertisedModificationStatus)
+				.addQuestion(
+					questions.applicantDetails,
+					new ManageListSection()
+						.addQuestion(questions.applicantName)
+						.addQuestion(questions.applicantAddress)
+						.addQuestion(questions.applicantContactDetails)
+				)
 				.addQuestion(questions.siteAddress)
 				.addQuestion(questions.location)
 				.addQuestion(questions.authority)
