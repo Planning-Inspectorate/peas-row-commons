@@ -35,6 +35,8 @@ import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/c
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
 import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-components/optional-date-component/validator.ts';
+import AtLeastOneFieldValidator from '@pins/peas-row-commons-lib/forms/custom-components/multi-field-input/validator.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
 
@@ -528,23 +530,6 @@ export const CASE_DETAILS_QUESTIONS = {
 				}
 			]
 		}
-	},
-	applicant: {
-		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
-		title: 'Applicant / Server',
-		question: 'Who is the applicant?',
-		hint: 'Enter either the applicant or server',
-		fieldName: 'applicantName',
-		url: 'applicant-server',
-		validators: [
-			new RequiredValidator('Enter the applicant'),
-			new StringValidator({
-				maxLength: {
-					maxLength: 150,
-					maxLengthMessage: 'Applicant must be less than 150 characters'
-				}
-			})
-		]
 	},
 	siteAddress: {
 		type: COMPONENT_TYPES.ADDRESS,
@@ -1807,7 +1792,7 @@ export const createProcedureQuestions = (suffix: string) => {
 	};
 };
 
-const createPersonQuestions = ({ section, db, url, label }: PersonConfig) => {
+export const createPersonQuestions = ({ section, db, url, label, hint }: PersonConfig) => {
 	const labelLower = label.toLowerCase();
 
 	return {
@@ -1817,14 +1802,18 @@ const createPersonQuestions = ({ section, db, url, label }: PersonConfig) => {
 			question: `Who is the ${labelLower}?`,
 			fieldName: `${section}Name`,
 			url: `${url}-name`,
-			hint: 'Enter the name of the individual, the organisation, or both.',
+			hint: hint || 'Enter the name of the individual, the organisation, or both.',
 			viewData: { tableHeader: 'Name' },
 			inputFields: [
 				{ fieldName: `${db}FirstName`, label: 'First name' },
 				{ fieldName: `${db}LastName`, label: 'Last name' },
-				{ fieldName: `${db}OrgName`, label: `${label} company or organisation name` }
+				{ fieldName: `${db}OrgName`, label: `${label} company name` }
 			],
 			validators: [
+				new AtLeastOneFieldValidator({
+					fields: [`${db}FirstName`, `${db}LastName`, `${db}OrgName`],
+					errorMessage: 'Enter at least one of first name, last name or company name'
+				}),
 				new MultiFieldInputValidator({
 					fields: [
 						{
@@ -1863,8 +1852,8 @@ const createPersonQuestions = ({ section, db, url, label }: PersonConfig) => {
 		},
 		[`${section}ContactDetails`]: {
 			type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
-			title: `${label === 'Contact' ? 'Contact details' : 'Objector contact details'}`,
-			question: `${label === 'Contact' ? 'What are the contact details?' : 'Objector contact details'} (optional)`,
+			title: `${label === 'Contact' ? 'Contact details' : label + ' contact details'}`,
+			question: `${label === 'Contact' ? 'What are the contact details?' : label + ' contact details'} (optional)`,
 			fieldName: `${section}Details`,
 			url: `${url}-contact-details`,
 			viewData: { tableHeader: 'Contact' },
@@ -1932,7 +1921,9 @@ export const KEY_CONTACTS_QUESTIONS = {
 		fieldName: 'contactTypeId',
 		url: 'contact-type',
 		validators: [new RequiredValidator('Select contact type')],
-		options: CONTACT_TYPES.filter((type) => type.id !== 'objector').map((type) => ({
+		options: CONTACT_TYPES.filter(
+			(type) => type.id !== CONTACT_TYPE_ID.OBJECTOR && type.id !== CONTACT_TYPE_ID.APPLICANT_APPELLANT
+		).map((type) => ({
 			text: type.displayName,
 			value: type.id
 		})),

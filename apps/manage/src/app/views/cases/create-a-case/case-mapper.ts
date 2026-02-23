@@ -1,6 +1,8 @@
 import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { kebabToCamel } from './questions-utils.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
+import { mapAddressViewModelToDb } from '@pins/peas-row-commons-lib/util/address.ts';
 
 /**
  * Takes an answers object and formats the data correctly ready for insertion into DB.
@@ -43,11 +45,31 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 		};
 	}
 
-	if (answers.applicant) {
-		input.Applicant = {
-			create: {
-				name: answers.applicant
+	const mappedApplicants = answers.applicantDetails
+		.map((item: Record<string, any>) => {
+			const contact: Prisma.ContactCreateWithoutCaseInput = {
+				ContactType: { connect: { id: CONTACT_TYPE_ID.APPLICANT_APPELLANT } },
+				firstName: item.applicantFirstName,
+				lastName: item.applicantLastName,
+				orgName: item.applicantOrgName,
+				telephoneNumber: item.applicantTelephoneNumber,
+				email: item.applicantEmail
+			};
+
+			const address = item.applicantAddress;
+			if (address) {
+				contact.Address = {
+					create: mapAddressViewModelToDb(address)
+				};
 			}
+
+			return contact;
+		})
+		.filter(Boolean);
+
+	if (mappedApplicants.length) {
+		input.Contacts = {
+			create: mappedApplicants
 		};
 	}
 

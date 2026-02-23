@@ -71,4 +71,5 @@ export interface PersonConfig {
 	db: string;
 	url: string;
 	label: string;
+	hint?: string;
 }

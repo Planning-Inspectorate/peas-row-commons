@@ -27,6 +27,11 @@ import {
 	CASEWORK_AREAS_CAMEL,
 	generateConditionalOptions
 } from './questions-utils.ts';
+import {
+	CUSTOM_COMPONENT_CLASSES,
+	CUSTOM_COMPONENTS
+} from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
+import { createPersonQuestions } from '../view/question-utils.ts';
 
 export function getQuestions(groupMembers = { caseOfficers: [] }) {
 	const mappedGroupMembers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
@@ -233,8 +238,31 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			url: 'case-officer',
 			validators: [new RequiredValidator('Select a case officer')],
 			options: mappedGroupMembers
-		}
+		},
+		applicantDetails: {
+			type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
+			title: 'Applicant or appellant(s)',
+			question: 'Check applicant or appellant details',
+			fieldName: 'applicantDetails',
+			url: 'applicant-details',
+			viewData: { emptyName: 'applicant or appellant' }
+		},
+		...createPersonQuestions({
+			section: 'applicant',
+			db: 'applicant',
+			url: 'applicant',
+			label: 'Applicant or appellant',
+			hint: `
+				Enter the name of the main party. This could be an applicant, appellant or server.
+				Enter the name of the individual, the company or both.
+			`
+		})
 	};
 
-	return createQuestions(questions, questionClasses, {});
+	const classes = {
+		...questionClasses,
+		...CUSTOM_COMPONENT_CLASSES
+	};
+
+	return createQuestions(questions, classes, {});
 }

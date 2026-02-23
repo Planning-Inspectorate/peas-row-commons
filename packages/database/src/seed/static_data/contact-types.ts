@@ -3,6 +3,7 @@ import { CONTACT_TYPE_ID } from './ids/index.ts';
 export const CONTACT_TYPES = [
 	{ id: CONTACT_TYPE_ID.ACQUIRING_AUTHORITY, displayName: 'Acquiring authority' },
 	{ id: CONTACT_TYPE_ID.AGENT, displayName: 'Agent' },
+	{ id: CONTACT_TYPE_ID.APPLICANT_APPELLANT, displayName: 'Applicant/appellant' },
 	{ id: CONTACT_TYPE_ID.CASE_OFFICER, displayName: 'Case Officer' },
 	{ id: CONTACT_TYPE_ID.COMMONS_REGISTRATION_AUTHORITY, displayName: 'Commons registration authority' },
 	{ id: CONTACT_TYPE_ID.CONSULTEE, displayName: 'Consultee' },

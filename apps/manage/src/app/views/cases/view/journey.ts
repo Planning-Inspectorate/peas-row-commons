@@ -55,7 +55,6 @@ export function createJourney(questions: Record<string, any>, response: Response
 				.addQuestion(questions.caseName)
 				.addQuestion(questions.caseStatus)
 				.addQuestion(questions.advertisedModificationStatus)
-				.addQuestion(questions.applicant)
 				.addQuestion(questions.siteAddress)
 				.addQuestion(questions.location)
 				.addQuestion(questions.authority)

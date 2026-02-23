@@ -1,6 +1,7 @@
 export const CONTACT_TYPE_ID = Object.freeze({
 	ACQUIRING_AUTHORITY: 'acquiring-authority',
 	AGENT: 'agent',
+	APPLICANT_APPELLANT: 'applicant-appellant',
 	CASE_OFFICER: 'case-officer',
 	COMMONS_REGISTRATION_AUTHORITY: 'commons-registration-authority',
 	CONSULTEE: 'consultee',
