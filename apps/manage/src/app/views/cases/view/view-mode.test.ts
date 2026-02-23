@@ -72,22 +72,6 @@ describe('view-model', () => {
 			assert.strictEqual(result.receivedDateSortable, input.receivedDate.getTime());
 		});
 
-		it('should map nested Applicant object to flat applicant fields', () => {
-			const input = {
-				id: '123',
-				receivedDate: new Date(),
-				Applicant: {
-					name: 'John Doe'
-				}
-			};
-
-			const result: any = caseToViewModel(input as any, groupMembers);
-
-			assert.strictEqual(result.applicantName, 'John Doe');
-
-			assert.strictEqual(result.Applicant, undefined);
-		});
-
 		it('should map nested Authority object to flat authority fields', () => {
 			const input = {
 				id: '123',

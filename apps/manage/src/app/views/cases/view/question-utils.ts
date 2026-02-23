@@ -27,7 +27,7 @@ import {
 	DECISION_MAKER_TYPES
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
-import type { CaseOfficer, PersonConfig } from './types.ts';
+import type { CaseOfficer } from './types.ts';
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/outcome.ts';
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
@@ -35,8 +35,8 @@ import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/c
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
 import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-components/optional-date-component/validator.ts';
-import AtLeastOneFieldValidator from '@pins/peas-row-commons-lib/forms/custom-components/multi-field-input/validator.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
+import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
 
@@ -1788,95 +1788,6 @@ export const createProcedureQuestions = (suffix: string) => {
 					}
 				]
 			}
-		}
-	};
-};
-
-export const createPersonQuestions = ({ section, db, url, label, hint }: PersonConfig) => {
-	const labelLower = label.toLowerCase();
-
-	return {
-		[`${section}Name`]: {
-			type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
-			title: label,
-			question: `Who is the ${labelLower}?`,
-			fieldName: `${section}Name`,
-			url: `${url}-name`,
-			hint: hint || 'Enter the name of the individual, the organisation, or both.',
-			viewData: { tableHeader: 'Name' },
-			inputFields: [
-				{ fieldName: `${db}FirstName`, label: 'First name' },
-				{ fieldName: `${db}LastName`, label: 'Last name' },
-				{ fieldName: `${db}OrgName`, label: `${label} company name` }
-			],
-			validators: [
-				new AtLeastOneFieldValidator({
-					fields: [`${db}FirstName`, `${db}LastName`, `${db}OrgName`],
-					errorMessage: 'Enter at least one of first name, last name or company name'
-				}),
-				new MultiFieldInputValidator({
-					fields: [
-						{
-							fieldName: `${db}FirstName`,
-							required: false,
-							errorMessage: `Enter ${labelLower} first name`,
-							maxLength: { maxLength: 250, maxLengthMessage: `${label} first name must be less than 250 characters` }
-						},
-						{
-							fieldName: `${db}LastName`,
-							required: false,
-							errorMessage: `Enter ${labelLower} last name`,
-							maxLength: { maxLength: 250, maxLengthMessage: `${label} last name must be less than 250 characters` }
-						},
-						{
-							fieldName: `${db}OrgName`,
-							required: false,
-							maxLength: {
-								maxLength: 250,
-								maxLengthMessage: 'Company or organisation name must be less than 250 characters'
-							}
-						}
-					]
-				})
-			]
-		},
-		[`${section}Address`]: {
-			type: COMPONENT_TYPES.ADDRESS,
-			title: `${label} address details`,
-			question: `${label} address details`,
-			hint: 'Optional',
-			fieldName: `${db}Address`,
-			url: `${url}-address`,
-			validators: [new AddressValidator()],
-			viewData: { tableHeader: 'Address' }
-		},
-		[`${section}ContactDetails`]: {
-			type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
-			title: `${label === 'Contact' ? 'Contact details' : label + ' contact details'}`,
-			question: `${label === 'Contact' ? 'What are the contact details?' : label + ' contact details'} (optional)`,
-			fieldName: `${section}Details`,
-			url: `${url}-contact-details`,
-			viewData: { tableHeader: 'Contact' },
-			inputFields: [
-				{ fieldName: `${db}Email`, label: 'Email address' },
-				{ fieldName: `${db}TelephoneNumber`, label: 'Phone number' }
-			],
-			validators: [
-				new MultiFieldInputValidator({
-					fields: [
-						{
-							fieldName: `${db}Email`,
-							required: false,
-							maxLength: { maxLength: 250, maxLengthMessage: `${label} email must be less than 250 characters` }
-						},
-						{
-							fieldName: `${db}TelephoneNumber`,
-							required: false,
-							maxLength: { maxLength: 15, maxLengthMessage: `${label} phone number must be less than 15 characters` }
-						}
-					]
-				})
-			]
 		}
 	};
 };

@@ -138,20 +138,6 @@ describe('Update Case Controller', () => {
 			assert.strictEqual((result as any).Dates.upsert.create.startDate, '2025-01-01');
 		});
 
-		it('should transform applicant fields into Applicant upsert payload', () => {
-			const input = {
-				applicantName: 'John Doe'
-			};
-			const result = mapCasePayload(input, 'case-123');
-
-			const applicantUpdate = (result as any).Applicant;
-			assert.ok(applicantUpdate, 'Should have Applicant property');
-
-			assert.strictEqual(applicantUpdate.upsert.create.name, 'John Doe');
-
-			assert.strictEqual((result as any).applicantName, undefined);
-		});
-
 		it('should transform authority fields into Authority upsert payload', () => {
 			const input = {
 				authorityName: 'Local Council'
