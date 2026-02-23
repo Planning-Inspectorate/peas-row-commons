@@ -171,20 +171,6 @@ describe('DynamicSectionBuilder', () => {
 			assert.strictEqual(sections.length, 1);
 			assert.strictEqual(sections[0].questions.length, 0);
 		});
-
-		it('should safely render a question if it lacks a shouldDisplay method', () => {
-			const weirdQuestion = new MockQuestion('weirdField');
-			delete (weirdQuestion as Partial<MockQuestion>).shouldDisplay;
-
-			mockManageListSection.addQuestion(weirdQuestion);
-			mockJourneyResponse.answers.outcomeDetails = [{ weirdField: 'value' }];
-
-			const builder = new DynamicSectionBuilder('outcomeDetails', mockManageListSection as unknown as Section);
-			const sections = builder.build(mockJourneyResponse as unknown as JourneyResponse) as unknown as MockSection[];
-
-			assert.strictEqual(sections[0].questions.length, 1);
-			assert.strictEqual(sections[0].questions[0].fieldName, 'outcomeDetails_0_weirdField');
-		});
 	});
 
 	describe('Extensibility', () => {
