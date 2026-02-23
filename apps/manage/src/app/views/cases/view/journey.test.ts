@@ -132,6 +132,7 @@ describe('case details journey', () => {
 					'caseName',
 					'caseStatus',
 					'advertisedModificationStatus',
+					'applicantDetails',
 					'siteAddress',
 					'location',
 					'authority',
