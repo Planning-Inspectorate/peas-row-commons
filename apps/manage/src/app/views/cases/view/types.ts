@@ -24,7 +24,6 @@ export const caseListSelect = {
 			Author: true
 		}
 	},
-	Applicant: true,
 	Authority: true,
 	Procedures: true,
 	Inspectors: {
