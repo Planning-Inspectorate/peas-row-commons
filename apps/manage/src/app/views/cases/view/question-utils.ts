@@ -589,7 +589,26 @@ export const CASE_DETAILS_QUESTIONS = {
 				}
 			]
 		}
-	}
+	},
+	applicantDetails: {
+		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
+		title: 'Applicant or appellant',
+		question: 'Check applicant or appellant details',
+		fieldName: 'applicantDetails',
+		url: 'applicant-details',
+		viewData: { emptyName: 'applicant or appellant' },
+		showAnswersInSummary: true
+	},
+	...createPersonQuestions({
+		section: 'applicant',
+		db: 'applicant',
+		url: 'applicant',
+		label: 'Applicant or appellant',
+		hint: `
+			Enter the name of the main party. This could be an applicant, appellant or server.
+			Enter the name of the individual, the company or both.
+		`
+	})
 };
 
 export const OVERVIEW_QUESTIONS = {

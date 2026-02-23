@@ -138,11 +138,17 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 	const mappedNotes = mapNotes(caseRow.Notes || [], groupMembers);
 
 	const objectors = (caseRow.Contacts || []).filter((contact) => contact.contactTypeId === CONTACT_TYPE_ID.OBJECTOR);
+	const applicants = (caseRow.Contacts || []).filter(
+		(contact) => contact.contactTypeId === CONTACT_TYPE_ID.APPLICANT_APPELLANT
+	);
 	const genericContacts = (caseRow.Contacts || []).filter(
-		(contact) => contact.contactTypeId !== CONTACT_TYPE_ID.OBJECTOR
+		(contact) =>
+			contact.contactTypeId !== CONTACT_TYPE_ID.OBJECTOR &&
+			contact.contactTypeId !== CONTACT_TYPE_ID.APPLICANT_APPELLANT
 	);
 
 	const mappedObjectors = mapContacts(objectors, 'objector');
+	const mappedApplicants = mapContacts(applicants, 'applicant');
 	const mappedContacts = mapContacts(genericContacts, 'contact');
 
 	return {
@@ -155,6 +161,7 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		inspectorDetails: inspectors,
 		objectorDetails: mappedObjectors,
 		contactDetails: mappedContacts,
+		applicantDetails: mappedApplicants.length ? mappedApplicants : undefined,
 		outcomeDetails
 	};
 }
