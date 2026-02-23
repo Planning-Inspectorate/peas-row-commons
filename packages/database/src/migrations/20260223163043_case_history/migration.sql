@@ -8,7 +8,7 @@ CREATE TABLE [dbo].[CaseHistory] (
     [caseId] UNIQUEIDENTIFIER NOT NULL,
     [action] NVARCHAR(1000) NOT NULL,
     [metadata] NVARCHAR(max),
-    [userId] NVARCHAR(1000) NOT NULL,
+    [userId] UNIQUEIDENTIFIER,
     [createdAt] DATETIME2 NOT NULL CONSTRAINT [CaseHistory_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT [CaseHistory_pkey] PRIMARY KEY CLUSTERED ([id])
 );
@@ -18,6 +18,9 @@ CREATE NONCLUSTERED INDEX [CaseHistory_caseId_createdAt_idx] ON [dbo].[CaseHisto
 
 -- AddForeignKey
 ALTER TABLE [dbo].[CaseHistory] ADD CONSTRAINT [CaseHistory_caseId_fkey] FOREIGN KEY ([caseId]) REFERENCES [dbo].[Case]([id]) ON DELETE NO ACTION ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[CaseHistory] ADD CONSTRAINT [CaseHistory_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 COMMIT TRAN;
 
