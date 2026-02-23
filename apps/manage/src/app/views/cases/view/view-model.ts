@@ -79,11 +79,6 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		}
 	});
 
-	if (caseRow.Applicant) {
-		mergedData.applicantName = caseRow.Applicant.name;
-		delete mergedData.Applicant;
-	}
-
 	if (caseRow.Authority) {
 		mergedData.authorityName = caseRow.Authority.name;
 		delete mergedData.Authority;
