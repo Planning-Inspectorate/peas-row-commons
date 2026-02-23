@@ -98,6 +98,7 @@ describe('Audit Service', () => {
 						action: 'CASE_CREATED',
 						metadata: '{"caseName":"Test"}',
 						userId: 'user-1',
+						User: { idpUserId: 'user-1' },
 						userName: 'John Doe',
 						createdAt: new Date('2025-01-01')
 					},
@@ -107,6 +108,7 @@ describe('Audit Service', () => {
 						action: 'CASE_UPDATED',
 						metadata: null,
 						userId: 'user-2',
+						User: { idpUserId: 'user-2' },
 						userName: 'Jane Doe',
 						createdAt: new Date('2025-01-02')
 					}
@@ -277,7 +279,7 @@ describe('Audit Service', () => {
 			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() =>
 				Promise.resolve({
 					createdAt: new Date('2025-01-15T14:30:00Z'),
-					userId: 'user-123'
+					User: { idpUserId: 'user-123' }
 				})
 			);
 
@@ -302,7 +304,7 @@ describe('Audit Service', () => {
 			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() =>
 				Promise.resolve({
 					createdAt: new Date('2025-01-15T14:30:00Z'),
-					userId: 'user-999'
+					User: { idpUserId: 'user-999' }
 				})
 			);
 
@@ -355,7 +357,7 @@ describe('Audit Service', () => {
 			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() =>
 				Promise.resolve({
 					createdAt: new Date('2025-01-15T14:30:00Z'),
-					userId: 'user-123'
+					User: { idpUserId: 'user-123' }
 				})
 			);
 

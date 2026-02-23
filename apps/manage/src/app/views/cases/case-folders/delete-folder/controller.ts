@@ -104,7 +104,7 @@ export function buildDeleteFolderController(service: ManageService) {
 			await audit.record({
 				caseId: id,
 				action: AUDIT_ACTIONS.FOLDER_DELETED,
-				userId: req?.session?.account?.localAccountId || 'unknown',
+				userId: req?.session?.account?.localAccountId,
 				metadata: { folderName: context.folder.displayName }
 			});
 

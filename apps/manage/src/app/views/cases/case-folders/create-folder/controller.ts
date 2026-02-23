@@ -68,7 +68,7 @@ export function buildCreateFolders(service: ManageService): AsyncRequestHandler 
 			await audit.record({
 				caseId: id,
 				action: AUDIT_ACTIONS.FOLDER_CREATED,
-				userId: req?.session?.account?.localAccountId || 'unknown',
+				userId: req?.session?.account?.localAccountId,
 				metadata: { folderName }
 			});
 

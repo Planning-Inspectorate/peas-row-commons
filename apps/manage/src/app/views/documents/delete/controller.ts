@@ -127,7 +127,7 @@ export function buildDeleteFileController(service: ManageService) {
 			await audit.record({
 				caseId: req.params.id,
 				action: AUDIT_ACTIONS.FILE_DELETED,
-				userId: req?.session?.account?.localAccountId || 'unknown'
+				userId: req?.session?.account?.localAccountId
 			});
 
 			return res.redirect(req.originalUrl);

@@ -56,7 +56,7 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 		await audit.record({
 			caseId: id,
 			action: AUDIT_ACTIONS.FIELD_UPDATED,
-			userId: req?.session?.account?.localAccountId || 'unknown',
+			userId: req?.session?.account?.localAccountId,
 			metadata: { fieldName: getFieldDisplayNames(Object.keys(rawAnswers)) }
 		});
 
