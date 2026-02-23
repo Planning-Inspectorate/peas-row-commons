@@ -159,7 +159,6 @@ function generateNestedQuery(mainTableData: Record<string, any>, nestedData: Rec
  * Handles all the unique data cases that require creating new tables or deleting the tables.
  */
 function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput, caseId: string) {
-	handleApplicant(flatData, prismaPayload);
 	handleAuthority(flatData, prismaPayload);
 	handleAddress(flatData, prismaPayload);
 	handleInspectors(flatData, prismaPayload);
@@ -319,26 +318,6 @@ function handleInspectors(flatData: Record<string, any>, prismaPayload: Prisma.C
 	};
 
 	delete flatData.inspectorDetails;
-}
-
-/**
- * Handles mapping the applicant or server data to the db fields.
- */
-function handleApplicant(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
-	if (!Object.hasOwn(flatData, 'applicantName')) return;
-
-	const applicantData = {
-		name: flatData.applicantName
-	};
-
-	prismaPayload.Applicant = {
-		upsert: {
-			create: applicantData,
-			update: applicantData
-		}
-	};
-
-	delete flatData.applicantName;
 }
 
 /**

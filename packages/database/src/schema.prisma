@@ -61,8 +61,6 @@ model Case {
   Status                   CaseStatus?                   @relation(fields: [statusId], references: [id])
   advertisedModificationId String?
   AdvertisedModification   AdvertisedModificationStatus? @relation(fields: [advertisedModificationId], references: [id])
-  applicantId              String?                       @db.UniqueIdentifier
-  Applicant                Applicant?                    @relation(fields: [applicantId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   authorityid              String?                       @db.UniqueIdentifier
   Authority                Authority?                    @relation(fields: [authorityid], references: [id], onUpdate: NoAction, onDelete: NoAction)
   priorityId               String?
@@ -285,12 +283,6 @@ model DraftDocument {
   mimeType   String @default("application/octet-stream")
 
   @@index([sessionKey, caseId])
-}
-
-model Applicant {
-  id   String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  name String
-  Case Case[]
 }
 
 model Authority {

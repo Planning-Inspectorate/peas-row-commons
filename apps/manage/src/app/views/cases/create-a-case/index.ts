@@ -36,10 +36,16 @@ export function createNewCaseRoutes(service: ManageService): IRouter {
 
 	router.get('/', getJourneyResponse, getJourneyMiddleware, getJourney, redirectToUnansweredQuestion());
 
-	router.get('/:section/:question', getJourneyResponse, getJourneyMiddleware, getJourney, question);
+	router.get(
+		'/:section/:question{/:manageListAction/:manageListItemId/:manageListQuestion}',
+		getJourneyResponse,
+		getJourneyMiddleware,
+		getJourney,
+		question
+	);
 
 	router.post(
-		'/:section/:question',
+		'/:section/:question{/:manageListAction/:manageListItemId/:manageListQuestion}',
 		getJourneyResponse,
 		getJourneyMiddleware,
 		getJourney,
