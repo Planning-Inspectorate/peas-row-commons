@@ -35,7 +35,7 @@ export function buildDownloadDocument(service: ManageService): AsyncRequestHandl
 			await audit.record({
 				caseId: document.caseId,
 				action: AUDIT_ACTIONS.FILE_DOWNLOADED,
-				userId: req?.session?.account?.localAccountId || 'unknown'
+				userId: req?.session?.account?.localAccountId
 			});
 		});
 

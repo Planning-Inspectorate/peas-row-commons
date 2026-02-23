@@ -240,8 +240,8 @@ model CaseHistory {
   Case      Case     @relation(fields: [caseId], references: [id])
   action    String
   metadata  String?  @db.NVarChar(Max)
-  userId    String   @db.UniqueIdentifier
-  User      User     @relation("caseHistoryUser", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId    String?  @db.UniqueIdentifier
+  User      User?    @relation("caseHistoryUser", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   createdAt DateTime @default(now())
 
   @@index([caseId, createdAt(sort: Desc)])

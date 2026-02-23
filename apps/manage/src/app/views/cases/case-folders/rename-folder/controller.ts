@@ -76,7 +76,7 @@ export function buildRenameFolder(service: ManageService): AsyncRequestHandler {
 			await audit.record({
 				caseId: id,
 				action: AUDIT_ACTIONS.FOLDER_RENAMED,
-				userId: req?.session?.account?.localAccountId || 'unknown',
+				userId: req?.session?.account?.localAccountId,
 				metadata: { folderName }
 			});
 

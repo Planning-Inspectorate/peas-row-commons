@@ -40,7 +40,7 @@ export function uploadDocumentsController(service: ManageService) {
 		await audit.record({
 			caseId: id,
 			action: AUDIT_ACTIONS.FILE_UPLOADED,
-			userId: req?.session?.account?.localAccountId || 'unknown',
+			userId: req?.session?.account?.localAccountId,
 			metadata: { fileName }
 		});
 

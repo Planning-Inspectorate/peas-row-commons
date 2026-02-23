@@ -131,7 +131,7 @@ describe('buildViewCaseHistory', () => {
 					{
 						id: 'evt-1',
 						action: 'CASE_CREATED',
-						userId: 'user-1',
+						User: { idpUserId: 'user-1' },
 						createdAt: '2026-02-11T14:31:00Z',
 						metadata: { reference: 'REF-001' }
 					}

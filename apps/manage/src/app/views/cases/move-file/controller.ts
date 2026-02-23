@@ -77,7 +77,7 @@ export function buildViewMoveFiles(service: ManageService): RequestHandler {
 		await audit.record({
 			caseId: req.params.id,
 			action: AUDIT_ACTIONS.FILE_MOVED,
-			userId: req?.session?.account?.localAccountId || 'unknown'
+			userId: req?.session?.account?.localAccountId
 		});
 
 		return res.render('views/cases/move-file/view.njk', {

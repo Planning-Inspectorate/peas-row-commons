@@ -24,7 +24,7 @@ export interface AuditEntry {
 	metadata?: Record<string, unknown>;
 
 	/** ID of the user who performed the action */
-	userId: string;
+	userId?: string;
 }
 
 /**
@@ -35,8 +35,8 @@ export interface AuditEvent {
 	caseId: string;
 	action: string;
 	metadata: Record<string, unknown> | null;
-	userId: string;
-	User?: { idpUserId: string | null };
+	userId?: string;
+	User?: { idpUserId: string | null } | null;
 	createdAt: Date;
 }
 

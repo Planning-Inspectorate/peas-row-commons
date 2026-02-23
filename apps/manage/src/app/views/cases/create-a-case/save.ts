@@ -50,7 +50,7 @@ export function buildSaveController({ db, logger, audit }: ManageService) {
 			await audit.record({
 				caseId: createdCase.id,
 				action: AUDIT_ACTIONS.CASE_CREATED,
-				userId: req?.session?.account?.localAccountId || 'unknown',
+				userId: req?.session?.account?.localAccountId,
 				metadata: { reference: createdCase.reference }
 			});
 		} catch (error: any) {
