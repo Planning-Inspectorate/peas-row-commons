@@ -2,7 +2,7 @@
     {% for question in answers %}
         <li class="{% if loop.index0 >= limit %}govuk-!-display-none js-hidden-item{% endif %}" data-cy="answer-item">
             {% for value in question %}
-                {{ value.answer }}{% if not loop.last %}<br>{% endif %}
+                {{ value.answer | safe }}{% if not loop.last %}<br>{% endif %}
             {% endfor %}
         </li>
     {% endfor %}

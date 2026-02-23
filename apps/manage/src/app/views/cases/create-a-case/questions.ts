@@ -241,11 +241,12 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 		},
 		applicantDetails: {
 			type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
-			title: 'Applicant or appellant(s)',
+			title: 'Applicant/Appellant/Server',
 			question: 'Check applicant or appellant details',
 			fieldName: 'applicantDetails',
 			url: 'applicant-details',
-			viewData: { emptyName: 'applicant or appellant' }
+			viewData: { emptyName: 'applicant or appellant' },
+			showAnswersInSummary: true
 		},
 		...createPersonQuestions({
 			section: 'applicant',
