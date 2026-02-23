@@ -82,7 +82,7 @@ export function handleContacts(
 
 		const items = flatData[config.sourceKey];
 		const { prefix } = config;
-		console.log('quack', items);
+
 		const mappedContacts = items
 			.map((item: Record<string, any>) => {
 				// If there is a fixed type id, e.g. in Objector, use that
