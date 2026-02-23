@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { mapContacts, handleContacts } from './contact.ts';
+import { mapContacts, handleContacts, createPersonQuestions } from './contact.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 
@@ -133,5 +133,72 @@ describe('handleContacts', () => {
 
 		assert.strictEqual(prismaPayload.Contacts, undefined);
 		assert.strictEqual(flatData.randomKey, 'value');
+	});
+});
+
+describe('createPersonQuestions', () => {
+	it('should generate person questions with the correct dynamic keys and text', () => {
+		const result = createPersonQuestions({
+			section: 'applicantDetails',
+			db: 'applicant',
+			url: 'applicant',
+			label: 'Applicant',
+			hint: 'Custom hint text'
+		});
+
+		assert.ok(result.applicantDetailsName);
+		assert.ok(result.applicantDetailsAddress);
+		assert.ok(result.applicantDetailsContactDetails);
+
+		assert.strictEqual(result.applicantDetailsName.title, 'Applicant');
+		assert.strictEqual(result.applicantDetailsName.question, 'Who is the applicant?');
+		assert.strictEqual(result.applicantDetailsName.hint, 'Custom hint text');
+
+		assert.strictEqual(result.applicantDetailsContactDetails.title, 'Applicant contact details');
+		assert.strictEqual(result.applicantDetailsContactDetails.question, 'Applicant contact details (optional)');
+	});
+
+	it('should adjust title and question text when the label is exactly "Contact"', () => {
+		const result = createPersonQuestions({
+			section: 'contact',
+			db: 'contact',
+			url: 'contact',
+			label: 'Contact'
+		});
+
+		const contactDetails = result.contactContactDetails;
+
+		assert.strictEqual(contactDetails.title, 'Contact details');
+		assert.strictEqual(contactDetails.question, 'What are the contact details? (optional)');
+	});
+
+	it('should correctly prefix database fields in the input fields array', () => {
+		const result = createPersonQuestions({
+			section: 'agent',
+			db: 'agentDbPrefix',
+			url: 'agent',
+			label: 'Agent'
+		});
+
+		const nameInputFields = result.agentName.inputFields as { fieldName: string }[];
+		const contactInputFields = result.agentContactDetails.inputFields as { fieldName: string }[];
+
+		assert.strictEqual(nameInputFields[0].fieldName, 'agentDbPrefixFirstName');
+		assert.strictEqual(nameInputFields[1].fieldName, 'agentDbPrefixLastName');
+		assert.strictEqual(nameInputFields[2].fieldName, 'agentDbPrefixOrgName');
+
+		assert.strictEqual(contactInputFields[0].fieldName, 'agentDbPrefixEmail');
+		assert.strictEqual(contactInputFields[1].fieldName, 'agentDbPrefixTelephoneNumber');
+	});
+
+	it('should use a default hint if one is not provided', () => {
+		const result = createPersonQuestions({
+			section: 'appellant',
+			db: 'appellant',
+			url: 'appellant',
+			label: 'Appellant'
+		});
+
+		assert.strictEqual(result.appellantName.hint, 'Enter the name of the individual, the organisation, or both.');
 	});
 });

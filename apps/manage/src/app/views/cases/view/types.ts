@@ -64,11 +64,3 @@ export type CaseOfficer = {
 export type Inspector = {
 	id: string;
 };
-
-export interface PersonConfig {
-	section: string;
-	db: string;
-	url: string;
-	label: string;
-	hint?: string;
-}

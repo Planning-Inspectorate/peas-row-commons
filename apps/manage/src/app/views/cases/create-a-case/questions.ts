@@ -31,7 +31,7 @@ import {
 	CUSTOM_COMPONENT_CLASSES,
 	CUSTOM_COMPONENTS
 } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
-import { createPersonQuestions } from '../view/question-utils.ts';
+import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
 
 export function getQuestions(groupMembers = { caseOfficers: [] }) {
 	const mappedGroupMembers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
