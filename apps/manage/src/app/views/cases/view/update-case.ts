@@ -14,6 +14,7 @@ import { CONTACT_MAPPINGS, handleContacts } from '@pins/peas-row-commons-lib/uti
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
 import { AUDIT_ACTIONS } from '../../../audit/index.ts';
 import { getFieldDisplayNames } from './question-utils.ts';
+import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -187,6 +188,7 @@ function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Pri
 	handleBooleans(flatData);
 	handleCaseOfficer(flatData, prismaPayload);
 	handleOutcomes(flatData, prismaPayload);
+	handleActAndSection(flatData, prismaPayload);
 }
 
 /**
@@ -380,4 +382,31 @@ function handleAddress(flatData: Record<string, any>, prismaPayload: Prisma.Case
 	};
 
 	delete flatData.siteAddress;
+}
+
+/**
+ * Handles mapping the act/section data fields to the db fields.
+ */
+function handleActAndSection(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (!Object.hasOwn(flatData, 'act')) return;
+
+	const submittedId = flatData.act;
+	const actSection = ACT_SECTIONS.find((mapping) => mapping.id === submittedId);
+
+	const actId = actSection?.actId;
+	const sectionId = actSection?.sectionId;
+
+	if (actId) {
+		prismaPayload.Act = { connect: { id: actId } };
+	} else {
+		prismaPayload.Act = { disconnect: true };
+	}
+
+	if (sectionId) {
+		prismaPayload.Section = { connect: { id: sectionId } };
+	} else {
+		prismaPayload.Section = { disconnect: true };
+	}
+
+	delete flatData.act;
 }

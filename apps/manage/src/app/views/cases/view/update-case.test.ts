@@ -2,6 +2,8 @@ import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import { buildUpdateCase, mapCasePayload } from './update-case.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
+import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
+import { ACT_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/act.ts';
 
 const mockFindUnique = mock.fn();
 const mockUpdate = mock.fn();
@@ -358,6 +360,34 @@ describe('Update Case Controller', () => {
 
 			const result = mapCasePayload(input, 'case-123');
 			assert.strictEqual((result as any).Outcome, undefined);
+		});
+
+		it('should handle adding an Act with a Section', () => {
+			const actSection = ACT_SECTIONS[0];
+			const input = {
+				act: actSection.id
+			};
+
+			const result = mapCasePayload(input, 'case-123');
+			const act = result.Act;
+			const section = result.Section;
+
+			assert.strictEqual(section?.connect?.id, actSection.sectionId);
+			assert.strictEqual(act?.connect?.id, actSection.actId);
+		});
+
+		it('should handle adding an Act without a Section', () => {
+			const input = {
+				act: ACT_ID.ELECTRICITY_1989
+			};
+
+			const result = mapCasePayload(input, 'case-123');
+			const act = result.Act;
+			const section = result.Section;
+
+			// Create the connection to the act, make sure to wipe any old connection to section.
+			assert.strictEqual(act?.connect?.id, ACT_ID.ELECTRICITY_1989);
+			assert.strictEqual(section?.disconnect, true);
 		});
 	});
 

@@ -18,7 +18,9 @@ import {
 	OBJECTOR_STATUSES,
 	CONTACT_TYPES,
 	DECISION_MAKER_TYPES,
-	NOTE_TYPES
+	NOTE_TYPES,
+	ACTS,
+	SECTIONS
 } from './static_data/index.ts';
 import { CASE_STATUSES } from './static_data/status.ts';
 
@@ -129,6 +131,15 @@ export async function seedStaticData(dbClient: PrismaClient) {
 
 	for (const input of NOTE_TYPES) {
 		await upsertReferenceData({ delegate: dbClient.noteType, input });
+
+	}
+
+	for (const input of ACTS) {
+		await upsertReferenceData({ delegate: dbClient.act, input });
+	}
+
+	for (const input of SECTIONS) {
+		await upsertReferenceData({ delegate: dbClient.section, input });
 	}
 
 	console.log('static data seed complete');

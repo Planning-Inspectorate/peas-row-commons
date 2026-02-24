@@ -67,7 +67,11 @@ model Case {
   priorityId               String?
   Priority                 CasePriority?                 @relation(fields: [priorityId], references: [id])
   /// The relevant legislation / act
-  act                      String?
+  actId                    String?
+  Act                      Act?                          @relation(fields: [actId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  /// The relevant section of the act
+  sectionId                String?
+  Section                  Section?                      @relation(fields: [sectionId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   /// What type of consent has been sought
   consentSought            String?
   /// The band for the inspector
@@ -87,6 +91,20 @@ model Case {
   RelatedCases             RelatedCase[]
   /// Cases linked to this case
   LinkedCases              LinkedCase[]
+}
+
+model Act {
+  /// unique machine-readable name, not generated, e.g. "gas-1986"
+  id          String  @id
+  displayName String?
+  Case        Case[]
+}
+
+model Section {
+  /// unique machine-readable name, not generated, e.g. "schedule-14-a"
+  id          String  @id
+  displayName String?
+  Case        Case[]
 }
 
 model User {
