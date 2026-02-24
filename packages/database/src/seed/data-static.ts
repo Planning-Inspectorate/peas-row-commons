@@ -126,7 +126,7 @@ export async function seedStaticData(dbClient: PrismaClient) {
 	for (const input of DECISION_MAKER_TYPES) {
 		await upsertReferenceData({ delegate: dbClient.decisionMakerType, input });
 	}
-	
+
 	for (const input of NOTE_TYPES) {
 		await upsertReferenceData({ delegate: dbClient.noteType, input });
 	}
