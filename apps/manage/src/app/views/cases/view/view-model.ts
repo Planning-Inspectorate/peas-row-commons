@@ -11,6 +11,7 @@ import { mapContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
 import { nl2br, truncateComment } from '@pins/peas-row-commons-lib/util/strings.ts';
+import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
 
 function formatValue(value: any) {
 	if (typeof value === 'boolean') {
@@ -152,6 +153,14 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 	const mappedApplicants = mapContacts(applicants, 'applicant');
 	const mappedContacts = mapContacts(genericContacts, 'contact');
 
+	// Some acts do not have sections so we need to nullish coalesce in that check.
+	const act = mergedData.actId
+		? ACT_SECTIONS.find(
+				(actSection) =>
+					actSection.actId === mergedData.actId && (actSection.sectionId ?? null) === (mergedData.sectionId ?? null)
+			)
+		: undefined;
+
 	return {
 		...sanitisedData,
 		...mappedProcedures,
@@ -163,7 +172,8 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		objectorDetails: mappedObjectors,
 		contactDetails: mappedContacts,
 		applicantDetails: mappedApplicants.length ? mappedApplicants : undefined,
-		outcomeDetails
+		outcomeDetails,
+		act: act?.id
 	};
 }
 

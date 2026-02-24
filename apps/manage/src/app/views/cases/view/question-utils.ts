@@ -37,6 +37,7 @@ import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/que
 import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-components/optional-date-component/validator.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
+import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
 
@@ -633,19 +634,22 @@ export const OVERVIEW_QUESTIONS = {
 		options: CASE_SUBTYPES.map((type) => ({ text: type.displayName, value: type.id }))
 	},
 	act: {
-		type: COMPONENT_TYPES.TEXT_ENTRY,
+		type: COMPONENT_TYPES.SELECT,
 		title: 'Act',
 		question: 'What is the relevant legislation/act for this case?',
 		fieldName: 'act',
 		url: 'act',
-		validators: [
-			new StringValidator({
-				maxLength: {
-					maxLength: 250,
-					maxLengthMessage: 'Act must be 250 characters or less'
+		validators: [new RequiredValidator('Select a legislation/act')],
+		options: [{ text: '', value: '' }, ...ACT_SECTIONS.map((type) => ({ text: type.displayName, value: type.id }))],
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'act/remove'
 				}
-			})
-		]
+			]
+		}
 	},
 	consentSought: {
 		type: COMPONENT_TYPES.TEXT_ENTRY,
