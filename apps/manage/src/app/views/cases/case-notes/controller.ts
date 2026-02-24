@@ -11,7 +11,7 @@ export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler
 	return async (req, res) => {
 		const { id } = req.params;
 		const { comment } = req.body;
-		const userId = req?.session?.account?.localAccountId
+		const userId = req?.session?.account?.localAccountId;
 
 		logger.info({ comment }, 'case note creation');
 
