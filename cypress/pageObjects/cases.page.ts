@@ -1,5 +1,9 @@
+import HeaderUtility from 'cypress/pageUtilities/header.utility.ts';
+
 class CasesPage {
-	isPageDisplayed() {}
+	isPageDisplayed() {
+		HeaderUtility.isHeaderDisplayed();
+	}
 
 	clickAnchorNavigationLink(
 		section:
