@@ -636,7 +636,7 @@ export const OVERVIEW_QUESTIONS = {
 	act: {
 		type: COMPONENT_TYPES.SELECT,
 		title: 'Act',
-		question: 'What is the relevant legislation/act for this case?',
+		question: 'What is the relevant legislation or act for this case?',
 		fieldName: 'act',
 		url: 'act',
 		validators: [new RequiredValidator('Select a legislation/act')],
