@@ -387,7 +387,7 @@ function handleAddress(flatData: Record<string, any>, prismaPayload: Prisma.Case
 /**
  * Handles mapping the act/section data fields to the db fields.
  */
-function handleActAndSection(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+function handleActAndSection(flatData: Record<string, unknown>, prismaPayload: Prisma.CaseUpdateInput) {
 	if (!Object.hasOwn(flatData, 'act')) return;
 
 	const submittedId = flatData.act;
