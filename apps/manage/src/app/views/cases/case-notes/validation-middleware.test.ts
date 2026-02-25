@@ -21,7 +21,7 @@ describe('buildValidateCaseNotesMiddleware', () => {
 		const req = {
 			params: { id: '123' },
 			body: { comment: 'This is a valid comment' },
-			baseUrl: '/case/123/case-note',
+			baseUrl: '/case/123/case-notes',
 			session: {}
 		};
 		const res = {
@@ -40,7 +40,7 @@ describe('buildValidateCaseNotesMiddleware', () => {
 		const req = {
 			params: { id: '123' },
 			body: { comment: '' },
-			baseUrl: '/case/123/case-note',
+			baseUrl: '/case/123/case-notes',
 			session: {}
 		};
 		const res = {
@@ -57,7 +57,7 @@ describe('buildValidateCaseNotesMiddleware', () => {
 		// Should redirect
 		assert.strictEqual(res.redirect.mock.callCount(), 1);
 
-		// Check redirect URL logic: removes /case-note
+		// Check redirect URL logic: removes /case-notes
 		const expectedUrl = '/case/123';
 		assert.deepStrictEqual(res.redirect.mock.calls[0].arguments, [expectedUrl]);
 	});
@@ -69,7 +69,7 @@ describe('buildValidateCaseNotesMiddleware', () => {
 		const req = {
 			params: { id: '123' },
 			body: { comment: longComment },
-			baseUrl: '/case/123/case-note',
+			baseUrl: '/case/123/case-notes',
 			session: {}
 		};
 		const res = {
@@ -88,7 +88,7 @@ describe('buildValidateCaseNotesMiddleware', () => {
 		const req = {
 			params: { id: '123' },
 			body: {}, // comment is undefined
-			baseUrl: '/case/123/case-note',
+			baseUrl: '/case/123/case-notes',
 			session: {}
 		};
 		const res = {

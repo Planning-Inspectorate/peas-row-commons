@@ -5,6 +5,9 @@ import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-
 import type { Logger } from 'pino';
 import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
 import { NOTE_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/note-type.ts';
+import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
+import { mapNotes } from '../view/view-model.ts';
+import { getEntraGroupMembers } from '#util/entra-groups.ts';
 
 export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler {
 	const { db, logger, audit } = service;
@@ -27,7 +30,7 @@ export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler
 		logger.info({ id }, 'case note created');
 
 		// Return back to case view page
-		const viewCaseUrl = req.baseUrl.replace(/\/case-note\/?$/, '');
+		const viewCaseUrl = req.baseUrl.replace(/\/case-notes\/?$/, '');
 		res.redirect(viewCaseUrl);
 	};
 }
@@ -73,4 +76,67 @@ async function createCaseNote(id: string, comment: string, authorId: string, db:
 			logParams: { id }
 		});
 	}
+}
+
+export function buildViewCaseNotes(service: ManageService): AsyncRequestHandler {
+	const { db, logger, getEntraClient } = service;
+	const groupId = service.authConfig.groups.applicationAccess;
+
+	return async (req, res) => {
+		const id = req.params.id;
+
+		if (!id) {
+			throw new Error('id param required');
+		}
+
+		let caseRow;
+		try {
+			[caseRow] = await Promise.all([
+				db.case.findUnique({
+					select: {
+						id: true,
+						name: true,
+						reference: true,
+						Notes: {
+							orderBy: { createdAt: 'desc' },
+							include: {
+								Author: true,
+								NoteType: true
+							}
+						}
+					},
+					where: { id }
+				})
+			]);
+		} catch (error: any) {
+			wrapPrismaError({
+				error,
+				logger,
+				message: 'fetching all case notes',
+				logParams: {}
+			});
+		}
+
+		if (!caseRow) {
+			return notFoundHandler(req, res);
+		}
+
+		const groupMembers = await getEntraGroupMembers({
+			logger,
+			initClient: getEntraClient,
+			session: req.session,
+			groupId
+		});
+
+		const notes = mapNotes(caseRow.Notes, groupMembers, caseRow.id);
+
+		return res.render('views/cases/case-notes/view.njk', {
+			pageHeading: 'Case notes',
+			reference: caseRow?.reference,
+			backLinkUrl: `/cases/${id}`,
+			backLinkText: 'Back to case details',
+			currentUrl: req.originalUrl,
+			...notes
+		});
+	};
 }

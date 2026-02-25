@@ -248,7 +248,7 @@ describe('view-model', () => {
 				}
 			];
 
-			const result = mapNotes(input as any, groupMembers);
+			const result = mapNotes(input as any, groupMembers, '123');
 
 			assert.ok(result.caseNotes);
 			assert.strictEqual(result.caseNotes.length, 2);
@@ -266,7 +266,7 @@ describe('view-model', () => {
 
 		it('should handle an empty array of case notes', async () => {
 			const input: any[] = [];
-			const result = mapNotes(input, groupMembers);
+			const result = mapNotes(input, groupMembers, '123');
 
 			assert.deepStrictEqual(result.caseNotes, []);
 		});
@@ -280,10 +280,45 @@ describe('view-model', () => {
 				{ createdAt: dateNew, comment: 'B', Author: { idpUserId: '2' } }
 			];
 
-			mapNotes(input as any, groupMembers);
+			mapNotes(input as any, groupMembers, '123');
 
 			assert.strictEqual(input[0].createdAt, dateOld);
 			assert.strictEqual(input[1].createdAt, dateNew);
+		});
+
+		it('should convert newline characters in the comment to HTML <br> tags', async () => {
+			const input = [
+				{
+					createdAt: new Date('2024-01-01T10:00:00.000Z'),
+					comment: 'First line\nSecond line\r\nThird line',
+					Author: { idpUserId: '123' }
+				}
+			];
+
+			const result = mapNotes(input as any, groupMembers, '123');
+
+			assert.strictEqual(result.caseNotes[0].commentText, 'First line<br>Second line<br>Third line');
+		});
+
+		it('should truncate extremely long comments', async () => {
+			const massiveComment = 'A'.repeat(500);
+
+			const input = [
+				{
+					createdAt: new Date('2024-01-01T10:00:00.000Z'),
+					comment: massiveComment,
+					Author: { idpUserId: '123' }
+				}
+			];
+
+			const result = mapNotes(input as any, groupMembers, '123');
+
+			assert.notStrictEqual(result.caseNotes[0].truncatedCommentText, massiveComment);
+
+			// The length gets truncated at 100 + ... + a "read more" link so just check that it is smaller than 500
+			assert.ok(result.caseNotes[0].truncatedCommentText.length < 500);
+
+			assert.ok(result.caseNotes[0].truncatedCommentText.includes('...'));
 		});
 	});
 	describe('mapProcedures', () => {

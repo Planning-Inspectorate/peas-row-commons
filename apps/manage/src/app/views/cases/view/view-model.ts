@@ -10,6 +10,7 @@ import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address
 import { mapContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
+import { nl2br, truncateComment } from '@pins/peas-row-commons-lib/util/strings.ts';
 
 function formatValue(value: any) {
 	if (typeof value === 'boolean') {
@@ -135,7 +136,7 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 
 	const siteAddress = mapAddressDbToViewModel(caseRow.SiteAddress);
 
-	const mappedNotes = mapNotes(caseRow.Notes || [], groupMembers);
+	const mappedNotes = mapNotes(caseRow.Notes || [], groupMembers, caseRow.id);
 
 	const objectors = (caseRow.Contacts || []).filter((contact) => contact.contactTypeId === CONTACT_TYPE_ID.OBJECTOR);
 	const genericContacts = (caseRow.Contacts || []).filter(
@@ -164,7 +165,8 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
  */
 export const mapNotes = (
 	unmappedCaseNotes: Omit<CaseNoteFields, 'Case'>[],
-	groupMembers: { caseOfficers: CaseOfficer[] }
+	groupMembers: { caseOfficers: CaseOfficer[] },
+	caseId: string
 ) => {
 	// Sort the cases first so that they are in descending order by creation date.
 	const caseNotes = [...unmappedCaseNotes].sort((a: any, b: any) => b.createdAt - a.createdAt);
@@ -177,7 +179,8 @@ export const mapNotes = (
 				date: dateISOStringToDisplayDate(caseNote.createdAt),
 				dayOfWeek: getDayFromISODate(caseNote.createdAt),
 				time: dateISOStringToDisplayTime12hr(caseNote.createdAt),
-				commentText: caseNote.comment,
+				commentText: nl2br(caseNote.comment),
+				truncatedCommentText: nl2br(truncateComment(caseNote.comment, `/cases/${caseId}/case-notes`)),
 				userName: user?.displayName || 'Unknown'
 			};
 		})

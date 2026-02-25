@@ -17,6 +17,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 		const reference = res.locals?.journeyResponse?.answers?.reference;
 		const caseName = res.locals?.journeyResponse?.answers?.name;
 		const caseNotes = res.locals?.journeyResponse?.answers?.caseNotes;
+		const allCaseNotesCount = res.locals?.journeyResponse?.answers?._count?.Notes || 0;
 
 		const id = req.params.id;
 
@@ -34,6 +35,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 			reference,
 			caseName,
 			notes: caseNotes || [],
+			allCaseNotesCount,
 			baseUrl,
 			backLinkUrl: res.locals.backLinkUrl || '/cases',
 			caseUpdated,
@@ -81,6 +83,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				Costs: true,
 				Abeyance: true,
 				Notes: {
+					take: 4,
+					orderBy: { createdAt: 'desc' },
 					include: {
 						Author: true,
 						NoteType: true
@@ -117,7 +121,12 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				},
 				RelatedCases: true,
 				LinkedCases: true,
-				CaseOfficer: true
+				CaseOfficer: true,
+				_count: {
+					select: {
+						Notes: true
+					}
+				}
 			}
 		});
 
