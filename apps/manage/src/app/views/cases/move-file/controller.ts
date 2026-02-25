@@ -23,7 +23,7 @@ export function buildHandleMoveSelection(): RequestHandler {
 				{
 					moveFilesErrors: [
 						{
-							text: 'Select file to move',
+							text: 'Select file(s) to move',
 							href: '#'
 						}
 					]
