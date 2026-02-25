@@ -4,6 +4,7 @@ import { buildUpdateCase, mapCasePayload } from './update-case.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
 import { ACT_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/act.ts';
+import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
 
 const mockFindUnique = mock.fn();
 const mockUpdate = mock.fn();
@@ -92,7 +93,6 @@ describe('Update Case Controller', () => {
 			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
 			assert.strictEqual(updateArgs.where.id, 'case-123');
 			assert.strictEqual(updateArgs.data.name, 'New Name');
-			assert.ok(updateArgs.data.updatedDate instanceof Date, 'Should set updatedDate');
 		});
 
 		it('should throw "Case not found" if case does not exist', async () => {
@@ -388,6 +388,52 @@ describe('Update Case Controller', () => {
 			// Create the connection to the act, make sure to wipe any old connection to section.
 			assert.strictEqual(act?.connect?.id, ACT_ID.ELECTRICITY_1989);
 			assert.strictEqual(section?.disconnect, true);
+		});
+
+		it('should set closedDate if status is being set to a closed one', () => {
+			const input = {
+				statusId: CASE_STATUS_ID.CLOSED
+			};
+
+			const result = mapCasePayload(input, 'case-123');
+
+			assert.ok(result.closedDate instanceof Date);
+
+			// Because closedDate will have been set "now" it might be a few ms or secs off,
+			// so just check it's roughly correct.
+			const now = new Date().getTime();
+			const closedTime = result.closedDate.getTime();
+			const differenceInSeconds = (now - closedTime) / 1000;
+
+			assert.ok(differenceInSeconds < 5);
+		});
+
+		it('should not set closedDate if status is being set to an open one', () => {
+			const input = {
+				statusId: CASE_STATUS_ID.ARRANGE_EVENT
+			};
+
+			const result = mapCasePayload(input, 'case-123');
+
+			assert.strictEqual(result.closedDate, null);
+		});
+
+		it('should set closedDate to null if we have passed null', () => {
+			const input = {
+				statusId: null
+			};
+
+			const result = mapCasePayload(input, 'case-123');
+
+			assert.strictEqual(result.closedDate, null);
+		});
+
+		it('closedDate should be undefined if we have passed nothing', () => {
+			const input = {};
+
+			const result = mapCasePayload(input, 'case-123');
+
+			assert.strictEqual(result.closedDate, undefined);
 		});
 	});
 

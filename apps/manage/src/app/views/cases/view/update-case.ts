@@ -15,6 +15,7 @@ import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed
 import { AUDIT_ACTIONS } from '../../../audit/index.ts';
 import { getFieldDisplayNames } from './question-utils.ts';
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
+import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -54,8 +55,6 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 		}
 
 		const formattedAnswersForQuery = mapCasePayload(rawAnswers, id);
-
-		formattedAnswersForQuery.updatedDate = new Date();
 
 		logger.info({ fields: updatedFieldNames }, 'update case input');
 
@@ -189,6 +188,7 @@ function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Pri
 	handleCaseOfficer(flatData, prismaPayload);
 	handleOutcomes(flatData, prismaPayload);
 	handleActAndSection(flatData, prismaPayload);
+	updateClosedDate(flatData, prismaPayload);
 }
 
 /**
@@ -409,4 +409,33 @@ function handleActAndSection(flatData: Record<string, unknown>, prismaPayload: P
 	}
 
 	delete flatData.act;
+}
+
+const CLOSED_STATUS_IDS = new Set([
+	CASE_STATUS_ID.INVALID,
+	CASE_STATUS_ID.REJECTED,
+	CASE_STATUS_ID.CLOSED,
+	CASE_STATUS_ID.CANCELLED,
+	CASE_STATUS_ID.WITHDRAWN,
+	CASE_STATUS_ID.CLOSED_OPENED_IN_ERROR
+]);
+
+/**
+ * Updates the closedDate based on the status, if the status is one of the closed ones we updated it.
+ * If the status has been changed to a different status not closed, we reset it to null. If the status
+ * is being set to null (i.e. they are removing the status completely) then we set closed date to null too.
+ */
+function updateClosedDate(flatData: Record<string, unknown>, prismaPayload: Prisma.CaseUpdateInput) {
+	const { statusId } = flatData;
+
+	// undefined means that the user is simply changing a random field unrelated to status
+	if (statusId === undefined) {
+		return;
+	}
+
+	if (typeof statusId === 'string' && CLOSED_STATUS_IDS.has(statusId)) {
+		prismaPayload.closedDate = new Date();
+	} else {
+		prismaPayload.closedDate = null;
+	}
 }

@@ -11,7 +11,16 @@ describe('Audit Service', () => {
 			findMany: mock.fn() as any,
 			findFirst: mock.fn() as any,
 			count: mock.fn() as any
-		}
+		},
+		case: {
+			create: mock.fn() as any,
+			findMany: mock.fn() as any,
+			findFirst: mock.fn() as any,
+			count: mock.fn() as any,
+			findUnique: mock.fn() as any,
+			update: mock.fn() as any
+		},
+		$transaction: mock.fn(async (promises) => Promise.all(promises))
 	});
 
 	describe('record', () => {
@@ -200,86 +209,14 @@ describe('Audit Service', () => {
 		});
 	});
 
-	describe('getLatestForCase', () => {
-		it('should retrieve and parse the latest audit event', async () => {
-			const mockDb = createMockDb();
-			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() =>
-				Promise.resolve({
-					id: 'event-1',
-					caseId: 'case-123',
-					action: 'CASE_UPDATED',
-					metadata: '{"field":"value"}',
-					userId: 'user-1',
-					userName: 'John Doe',
-					createdAt: new Date('2025-01-15')
-				})
-			);
-
-			const logger = mockLogger();
-			const service = buildAuditService(mockDb as any, logger as any);
-
-			const event = await service.getLatestForCase('case-123');
-
-			assert.strictEqual(event?.id, 'event-1');
-			assert.deepStrictEqual(event?.metadata, { field: 'value' });
-		});
-
-		it('should return null if no events exist', async () => {
-			const mockDb = createMockDb();
-			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() => Promise.resolve(null));
-
-			const logger = mockLogger();
-			const service = buildAuditService(mockDb as any, logger as any);
-
-			const event = await service.getLatestForCase('case-123');
-
-			assert.strictEqual(event, null);
-		});
-
-		it('should handle null metadata', async () => {
-			const mockDb = createMockDb();
-			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() =>
-				Promise.resolve({
-					id: 'event-1',
-					caseId: 'case-123',
-					action: 'CASE_UPDATED',
-					metadata: null,
-					userId: 'user-1',
-					userName: 'John Doe',
-					createdAt: new Date('2025-01-15')
-				})
-			);
-
-			const logger = mockLogger();
-			const service = buildAuditService(mockDb as any, logger as any);
-
-			const event = await service.getLatestForCase('case-123');
-
-			assert.strictEqual(event?.metadata, null);
-		});
-
-		it('should return null and log error on failure', async () => {
-			const mockDb = createMockDb();
-			const dbError = new Error('Query failed');
-			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() => Promise.reject(dbError));
-
-			const logger = mockLogger();
-			const service = buildAuditService(mockDb as any, logger as any);
-
-			const event = await service.getLatestForCase('case-123');
-
-			assert.strictEqual(event, null);
-			assert.strictEqual(logger.error.mock.callCount(), 1);
-		});
-	});
-
 	describe('getLastModifiedInfo', () => {
-		it('should return formatted date and user display name', async () => {
+		it('should return formatted dates and user display name', async () => {
 			const mockDb = createMockDb();
-			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() =>
+			mockDb.case.findUnique.mock.mockImplementationOnce(() =>
 				Promise.resolve({
-					createdAt: new Date('2025-01-15T14:30:00Z'),
-					User: { idpUserId: 'user-123' }
+					updatedDate: new Date('2025-01-15T14:30:00Z'),
+					closedDate: new Date('2025-01-20T14:30:00Z'),
+					UpdatedBy: { idpUserId: 'user-123' }
 				})
 			);
 
@@ -295,16 +232,18 @@ describe('Audit Service', () => {
 
 			const info = await service.getLastModifiedInfo('case-123', groupMembers);
 
-			assert.strictEqual(info.date, '15 January 2025');
+			assert.strictEqual(info.updatedDate?.date, '15 January 2025');
+			assert.strictEqual(info.closedDate?.date, '20 January 2025');
 			assert.strictEqual(info.by, 'John Smith');
 		});
 
 		it('should return "Unknown" if user not found in group members', async () => {
 			const mockDb = createMockDb();
-			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() =>
+			mockDb.case.findUnique.mock.mockImplementationOnce(() =>
 				Promise.resolve({
-					createdAt: new Date('2025-01-15T14:30:00Z'),
-					User: { idpUserId: 'user-999' }
+					updatedDate: new Date('2025-01-15T14:30:00Z'),
+					closedDate: null,
+					UpdatedBy: { idpUserId: 'user-999' }
 				})
 			);
 
@@ -320,9 +259,9 @@ describe('Audit Service', () => {
 			assert.strictEqual(info.by, 'Unknown');
 		});
 
-		it('should return null values if no events exist', async () => {
+		it('should return null values and log error if case row does not exist', async () => {
 			const mockDb = createMockDb();
-			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() => Promise.resolve(null));
+			mockDb.case.findUnique.mock.mockImplementationOnce(() => Promise.resolve(null));
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
@@ -331,14 +270,21 @@ describe('Audit Service', () => {
 
 			const info = await service.getLastModifiedInfo('case-123', groupMembers);
 
-			assert.strictEqual(info.date, null);
+			assert.strictEqual(info.updatedDate, null);
+			assert.strictEqual(info.closedDate, null);
 			assert.strictEqual(info.by, null);
+			assert.strictEqual(logger.error.mock.callCount(), 1);
 		});
 
-		it('should return null values and log error on failure', async () => {
+		it('should handle a case with null date fields gracefully', async () => {
 			const mockDb = createMockDb();
-			const dbError = new Error('Query failed');
-			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() => Promise.reject(dbError));
+			mockDb.case.findUnique.mock.mockImplementationOnce(() =>
+				Promise.resolve({
+					updatedDate: null,
+					closedDate: null,
+					UpdatedBy: null
+				})
+			);
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
@@ -347,17 +293,36 @@ describe('Audit Service', () => {
 
 			const info = await service.getLastModifiedInfo('case-123', groupMembers);
 
-			assert.strictEqual(info.date, null);
+			assert.strictEqual(info.updatedDate, null);
+			assert.strictEqual(info.closedDate, null);
+			assert.strictEqual(info.by, 'Unknown');
+		});
+
+		it('should return null values and log error on database failure', async () => {
+			const mockDb = createMockDb();
+			const dbError = new Error('Query failed');
+			mockDb.case.findUnique.mock.mockImplementationOnce(() => Promise.reject(dbError));
+
+			const logger = mockLogger();
+			const service = buildAuditService(mockDb as any, logger as any);
+
+			const groupMembers = { caseOfficers: [] };
+
+			const info = await service.getLastModifiedInfo('case-123', groupMembers);
+
+			assert.strictEqual(info.updatedDate, null);
+			assert.strictEqual(info.closedDate, null);
 			assert.strictEqual(info.by, null);
 			assert.strictEqual(logger.error.mock.callCount(), 1);
 		});
 
 		it('should handle empty caseOfficers array', async () => {
 			const mockDb = createMockDb();
-			mockDb.caseHistory.findFirst.mock.mockImplementationOnce(() =>
+			mockDb.case.findUnique.mock.mockImplementationOnce(() =>
 				Promise.resolve({
-					createdAt: new Date('2025-01-15T14:30:00Z'),
-					User: { idpUserId: 'user-123' }
+					updatedDate: new Date('2025-01-15T14:30:00Z'),
+					closedDate: null,
+					UpdatedBy: { idpUserId: 'user-123' }
 				})
 			);
 

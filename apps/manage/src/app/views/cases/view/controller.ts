@@ -31,6 +31,8 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 
 		const baseUrl = req.baseUrl;
 
+		const lastModifiedDate = res.locals.lastModified?.updatedDate;
+
 		await list(req, res, '', {
 			reference,
 			caseName,
@@ -40,8 +42,9 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 			backLinkUrl: res.locals.backLinkUrl || '/cases',
 			caseUpdated,
 			currentUrl: req.originalUrl,
-			lastModifiedDate: res.locals.lastModified?.date || null,
-			lastModifiedBy: res.locals.lastModified?.by || null
+			lastModifiedDate,
+			lastModifiedBy: res.locals.lastModified?.by || null,
+			closedDate: res.locals.lastModified?.closedDate || null
 		});
 	};
 }
