@@ -33,6 +33,13 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 		logger.info({ id }, 'case update');
 
 		const rawAnswers = data?.answers || {};
+		const updatedFieldNames = Object.keys(rawAnswers);
+
+		if (updatedFieldNames.length === 0) {
+			logger.info({ id }, 'no case updates to apply');
+
+			return;
+		}
 
 		if (clearAnswer) {
 			Object.keys(rawAnswers).forEach((key) => {
@@ -49,7 +56,7 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 
 		formattedAnswersForQuery.updatedDate = new Date();
 
-		logger.info({ fields: Object.keys(rawAnswers) }, 'update case input');
+		logger.info({ fields: updatedFieldNames }, 'update case input');
 
 		await updateCaseData(id, db, logger, formattedAnswersForQuery);
 
@@ -57,7 +64,7 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 			caseId: id,
 			action: AUDIT_ACTIONS.FIELD_UPDATED,
 			userId: req?.session?.account?.localAccountId,
-			metadata: { fieldName: getFieldDisplayNames(Object.keys(rawAnswers)) }
+			metadata: { fieldName: getFieldDisplayNames(updatedFieldNames) }
 		});
 
 		// We clear the session after we have updated the case to avoid ghost data
