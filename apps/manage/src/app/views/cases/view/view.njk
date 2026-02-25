@@ -44,6 +44,11 @@
                         </li>
                     {% endif %}
                 {% endfor %}
+                {# Case audit log is not included in the section summary list, so we must give it its own hardcoded value at the end. #}
+                <li>
+                    <a href="#case-audit-log"
+                    class="govuk-link govuk-link--no-visited-state">Case audit log</a>
+                </li>
             </ul>
             {{ govukDetails({
                 summaryText: allCaseNotesCount + ' case notes',
@@ -90,7 +95,7 @@
                             text: "Last modified date"
                         },
                         value: {
-                            text: lastModifiedDate if lastModifiedDate else "-"
+                            html: lastModifiedDate.date + "<br>" + lastModifiedDate.time if lastModifiedDate.date else "-"
                         }
                     },
                     {
@@ -99,6 +104,14 @@
                         },
                         value: {
                             text: lastModifiedBy if lastModifiedBy else "-"
+                        }
+                    },
+                    {
+                        key: {
+                            text: "Case closed date"
+                        },
+                        value: {
+                            html: closedDate.date if closedDate.date else "-"
                         }
                     },
                     {

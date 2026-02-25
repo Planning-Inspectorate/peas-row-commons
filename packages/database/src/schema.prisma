@@ -27,6 +27,8 @@ model Case {
   id                       String                        @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   createdDate              DateTime                      @default(now())
   updatedDate              DateTime?
+  updatedById              String?                       @db.UniqueIdentifier
+  UpdatedBy                User?                         @relation("updatedBy", fields: [updatedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
   receivedDate             DateTime
   closedDate               DateTime?
   /// type of case
@@ -114,6 +116,7 @@ model User {
   /// Id from legacy system, in case no ipdUserId can be found in migration
   legacyId      String?
   CaseOfficer   Case[]         @relation("caseOfficer")
+  UpdatedBy     Case[]         @relation("updatedBy")
   Author        CaseNote[]     @relation("author")
   DecisionMaker CaseDecision[] @relation("decisionMaker")
   Inspector     Inspector[]    @relation("inspector")

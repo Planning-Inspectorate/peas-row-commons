@@ -2,6 +2,7 @@ import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/cl
 import type { Logger } from 'pino';
 import { parseMetadata, type AuditEntry, type AuditEvent, type AuditQueryOptions } from './types.ts';
 import type { CaseOfficer } from '../views/cases/view/types.ts';
+import { formatDateTime } from '@pins/peas-row-commons-lib/util/dates.ts';
 
 /**
  * Builds the audit service used to record and retrieve case history events.
@@ -20,21 +21,36 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 		 */
 		async record(entry: AuditEntry): Promise<void> {
 			try {
-				await db.caseHistory.create({
-					data: {
-						Case: {
-							connect: { id: entry.caseId }
-						},
-						action: entry.action,
-						metadata: JSON.stringify(entry.metadata ?? {}),
-						User: {
-							connectOrCreate: {
-								where: { idpUserId: entry.userId },
-								create: { idpUserId: entry.userId }
+				await db.$transaction([
+					db.caseHistory.create({
+						data: {
+							Case: {
+								connect: { id: entry.caseId }
+							},
+							action: entry.action,
+							metadata: JSON.stringify(entry.metadata ?? {}),
+							User: {
+								connectOrCreate: {
+									where: { idpUserId: entry.userId },
+									create: { idpUserId: entry.userId }
+								}
 							}
 						}
-					}
-				});
+					}),
+					// Updated By, Updated Date are stored as their own columns on Case
+					db.case.update({
+						where: { id: entry.caseId },
+						data: {
+							updatedDate: new Date(),
+							UpdatedBy: {
+								connectOrCreate: {
+									where: { idpUserId: entry.userId },
+									create: { idpUserId: entry.userId }
+								}
+							}
+						}
+					})
+				]);
 			} catch (error) {
 				logger.error(
 					{
@@ -104,37 +120,6 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 		},
 
 		/**
-		 * Get the most recent audit event for a case.
-		 * Used for "last modified" information.
-		 */
-		async getLatestForCase(caseId: string): Promise<AuditEvent | null> {
-			try {
-				const event = await db.caseHistory.findFirst({
-					where: { caseId },
-					orderBy: { createdAt: 'desc' }
-				});
-
-				if (!event) {
-					return null;
-				}
-
-				return {
-					...event,
-					metadata: parseMetadata(event.metadata)
-				};
-			} catch (error) {
-				logger.error(
-					{
-						error,
-						caseId
-					},
-					'Failed to fetch latest audit event'
-				);
-				return null;
-			}
-		},
-
-		/**
 		 * Get last modified information for display in case summary.
 		 * Returns formatted data ready for the UI.
 		 */
@@ -142,33 +127,33 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 			caseId: string,
 			groupMembers: { caseOfficers: CaseOfficer[] }
 		): Promise<{
-			date: string | null;
+			updatedDate: { date: string; time: string } | null;
 			by: string | null;
+			closedDate: { date: string; time: string } | null;
 		}> {
 			try {
-				const latest = await db.caseHistory.findFirst({
-					where: { caseId },
-					orderBy: { createdAt: 'desc' },
+				const caseRow = await db.case.findUnique({
+					where: { id: caseId },
 					select: {
-						createdAt: true,
-						User: { select: { idpUserId: true } }
+						updatedDate: true,
+						closedDate: true,
+						UpdatedBy: { select: { idpUserId: true } }
 					}
 				});
 
-				if (!latest) {
-					return { date: null, by: null };
+				if (!caseRow) {
+					throw new Error(`No folder found for id: ${caseId}`);
 				}
 
-				const date = new Date(latest.createdAt).toLocaleDateString('en-GB', {
-					day: 'numeric',
-					month: 'long',
-					year: 'numeric'
-				});
+				const updatedDate = caseRow.updatedDate ? formatDateTime(caseRow.updatedDate) : null;
 
-				const user = groupMembers.caseOfficers.find((member) => member.id === latest.User?.idpUserId);
+				const closedDate = caseRow.closedDate ? formatDateTime(caseRow.closedDate) : null;
+
+				const user = groupMembers.caseOfficers.find((member) => member.id === caseRow.UpdatedBy?.idpUserId);
 
 				return {
-					date,
+					updatedDate,
+					closedDate,
 					by: user?.displayName || 'Unknown'
 				};
 			} catch (error) {
@@ -179,7 +164,7 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 					},
 					'Failed to fetch last modified info'
 				);
-				return { date: null, by: null };
+				return { updatedDate: null, closedDate: null, by: null };
 			}
 		}
 	};
