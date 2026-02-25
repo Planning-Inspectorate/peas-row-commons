@@ -1,6 +1,6 @@
 import { promisify } from 'node:util';
-import * as msalNode from '@azure/msal-node';
 import * as authSession from './session.service.ts';
+import { randomUUID } from 'node:crypto';
 import type { AuthService } from './auth-service.ts';
 import type { RequestHandler } from 'express';
 import type { Logger } from 'pino';
@@ -23,7 +23,7 @@ export function buildStartMsalAuthentication(
 		// code, whereupon it is validated against the original nonce retained in the
 		// session. Note that this is not susceptible to a downgrade attack like PKCE
 		// because the verification is enforced locally and not in the auth server.
-		const nonce = new msalNode.CryptoProvider().createNewGuid();
+		const nonce = randomUUID();
 		// The url from which the OpenID Connect flow was triggered by the
 		// application. Ultimately, we will forward the user to this route at the
 		// end of the authentication journey.
