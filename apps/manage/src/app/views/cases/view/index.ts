@@ -77,7 +77,7 @@ export function createRoutes(service: ManageService) {
 	router.post('/:section/:question/remove', validateIdFormat, getJourney, asyncHandler(clearAndUpdateCase));
 
 	// Load case note routes
-	router.use('/case-note', caseNoteRoutes);
+	router.use('/case-notes', caseNoteRoutes);
 
 	return router;
 }

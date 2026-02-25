@@ -46,10 +46,12 @@
                 {% endfor %}
             </ul>
             {{ govukDetails({
-                summaryText: notes.length + ' case notes',
+                summaryText: allCaseNotesCount + ' case notes',
                 html: caseNotes({
                     currentUrl: currentUrl,
-                    notes: notes
+                    notes: notes,
+                    max: 4,
+                    totalNotes: allCaseNotesCount
                 })
             }) }}
         </div>

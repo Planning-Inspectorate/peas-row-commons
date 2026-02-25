@@ -226,7 +226,8 @@ model CaseAbeyance {
 
 model CaseNote {
   id           String    @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  comment      String
+  /// Comment length is 500 in UI, but 4000 in Horizon, so we have to support those old notes
+  comment      String    @db.NVarChar(4000)
   createdAt    DateTime  @default(now())
   authorId     String    @db.UniqueIdentifier
   Author       User      @relation("author", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)

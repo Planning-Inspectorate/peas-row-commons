@@ -1,0 +1,56 @@
+{% extends "views/layouts/main.njk" %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+
+{% set title = reference + " - Case history" %}
+
+{% block pageTitle %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <h2 class="govuk-caption-l" data-cy="page-caption">
+                {{ reference }}
+            </h2>
+            <h1 class="govuk-heading-l" data-cy="page-heading">
+                {{ pageHeading }}
+            </h1>
+
+            {% if caseNotes | length == 0 %}
+                <p class="govuk-body" data-cy="no-notes-message">There are no case notes to display</p>
+            {% else %}
+                {% set tableRows = [] %}
+                {% for note in caseNotes %}
+                    {% set tableRows = (tableRows.push([
+                        {
+                            html: note.date + "<br>" + note.time,
+                            attributes: { "data-cy": "note-date-" + loop.index0 }
+                        },
+                        {
+                            html: note.commentText,
+                            attributes: { "data-cy": "note-comment-" + loop.index0 },
+                            classes: "govuk-!-text-break-word"
+                        },
+                        {
+                            text: note.userName,
+                            attributes: { "data-cy": "note-user-" + loop.index0 }
+                        }
+                    ]), tableRows) %}
+                {% endfor %}
+
+                {{ govukTable({
+                    attributes: {
+                        "data-cy": "case-notes-table"
+                    },
+                    head: [
+                        { text: "Date and time", classes: "govuk-!-width-one-quarter" },
+                        { text: "Details" },
+                        { text: "User", classes: "govuk-!-width-one-quarter" }
+                    ],
+                    rows: tableRows
+                }) }}
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
