@@ -68,13 +68,15 @@ async function createCaseNote(id: string, comment: string, authorId: string, db:
 				}
 			});
 		});
-	} catch (error: any) {
-		wrapPrismaError({
-			error,
-			logger,
-			message: 'creating a case not',
-			logParams: { id }
-		});
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			wrapPrismaError({
+				error,
+				logger,
+				message: 'creating a case not',
+				logParams: { id }
+			});
+		}
 	}
 }
 
@@ -108,13 +110,15 @@ export function buildViewCaseNotes(service: ManageService): AsyncRequestHandler 
 					where: { id }
 				})
 			]);
-		} catch (error: any) {
-			wrapPrismaError({
-				error,
-				logger,
-				message: 'fetching all case notes',
-				logParams: {}
-			});
+		} catch (error: unknown) {
+			if (error instanceof Error) {
+				wrapPrismaError({
+					error,
+					logger,
+					message: 'fetching all case notes',
+					logParams: { id }
+				});
+			}
 		}
 
 		if (!caseRow) {
