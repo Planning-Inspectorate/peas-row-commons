@@ -131,7 +131,6 @@ export async function seedStaticData(dbClient: PrismaClient) {
 
 	for (const input of NOTE_TYPES) {
 		await upsertReferenceData({ delegate: dbClient.noteType, input });
-
 	}
 
 	for (const input of ACTS) {
