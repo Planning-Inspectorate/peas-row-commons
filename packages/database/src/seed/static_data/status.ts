@@ -14,10 +14,6 @@ export const CASE_STATUSES = [
 		displayName: 'Invalid'
 	},
 	{
-		id: CASE_STATUS_ID.INITIAL_CHECKS_VALIDATION,
-		displayName: 'Initial checks / validation'
-	},
-	{
 		id: CASE_STATUS_ID.REJECTED,
 		displayName: 'Rejected'
 	},
@@ -38,10 +34,6 @@ export const CASE_STATUSES = [
 		displayName: 'In progress'
 	},
 	{
-		id: CASE_STATUS_ID.EXCHANGE_CORRESPONDENCE,
-		displayName: 'Exchange correspondence'
-	},
-	{
 		id: CASE_STATUS_ID.READY_FOR_INSPECTOR,
 		displayName: 'Ready for inspector'
 	},
@@ -51,7 +43,7 @@ export const CASE_STATUSES = [
 	},
 	{
 		id: CASE_STATUS_ID.DECISION_RECOMMENDATION_ISSUED,
-		displayName: 'Decision/recommendation issued'
+		displayName: 'Decision / recommendation issued'
 	},
 	{
 		id: CASE_STATUS_ID.DESPATCH,
@@ -71,7 +63,7 @@ export const CASE_STATUSES = [
 	},
 	{
 		id: CASE_STATUS_ID.PAUSED_ON_HOLD,
-		displayName: 'Paused/on hold'
+		displayName: 'Paused / on hold'
 	},
 	{
 		id: CASE_STATUS_ID.WITHDRAWN,
