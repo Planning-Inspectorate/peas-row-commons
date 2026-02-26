@@ -12,6 +12,7 @@ import type { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/c
 import { formatInTimeZone } from 'date-fns-tz';
 import type { Request } from 'express';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
 
 const FILTER_KEYS = {
 	AREA: 'area',
@@ -156,9 +157,13 @@ function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerato
 	const searchCriteria = createWhereClause(splitStringQueries(searchString), [
 		{ fields: ['reference', 'name'], searchType: 'contains' },
 		{
-			parent: 'Applicant',
-			fields: ['name'],
-			searchType: 'contains'
+			parent: 'Contacts',
+			isList: true,
+			fields: ['firstName', 'lastName', 'orgName'],
+			searchType: 'contains',
+			relationConstraints: [
+				{ contactTypeId: CONTACT_TYPE_ID.APPLICANT_APPELLANT } // Only check applicants
+			]
 		},
 		{
 			parent: 'Status',
