@@ -54,7 +54,7 @@
                     uploadHtml: uploadHtml
                 }) }}
             </form>
-            <form action="{{ currentUrl }}" method="post">
+            <form id="main-submit-form" action="{{ currentUrl }}" method="post">
                 {{ govukButton({
                     text: "Upload"
                 }) }}
@@ -62,17 +62,62 @@
 
             <script type="module" {% if cspNonce %}nonce="{{ cspNonce }}"{% endif %}>
                 import { MultiFileUpload } from '/assets/js/moj-frontend.min.js';
-                
-                const $multiFileUpload = document.querySelector(
-                    '[data-module="moj-multi-file-upload"]'
-                );
 
-                const $form = document.querySelector('#upload-form-container');
+                const $mojFormContainer = document.querySelector('#upload-form-container');
+                const $mainSubmitForm = document.querySelector('#main-submit-form');
+                const $multiFileUpload = document.querySelector('[data-module="moj-multi-file-upload"]');
 
-                if ($multiFileUpload) {
+                /**
+                 * Prepends a warning banner into the DOM if files are still uploading.
+                 */
+                function showUploadError() {
+                    const existingError = document.querySelector('.govuk-error-summary');
+                    if (existingError) existingError.remove();
+
+                    const errorSummaryHtml = `
+                        <div
+                            class="govuk-error-summary govuk-grid-column-two-thirds"
+                            aria-labelledby="error-summary-title" role="alert"
+                            tabindex="-1"
+                            data-module="govuk-error-summary"
+                        >
+                            <h2 class="govuk-error-summary__title" id="error-summary-title">
+                                There is a problem
+                            </h2>
+                            <div class="govuk-error-summary__body">
+                                <ul class="govuk-list govuk-error-summary__list">
+                                    <li>
+                                        <a href="#upload-form">Wait for all files to finish uploading</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+
+                    const mainContent = document.querySelector('main') || $mainSubmitForm;
+                    mainContent.insertAdjacentHTML('afterbegin', errorSummaryHtml);
+
+                    const newErrorSummary = document.querySelector('.govuk-error-summary');
+                    if (newErrorSummary) newErrorSummary.focus();
+                }
+
+                if ($mainSubmitForm) {
+                    $mainSubmitForm.addEventListener('submit', function (event) {
+                        // If something is still uploading then it has a __progress banner
+                        // we can use this as if even one of these is still present then upload has not finished
+                        const activeUploads = document.querySelectorAll('.moj-multi-file-upload__progress');
+
+                        if (activeUploads.length > 0) {
+                            event.preventDefault();
+                            showUploadError(); 
+                        }
+                    });
+                }
+
+                if ($multiFileUpload && $mojFormContainer) {
                     new MultiFileUpload($multiFileUpload, {
-                        uploadUrl: $form.dataset.uploadUrl,
-                        deleteUrl: $form.dataset.deleteUrl
+                        uploadUrl: $mojFormContainer.dataset.uploadUrl,
+                        deleteUrl: $mojFormContainer.dataset.deleteUrl
                     });
                 }
             </script>
