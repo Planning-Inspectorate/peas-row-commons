@@ -245,7 +245,12 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			question: 'Check applicant or appellant details',
 			fieldName: 'applicantDetails',
 			url: 'applicant-details',
-			viewData: { emptyName: 'applicant or appellant' },
+			viewData: {
+				emptyName: 'applicant or appellant',
+				emptyNamePlural: 'applicants or appellants',
+				hideButtonsEmpty: true
+			},
+			titleSingular: 'applicant or appellant',
 			showAnswersInSummary: true
 		},
 		...createPersonQuestions({

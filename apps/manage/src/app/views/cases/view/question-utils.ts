@@ -597,8 +597,13 @@ export const CASE_DETAILS_QUESTIONS = {
 		question: 'Check applicant or appellant details',
 		fieldName: 'applicantDetails',
 		url: 'applicant-details',
-		viewData: { emptyName: 'applicant or appellant' },
-		showAnswersInSummary: true
+		viewData: {
+			emptyName: 'applicant or appellant',
+			emptyNamePlural: 'applicants or appellants'
+		},
+		titleSingular: 'applicant or appellant',
+		showAnswersInSummary: true,
+		hideRemoveOnLastItem: true
 	},
 	...createPersonQuestions({
 		section: 'applicant',
@@ -713,7 +718,8 @@ export const OVERVIEW_QUESTIONS = {
 		fieldName: 'relatedCaseDetails',
 		url: 'check-related-cases',
 		showAnswersInSummary: true,
-		viewData: { emptyName: 'related case' }
+		viewData: { emptyName: 'related case' },
+		titleSingular: 'related case'
 	},
 	addRelatedCase: {
 		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // Multi because we want an H1 header and an inline question too.
@@ -743,7 +749,8 @@ export const OVERVIEW_QUESTIONS = {
 		fieldName: 'linkedCaseDetails',
 		url: 'check-linked-cases',
 		showAnswersInSummary: true,
-		viewData: { emptyName: 'linked case' }
+		viewData: { emptyName: 'linked case' },
+		titleSingular: 'linked case'
 	},
 	linkedCaseReference: {
 		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // Multi because we want an H1 header and an inline question too.
@@ -804,6 +811,7 @@ export const TEAM_QUESTIONS = {
 		url: 'inspector-details',
 		showAnswersInSummary: true,
 		viewData: { emptyName: 'inspector' },
+		titleSingular: 'inspector',
 		validators: [
 			new ManageListItemsCompleteValidator({
 				inspectorId: 'Inspector name',
@@ -862,6 +870,7 @@ export const OUTCOME_QUESTIONS = {
 		fieldName: 'outcomeDetails',
 		url: 'check-outcome-details',
 		viewData: { emptyName: 'outcome' },
+		titleSingular: 'outcome',
 		columns: [
 			{ header: 'Type', fieldName: 'decisionTypeId' },
 			{
@@ -1853,7 +1862,8 @@ export const KEY_CONTACTS_QUESTIONS = {
 		question: 'Check objector details',
 		fieldName: 'objectorDetails',
 		url: 'objector-details',
-		viewData: { emptyName: 'objector' }
+		viewData: { emptyName: 'objector' },
+		titleSingular: 'objector'
 	},
 	...createPersonQuestions({
 		section: 'objector',
@@ -1877,7 +1887,8 @@ export const KEY_CONTACTS_QUESTIONS = {
 		question: 'Check contact details',
 		fieldName: 'contactDetails',
 		url: 'contact-details',
-		viewData: { emptyName: 'contact' }
+		viewData: { emptyName: 'contact' },
+		titleSingular: 'contact'
 	},
 	contactType: {
 		type: COMPONENT_TYPES.RADIO,

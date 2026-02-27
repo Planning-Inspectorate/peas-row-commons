@@ -108,13 +108,45 @@ describe('TableManageListQuestion', () => {
 	});
 
 	describe('generateActionsHtml()', () => {
-		it('should generate correct edit and remove links with the originalUrl', () => {
+		it('should generate correct edit and remove links with the originalUrl by default', () => {
 			const item = { id: 'item-123' };
 			const html = tableQuestion.generateActionsHtml(mockViewModel, item);
 
 			assert.ok(html.includes('href="/my-url/edit/item-123/name-page"'));
 			assert.ok(html.includes('href="/my-url/remove/item-123/confirm"'));
-			assert.ok(html.includes('<span class="govuk-visually-hidden"> row</span>'));
+			assert.ok(html.includes('Change<span class="govuk-visually-hidden"> row</span>'));
+			assert.ok(html.includes('Remove<span class="govuk-visually-hidden"> row</span>'));
+		});
+
+		it('should hide the remove link if hideRemoveOnLastItem is true and there is only 1 item left', () => {
+			tableQuestion.hideRemoveOnLastItem = true;
+			mockViewModel.question.value = [{ id: 'uuid-1', name: 'John Doe', dob: '1990-01-01' }];
+
+			const item = { id: 'uuid-1' };
+			const html = tableQuestion.generateActionsHtml(mockViewModel, item);
+
+			assert.ok(html.includes('href="/my-url/edit/uuid-1/name-page"'));
+			assert.strictEqual(html.includes('href="/my-url/remove/uuid-1/confirm"'), false);
+			assert.strictEqual(html.includes('Remove<span class="govuk-visually-hidden"> row</span>'), false);
+		});
+
+		it('should display the remove link if hideRemoveOnLastItem is true but there are multiple items', () => {
+			tableQuestion.hideRemoveOnLastItem = true;
+
+			const item = { id: 'uuid-1' };
+			const html = tableQuestion.generateActionsHtml(mockViewModel, item);
+
+			assert.ok(html.includes('href="/my-url/remove/uuid-1/confirm"'));
+		});
+
+		it('should display the remove link if there is only 1 item left but hideRemoveOnLastItem is false', () => {
+			tableQuestion.hideRemoveOnLastItem = false;
+			mockViewModel.question.value = [{ id: 'uuid-1', name: 'John Doe', dob: '1990-01-01' }];
+
+			const item = { id: 'uuid-1' };
+			const html = tableQuestion.generateActionsHtml(mockViewModel, item);
+
+			assert.ok(html.includes('href="/my-url/remove/uuid-1/confirm"'));
 		});
 	});
 

@@ -12,11 +12,13 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	viewFolder: string;
 	summaryLimit: number;
 	showAnswersInSummary: boolean;
+	hideRemoveOnLastItem: boolean;
 
 	constructor(params: TableManageListQuestionParameters) {
 		super(params);
 		this.summaryLimit = params.summaryLimit || 2;
 		this.showAnswersInSummary = params.showAnswersInSummary || false;
+		this.hideRemoveOnLastItem = params.hideRemoveOnLastItem || false;
 
 		this.viewFolder = 'custom-components/manage-list-table';
 	}
@@ -172,6 +174,18 @@ export default class TableManageListQuestion extends ManageListQuestion {
 		const changeUrl = `${originalUrlTrimmed}/edit/${item.id}/${firstQuestionUrl}`;
 		const removeUrl = `${originalUrlTrimmed}/remove/${item.id}/confirm`;
 
+		// Some lists need to have at least 1 answer, so we hide the remove button if that is the case
+		const removeHtml =
+			viewModel?.question?.value?.length === 1 && this.hideRemoveOnLastItem
+				? ''
+				: `
+					<li class="govuk-summary-list__actions-list-item">
+						<a class="govuk-link" href="${removeUrl}">
+							Remove<span class="govuk-visually-hidden"> row</span>
+						</a>
+					</li>
+				`;
+
 		const actionsHtml = `
             <ul class="govuk-summary-list__actions-list">
                 <li class="govuk-summary-list__actions-list-item">
@@ -179,11 +193,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
                         Change<span class="govuk-visually-hidden"> row</span>
                     </a>
                 </li>
-                <li class="govuk-summary-list__actions-list-item">
-                    <a class="govuk-link" href="${removeUrl}">
-                        Remove<span class="govuk-visually-hidden"> row</span>
-                    </a>
-                </li>
+				${removeHtml}
             </ul>`;
 
 		return actionsHtml;

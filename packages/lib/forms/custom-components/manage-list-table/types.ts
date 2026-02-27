@@ -25,6 +25,7 @@ export interface TableManageListQuestionParameters {
 	showManageListQuestions?: boolean;
 	showAnswersInSummary?: boolean;
 	summaryLimit?: number;
+	hideRemoveOnLastItem?: boolean;
 }
 
 export interface PreppedQuestion {
