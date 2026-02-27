@@ -1,0 +1,45 @@
+{% extends layoutTemplate %}
+
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+
+{% block dynQuestionContent %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <form action="" method="post" novalidate>
+                {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
+                {{ govukRadios({
+                    name: "remove",
+                    fieldset: {
+                        legend: {
+                            text: "Are you sure you want to remove this " + (titleSingular | lower) + "?",
+                            isPageHeading: true,
+                            classes: "govuk-fieldset__legend--l"
+                        }
+                    },
+                    hint: {
+                        html: summaryHtml
+                    },
+                    items: [
+                        {
+                            value: "yes",
+                            text: "Yes",
+                            attributes: { "data-cy": "answer-yes" }
+                        },
+                        {
+                            value: "no",
+                            text: "No",
+                            attributes: { "data-cy": "answer-no" }
+                        }
+                    ]
+                }) }}
+
+                {{ govukButton({
+                    text: "Continue",
+                    type: "submit",
+                    attributes: { "data-cy":"button-save-and-continue"}
+                }) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

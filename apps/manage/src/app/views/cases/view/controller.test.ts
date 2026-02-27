@@ -20,7 +20,7 @@ describe('Case Controller', () => {
 
 	describe('validateIdFormat', () => {
 		it('should throw if no id param', () => {
-			const mockReq = { params: {} };
+			const mockReq = { params: {}, session: {} };
 			const mockRes = newMockRes();
 
 			assert.throws(() => validateIdFormat(mockReq as any, mockRes as any, mockNext), {
@@ -29,7 +29,7 @@ describe('Case Controller', () => {
 		});
 
 		it('should call next() if id is a valid UUID', () => {
-			const mockReq = { params: { id: '00000000-0000-0000-0000-000000000001' } };
+			const mockReq = { params: { id: '00000000-0000-0000-0000-000000000001' }, session: {} };
 			const mockRes = newMockRes();
 			const next = mock.fn();
 
@@ -39,7 +39,7 @@ describe('Case Controller', () => {
 		});
 
 		it('should not call next() if id is invalid', () => {
-			const mockReq = { params: { id: 'invalid-id-string' } };
+			const mockReq = { params: { id: 'invalid-id-string' }, session: {} };
 			const mockRes = newMockRes();
 			const next = mock.fn();
 
@@ -55,7 +55,7 @@ describe('Case Controller', () => {
 
 	describe('buildViewCaseDetails', () => {
 		it('should throw if no id param', async () => {
-			const mockReq = { params: {} };
+			const mockReq = { params: {}, session: {} };
 			const mockRes = newMockRes();
 			const handler = buildViewCaseDetails();
 
@@ -82,7 +82,7 @@ describe('Case Controller', () => {
 		};
 
 		it('should throw if no id param', async () => {
-			const mockReq = { params: {} };
+			const mockReq = { params: {}, session: {} };
 			const mockRes = newMockRes();
 
 			const middleware = buildGetJourneyMiddleware(mockService as any);
@@ -94,7 +94,7 @@ describe('Case Controller', () => {
 		});
 
 		it('should return 404 (call notFoundHandler) if case not found', async () => {
-			const mockReq = { params: { id: 'case-1' } };
+			const mockReq = { params: { id: 'case-1' }, session: {} };
 			const mockRes = newMockRes();
 
 			mockDb.case.findUnique.mock.mockImplementationOnce(() => null as any);
@@ -110,7 +110,8 @@ describe('Case Controller', () => {
 			const mockReq: any = {
 				params: { id: 'case-1', section: 'section' },
 				baseUrl: '/case-1',
-				originalUrl: '/case-1/edit'
+				originalUrl: '/case-1/edit',
+				session: {}
 			};
 			const mockRes: any = { locals: {} };
 			const mockDb = {
@@ -177,7 +178,7 @@ describe('Case Controller', () => {
 				inspectors: [{ id: '2', name: 'Inspector B' }]
 			};
 
-			const result = combineSessionAndDbData(mockRes, dbData);
+			const result = combineSessionAndDbData(mockRes, dbData) as { inspectors: Record<string, unknown>[] };
 
 			assert.strictEqual(result.inspectors.length, 2);
 			assert.strictEqual(result.inspectors[0].name, 'Inspector A');
@@ -196,7 +197,7 @@ describe('Case Controller', () => {
 				inspectors: [{ id: '2', name: 'Inspector B (Updated)' }]
 			};
 
-			const result = combineSessionAndDbData(mockRes, dbData);
+			const result = combineSessionAndDbData(mockRes, dbData) as { inspectors: Record<string, unknown>[] };
 
 			assert.strictEqual(result.inspectors.length, 2, 'Should not increase array length on update');
 
@@ -212,10 +213,82 @@ describe('Case Controller', () => {
 
 			mockRes.locals.journeyResponse.answers = { tags: [{ label: 'Review' }] };
 
-			const result = combineSessionAndDbData(mockRes, dbData);
+			const result = combineSessionAndDbData(mockRes, dbData) as { tags: Record<string, unknown>[] };
 
 			assert.strictEqual(result.tags.length, 2);
 			assert.strictEqual(result.tags[1].label, 'Review');
+		});
+
+		it('should REMOVE DB items if their ID is present in the removedIds array (Delete Scenario)', () => {
+			const dbData = {
+				inspectors: [
+					{ id: '1', name: 'Inspector A' },
+					{ id: '2', name: 'Inspector B' },
+					{ id: '3', name: 'Inspector C' }
+				]
+			};
+
+			mockRes.locals.journeyResponse.answers = {};
+			const removedIds = ['2'];
+
+			const result = combineSessionAndDbData(mockRes, dbData, removedIds) as { inspectors: Record<string, unknown>[] };
+
+			assert.strictEqual(result.inspectors.length, 2, 'Should remove exactly one item');
+			assert.strictEqual(result.inspectors[0].id, '1');
+			assert.strictEqual(result.inspectors[1].id, '3', 'Inspector B should be sliced out');
+		});
+
+		it('should handle complex scenarios: Remove an item, Update an item, and Create an item simultaneously', () => {
+			const dbData = {
+				inspectors: [
+					{ id: '1', name: 'Inspector A', role: 'Lead' },
+					{ id: '2', name: 'Inspector B', role: 'Assistant' }
+				]
+			};
+
+			mockRes.locals.journeyResponse.answers = {
+				inspectors: [
+					{ id: '1', name: 'Inspector A (Updated)' },
+					{ id: '3', name: 'Inspector C (New)' }
+				]
+			};
+
+			const removedIds = ['2'];
+
+			const result = combineSessionAndDbData(mockRes, dbData, removedIds) as { inspectors: Record<string, unknown>[] };
+
+			assert.strictEqual(result.inspectors.length, 2, 'Should end up with 2 items');
+
+			assert.strictEqual(result.inspectors[0].id, '1');
+			assert.strictEqual(result.inspectors[0].name, 'Inspector A (Updated)');
+			assert.strictEqual(result.inspectors[0].role, 'Lead');
+
+			const removedItem = result.inspectors.find((i: any) => i.id === '2');
+			assert.strictEqual(removedItem, undefined, 'Inspector B should be gone');
+
+			assert.strictEqual(result.inspectors[1].id, '3');
+			assert.strictEqual(result.inspectors[1].name, 'Inspector C (New)');
+		});
+
+		it('should bring over brand new keys from the session that do not exist in the DB answers', () => {
+			const dbData = { existingField: 'DB Value' };
+
+			mockRes.locals.journeyResponse.answers = {
+				existingField: 'Session Value',
+				brandNewField: 'Brand New Value',
+				newArrayField: [{ id: '99', label: 'New Array Item' }]
+			};
+
+			const result = combineSessionAndDbData(mockRes, dbData) as {
+				newArrayField: Record<string, unknown>[];
+				existingField: string;
+				brandNewField: string;
+			};
+
+			assert.strictEqual(result.existingField, 'Session Value');
+			assert.strictEqual(result.brandNewField, 'Brand New Value');
+			assert.strictEqual(Array.isArray(result.newArrayField), true);
+			assert.strictEqual(result.newArrayField[0].label, 'New Array Item');
 		});
 	});
 });

@@ -15,6 +15,11 @@ import {
 	saveDataToSession
 } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 import { JOURNEY_ID } from './journey.ts';
+import {
+	bounceRemoveCancellation,
+	resetRemovedListItems,
+	trackRemovedItemId
+} from '@pins/peas-row-commons-lib/middleware/manage-list/track-removes.ts';
 
 export function createRoutes(service: ManageService) {
 	const router = createRouter({ mergeParams: true });
@@ -39,7 +44,7 @@ export function createRoutes(service: ManageService) {
 	router.use('/case-history', caseHistoryRoutes);
 
 	// View case
-	router.get('/', validateIdFormat, getJourney, asyncHandler(viewCaseDetails));
+	router.get('/', validateIdFormat, resetRemovedListItems, getJourney, asyncHandler(viewCaseDetails));
 
 	const getJourneyResponse = buildGetJourneyResponseFromSession(JOURNEY_ID);
 
@@ -70,6 +75,8 @@ export function createRoutes(service: ManageService) {
 		getJourney,
 		validate,
 		validationErrorHandler,
+		asyncHandler(bounceRemoveCancellation),
+		asyncHandler(trackRemovedItemId),
 		buildSave(saveDataToSession)
 	);
 
