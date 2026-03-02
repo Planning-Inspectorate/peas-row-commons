@@ -34,12 +34,16 @@ export const OUTCOMES = [
 		displayName: 'Not directed'
 	},
 	{
+		id: OUTCOME_ID.GRANTED,
+		displayName: 'Granted'
+	},
+	{
 		id: OUTCOME_ID.GRANTED_WITH_CONDITIONS,
 		displayName: 'Granted with conditions'
 	},
 	{
-		id: OUTCOME_ID.GRANTED_WITHOUT_CONDITIONS,
-		displayName: 'Granted without conditions'
+		id: OUTCOME_ID.PARTIALLY_GRANTED,
+		displayName: 'Partially granted'
 	},
 	{
 		id: OUTCOME_ID.NOT_GRANTED,
