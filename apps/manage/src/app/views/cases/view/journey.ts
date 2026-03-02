@@ -1,14 +1,15 @@
 import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js';
-
 import type { Request } from 'express';
-import { createProcedureSection } from './journey-utils.ts';
 import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import { questionHasAnswer } from '@planning-inspectorate/dynamic-forms/src/components/utils/question-has-answer.js';
-import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
 import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-import { OutcomeSectionBuilder } from '@pins/peas-row-commons-lib/util/dynamic-sections/outcomes-section/outcomes-section-builder.ts';
+import { buildOutcomeManageList, buildDynamicOutcomeSections } from './journeys/outcome-journey.ts';
+import {
+	buildProcedureManageList,
+	buildProcedureAllQuestionsSection,
+	buildDynamicProcedureSections
+} from './journeys/procedure-journey.ts';
 
 export const JOURNEY_ID = 'case-details';
 
@@ -20,39 +21,12 @@ export function createJourney(questions: Record<string, any>, response: JourneyR
 		throw new Error(`not a valid request for the ${JOURNEY_ID} journey (invalid baseUrl)`);
 	}
 
-	const procedureSections = [
-		createProcedureSection('One', questions),
-		createProcedureSection('Two', questions),
-		createProcedureSection('Three', questions)
-	];
+	const outcomeManageList = buildOutcomeManageList(questions);
+	const dynamicOutcomeSections = buildDynamicOutcomeSections(outcomeManageList, response);
 
-	const outcomeManageList = new ManageListSection()
-		.addQuestion(questions.decisionType)
-		.addQuestion(questions.decisionMakerType)
-
-		/**
-		 * Inspector gets its own question of currently selected inspectors on case
-		 */
-		.addQuestion(questions.decisionMakerInspector)
-		.withCondition((response: JourneyResponse) =>
-			questionHasAnswer(response, questions.decisionMakerType, DECISION_MAKER_TYPE_ID.INSPECTOR)
-		)
-
-		/**
-		 * Case officer likewise gets its own question of users in general.
-		 */
-		.addQuestion(questions.decisionMakerOfficer)
-		.withCondition((response: JourneyResponse) =>
-			questionHasAnswer(response, questions.decisionMakerType, DECISION_MAKER_TYPE_ID.OFFICER)
-		)
-
-		.addQuestion(questions.outcome)
-		.addQuestion(questions.outcomeDate)
-		.addQuestion(questions.decisionReceivedDate);
-
-	const outcomeBuilder = new OutcomeSectionBuilder(outcomeManageList);
-
-	const dynamicOutcomeSections = outcomeBuilder.build(response);
+	const procedureManageList = buildProcedureManageList(questions);
+	const procedureAllQuestionsSection = buildProcedureAllQuestionsSection(questions);
+	const dynamicProcedureSections = buildDynamicProcedureSections(procedureAllQuestionsSection, response);
 
 	/**
 	 * Checks that a manage list has at least 1 answer (of anything)
@@ -71,7 +45,6 @@ export function createJourney(questions: Record<string, any>, response: JourneyR
 				.addQuestion(questions.act)
 				.addQuestion(questions.consentSought)
 				.addQuestion(questions.inspectorBand)
-				.addQuestion(questions.primaryProcedure)
 				.addQuestion(questions.relatedCaseDetails, new ManageListSection().addQuestion(questions.addRelatedCase))
 				.addQuestion(
 					questions.linkedCaseDetails,
@@ -131,7 +104,8 @@ export function createJourney(questions: Record<string, any>, response: JourneyR
 						.addQuestion(questions.contactAddress)
 						.addQuestion(questions.contactContactDetails)
 				),
-			...procedureSections,
+			new Section('Procedures', 'procedures').addQuestion(questions.procedureDetails, procedureManageList),
+			...dynamicProcedureSections,
 			new Section('Outcome overview', 'outcome')
 				.addQuestion(questions.outcomeDetails, outcomeManageList)
 				.startMultiQuestionCondition('outcome-details', (response) =>
