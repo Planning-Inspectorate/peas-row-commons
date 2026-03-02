@@ -109,7 +109,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 					include: {
 						HearingVenue: true,
 						InquiryVenue: true,
-						ConferenceVenue: true
+						ConferenceVenue: true,
+						Inspector: true
 					}
 				},
 				Inspectors: {

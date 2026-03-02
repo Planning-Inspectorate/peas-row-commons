@@ -7,7 +7,6 @@ import type { Request, Response } from 'express';
 import type { Logger } from 'pino';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { yesNoToBoolean } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
-import { handleProcedureGeneric } from './procedure-utils.ts';
 import { JOURNEY_ID } from './journey.ts';
 import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 import { CONTACT_MAPPINGS, handleContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
@@ -16,6 +15,8 @@ import { AUDIT_ACTIONS } from '../../../audit/index.ts';
 import { getFieldDisplayNames } from './question-utils.ts';
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
+import { remapFlattenedFieldsToArray } from '@pins/peas-row-commons-lib/util/remap-flattened-fields.ts';
+import { mapProceduresToArray } from './view-model.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -43,6 +44,23 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 			return;
 		}
 
+		// Fetch existing procedures if any flattened procedure fields are present
+		const hasFlattenedProcedureFields = Object.keys(rawAnswers).some((key) => /^procedureDetails_\d+_/.test(key));
+
+		if (hasFlattenedProcedureFields) {
+			const existingCase = await db.case.findUnique({
+				where: { id },
+				include: { Procedures: true }
+			});
+
+			remapFlattenedFieldsToArray(
+				rawAnswers,
+				mapProceduresToArray(existingCase?.Procedures || []) || [],
+				/^procedureDetails_(\d+)_(.+)$/,
+				'procedureDetails'
+			);
+		}
+
 		if (clearAnswer) {
 			Object.keys(rawAnswers).forEach((key) => {
 				rawAnswers[key] = null;
@@ -54,7 +72,7 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 			return;
 		}
 
-		const formattedAnswersForQuery = mapCasePayload(rawAnswers, id);
+		const formattedAnswersForQuery = mapCasePayload(rawAnswers);
 
 		logger.info({ fields: updatedFieldNames }, 'update case input');
 
@@ -117,10 +135,10 @@ async function updateCaseData(
  * It explicitly handles complex multi-field objects (Applicant, Authority, SiteAddress)
  * first, then passes any remaining keys to the generic mapping logic.
  */
-export function mapCasePayload(flatData: Record<string, any>, caseId: string): Prisma.CaseUpdateInput {
+export function mapCasePayload(flatData: Record<string, unknown>): Prisma.CaseUpdateInput {
 	const prismaPayload: Prisma.CaseUpdateInput = {};
 
-	handleUniqueDataCases(flatData, prismaPayload, caseId);
+	handleUniqueDataCases(flatData, prismaPayload);
 
 	const [mainTableData, nestedData] = parseDataToCorrectTable(flatData);
 	const genericPayload = generateNestedQuery(mainTableData, nestedData);
@@ -174,16 +192,14 @@ function generateNestedQuery(mainTableData: Record<string, any>, nestedData: Rec
 /**
  * Handles all the unique data cases that require creating new tables or deleting the tables.
  */
-function handleUniqueDataCases(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput, caseId: string) {
+function handleUniqueDataCases(flatData: Record<string, unknown>, prismaPayload: Prisma.CaseUpdateInput) {
 	handleAuthority(flatData, prismaPayload);
 	handleAddress(flatData, prismaPayload);
 	handleInspectors(flatData, prismaPayload);
 	handleContacts(flatData, prismaPayload, CONTACT_MAPPINGS);
 	handleRelatedCases(flatData, prismaPayload);
 	handleLinkedCases(flatData, prismaPayload);
-	['One', 'Two', 'Three'].forEach((suffix) => {
-		handleProcedureGeneric(caseId, flatData, prismaPayload, suffix);
-	});
+	handleProcedureDetails(flatData, prismaPayload);
 	handleBooleans(flatData);
 	handleCaseOfficer(flatData, prismaPayload);
 	handleOutcomes(flatData, prismaPayload);
@@ -242,6 +258,135 @@ export function handleOutcomes(flatData: Record<string, unknown>, prismaPayload:
 	};
 
 	delete flatData.outcomeDetails;
+}
+
+/**
+ * Handles the deletion and re-creation of procedures from the new
+ * dynamic procedureDetails array.
+ *
+ * Uses deleteMany + create pattern (same as outcomes, inspectors, etc.)
+ * to replace all procedures with the current set.
+ */
+function handleProcedureDetails(flatData: Record<string, unknown>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (!Object.hasOwn(flatData, 'procedureDetails') || !Array.isArray(flatData.procedureDetails)) {
+		delete flatData.procedureDetails;
+		return;
+	}
+
+	const mappedProcedures = flatData.procedureDetails.map(
+		(proc: Prisma.ProcedureUncheckedCreateWithoutCaseInput): Prisma.ProcedureUncheckedCreateWithoutCaseInput => ({
+			...(proc.procedureTypeId && {
+				ProcedureType: { connect: { id: proc.procedureTypeId } }
+			}),
+			...(proc.procedureStatusId && {
+				ProcedureStatus: { connect: { id: proc.procedureStatusId } }
+			}),
+			...(proc.adminProcedureType && {
+				AdminProcedureType: { connect: { id: proc.adminProcedureType } }
+			}),
+			...(proc.siteVisitTypeId && {
+				SiteVisitType: { connect: { id: proc.siteVisitTypeId } }
+			}),
+			...(proc.inspectorId &&
+				proc.inspectorId !== 'not-allocated' && {
+					Inspector: {
+						connectOrCreate: {
+							where: { idpUserId: proc.inspectorId },
+							create: { idpUserId: proc.inspectorId }
+						}
+					}
+				}),
+			...(proc.hearingFormatId && {
+				HearingFormat: { connect: { id: proc.hearingFormatId } }
+			}),
+			...(proc.inquiryFormatId && {
+				InquiryFormat: { connect: { id: proc.inquiryFormatId } }
+			}),
+			...(proc.conferenceFormatId && {
+				ConferenceFormat: { connect: { id: proc.conferenceFormatId } }
+			}),
+			...(proc.preInquiryMeetingFormatId && {
+				PreInquiryMeetingFormat: { connect: { id: proc.preInquiryMeetingFormatId } }
+			}),
+			...(proc.inquiryOrConferenceId && {
+				InquiryOrConference: { connect: { id: proc.inquiryOrConferenceId } }
+			}),
+
+			// Scalar date fields
+			siteVisitDate: proc.siteVisitDate ? new Date(proc.siteVisitDate as string) : null,
+			caseOfficerVerificationDate: proc.caseOfficerVerificationDate
+				? new Date(proc.caseOfficerVerificationDate as string)
+				: null,
+
+			// Hearing fields
+			hearingTargetDate: proc.hearingTargetDate ? new Date(proc.hearingTargetDate as string) : null,
+			earliestHearingDate: proc.earliestHearingDate ? new Date(proc.earliestHearingDate as string) : null,
+			confirmedHearingDate: proc.confirmedHearingDate ? new Date(proc.confirmedHearingDate as string) : null,
+			hearingClosedDate: proc.hearingClosedDate ? new Date(proc.hearingClosedDate as string) : null,
+			hearingDateNotificationDate: proc.hearingDateNotificationDate
+				? new Date(proc.hearingDateNotificationDate as string)
+				: null,
+			hearingVenueNotificationDate: proc.hearingVenueNotificationDate
+				? new Date(proc.hearingVenueNotificationDate as string)
+				: null,
+			partiesNotifiedOfHearingDate: proc.partiesNotifiedOfHearingDate
+				? new Date(proc.partiesNotifiedOfHearingDate as string)
+				: null,
+			lengthOfHearingEvent: proc.lengthOfHearingEvent ?? null,
+			hearingInTarget: proc.hearingInTarget ?? null,
+			hearingPreparationTimeDays: proc.hearingPreparationTimeDays ?? null,
+			hearingTravelTimeDays: proc.hearingTravelTimeDays ?? null,
+			hearingSittingTimeDays: proc.hearingSittingTimeDays ?? null,
+			hearingReportingTimeDays: proc.hearingReportingTimeDays ?? null,
+
+			// Inquiry fields
+			inquiryTargetDate: proc.inquiryTargetDate ? new Date(proc.inquiryTargetDate as string) : null,
+			earliestInquiryDate: proc.earliestInquiryDate ? new Date(proc.earliestInquiryDate as string) : null,
+			confirmedInquiryDate: proc.confirmedInquiryDate ? new Date(proc.confirmedInquiryDate as string) : null,
+			inquiryFinishedDate: proc.inquiryFinishedDate ? new Date(proc.inquiryFinishedDate as string) : null,
+			inquiryClosedDate: proc.inquiryClosedDate ? new Date(proc.inquiryClosedDate as string) : null,
+			inquiryDateNotificationDate: proc.inquiryDateNotificationDate
+				? new Date(proc.inquiryDateNotificationDate as string)
+				: null,
+			inquiryVenueNotificationDate: proc.inquiryVenueNotificationDate
+				? new Date(proc.inquiryVenueNotificationDate as string)
+				: null,
+			partiesNotifiedOfInquiryDate: proc.partiesNotifiedOfInquiryDate
+				? new Date(proc.partiesNotifiedOfInquiryDate as string)
+				: null,
+			lengthOfInquiryEvent: proc.lengthOfInquiryEvent ?? null,
+			inquiryInTarget: proc.inquiryInTarget ?? null,
+			inquiryPreparationTimeDays: proc.inquiryPreparationTimeDays ?? null,
+			inquiryTravelTimeDays: proc.inquiryTravelTimeDays ?? null,
+			inquirySittingTimeDays: proc.inquirySittingTimeDays ?? null,
+			inquiryReportingTimeDays: proc.inquiryReportingTimeDays ?? null,
+
+			// Conference / pre-inquiry fields
+			conferenceDate: proc.conferenceDate ? new Date(proc.conferenceDate as string) : null,
+			conferenceNoteSentDate: proc.conferenceNoteSentDate ? new Date(proc.conferenceNoteSentDate as string) : null,
+			preInquiryMeetingDate: proc.preInquiryMeetingDate ? new Date(proc.preInquiryMeetingDate as string) : null,
+			preInquiryNoteSentDate: proc.preInquiryNoteSentDate ? new Date(proc.preInquiryNoteSentDate as string) : null,
+
+			// Document dates
+			proofsOfEvidenceReceivedDate: proc.proofsOfEvidenceReceivedDate
+				? new Date(proc.proofsOfEvidenceReceivedDate as string)
+				: null,
+			statementsOfCaseReceivedDate: proc.statementsOfCaseReceivedDate
+				? new Date(proc.statementsOfCaseReceivedDate as string)
+				: null,
+			inHouseDate: proc.inHouseDate ? new Date(proc.inHouseDate as string) : null,
+			offerForWrittenRepresentationsDate: proc.offerForWrittenRepresentationsDate
+				? new Date(proc.offerForWrittenRepresentationsDate as string)
+				: null
+		})
+	);
+
+	prismaPayload.Procedures = {
+		deleteMany: {},
+		create: mappedProcedures
+	};
+
+	delete flatData.procedureDetails;
 }
 
 /**

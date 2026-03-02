@@ -23,37 +23,88 @@ function formatValue(value: any) {
 const NESTED_SECTIONS: (keyof CaseListFields)[] = ['Dates', 'Costs', 'Abeyance', 'Notes', 'Outcome'];
 
 /**
- * Flattens the Procedures array into procedureOne..., procedureTwo... fields
+ * Maps the Procedures array from the DB into a procedureDetails array.
+ *
+ * Each procedure becomes an object keyed by unprefixed field names
+ * (matching the fieldNames in PROCEDURE_QUESTIONS).
+ *
+ * Address fields (venues) are mapped to the UI address format.
+ *
+ * Fields we don't want in the UI (internal IDs, timestamps) are stripped.
  */
-export function mapProcedures(procedures: any[]) {
-	if (!procedures || !Array.isArray(procedures)) return {};
+export function mapProceduresToArray(procedures: any[]): Record<string, any>[] | undefined {
+	if (!procedures || !Array.isArray(procedures) || procedures.length === 0) {
+		return undefined;
+	}
 
-	const flattened: Record<string, any> = {};
+	/** Fields to strip from each procedure — internal DB fields not needed in the UI */
+	const STRIP_FIELDS = ['inspectorId', 'caseId', 'createdAt', 'updatedAt'];
 
-	procedures.forEach((proc) => {
-		if (!proc.step) return;
-		const suffix = proc.step.replace('Procedure', '');
-		const prefix = `procedure${suffix}`;
+	/** Fields that contain Address objects needing transformation */
+	const VENUE_FIELDS = ['hearingVenue', 'inquiryVenue', 'conferenceVenue'];
+
+	/**
+	 * Fields that are foreign key IDs pointing to related tables.
+	 * The DB returns these as separate objects (e.g. HearingVenue: { line1: ... })
+	 * but also has the raw ID field (hearingVenueId). We strip the ID fields
+	 * because the venue address object is what we actually display.
+	 */
+	const VENUE_ID_FIELDS = ['hearingVenueId', 'inquiryVenueId', 'conferenceVenueId'];
+
+	/**
+	 * Prisma relation fields that are capitalised objects — we extract data
+	 * from these but don't pass them through directly.
+	 */
+	const RELATION_FIELDS = [
+		'Inspector',
+		'ProcedureType',
+		'ProcedureStatus',
+		'SiteVisitType',
+		'AdminProcedureType',
+		'HearingFormat',
+		'InquiryFormat',
+		'ConferenceFormat',
+		'PreInquiryMeetingFormat',
+		'HearingVenue',
+		'InquiryVenue',
+		'ConferenceVenue',
+		'InquiryOrConference'
+	];
+
+	return procedures.map((proc) => {
+		const mapped: Record<string, any> = {};
 
 		Object.keys(proc).forEach((key) => {
-			if (['step', 'caseId', 'id', 'createdAt', 'updatedAt'].includes(key)) return;
+			// Skip internal / relation fields
+			if (STRIP_FIELDS.includes(key) || VENUE_ID_FIELDS.includes(key) || RELATION_FIELDS.includes(key)) {
+				return;
+			}
 
 			const value = proc[key];
 			if (value === null || value === undefined) return;
 
-			const suffixKey = key.charAt(0).toUpperCase() + key.slice(1);
-
-			const uiKey = `${prefix}${suffixKey}`;
-
-			if (key.endsWith('Venue') && typeof value === 'object') {
-				flattened[uiKey] = mapAddressDbToViewModel(value);
+			// Map venue address objects to the UI format
+			if (VENUE_FIELDS.includes(key) && typeof value === 'object') {
+				mapped[key] = mapAddressDbToViewModel(value);
 			} else {
-				flattened[uiKey] = formatValue(value);
+				mapped[key] = formatValue(value);
 			}
 		});
-	});
 
-	return flattened;
+		/**
+		 * Handle the case where venue data comes from Prisma relations
+		 * (capitalised) rather than direct fields. This happens because
+		 * Prisma includes both the FK (hearingVenueId) and the relation
+		 * (HearingVenue: { ... }) in the query result.
+		 */
+		if (proc.HearingVenue) mapped.hearingVenue = mapAddressDbToViewModel(proc.HearingVenue);
+		if (proc.InquiryVenue) mapped.inquiryVenue = mapAddressDbToViewModel(proc.InquiryVenue);
+		if (proc.ConferenceVenue) mapped.conferenceVenue = mapAddressDbToViewModel(proc.ConferenceVenue);
+
+		if (proc.Inspector) mapped.inspectorId = proc.Inspector.idpUserId;
+
+		return mapped;
+	});
 }
 
 /**
@@ -125,7 +176,7 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 					: undefined
 		})) || undefined;
 
-	const mappedProcedures = mapProcedures(mergedData.Procedures || []);
+	const procedureDetails = mapProceduresToArray(mergedData.Procedures || []);
 	delete mergedData.Procedures;
 
 	const sanitisedData: Record<string, any> = {};
@@ -163,7 +214,6 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 
 	return {
 		...sanitisedData,
-		...mappedProcedures,
 		...mappedNotes,
 		siteAddress,
 		receivedDateDisplay: formatInTimeZone(caseRow.receivedDate, 'Europe/London', 'dd MMM yyyy'),
@@ -173,6 +223,7 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		contactDetails: mappedContacts,
 		applicantDetails: mappedApplicants.length ? mappedApplicants : undefined,
 		outcomeDetails,
+		procedureDetails,
 		act: act?.id
 	};
 }

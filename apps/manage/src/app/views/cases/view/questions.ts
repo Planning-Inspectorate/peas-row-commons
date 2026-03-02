@@ -10,11 +10,13 @@ import {
 	TEAM_QUESTIONS,
 	createTeamQuestions,
 	createOutcomeQuestions,
+	createProcedureDetailQuestions,
 	OVERVIEW_QUESTIONS,
 	OUTCOME_QUESTIONS,
-	createProcedureQuestions,
+	createOverviewQuestions,
 	KEY_CONTACTS_QUESTIONS,
-	createOverviewQuestions
+	PROCEDURE_QUESTIONS,
+	PROCEDURE_MANAGE_LIST_QUESTION
 } from './question-utils.ts';
 
 import type { CaseOfficer } from './types.ts';
@@ -29,10 +31,11 @@ export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }, answ
 		answers.inspectorDetails as Record<string, unknown>[]
 	);
 	const generateOverviewQuestions = createOverviewQuestions(OVERVIEW_QUESTIONS, answers);
-
-	const procedureOneQuestions = createProcedureQuestions('One');
-	const procedureTwoQuestions = createProcedureQuestions('Two');
-	const procedureThreeQuestions = createProcedureQuestions('Three');
+	const generatedProcedureQuestions = createProcedureDetailQuestions(
+		PROCEDURE_QUESTIONS,
+		groupMembers,
+		answers.inspectorDetails as Record<string, unknown>[]
+	);
 
 	const questions = {
 		// Static questions
@@ -47,9 +50,9 @@ export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }, answ
 		...generatedTeamQuestions,
 		...generateOverviewQuestions,
 		...generateOutcomeQuestions,
-		...procedureOneQuestions,
-		...procedureTwoQuestions,
-		...procedureThreeQuestions
+		...PROCEDURE_MANAGE_LIST_QUESTION,
+		...generatedProcedureQuestions,
+		...KEY_CONTACTS_QUESTIONS
 	};
 
 	const textOverrides = {
