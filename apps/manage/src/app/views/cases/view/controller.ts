@@ -150,7 +150,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 
 		const finalAnswers = combineSessionAndDbData(res, answers);
 
-		const questions = getQuestions(groupMembers, answers.inspectorDetails);
+		const questions = getQuestions(groupMembers, answers);
 
 		// put these on locals for the list controller
 		res.locals.originalAnswers = { ...answers };

@@ -109,8 +109,9 @@ declare module '@planning-inspectorate/dynamic-forms/src/components/date/questio
 
 declare module '@planning-inspectorate/dynamic-forms/src/components/radio/question.js' {
 	import type { QuestionParameters } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+	import type OptionsQuestion from '@planning-inspectorate/dynamic-forms/src/questions/options-question.js';
 
-	export default class RadioQuestion {
+	export default class RadioQuestion extends OptionsQuestion {
 		constructor(params: QuestionParameters);
 	}
 }
