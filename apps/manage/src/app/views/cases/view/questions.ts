@@ -13,34 +13,43 @@ import {
 	OVERVIEW_QUESTIONS,
 	OUTCOME_QUESTIONS,
 	createProcedureQuestions,
-	KEY_CONTACTS_QUESTIONS
+	KEY_CONTACTS_QUESTIONS,
+	createOverviewQuestions
 } from './question-utils.ts';
 
-import type { CaseOfficer, Inspector } from './types.ts';
+import type { CaseOfficer } from './types.ts';
 import { CUSTOM_COMPONENT_CLASSES } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 
-export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }, inspectors: Inspector[]) {
+export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }, answers: Record<string, unknown>) {
 	// We must generate team questions due to the varying nature of groupMembers
 	const generatedTeamQuestions = createTeamQuestions(TEAM_QUESTIONS, groupMembers);
-	const generateOutcomeQuestions = createOutcomeQuestions(OUTCOME_QUESTIONS, groupMembers, inspectors);
+	const generateOutcomeQuestions = createOutcomeQuestions(
+		OUTCOME_QUESTIONS,
+		groupMembers,
+		answers.inspectorDetails as Record<string, unknown>[]
+	);
+	const generateOverviewQuestions = createOverviewQuestions(OVERVIEW_QUESTIONS, answers);
 
 	const procedureOneQuestions = createProcedureQuestions('One');
 	const procedureTwoQuestions = createProcedureQuestions('Two');
 	const procedureThreeQuestions = createProcedureQuestions('Three');
 
 	const questions = {
+		// Static questions
 		...DATE_QUESTIONS,
 		...DOCUMENTS_QUESTIONS,
 		...COSTS_QUESTIONS,
 		...ABEYANCE_QUESTIONS,
 		...CASE_DETAILS_QUESTIONS,
+		...KEY_CONTACTS_QUESTIONS,
+		// Questions where we need to inject some
+		// sort of dynamic data (e.g. from DB or entra)
 		...generatedTeamQuestions,
-		...OVERVIEW_QUESTIONS,
+		...generateOverviewQuestions,
 		...generateOutcomeQuestions,
 		...procedureOneQuestions,
 		...procedureTwoQuestions,
-		...procedureThreeQuestions,
-		...KEY_CONTACTS_QUESTIONS
+		...procedureThreeQuestions
 	};
 
 	const textOverrides = {

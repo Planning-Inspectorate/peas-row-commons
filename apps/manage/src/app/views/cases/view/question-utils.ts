@@ -624,7 +624,7 @@ export const OVERVIEW_QUESTIONS = {
 		options: CASE_TYPES.map((type) => ({ text: type.displayName, value: type.id }))
 	},
 	caseSubtype: {
-		type: COMPONENT_TYPES.RADIO,
+		type: CUSTOM_COMPONENTS.LEGACY_RADIO,
 		title: 'Subtype',
 		question: 'not editable',
 		fieldName: 'subTypeId',
@@ -1050,6 +1050,35 @@ export function createOutcomeQuestions(
 		decisionMakerInspector: {
 			...outcomeQuestions.decisionMakerInspector,
 			options: inspectorOptions
+		}
+	};
+}
+
+/**
+ * Generates the Overview questions, which are mostly the same
+ * except for caseSubtype which needs a legacyOptions field appended
+ * so that we can display user added values.
+ */
+export function createOverviewQuestions(
+	overviewQuestions: typeof OVERVIEW_QUESTIONS,
+	answers: Record<string, unknown>
+) {
+	const subType = answers.SubType as { displayName: string; id: string };
+
+	const subTypes = subType
+		? [
+				{
+					text: `Other: ${subType.displayName}`,
+					value: subType.id
+				}
+			]
+		: [];
+
+	return {
+		...overviewQuestions,
+		caseSubtype: {
+			...overviewQuestions.caseSubtype,
+			legacyOptions: subTypes
 		}
 	};
 }
