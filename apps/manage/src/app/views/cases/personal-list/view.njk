@@ -1,0 +1,146 @@
+{% extends "views/layouts/main.njk" %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+
+{% from "govuk/components/details/macro.njk" import govukDetails %}
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% set title = "Cases - Personal List" %}
+
+{% block pageTitle %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+
+            {% set isFilterActive = statusParams.currentStatus and statusParams.currentStatus !== 'all' %}
+
+            {# If we have no cases at all, then we give them a specific page with just an H1 and a button to go back #}
+            {% if cases | length === 0 and not isFilterActive %}
+                <h1 class="govuk-heading-l" data-cy="page-heading-no-cases">
+                    You are not assigned to any cases
+                </h1>
+
+                {{ govukButton({
+                    text: "Search all cases",
+                    href: "/cases",
+                    classes: "govuk-button--secondary",
+                    attributes: { "data-cy": "search-all-cases-btn" }
+                }) }}
+
+            {% else %}
+
+                <h1 class="govuk-heading-l" data-cy="page-heading">
+                    {{ pageHeading }}
+                </h1>
+
+                {% set statusItems = [{ value: "all", text: "All" }] %}
+                {% for status in statusParams.caseStatuses %}
+                    {% set statusItems = (statusItems.push({
+                        value: status.id,
+                        text: status.displayName,
+                        selected: status.id === statusParams.currentStatus 
+                    }), statusItems) %}
+                {% endfor %}
+
+                {% set filterHtml %}
+                    <form method="GET" action="">
+                        {{ govukSelect({
+                            id: "status-filter",
+                            name: "status",
+                            label: {
+                                text: "Show cases with status",
+                                classes: "govuk-label--s"
+                            },
+                            items: statusItems
+                        }) }}
+                        
+                        <div class="govuk-button-group govuk-!-margin-bottom-0">
+                            {{ govukButton({
+                                text: "Apply",
+                                classes: "govuk-button--secondary"
+                            }) }}
+                            
+                            <a class="govuk-link govuk-link--no-visited-state" href="?" data-cy="clear-filter-link-inline">
+                                Clear filter
+                            </a>
+                        </div>
+                    </form>
+                {% endset %}
+
+                {{ govukDetails({
+                    summaryText: "Filters",
+                    html: filterHtml,
+                    attributes: { "data-cy": "filters-details" }
+                }) }}
+
+                {% if cases | length !== 0 %}
+                    
+                    {% set caseRows = [] %}
+                    {% for case in cases %}
+
+                        {% set inspectorsHtml %}
+                            {% if case.mappedInspectors and case.mappedInspectors.length > 0 %}
+                                <ul class="govuk-list govuk-!-margin-bottom-0">
+                                    {% for insp in case.mappedInspectors %}
+                                        <li>{{ insp.displayName }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span class="govuk-hint govuk-!-margin-bottom-0">Unassigned</span>
+                            {% endif %}
+                        {% endset %}
+
+                        {% set caseOfficerText = case.CaseOfficer.idpUserId if case.CaseOfficer else "Unassigned" %}
+
+                        {% set caseRows = (caseRows.push([
+                            {
+                                html: "<a class='govuk-link govuk-link--no-visited-state' target='_blank' href='/cases/" +  case.id +"'>" + case.reference + "</a>",
+                                attributes: { "data-cy": "case-reference-" + loop.index0, "data-sort-value": case.reference }
+                            },
+                            {
+                                text: case.caseOfficerName or "Unassigned",
+                                attributes: { "data-cy": "case-officer-" + loop.index0 },
+                                classes: "govuk-hint" if not case.caseOfficerName
+                            },
+                            {
+                                html: inspectorsHtml,
+                                attributes: { "data-cy": "case-inspectors-" + loop.index0 }
+                            },
+                            {
+                                text: case.Status.displayName | default("Unknown"),
+                                attributes: { "data-cy": "case-status-" + loop.index0 }
+                            }
+                        ]), caseRows) %}
+                    {% endfor %}
+
+                    {{ govukTable({
+                        attributes: {
+                            "data-cy": "assigned-to-me-table",
+                            "data-module": "moj-sortable-table"
+                        },
+                        head: [
+                            { text: "Reference", classes: "govuk-!-width-one-quarter", attributes: { "aria-sort": "ascending" } },
+                            { text: "Case officer", classes: "govuk-!-width-one-quarter", attributes: { "aria-sort": "none" } },
+                            { text: "Inspector", classes: "govuk-!-width-one-quarter", attributes: { "aria-sort": "none" } },
+                            { text: "Case status", classes: "govuk-!-width-one-quarter", attributes: { "aria-sort": "none" } }
+                        ],
+                        rows: caseRows
+                    }) }}
+                
+                {# However, if there are no cases because we have done a filter then we show some different text and layout #}
+                {% else %}
+                    <p class="govuk-body" data-cy="no-cases-filtered-text">
+                        No cases were found.
+                    </p>
+                    <p class="govuk-body">
+                        <a href="?" class="govuk-link govuk-link--no-visited-state" data-cy="clear-filter-link">Clear filter</a> to view all assigned cases.
+                    </p>
+                {% endif %}
+
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
