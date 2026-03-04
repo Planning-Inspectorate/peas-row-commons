@@ -14,6 +14,9 @@
                 </p>
                 <nav class="govuk-header__navigation pins-header-navigation" aria-label="Menu">
                     <ul class="govuk-header__navigation-list">
+                        <li class="govuk-header__navigation-item{% if currentPage == 'personal-list' %} govuk-header__navigation-item--active{% endif %}">
+                            <a class="govuk-header__link" href="/cases/personal-list">Assigned to me</a>
+                        </li>
                         <li class="govuk-header__navigation-item{% if currentPage == 'all-cases' %} govuk-header__navigation-item--active{% endif %}">
                             <a class="govuk-header__link" href="/">All cases</a>
                         </li>
