@@ -88,7 +88,7 @@ export function buildSuccessController() {
 		res.render('views/cases/create-a-case/success.njk', {
 			title: 'New case has been created',
 			bodyText: `The case reference number<br><strong>${data.reference}</strong>`,
-			successBackLinkUrl: `/cases/${data.id}`,
+			successBackLinkUrl: `/cases/${data.id}?firstVisit=true`,
 			successBackLinkText: 'Continue to case details page'
 		});
 	};
