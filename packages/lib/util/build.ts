@@ -7,7 +7,10 @@ import crypto from 'node:crypto';
 interface SassOptions {
 	staticDir: string;
 	srcDir: string;
-	govUkRoot: string;
+	/**
+	 * The root of the repository where `node_modules` can be found
+	 */
+	repoRoot: string;
 	/**
 	 * a file to update with the new css filename
 	 */
@@ -21,11 +24,11 @@ interface SassOptions {
  *
  * @see https://sass-lang.com/documentation/js-api/#md:usage
  */
-async function compileSass({ staticDir, srcDir, govUkRoot, localsFile, mojRoot }: SassOptions): Promise<void> {
+async function compileSass({ staticDir, srcDir, repoRoot, localsFile, mojRoot }: SassOptions): Promise<void> {
 	const styleFile = path.join(srcDir, 'app', 'sass/style.scss');
 	const out = sass.compile(styleFile, {
 		// ensure scss can find the govuk-frontend folders
-		loadPaths: [govUkRoot, mojRoot],
+		loadPaths: [repoRoot, mojRoot],
 		style: 'compressed',
 		// don't show depreciate warnings for govuk
 		// see https://frontend.design-system.service.gov.uk/importing-css-assets-and-javascript/#silence-deprecation-warnings-from-dependencies-in-dart-sass
@@ -72,7 +75,7 @@ async function deleteOldCssFiles({ staticDir, filename }: { staticDir: string; f
 
 interface AssetOptions {
 	staticDir: string;
-	govUkRoot: string;
+	repoRoot: string;
 	mojRoot: string;
 }
 
@@ -82,12 +85,12 @@ interface AssetOptions {
  * @see https://frontend.design-system.service.gov.uk/importing-css-assets-and-javascript/#copy-the-font-and-image-files-into-your-application
  * @returns {Promise<void>}
  */
-async function copyAssets({ staticDir, govUkRoot, mojRoot }: AssetOptions): Promise<void> {
-	const images = path.join(govUkRoot, 'node_modules/govuk-frontend/dist/govuk/assets/images');
-	const fonts = path.join(govUkRoot, 'node_modules/govuk-frontend/dist/govuk/assets/fonts');
-	const js = path.join(govUkRoot, 'node_modules/govuk-frontend/dist/govuk/govuk-frontend.min.js');
-	const manifest = path.join(govUkRoot, 'node_modules/govuk-frontend/dist/govuk/assets/manifest.json');
-	const rebrand = path.join(govUkRoot, 'node_modules/govuk-frontend/dist/govuk/assets/rebrand');
+async function copyAssets({ staticDir, repoRoot, mojRoot }: AssetOptions): Promise<void> {
+	const images = path.join(repoRoot, 'node_modules/govuk-frontend/dist/govuk/assets/images');
+	const fonts = path.join(repoRoot, 'node_modules/govuk-frontend/dist/govuk/assets/fonts');
+	const js = path.join(repoRoot, 'node_modules/govuk-frontend/dist/govuk/govuk-frontend.min.js');
+	const manifest = path.join(repoRoot, 'node_modules/govuk-frontend/dist/govuk/assets/manifest.json');
+	const rebrand = path.join(repoRoot, 'node_modules/govuk-frontend/dist/govuk/assets/rebrand');
 
 	const staticImages = path.join(staticDir, 'assets', 'images');
 	const staticFonts = path.join(staticDir, 'assets', 'fonts');
@@ -132,7 +135,7 @@ async function copyAutocompleteAssets({ staticDir, root }: AutocompleteOptions):
 interface BuildOptions {
 	staticDir: string;
 	srcDir: string;
-	govUkRoot: string;
+	repoRoot: string;
 	accessibleAutocompleteRoot?: string;
 	localsFile?: string;
 	mojRoot: string;
@@ -167,14 +170,14 @@ async function replaceInFile(file: string, replacements: Replacement[]) {
 export function runBuild({
 	staticDir,
 	srcDir,
-	govUkRoot,
+	repoRoot,
 	accessibleAutocompleteRoot,
 	localsFile,
 	mojRoot
 }: BuildOptions): Promise<void[]> {
 	const tasks = [
-		compileSass({ staticDir, srcDir, govUkRoot, localsFile, mojRoot }),
-		copyAssets({ staticDir, govUkRoot, mojRoot })
+		compileSass({ staticDir, srcDir, repoRoot, localsFile, mojRoot }),
+		copyAssets({ staticDir, repoRoot, mojRoot })
 	];
 	if (accessibleAutocompleteRoot) {
 		tasks.push(copyAutocompleteAssets({ staticDir, root: accessibleAutocompleteRoot }));
