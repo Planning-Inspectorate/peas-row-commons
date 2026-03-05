@@ -1,0 +1,42 @@
+@use '../brand/pins-colors' as brand;
+@use 'node_modules/govuk-frontend/dist/govuk/index' as govuk;
+
+header.govuk-header.pins-header {
+	min-height: 60px;
+	padding: 1rem 1rem 0;
+	background: brand.$pins-grey-100;
+	border-bottom: 0.5rem solid brand.$pins-green-200;
+
+	&.pins-header__external {
+		color: white;
+		background-color: brand.$pins-mhclg-green;
+		font-family: govuk.$govuk-font-family;
+
+		& svg {
+			fill: white;
+			& rect {
+				fill: white;
+			}
+		}
+	}
+
+	& svg {
+		height: 40px;
+		& rect {
+			fill: brand.$pins-green-strip;
+		}
+	}
+}
+
+.govuk-service-navigation.pins-service-navigation {
+	background: brand.$pins-grey-100;
+	border-bottom: none;
+
+	& .govuk-service-navigation__item {
+		border-color: brand.$pins-green-200;
+	}
+
+	& .govuk-service-navigation__link:hover {
+		color: black;
+	}
+}

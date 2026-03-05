@@ -18,12 +18,13 @@ export function configureNunjucks(): nunjucks.Environment {
 	// get the path to the moj frontend folder in node_modules, using the node require resolution
 	const mojFrontendRoot = path.resolve(require.resolve('@ministryofjustice/frontend'), '../..');
 	const customFormsRoot = path.resolve(require.resolve('@pins/peas-row-commons-lib'), '..', 'forms');
+	const libUi = path.resolve(require.resolve('@pins/peas-row-commons-lib'), '..');
 	const appDir = path.join(config.srcDir, 'app');
 
 	// configure nunjucks
 	return nunjucks.configure(
 		// ensure nunjucks templates can use govuk-frontend components, and templates we've defined in `web/src/app`
-		[dynamicFormsRoot, govukFrontendRoot, appDir, mojFrontendRoot, customFormsRoot],
+		[dynamicFormsRoot, govukFrontendRoot, appDir, mojFrontendRoot, customFormsRoot, libUi],
 		{
 			// output with dangerous characters are escaped automatically
 			autoescape: true,

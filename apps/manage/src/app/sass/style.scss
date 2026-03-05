@@ -7,7 +7,7 @@ $font-family: arial, helvetica, sans-serif;
 	$govuk-font-family: $font-family
 );
 @forward 'node_modules/@ministryofjustice/frontend/moj/all';
-@use './header';
+@use 'node_modules/@pins/peas-row-commons-lib/ui/header/pins-header';
 
 // set font-family for any autocomplete menu items
 .autocomplete__menu {
