@@ -35,6 +35,13 @@ export function createNewCaseRoutes(service: ManageService): IRouter {
 	const saveController = buildSaveController(service);
 	const successController = buildSuccessController();
 
+	// Set `currentPage` for the navigation banner highlight.
+	// This is injected via res.locals because the dynamic forms library handles all actual res.render() calls.
+	router.use((req, res, next) => {
+		res.locals.currentPage = 'create-a-case';
+		next();
+	});
+
 	router.get('/', getJourneyResponse, getJourneyMiddleware, getJourney, redirectToUnansweredQuestion());
 
 	router.get(

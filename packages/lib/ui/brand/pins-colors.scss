@@ -1,0 +1,14 @@
+@use 'sass:map' as map;
+@use 'node_modules/govuk-frontend/dist/govuk/settings/_colours-organisations.scss' as org-colors with (
+	$govuk-new-organisation-colours: true
+);
+
+$pins-grey-100: #f3f2f1;
+$pins-blue-500: #1d70b8;
+$pins-green-200: #13a19b;
+$pins-green-strip: #00625e;
+$pins-mhclg-green: map.get(
+	org-colors.$govuk-colours-organisations,
+	'ministry-of-housing-communities-local-government',
+	'colour'
+);
