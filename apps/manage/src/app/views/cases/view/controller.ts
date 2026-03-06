@@ -97,6 +97,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				Outcome: {
 					include: {
 						CaseDecisions: {
+							orderBy: { createdDate: 'asc' },
 							include: {
 								DecisionMaker: true,
 								DecisionMakerType: true,
@@ -106,6 +107,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 					}
 				},
 				Procedures: {
+					orderBy: { createdDate: 'asc' },
 					include: {
 						HearingVenue: true,
 						InquiryVenue: true,

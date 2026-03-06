@@ -359,11 +359,14 @@ model CaseOutcome {
 
 /// The many decisions that could be made for the outcome (1-many)
 model CaseDecision {
-  id            String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  caseOutcomeId String? @db.UniqueIdentifier
+  id String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+
+  /// The date the Decision row was inserted into the table
+  createdDate DateTime @default(now())
 
   /// Parent Relation
-  CaseOutcome CaseOutcome? @relation(fields: [caseOutcomeId], references: [id])
+  caseOutcomeId String?      @db.UniqueIdentifier
+  CaseOutcome   CaseOutcome? @relation(fields: [caseOutcomeId], references: [id])
 
   /// Decision Maker (who)
   decisionMakerTypeId String?
@@ -411,6 +414,9 @@ model Outcome {
 
 model Procedure {
   id String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+
+  /// The date the procedure row was inserted into the table
+  createdDate DateTime @default(now())
 
   /// Core procedure data
   procedureTypeId             String?
