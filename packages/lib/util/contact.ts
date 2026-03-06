@@ -192,8 +192,7 @@ export const createPersonQuestions = ({ section, db, url, label, hint }: PersonC
 		[`${section}Address`]: {
 			type: COMPONENT_TYPES.ADDRESS,
 			title: `${label} address details`,
-			question: `${label} address details`,
-			hint: 'Optional',
+			question: `${label} address details (optional)`,
 			fieldName: `${db}Address`,
 			url: `${url}-address`,
 			validators: [new AddressValidator()],
