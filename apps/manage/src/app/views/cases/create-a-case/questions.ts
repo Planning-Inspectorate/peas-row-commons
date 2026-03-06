@@ -32,11 +32,23 @@ import {
 	CUSTOM_COMPONENTS
 } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
+import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../../config.ts';
+import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
+import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
 
 export function getQuestions(groupMembers = { caseOfficers: [] }) {
-	const mappedGroupMembers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
+	const env = loadEnvironmentConfig();
 
+	const mappedGroupMembers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
 	mappedGroupMembers.unshift({ text: '', value: '' });
+
+	// this is to avoid a database read when the data is static - but it does vary by environment
+	// the options here should match the dev/prod seed scripts
+	const LPAs = env === ENVIRONMENT_NAME.PROD ? AUTHORITIES_PROD : AUTHORITIES_DEV;
+	const lpaOptions = [
+		{ text: '', value: '' }, // ensure there is a 'null' option so the first LPA isn't selected by default
+		...LPAs.map((t) => ({ text: t.name, value: t.id })).sort((a, b) => a.text.localeCompare(b.text))
+	];
 
 	const questions = {
 		caseworkArea: {
@@ -215,20 +227,13 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			]
 		},
 		authority: {
-			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
+			type: COMPONENT_TYPES.SELECT,
 			title: 'Who is the authority? (optional)',
 			question: 'Who is the authority? (optional)',
 			hint: 'Enter the Local Planning Authority or Common Registration Authority',
 			fieldName: 'authority',
 			url: 'authority',
-			validators: [
-				new StringValidator({
-					maxLength: {
-						maxLength: 150,
-						maxLengthMessage: 'Authority must be less than 150 characters'
-					}
-				})
-			]
+			options: lpaOptions
 		},
 		caseOfficer: {
 			type: COMPONENT_TYPES.SELECT,
