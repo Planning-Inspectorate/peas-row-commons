@@ -191,17 +191,17 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 		},
 		siteAddress: {
 			type: COMPONENT_TYPES.ADDRESS,
-			title: 'What is the site address?',
-			question: 'What is the site address?',
-			hint: '(optional)',
+			title: 'What is the site address? (optional)',
+			question: 'What is the site address? (optional)',
+			hint: 'You are able to add a site location on the next page if there is no site address.',
 			fieldName: 'siteAddress',
 			url: 'site-address',
 			validators: [new AddressValidator()]
 		},
 		location: {
 			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
-			title: 'What is the site location if no address was added?',
-			question: 'What is the site location if no address was added?',
+			title: 'What is the site location if no address was added? (optional)',
+			question: 'What is the site location if no address was added? (optional)',
 			hint: 'For example, name of common, village green, area or body of water',
 			fieldName: 'location',
 			url: 'location',
