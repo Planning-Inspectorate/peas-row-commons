@@ -71,3 +71,25 @@ $font-family: arial, helvetica, sans-serif;
 		border-bottom-style: none;
 	}
 }
+
+/**
+ * The accordion used inside of the section summary list on the 
+ * case details page needs to have a "cleaner" style compared to
+ * regular one. Namely removing all the spacing and borders so it
+ * fits nicely into the list that surrounds it.
+ */
+.govuk-accordion.pins-clean-accordion {
+	border-bottom: none;
+
+	.govuk-accordion__section-heading {
+		.govuk-accordion__section-button {
+			padding-top: 0;
+			padding-bottom: 0;
+		}
+	}
+
+	.govuk-accordion__section-content {
+		padding-top: 5px;
+		padding-bottom: 0;
+	}
+}

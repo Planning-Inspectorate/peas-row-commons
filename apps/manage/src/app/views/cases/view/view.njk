@@ -8,6 +8,7 @@
 {% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
 {% from "govuk/components/tag/macro.njk" import govukTag %}
 {% from "govuk/components/details/macro.njk" import govukDetails %}
+{% from "govuk/components/accordion/macro.njk" import govukAccordion %}
 
 {% set title = reference + " - " + journeyTitle + " - Manage a Case" %}
 
@@ -24,32 +25,86 @@
         }) }}
     {% endif %}
     <div class="govuk-grid-row">
-        <div class="govuk-grid-column-full govuk-!-margin-bottom-3">
+        <div class="govuk-grid-column-two-thirds">
             <h2 class="govuk-hint govuk-!-margin-bottom-0">
                 {{ reference }}
             </h2>
             <h1 class="govuk-heading-l">
                 {{ caseName }}
             </h1>
-        </div>
-    </div>
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-two-thirds">
-            <ul class="govuk-list">
-                {% for section in summaryListData.sections %}
-                    {% if section.list.rows.length %}
-                        <li>
-                            <a href="#{{ section.heading | lower }}"
-                            class="govuk-link govuk-link--no-visited-state">{{ section.heading }}</a>
+            <div class="govuk-button-group">
+                {{ govukButton({
+                    text: "Manage case files",
+                    href: baseUrl + "/case-folders",
+                    classes: "govuk-button--secondary"
+                }) }}
+            </div>
+
+            <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible govuk-!-margin-top-0">
+
+            <p class="govuk-body govuk-!-font-weight-bold">Summary card list</p>
+            {% set allSections = [] %}
+
+            {% for section in summaryListData.sections %}
+                {% if section.list.rows.length %}
+                    {% set allSections = (allSections.push({
+                        heading: section.heading,
+                        href: "#" + (section.heading | lower)
+                    }), allSections) %}
+                {% endif %}
+            {% endfor %}
+
+            {% set allSections = (allSections.push({
+                heading: "Case audit log",
+                href: "#case-audit-log"
+            }), allSections) %}
+
+            <ul class="govuk-list govuk-!-margin-bottom-0">
+                {% for item in allSections %}
+                    {% if loop.index0 < 3 %}
+                        <li data-cy="summary-link-{{ item.heading | lower | replace(' ', '-') }}">
+                            <a href="{{ item.href }}" class="govuk-link govuk-link--no-visited-state">{{ item.heading }}</a>
                         </li>
                     {% endif %}
                 {% endfor %}
-                {# Case audit log is not included in the section summary list, so we must give it its own hardcoded value at the end. #}
-                <li>
-                    <a href="#case-audit-log"
-                    class="govuk-link govuk-link--no-visited-state">Case audit log</a>
-                </li>
             </ul>
+
+            {% if allSections.length > 3 %}
+                
+                {% set remainingCount = allSections.length - 3 %}
+
+                {% set hiddenLinksHtml %}
+                    <ul class="govuk-list govuk-!-margin-bottom-0 govuk-!-margin-top-0">
+                        {% for item in allSections %}
+                            {% if loop.index0 >= 3 %}
+                                <li data-cy="summary-link-{{ item.heading | lower | replace(' ', '-') }}">
+                                    <a href="{{ item.href }}" class="govuk-link govuk-link--no-visited-state">{{ item.heading }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% endset %}
+
+                {# Default expanded when viewing page for first time after creation. ID has to be unique for this to work. #}
+                {{ govukAccordion({
+                    id: "more-sections-accordion-" + caseId,
+                    classes: "hide-controls pins-clean-accordion",
+                    showSectionText: "Show " + remainingCount + " more sections",
+                    hideSectionText: "Hide",
+                    items: [
+                        {
+                            expanded: expandSectionList,
+                            content: {
+                                html: hiddenLinksHtml
+                            }
+                        }
+                    ],
+                    attributes: { "data-cy": "more-sections-accordion" }
+                }) }}
+                
+            {% endif %}
+
+            <p class="govuk-body govuk-!-font-weight-bold">Case notes actions</p>
             {{ govukDetails({
                 summaryText: allCaseNotesCount + ' case notes',
                 html: caseNotes({
@@ -60,13 +115,8 @@
                 })
             }) }}
         </div>
-        <div class="govuk-grid-column-one-third govuk-!-text-align-right">
-            {{ govukButton({
-                text: "Manage case files",
-                href: baseUrl + "/case-folders",
-                classes: "govuk-button--secondary"
-            }) }}
-        </div>
+    </div>
+    <div class="govuk-grid-row">
         <div class="govuk-grid-column-full">
             {% for section in summaryListData.sections %}
                 {% if section.list.rows.length %}
