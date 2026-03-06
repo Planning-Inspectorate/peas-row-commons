@@ -15,6 +15,7 @@ import { buildSaveController, buildSuccessController } from './save.ts';
 import { ManageService } from '#service';
 import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { buildGetJourneyMiddleware } from './controller.ts';
+import { bounceRemoveCancellation } from '@pins/peas-row-commons-lib/middleware/manage-list/track-removes.ts';
 
 export function createNewCaseRoutes(service: ManageService): IRouter {
 	const router = createRouter({ mergeParams: true });
@@ -36,15 +37,22 @@ export function createNewCaseRoutes(service: ManageService): IRouter {
 
 	router.get('/', getJourneyResponse, getJourneyMiddleware, getJourney, redirectToUnansweredQuestion());
 
-	router.get('/:section/:question', getJourneyResponse, getJourneyMiddleware, getJourney, question);
+	router.get(
+		'/:section/:question{/:manageListAction/:manageListItemId/:manageListQuestion}',
+		getJourneyResponse,
+		getJourneyMiddleware,
+		getJourney,
+		question
+	);
 
 	router.post(
-		'/:section/:question',
+		'/:section/:question{/:manageListAction/:manageListItemId/:manageListQuestion}',
 		getJourneyResponse,
 		getJourneyMiddleware,
 		getJourney,
 		validate,
 		validationErrorHandler,
+		asyncHandler(bounceRemoveCancellation),
 		buildSave(saveDataToSession)
 	);
 

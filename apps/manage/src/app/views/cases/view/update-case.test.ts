@@ -2,6 +2,9 @@ import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import { buildUpdateCase, mapCasePayload } from './update-case.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
+import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
+import { ACT_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/act.ts';
+import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
 
 const mockFindUnique = mock.fn();
 const mockUpdate = mock.fn();
@@ -23,7 +26,10 @@ const mockDb = {
 
 const mockService = {
 	db: mockDb as any,
-	logger: mockLogger()
+	logger: mockLogger(),
+	audit: {
+		record: mock.fn(() => Promise.resolve())
+	}
 };
 
 describe('Update Case Controller', () => {
@@ -60,7 +66,8 @@ describe('Update Case Controller', () => {
 
 			const handler = buildUpdateCase(mockService as any, true);
 
-			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123' }) as any);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
 
 			await handler({ req: req as any, res: {} as any, data });
 
@@ -74,7 +81,8 @@ describe('Update Case Controller', () => {
 			const req = { params: { id: 'case-123' }, session: {} };
 			const data = { answers: { name: 'New Name' } };
 
-			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123' }) as any);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
 
 			const handler = buildUpdateCase(mockService as any);
 			await handler({ req: req as any, res: {} as any, data });
@@ -85,7 +93,6 @@ describe('Update Case Controller', () => {
 			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
 			assert.strictEqual(updateArgs.where.id, 'case-123');
 			assert.strictEqual(updateArgs.data.name, 'New Name');
-			assert.ok(updateArgs.data.updatedDate instanceof Date, 'Should set updatedDate');
 		});
 
 		it('should throw "Case not found" if case does not exist', async () => {
@@ -105,7 +112,7 @@ describe('Update Case Controller', () => {
 	describe('mapCasePayload (Transformation Logic)', () => {
 		it('should keep main table fields at root level', () => {
 			const input = { name: 'My Case', reference: 'REF001' };
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 
 			assert.strictEqual(result.name, 'My Case');
 			assert.strictEqual(result.reference, 'REF001');
@@ -114,7 +121,7 @@ describe('Update Case Controller', () => {
 
 		it('should nest Date fields into "Dates" upsert object', () => {
 			const input = { startDate: '2025-01-01', expiryDate: '2025-12-31' };
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 
 			const datesUpdate = (result as any).Dates;
 
@@ -132,31 +139,17 @@ describe('Update Case Controller', () => {
 				name: 'Main Field',
 				startDate: '2025-01-01'
 			};
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 
 			assert.strictEqual(result.name, 'Main Field');
 			assert.strictEqual((result as any).Dates.upsert.create.startDate, '2025-01-01');
-		});
-
-		it('should transform applicant fields into Applicant upsert payload', () => {
-			const input = {
-				applicantName: 'John Doe'
-			};
-			const result = mapCasePayload(input, 'case-123');
-
-			const applicantUpdate = (result as any).Applicant;
-			assert.ok(applicantUpdate, 'Should have Applicant property');
-
-			assert.strictEqual(applicantUpdate.upsert.create.name, 'John Doe');
-
-			assert.strictEqual((result as any).applicantName, undefined);
 		});
 
 		it('should transform authority fields into Authority upsert payload', () => {
 			const input = {
 				authorityName: 'Local Council'
 			};
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 
 			const authorityUpdate = (result as any).Authority;
 			assert.ok(authorityUpdate, 'Should have Authority property');
@@ -176,7 +169,7 @@ describe('Update Case Controller', () => {
 					postcode: 'SW1 1AA'
 				}
 			};
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 
 			const addressUpdate = (result as any).SiteAddress;
 			assert.ok(addressUpdate, 'Should have SiteAddress property');
@@ -191,7 +184,7 @@ describe('Update Case Controller', () => {
 		it('should skip applicant transformation if fields are incomplete', () => {
 			const input = {};
 
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 
 			assert.strictEqual((result as any).Applicant, undefined);
 			assert.strictEqual((result as any).applicantName, undefined);
@@ -205,7 +198,7 @@ describe('Update Case Controller', () => {
 				]
 			};
 
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 
 			const inspectorsUpdate = (result as any).Inspectors;
 			assert.ok(inspectorsUpdate, 'Should have Inspectors property');
@@ -224,7 +217,7 @@ describe('Update Case Controller', () => {
 				relatedCaseDetails: [{ relatedCaseReference: 'REF-123' }, { relatedCaseReference: 'REF-456' }]
 			};
 
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 
 			const relatedCasesUpdate = (result as any).RelatedCases;
 			assert.ok(relatedCasesUpdate, 'Should have RelatedCases property');
@@ -246,7 +239,7 @@ describe('Update Case Controller', () => {
 				]
 			};
 
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 
 			const linkedCaseUpdate = (result as any).LinkedCases;
 			assert.ok(linkedCaseUpdate, 'Should have LinkedCases property');
@@ -267,7 +260,7 @@ describe('Update Case Controller', () => {
 			const input = {
 				caseOfficerId: 'officer-456'
 			};
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 
 			const caseOfficerUpdate = (result as any).CaseOfficer;
 			assert.ok(caseOfficerUpdate, 'Should have CaseOfficer property');
@@ -297,7 +290,7 @@ describe('Update Case Controller', () => {
 				]
 			};
 
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 			const outcomePayload = (result as any).Outcome;
 
 			assert.ok(outcomePayload);
@@ -323,7 +316,7 @@ describe('Update Case Controller', () => {
 				]
 			};
 
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 			const decision = (result as any).Outcome.upsert.create.CaseDecisions.create[0];
 
 			assert.strictEqual(decision.DecisionMaker.connectOrCreate.create.idpUserId, 'inspector-999');
@@ -340,7 +333,7 @@ describe('Update Case Controller', () => {
 				]
 			};
 
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 			const decision = (result as any).Outcome.upsert.create.CaseDecisions.create[0];
 
 			assert.strictEqual(decision.grantedWithConditionsComment, 'Conditions applied');
@@ -352,7 +345,7 @@ describe('Update Case Controller', () => {
 				outcomeDetails: [{ outcomeId: 'outcome-1' }, { outcomeId: 'outcome-2' }]
 			};
 
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 			const decisions = (result as any).Outcome.upsert.create.CaseDecisions.create;
 
 			assert.strictEqual(decisions.length, 2);
@@ -365,8 +358,318 @@ describe('Update Case Controller', () => {
 				outcomeDetails: 'invalid-string'
 			};
 
-			const result = mapCasePayload(input, 'case-123');
+			const result = mapCasePayload(input);
 			assert.strictEqual((result as any).Outcome, undefined);
+		});
+
+		it('should handle adding an Act with a Section', () => {
+			const actSection = ACT_SECTIONS[0];
+			const input = {
+				act: actSection.id
+			};
+
+			const result = mapCasePayload(input);
+			const act = result.Act;
+			const section = result.Section;
+
+			assert.strictEqual(section?.connect?.id, actSection.sectionId);
+			assert.strictEqual(act?.connect?.id, actSection.actId);
+		});
+
+		it('should handle adding an Act without a Section', () => {
+			const input = {
+				act: ACT_ID.ELECTRICITY_1989
+			};
+
+			const result = mapCasePayload(input);
+			const act = result.Act;
+			const section = result.Section;
+
+			// Create the connection to the act, make sure to wipe any old connection to section.
+			assert.strictEqual(act?.connect?.id, ACT_ID.ELECTRICITY_1989);
+			assert.strictEqual(section?.disconnect, true);
+		});
+
+		it('should set closedDate if status is being set to a closed one', () => {
+			const input = {
+				statusId: CASE_STATUS_ID.CLOSED
+			};
+
+			const result = mapCasePayload(input);
+
+			assert.ok(result.closedDate instanceof Date);
+
+			// Because closedDate will have been set "now" it might be a few ms or secs off,
+			// so just check it's roughly correct.
+			const now = new Date().getTime();
+			const closedTime = result.closedDate.getTime();
+			const differenceInSeconds = (now - closedTime) / 1000;
+
+			assert.ok(differenceInSeconds < 5);
+		});
+
+		it('should not set closedDate if status is being set to an open one', () => {
+			const input = {
+				statusId: CASE_STATUS_ID.ARRANGE_EVENT
+			};
+
+			const result = mapCasePayload(input);
+
+			assert.strictEqual(result.closedDate, null);
+		});
+
+		it('should set closedDate to null if we have passed null', () => {
+			const input = {
+				statusId: null
+			};
+
+			const result = mapCasePayload(input);
+
+			assert.strictEqual(result.closedDate, null);
+		});
+
+		it('closedDate should be undefined if we have passed nothing', () => {
+			const input = {};
+
+			const result = mapCasePayload(input);
+
+			assert.strictEqual(result.closedDate, undefined);
+		});
+	});
+
+	describe('buildUpdateCase (audit recording)', () => {
+		it('should record FIELD_UPDATED audit event with display name', async () => {
+			let recordedAudit: any = null;
+
+			const mockService = {
+				db: {
+					$transaction: async (callback: any) =>
+						callback({
+							case: {
+								findUnique: () => Promise.resolve({ id: 'case-1', reference: 'REF-001' }),
+								update: () => Promise.resolve({ id: 'case-1', reference: 'REF-001' })
+							}
+						})
+				},
+				audit: {
+					record: (entry: any) => {
+						recordedAudit = entry;
+						return Promise.resolve();
+					}
+				},
+				logger: {
+					error: () => {},
+					info: () => {}
+				}
+			};
+
+			const req = {
+				params: { id: 'case-1' },
+				session: { account: { localAccountId: 'user-123' } }
+			};
+
+			const data = { answers: { name: 'Updated Name' } };
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(recordedAudit.caseId, 'case-1');
+			assert.strictEqual(recordedAudit.action, 'FIELD_UPDATED');
+			assert.strictEqual(recordedAudit.userId, 'user-123');
+			assert.deepStrictEqual(recordedAudit.metadata, { fieldName: 'Case name' });
+		});
+	});
+
+	describe('mapCasePayload (Procedure Details)', () => {
+		it('should transform procedureDetails array into Procedures deleteMany/create payload', () => {
+			const input = {
+				procedureDetails: [
+					{
+						procedureTypeId: 'hearing',
+						procedureStatusId: 'active',
+						siteVisitDate: '2025-06-15'
+					},
+					{
+						procedureTypeId: 'inquiry',
+						procedureStatusId: 'completed'
+					}
+				]
+			};
+
+			const result = mapCasePayload(input);
+			const proceduresUpdate = (result as any).Procedures;
+
+			assert.ok(proceduresUpdate, 'Should have Procedures property');
+			assert.deepStrictEqual(proceduresUpdate.deleteMany, {});
+			assert.strictEqual(proceduresUpdate.create.length, 2);
+
+			assert.strictEqual(proceduresUpdate.create[0].ProcedureType.connect.id, 'hearing');
+			assert.strictEqual(proceduresUpdate.create[0].ProcedureStatus.connect.id, 'active');
+			assert.ok(proceduresUpdate.create[0].siteVisitDate instanceof Date);
+
+			assert.strictEqual(proceduresUpdate.create[1].ProcedureType.connect.id, 'inquiry');
+
+			assert.strictEqual((result as any).procedureDetails, undefined);
+		});
+
+		it('should convert date string fields to Date objects in procedures', () => {
+			const input = {
+				procedureDetails: [
+					{
+						procedureTypeId: 'hearing',
+						hearingTargetDate: '2025-03-15',
+						confirmedHearingDate: '2025-04-01',
+						hearingClosedDate: '2025-05-01'
+					}
+				]
+			};
+
+			const result = mapCasePayload(input);
+			const proc = (result as any).Procedures.create[0];
+
+			assert.ok(proc.hearingTargetDate instanceof Date);
+			assert.ok(proc.confirmedHearingDate instanceof Date);
+			assert.ok(proc.hearingClosedDate instanceof Date);
+		});
+
+		it('should set null for missing optional procedure fields', () => {
+			const input = {
+				procedureDetails: [
+					{
+						procedureTypeId: 'hearing',
+						procedureStatusId: 'active'
+					}
+				]
+			};
+
+			const result = mapCasePayload(input);
+			const proc = (result as any).Procedures.create[0];
+
+			assert.strictEqual(proc.siteVisitDate, null);
+			assert.strictEqual(proc.hearingTargetDate, null);
+			assert.strictEqual(proc.inquiryTargetDate, null);
+			assert.strictEqual(proc.inHouseDate, null);
+			assert.strictEqual(proc.AdminProcedureType, undefined, 'Missing FK should not produce a connect');
+			assert.strictEqual(proc.SiteVisitType, undefined, 'Missing FK should not produce a connect');
+		});
+
+		it('should handle inquiry-specific fields in procedure payload', () => {
+			const input = {
+				procedureDetails: [
+					{
+						procedureTypeId: 'inquiry',
+						inquiryTargetDate: '2025-06-01',
+						confirmedInquiryDate: '2025-07-01',
+						inquiryFormatId: 'face-to-face',
+						lengthOfInquiryEvent: 5,
+						inquiryInTarget: true
+					}
+				]
+			};
+
+			const result = mapCasePayload(input);
+			const proc = (result as any).Procedures.create[0];
+
+			assert.ok(proc.inquiryTargetDate instanceof Date);
+			assert.ok(proc.confirmedInquiryDate instanceof Date);
+			assert.strictEqual(proc.InquiryFormat.connect.id, 'face-to-face');
+			assert.strictEqual(proc.lengthOfInquiryEvent, 5);
+			assert.strictEqual(proc.inquiryInTarget, true);
+		});
+
+		it('should handle admin-specific fields in procedure payload', () => {
+			const input = {
+				procedureDetails: [
+					{
+						procedureTypeId: 'admin',
+						adminProcedureType: 'case-officer',
+						inHouseDate: '2025-03-01'
+					}
+				]
+			};
+
+			const result = mapCasePayload(input);
+			const proc = (result as any).Procedures.create[0];
+
+			assert.strictEqual(proc.AdminProcedureType.connect.id, 'case-officer');
+			assert.ok(proc.inHouseDate instanceof Date);
+		});
+
+		it('should ignore procedureDetails if it is not an array', () => {
+			const input = {
+				procedureDetails: 'invalid-string'
+			};
+
+			const result = mapCasePayload(input);
+			assert.strictEqual((result as any).Procedures, undefined);
+		});
+
+		it('should handle conference and pre-inquiry fields in procedure payload', () => {
+			const input = {
+				procedureDetails: [
+					{
+						procedureTypeId: 'inquiry',
+						conferenceDate: '2025-04-01',
+						conferenceFormatId: 'virtual',
+						conferenceNoteSentDate: '2025-04-02',
+						preInquiryMeetingDate: '2025-03-15',
+						preInquiryMeetingFormatId: 'face-to-face',
+						preInquiryNoteSentDate: '2025-03-16',
+						inquiryOrConferenceId: 'both'
+					}
+				]
+			};
+
+			const result = mapCasePayload(input);
+			const proc = (result as any).Procedures.create[0];
+
+			assert.ok(proc.conferenceDate instanceof Date);
+			assert.strictEqual(proc.ConferenceFormat.connect.id, 'virtual');
+			assert.ok(proc.conferenceNoteSentDate instanceof Date);
+			assert.ok(proc.preInquiryMeetingDate instanceof Date);
+			assert.strictEqual(proc.PreInquiryMeetingFormat.connect.id, 'face-to-face');
+			assert.ok(proc.preInquiryNoteSentDate instanceof Date);
+			assert.strictEqual(proc.InquiryOrConference.connect.id, 'both');
+		});
+
+		it('should handle written reps fields in procedure payload', () => {
+			const input = {
+				procedureDetails: [
+					{
+						procedureTypeId: 'written-reps',
+						offerForWrittenRepresentationsDate: '2025-05-01'
+					}
+				]
+			};
+
+			const result = mapCasePayload(input);
+			const proc = (result as any).Procedures.create[0];
+
+			assert.ok(proc.offerForWrittenRepresentationsDate instanceof Date);
+		});
+	});
+
+	describe('buildUpdateCase (procedure updates)', () => {
+		it('should save procedure details when procedureDetails is in answers', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = {
+				answers: {
+					procedureDetails: [{ procedureTypeId: 'hearing', procedureStatusId: 'active' }]
+				}
+			};
+
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockUpdate.mock.callCount(), 1);
+
+			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
+			assert.ok(updateArgs.data.Procedures, 'Should have Procedures in update payload');
+			assert.deepStrictEqual(updateArgs.data.Procedures.deleteMany, {});
+			assert.strictEqual(updateArgs.data.Procedures.create.length, 1);
 		});
 	});
 });

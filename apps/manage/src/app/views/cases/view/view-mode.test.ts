@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { caseToViewModel, mapNotes, mapProcedures } from './view-model.ts';
+import { caseToViewModel, mapNotes, mapProceduresToArray } from './view-model.ts';
 
 describe('view-model', () => {
 	const groupMembers = {
@@ -70,22 +70,6 @@ describe('view-model', () => {
 
 			assert.strictEqual(result.receivedDateDisplay, '15 Jan 2024');
 			assert.strictEqual(result.receivedDateSortable, input.receivedDate.getTime());
-		});
-
-		it('should map nested Applicant object to flat applicant fields', () => {
-			const input = {
-				id: '123',
-				receivedDate: new Date(),
-				Applicant: {
-					name: 'John Doe'
-				}
-			};
-
-			const result: any = caseToViewModel(input as any, groupMembers);
-
-			assert.strictEqual(result.applicantName, 'John Doe');
-
-			assert.strictEqual(result.Applicant, undefined);
 		});
 
 		it('should map nested Authority object to flat authority fields', () => {
@@ -230,7 +214,7 @@ describe('view-model', () => {
 			assert.strictEqual(result.outcomeDetails[2].decisionMakerInspectorId, undefined);
 		});
 
-		it('should return empty array for outcomeDetails if Outcome data is missing', () => {
+		it('should return undefined for outcomeDetails if Outcome data is missing', () => {
 			const input = {
 				id: '123',
 				receivedDate: new Date(),
@@ -238,7 +222,7 @@ describe('view-model', () => {
 			};
 
 			const result: any = caseToViewModel(input as any, groupMembers);
-			assert.deepStrictEqual(result.outcomeDetails, []);
+			assert.deepStrictEqual(result.outcomeDetails, undefined);
 		});
 	});
 
@@ -264,7 +248,7 @@ describe('view-model', () => {
 				}
 			];
 
-			const result = mapNotes(input as any, groupMembers);
+			const result = mapNotes(input as any, groupMembers, '123');
 
 			assert.ok(result.caseNotes);
 			assert.strictEqual(result.caseNotes.length, 2);
@@ -282,7 +266,7 @@ describe('view-model', () => {
 
 		it('should handle an empty array of case notes', async () => {
 			const input: any[] = [];
-			const result = mapNotes(input, groupMembers);
+			const result = mapNotes(input, groupMembers, '123');
 
 			assert.deepStrictEqual(result.caseNotes, []);
 		});
@@ -296,98 +280,292 @@ describe('view-model', () => {
 				{ createdAt: dateNew, comment: 'B', Author: { idpUserId: '2' } }
 			];
 
-			mapNotes(input as any, groupMembers);
+			mapNotes(input as any, groupMembers, '123');
 
 			assert.strictEqual(input[0].createdAt, dateOld);
 			assert.strictEqual(input[1].createdAt, dateNew);
 		});
-	});
-	describe('mapProcedures', () => {
-		it('should flatten procedure fields and prefix them with the step name', () => {
+
+		it('should convert newline characters in the comment to HTML <br> tags', async () => {
 			const input = [
 				{
-					step: 'ProcedureOne',
-					status: 'Open',
-					targetDate: new Date('2025-01-01')
-				},
-				{
-					step: 'ProcedureTwo',
-					status: 'Closed'
+					createdAt: new Date('2024-01-01T10:00:00.000Z'),
+					comment: 'First line\nSecond line\r\nThird line',
+					Author: { idpUserId: '123' }
 				}
 			];
 
-			const result = mapProcedures(input);
+			const result = mapNotes(input as any, groupMembers, '123');
 
-			assert.strictEqual(result.procedureOneStatus, 'Open');
-			assert.ok(result.procedureOneTargetDate);
-
-			assert.strictEqual(result.procedureTwoStatus, 'Closed');
+			assert.strictEqual(result.caseNotes[0].commentText, 'First line<br>Second line<br>Third line');
 		});
 
-		it('should transform Venue objects using mapAddress when key ends in "Venue"', () => {
+		it('should truncate extremely long comments', async () => {
+			const massiveComment = 'A'.repeat(500);
+
 			const input = [
 				{
-					step: 'ProcedureOne',
+					createdAt: new Date('2024-01-01T10:00:00.000Z'),
+					comment: massiveComment,
+					Author: { idpUserId: '123' }
+				}
+			];
+
+			const result = mapNotes(input as any, groupMembers, '123');
+
+			assert.notStrictEqual(result.caseNotes[0].truncatedCommentText, massiveComment);
+
+			// The length gets truncated at 100 + ... + a "read more" link so just check that it is smaller than 500
+			assert.ok(result.caseNotes[0].truncatedCommentText.length < 500);
+
+			assert.ok(result.caseNotes[0].truncatedCommentText.includes('...'));
+		});
+	});
+	describe('mapProceduresToArray', () => {
+		it('should return undefined if input is not an array', () => {
+			assert.strictEqual(mapProceduresToArray(null as any), undefined);
+			assert.strictEqual(mapProceduresToArray(undefined as any), undefined);
+			assert.strictEqual(mapProceduresToArray({} as any), undefined);
+		});
+
+		it('should return undefined for an empty array', () => {
+			assert.strictEqual(mapProceduresToArray([]), undefined);
+		});
+
+		it('should strip internal fields (caseId, createdAt, updatedAt)', () => {
+			const input = [
+				{
+					id: 'proc-1',
+					caseId: 'case-123',
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					procedureTypeId: 'hearing'
+				}
+			];
+
+			const result = mapProceduresToArray(input);
+
+			assert.ok(result);
+			assert.strictEqual(result[0].caseId, undefined);
+			assert.strictEqual(result[0].createdAt, undefined);
+			assert.strictEqual(result[0].updatedAt, undefined);
+			assert.strictEqual(result[0].procedureTypeId, 'hearing');
+		});
+
+		it('should strip venue ID fields (hearingVenueId, inquiryVenueId, conferenceVenueId)', () => {
+			const input = [
+				{
+					procedureTypeId: 'hearing',
+					hearingVenueId: 'venue-1',
+					inquiryVenueId: 'venue-2',
+					conferenceVenueId: 'venue-3'
+				}
+			];
+
+			const result = mapProceduresToArray(input);
+
+			assert.ok(result);
+			assert.strictEqual(result[0].hearingVenueId, undefined);
+			assert.strictEqual(result[0].inquiryVenueId, undefined);
+			assert.strictEqual(result[0].conferenceVenueId, undefined);
+		});
+
+		it('should strip capitalised Prisma relation fields', () => {
+			const input = [
+				{
+					procedureTypeId: 'hearing',
+					ProcedureType: { id: 'hearing', displayName: 'Hearing' },
+					ProcedureStatus: { id: 'active', displayName: 'Active' },
+					HearingFormat: { id: 'virtual', displayName: 'Virtual' }
+				}
+			];
+
+			const result = mapProceduresToArray(input);
+
+			assert.ok(result);
+			assert.strictEqual(result[0].ProcedureType, undefined);
+			assert.strictEqual(result[0].ProcedureStatus, undefined);
+			assert.strictEqual(result[0].HearingFormat, undefined);
+			assert.strictEqual(result[0].procedureTypeId, 'hearing');
+		});
+
+		it('should skip null and undefined values', () => {
+			const input = [
+				{
+					procedureTypeId: 'hearing',
+					hearingTargetDate: null,
+					inquiryTargetDate: undefined,
+					siteVisitDate: new Date('2025-01-01')
+				}
+			];
+
+			const result = mapProceduresToArray(input);
+
+			assert.ok(result);
+			assert.strictEqual(result[0].hearingTargetDate, undefined);
+			assert.strictEqual(result[0].inquiryTargetDate, undefined);
+			assert.ok(result[0].siteVisitDate);
+		});
+
+		it('should convert boolean values to yes/no strings', () => {
+			const input = [
+				{
+					procedureTypeId: 'hearing',
+					hearingInTarget: true,
+					inquiryInTarget: false
+				}
+			];
+
+			const result = mapProceduresToArray(input);
+
+			assert.ok(result);
+			assert.strictEqual(result[0].hearingInTarget, 'yes');
+			assert.strictEqual(result[0].inquiryInTarget, 'no');
+		});
+
+		it('should map HearingVenue relation to hearingVenue with UI address format', () => {
+			const input = [
+				{
+					procedureTypeId: 'hearing',
 					HearingVenue: {
-						line1: '123 Fake St',
+						line1: '10 Court Lane',
+						line2: 'Floor 2',
 						townCity: 'Bristol',
-						postcode: 'BS1 5TR'
+						county: 'Somerset',
+						postcode: 'BS1 1AA'
 					}
 				}
 			];
 
-			const result = mapProcedures(input);
+			const result = mapProceduresToArray(input);
 
-			const venue = result.procedureOneHearingVenue;
-
-			assert.ok(venue, 'Venue object should exist');
-			assert.strictEqual(venue.addressLine1, '123 Fake St');
-			assert.strictEqual(venue.townCity, 'Bristol');
-			assert.strictEqual(venue.postcode, 'BS1 5TR');
+			assert.ok(result);
+			assert.ok(result[0].hearingVenue);
+			assert.strictEqual(result[0].hearingVenue.addressLine1, '10 Court Lane');
+			assert.strictEqual(result[0].hearingVenue.townCity, 'Bristol');
+			assert.strictEqual(result[0].hearingVenue.postcode, 'BS1 1AA');
 		});
 
-		it('should format boolean values using formatValue (e.g. Yes/No)', () => {
+		it('should map InquiryVenue relation to inquiryVenue with UI address format', () => {
 			const input = [
 				{
-					step: 'ProcedureOne',
-					isUrgent: true,
-					hasFinished: false
+					procedureTypeId: 'inquiry',
+					InquiryVenue: {
+						line1: '456 Test Rd',
+						townCity: 'Manchester',
+						postcode: 'M1 1AA'
+					}
 				}
 			];
 
-			const result = mapProcedures(input);
+			const result = mapProceduresToArray(input);
 
-			assert.strictEqual(result.procedureOneIsUrgent, 'yes');
-			assert.strictEqual(result.procedureOneHasFinished, 'no');
+			assert.ok(result);
+			assert.ok(result[0].inquiryVenue);
+			assert.strictEqual(result[0].inquiryVenue.addressLine1, '456 Test Rd');
+			assert.strictEqual(result[0].inquiryVenue.townCity, 'Manchester');
 		});
 
-		it('should ignore excluded keys (id, caseId, etc) and null values', () => {
+		it('should map ConferenceVenue relation to conferenceVenue with UI address format', () => {
 			const input = [
 				{
-					step: 'ProcedureOne',
-					id: 'ignore-me',
-					caseId: 'ignore-me-too',
-					createdAt: new Date(),
-					validField: 'keep-me',
-					emptyField: null
+					procedureTypeId: 'inquiry',
+					ConferenceVenue: {
+						line1: '789 Conf St',
+						townCity: 'Leeds',
+						postcode: 'LS1 1AA'
+					}
 				}
 			];
 
-			const result = mapProcedures(input);
+			const result = mapProceduresToArray(input);
 
-			assert.strictEqual(result.procedureOneValidField, 'keep-me');
-
-			assert.strictEqual(result.procedureOneId, undefined);
-			assert.strictEqual(result.procedureOneCaseId, undefined);
-			assert.strictEqual(result.procedureOneCreatedAt, undefined);
-
-			assert.strictEqual(result.procedureOneEmptyField, undefined);
+			assert.ok(result);
+			assert.ok(result[0].conferenceVenue);
+			assert.strictEqual(result[0].conferenceVenue.addressLine1, '789 Conf St');
+			assert.strictEqual(result[0].conferenceVenue.townCity, 'Leeds');
 		});
 
-		it('should return empty object if input is not an array', () => {
-			assert.deepStrictEqual(mapProcedures(null as any), {});
-			assert.deepStrictEqual(mapProcedures(undefined as any), {});
-			assert.deepStrictEqual(mapProcedures({} as any), {});
+		it('should map multiple procedures independently', () => {
+			const input = [
+				{ procedureTypeId: 'hearing', procedureStatusId: 'active' },
+				{ procedureTypeId: 'inquiry', procedureStatusId: 'completed' },
+				{ procedureTypeId: 'admin', adminProcedureType: 'case-officer' }
+			];
+
+			const result = mapProceduresToArray(input);
+
+			assert.ok(result);
+			assert.strictEqual(result.length, 3);
+			assert.strictEqual(result[0].procedureTypeId, 'hearing');
+			assert.strictEqual(result[1].procedureTypeId, 'inquiry');
+			assert.strictEqual(result[2].procedureTypeId, 'admin');
+			assert.strictEqual(result[2].adminProcedureType, 'case-officer');
+		});
+
+		it('should pass through non-special fields like date objects and strings', () => {
+			const testDate = new Date('2025-06-15');
+			const input = [
+				{
+					procedureTypeId: 'hearing',
+					siteVisitDate: testDate,
+					hearingFormatId: 'face-to-face',
+					lengthOfHearingEvent: 5
+				}
+			];
+
+			const result = mapProceduresToArray(input);
+
+			assert.ok(result);
+			assert.strictEqual(result[0].siteVisitDate, testDate);
+			assert.strictEqual(result[0].hearingFormatId, 'face-to-face');
+			assert.strictEqual(result[0].lengthOfHearingEvent, 5);
+		});
+	});
+
+	describe('caseToViewModel - procedure mapping', () => {
+		it('should map Procedures array into procedureDetails via mapProceduresToArray', () => {
+			const input = {
+				id: '123',
+				receivedDate: new Date(),
+				Procedures: [
+					{
+						procedureTypeId: 'hearing',
+						procedureStatusId: 'active',
+						siteVisitDate: new Date('2025-01-15')
+					}
+				]
+			};
+
+			const result: any = caseToViewModel(input as any, groupMembers);
+
+			assert.ok(Array.isArray(result.procedureDetails), 'procedureDetails should be an array');
+			assert.strictEqual(result.procedureDetails.length, 1);
+			assert.strictEqual(result.procedureDetails[0].procedureTypeId, 'hearing');
+			assert.strictEqual(result.Procedures, undefined, 'Raw Procedures should be removed');
+		});
+
+		it('should return undefined procedureDetails when Procedures is empty', () => {
+			const input = {
+				id: '123',
+				receivedDate: new Date(),
+				Procedures: []
+			};
+
+			const result: any = caseToViewModel(input as any, groupMembers);
+
+			assert.strictEqual(result.procedureDetails, undefined);
+		});
+
+		it('should return undefined procedureDetails when Procedures is missing', () => {
+			const input = {
+				id: '123',
+				receivedDate: new Date()
+			};
+
+			const result: any = caseToViewModel(input as any, groupMembers);
+
+			assert.strictEqual(result.procedureDetails, undefined);
 		});
 	});
 });

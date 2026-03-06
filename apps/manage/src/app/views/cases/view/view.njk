@@ -44,12 +44,19 @@
                         </li>
                     {% endif %}
                 {% endfor %}
+                {# Case audit log is not included in the section summary list, so we must give it its own hardcoded value at the end. #}
+                <li>
+                    <a href="#case-audit-log"
+                    class="govuk-link govuk-link--no-visited-state">Case audit log</a>
+                </li>
             </ul>
             {{ govukDetails({
-                summaryText: notes.length + ' case notes',
+                summaryText: allCaseNotesCount + ' case notes',
                 html: caseNotes({
                     currentUrl: currentUrl,
-                    notes: notes
+                    notes: notes,
+                    max: 4,
+                    totalNotes: allCaseNotesCount
                 })
             }) }}
         </div>
@@ -74,32 +81,58 @@
                     }) }}
                 {% endif %}
             {% endfor %}
+
+            {{ govukSummaryList({
+                card: {
+                    title: {
+                        text: "Case audit log"
+                    },
+                    attributes: {id: "case-audit-log"}
+                },
+                rows: [
+                    {
+                        key: {
+                            text: "Last modified date"
+                        },
+                        value: {
+                            html: lastModifiedDate.date + "<br>" + lastModifiedDate.time if lastModifiedDate.date else "-"
+                        }
+                    },
+                    {
+                        key: {
+                            text: "Last modified by"
+                        },
+                        value: {
+                            text: lastModifiedBy if lastModifiedBy else "-"
+                        }
+                    },
+                    {
+                        key: {
+                            text: "Case closed date"
+                        },
+                        value: {
+                            html: closedDate.date if closedDate.date else "-"
+                        }
+                    },
+                    {
+                        key: {
+                            text: "Case history"
+                        },
+                        value: {
+                            html: ""
+                        },
+                        actions: {
+                            items: [
+                                {
+                                    href: baseUrl + "/case-history",
+                                    text: "View",
+                                    visuallyHiddenText: "case history"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }) }}
         </div>
     </div>
-
-    {# Script to handle the "Show more" buttons, hiding and displaying lists on view screen. #}
-	<script type="module" {% if cspNonce %}nonce="{{ cspNonce }}"{% endif %}>
-        function setupToggleButtons() {
-            document.querySelectorAll('.js-toggle-list-btn').forEach(btn => {
-                const list = document.getElementById(btn.getAttribute('data-list-id'));
-                const hiddenItems = list.querySelectorAll('.js-hidden-item');
-                const count = hiddenItems.length;
-
-                btn.innerText = `Show ${count} more`;
-
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    
-                    const isExpanded = btn.getAttribute('aria-expanded') === 'true';
-
-                    hiddenItems.forEach(item => item.classList.toggle('govuk-!-display-none', isExpanded));
-
-                    btn.setAttribute('aria-expanded', !isExpanded);
-                    btn.innerText = !isExpanded ? 'Hide' : `Show ${count} more`;
-                });
-            });
-        }
-
-		setupToggleButtons();
-	</script>
 {% endblock %}

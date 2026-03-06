@@ -1,6 +1,18 @@
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
 import { mapAddressDbToViewModel } from './address.ts';
+import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
+import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
+import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
+import AtLeastOneFieldValidator from '../forms/custom-components/multi-field-input/validator.ts';
+
+export interface PersonConfig {
+	section: string;
+	db: string;
+	url: string;
+	label: string;
+	hint?: string;
+}
 
 /**
  * Maps objectors DB data to view model.
@@ -38,7 +50,18 @@ export const CONTACT_MAPPINGS = [
 		prefix: 'contact',
 		dynamicTypeField: 'contactTypeId',
 		hasStatus: false,
-		deleteFilter: { contactTypeId: { not: CONTACT_TYPE_ID.OBJECTOR } }
+		deleteFilter: {
+			contactTypeId: {
+				notIn: [CONTACT_TYPE_ID.OBJECTOR, CONTACT_TYPE_ID.APPLICANT_APPELLANT]
+			}
+		}
+	},
+	{
+		sourceKey: 'applicantDetails',
+		prefix: 'applicant',
+		fixedTypeId: CONTACT_TYPE_ID.APPLICANT_APPELLANT,
+		hasStatus: false,
+		deleteFilter: { contactTypeId: CONTACT_TYPE_ID.APPLICANT_APPELLANT }
 	}
 ];
 
@@ -51,7 +74,7 @@ export function handleContacts(
 	prismaPayload: Prisma.CaseUpdateInput,
 	contactMappings: typeof CONTACT_MAPPINGS
 ) {
-	const deleteFilters: { contactTypeId: string | { not: string } }[] = [];
+	const deleteFilters: { contactTypeId: string | { notIn: string[] } }[] = [];
 	const allNewContacts: Prisma.ContactCreateWithoutCaseInput[] = [];
 
 	contactMappings.forEach((config) => {
@@ -114,3 +137,95 @@ export function handleContacts(
 		};
 	}
 }
+
+/**
+ * Boilerplate for creating a "contact" question in questions.ts
+ */
+export const createPersonQuestions = ({ section, db, url, label, hint }: PersonConfig) => {
+	const labelLower = label.toLowerCase();
+
+	return {
+		[`${section}Name`]: {
+			type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
+			title: label,
+			question: `Who is the ${labelLower}?`,
+			fieldName: `${section}Name`,
+			url: `${url}-name`,
+			hint: hint || 'Enter the name of the individual, the organisation, or both.',
+			viewData: { tableHeader: 'Name' },
+			inputFields: [
+				{ fieldName: `${db}FirstName`, label: 'First name' },
+				{ fieldName: `${db}LastName`, label: 'Last name' },
+				{ fieldName: `${db}OrgName`, label: `${label} company name` }
+			],
+			validators: [
+				new AtLeastOneFieldValidator({
+					fields: [`${db}FirstName`, `${db}LastName`, `${db}OrgName`],
+					errorMessage: 'Enter at least one of first name, last name or company name'
+				}),
+				new MultiFieldInputValidator({
+					fields: [
+						{
+							fieldName: `${db}FirstName`,
+							required: false,
+							errorMessage: `Enter ${labelLower} first name`,
+							maxLength: { maxLength: 250, maxLengthMessage: `${label} first name must be less than 250 characters` }
+						},
+						{
+							fieldName: `${db}LastName`,
+							required: false,
+							errorMessage: `Enter ${labelLower} last name`,
+							maxLength: { maxLength: 250, maxLengthMessage: `${label} last name must be less than 250 characters` }
+						},
+						{
+							fieldName: `${db}OrgName`,
+							required: false,
+							maxLength: {
+								maxLength: 250,
+								maxLengthMessage: 'Company or organisation name must be less than 250 characters'
+							}
+						}
+					]
+				})
+			]
+		},
+		[`${section}Address`]: {
+			type: COMPONENT_TYPES.ADDRESS,
+			title: `${label} address details`,
+			question: `${label} address details`,
+			hint: 'Optional',
+			fieldName: `${db}Address`,
+			url: `${url}-address`,
+			validators: [new AddressValidator()],
+			viewData: { tableHeader: 'Address' }
+		},
+		[`${section}ContactDetails`]: {
+			type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
+			title: `${label === 'Contact' ? 'Contact details' : label + ' contact details'}`,
+			question: `${label === 'Contact' ? 'What are the contact details?' : label + ' contact details'} (optional)`,
+			fieldName: `${section}Details`,
+			url: `${url}-contact-details`,
+			viewData: { tableHeader: 'Contact' },
+			inputFields: [
+				{ fieldName: `${db}Email`, label: 'Email address' },
+				{ fieldName: `${db}TelephoneNumber`, label: 'Phone number' }
+			],
+			validators: [
+				new MultiFieldInputValidator({
+					fields: [
+						{
+							fieldName: `${db}Email`,
+							required: false,
+							maxLength: { maxLength: 250, maxLengthMessage: `${label} email must be less than 250 characters` }
+						},
+						{
+							fieldName: `${db}TelephoneNumber`,
+							required: false,
+							maxLength: { maxLength: 15, maxLengthMessage: `${label} phone number must be less than 15 characters` }
+						}
+					]
+				})
+			]
+		}
+	};
+};

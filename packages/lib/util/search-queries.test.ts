@@ -214,4 +214,91 @@ describe('createWhereClause', () => {
 			assert.deepStrictEqual(result, { AND: [{ OR: [{ name: { contains: '' } }] }] });
 		});
 	});
+
+	describe('1-many relations and relationConstraints', () => {
+		it('should use "some" operator for 1-many relations when isList is true', () => {
+			const options = [{ parent: 'Contacts', isList: true, fields: ['name'], searchType: 'contains' as const }];
+			const result = createWhereClause(['foo'], options);
+			assert.deepStrictEqual(result, {
+				AND: [{ OR: [{ Contacts: { some: { name: { contains: 'foo' } } } }] }]
+			});
+		});
+
+		it('should apply relationConstraints inside the parent object for 1-1 relations', () => {
+			const options = [
+				{
+					parent: 'Status',
+					fields: ['name'],
+					searchType: 'contains',
+					relationConstraints: [{ isActive: true }]
+				}
+			];
+			const result = createWhereClause(['foo'], options);
+			assert.deepStrictEqual(result, {
+				AND: [{ OR: [{ Status: { AND: [{ name: { contains: 'foo' } }, { isActive: true }] } }] }]
+			});
+		});
+
+		it('should apply relationConstraints inside the "some" block for 1-many relations', () => {
+			const options = [
+				{
+					parent: 'Contacts',
+					isList: true,
+					fields: ['name'],
+					searchType: 'contains',
+					relationConstraints: [{ contactTypeId: 'applicant-appellant' }]
+				}
+			];
+			const result = createWhereClause(['foo'], options);
+			assert.deepStrictEqual(result, {
+				AND: [
+					{
+						OR: [
+							{
+								Contacts: {
+									some: {
+										AND: [{ name: { contains: 'foo' } }, { contactTypeId: 'applicant-appellant' }]
+									}
+								}
+							}
+						]
+					}
+				]
+			});
+		});
+
+		it('should correctly combine both relationConstraints and root level constraints', () => {
+			const options = [
+				{
+					parent: 'Contacts',
+					isList: true,
+					fields: ['name'],
+					searchType: 'contains',
+					relationConstraints: [{ contactTypeId: 'applicant-appellant' }],
+					constraints: [{ isDeleted: false }]
+				}
+			];
+			const result = createWhereClause(['foo'], options);
+			assert.deepStrictEqual(result, {
+				AND: [
+					{
+						OR: [
+							{
+								AND: [
+									{
+										Contacts: {
+											some: {
+												AND: [{ name: { contains: 'foo' } }, { contactTypeId: 'applicant-appellant' }]
+											}
+										}
+									},
+									{ isDeleted: false }
+								]
+							}
+						]
+					}
+				]
+			});
+		});
+	});
 });

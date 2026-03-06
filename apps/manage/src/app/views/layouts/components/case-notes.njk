@@ -2,9 +2,9 @@
 {%- from "govuk/components/character-count/macro.njk" import govukCharacterCount -%}
 
 {%- macro caseNotes(params) -%}
-	<form method="POST" novalidate="novalidate" action="{{ params.currentUrl }}/case-note">
+	<form method="POST" novalidate="novalidate" action="{{ params.currentUrl }}/case-notes">
 		<div class="govuk-grid-row">
-			<div class="govuk-grid-column-two-thirds">
+			<div class="govuk-grid-column-full">
 				{{ govukCharacterCount({
 					name: "comment",
 					id: "comment",
@@ -26,7 +26,7 @@
 		{%- for caseNote in params.notes -%}
 			<section>
 				<p class="govuk-body govuk-!-margin-bottom-1 govuk-!-text-break-word">
-					{{caseNote.commentText | safe}}
+					{{ caseNote.truncatedCommentText | safe }}
 				</p>
 				<p class="govuk-hint govuk-!-margin-bottom-6">
 					{{ [caseNote.time, ' on ', caseNote.dayOfWeek, ' ', caseNote.date, ' by ', caseNote.userName] | join }}
@@ -35,4 +35,12 @@
 			</section>
 		{%- endfor -%}
 	</div>
+	{# 4 is the maximum number currently allowed #}
+	{% if (params.totalNotes > params.max) %}
+		<p class="govuk-body govuk-!-text-align-centre">
+			<a class="govuk-link govuk-link--no-visited-state" href="{{ params.currentUrl }}/case-notes" data-cy="show-all-notes-link">
+				Show all notes
+			</a>
+		</p>
+	{% endif %}
 {%- endmacro -%}

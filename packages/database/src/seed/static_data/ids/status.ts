@@ -1,14 +1,21 @@
 export const CASE_STATUS_ID = {
 	NEW_CASE: 'new-case',
-	INITIAL_CHECKS_VALIDATION: 'initial-checks-validation',
+	VALIDATED: 'validated',
+	INVALID: 'invalid',
 	REJECTED: 'rejected',
-	SEND_LETTER: 'send-letter',
+	INFORM_PARTIES: 'inform-parties',
 	ALLOCATE_INSPECTOR: 'allocate-inspector',
 	ARRANGE_EVENT: 'arrange-event',
-	EXCHANGE_CORRESPONDENCE: 'exchange-correspondence',
+	IN_PROGRESS: 'in-progress',
 	READY_FOR_INSPECTOR: 'ready-for-inspector',
-	CHECK_DECISION: 'check-decision',
+	EVENT: 'event',
+	DECISION_RECOMMENDATION_ISSUED: 'decision-recommendation-issued',
 	DESPATCH: 'despatch',
 	FINAL_CHECK: 'final-check',
-	CLOSED: 'closed'
+	CLOSED: 'closed',
+	CANCELLED: 'cancelled',
+	PAUSED_ON_HOLD: 'paused-on-hold',
+	WITHDRAWN: 'withdrawn',
+	IN_ABEYANCE: 'in-abeyance',
+	CLOSED_OPENED_IN_ERROR: 'closed-opened-in-error'
 };

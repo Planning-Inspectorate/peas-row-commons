@@ -1,0 +1,55 @@
+{% extends "views/layouts/main.njk" %}
+{% from "govuk/components/table/macro.njk" import govukTable %}
+
+{% set title = reference + " - Case history" %}
+
+{% block pageTitle %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-full">
+            <h2 class="govuk-caption-l" data-cy="page-caption">
+                {{ reference }}
+            </h2>
+            <h1 class="govuk-heading-l" data-cy="page-heading">
+                {{ pageHeading }}
+            </h1>
+
+            {% if rows | length == 0 %}
+                <p class="govuk-body" data-cy="no-history-message">There is no case history to display</p>
+            {% else %}
+                {% set tableRows = [] %}
+                {% for row in rows %}
+                    {% set tableRows = (tableRows.push([
+                        {
+                            html: row.date + "<br>" + row.time,
+                            attributes: { "data-cy": "history-date-" + loop.index0 }
+                        },
+                        {
+                            text: row.details,
+                            attributes: { "data-cy": "history-details-" + loop.index0 }
+                        },
+                        {
+                            text: row.user,
+                            attributes: { "data-cy": "history-user-" + loop.index0 }
+                        }
+                    ]), tableRows) %}
+                {% endfor %}
+
+                {{ govukTable({
+                    attributes: {
+                        "data-cy": "case-history-table"
+                    },
+                    head: [
+                        { text: "Date and time" },
+                        { text: "Details" },
+                        { text: "User" }
+                    ],
+                    rows: tableRows
+                }) }}
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

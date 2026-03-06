@@ -1,0 +1,32 @@
+import { SECTION_ID } from './ids/index.ts';
+
+export const SECTIONS = [
+	{ id: SECTION_ID.S_16, displayName: '16' },
+	{ id: SECTION_ID.S_19_SCH_3_PARA_6, displayName: '19 and Schedule 3, para 6' },
+	{ id: SECTION_ID.S_23, displayName: '23' },
+	{ id: SECTION_ID.S_26, displayName: '26' },
+	{ id: SECTION_ID.S_32, displayName: '32' },
+	{ id: SECTION_ID.S_38, displayName: '38' },
+	{ id: SECTION_ID.S_53, displayName: '53' },
+	{ id: SECTION_ID.S_54, displayName: '54' },
+	{ id: SECTION_ID.S_78, displayName: '78' },
+	{ id: SECTION_ID.S_118, displayName: '118' },
+	{ id: SECTION_ID.S_118A, displayName: '118A' },
+	{ id: SECTION_ID.S_118B, displayName: '118B' },
+	{ id: SECTION_ID.S_119, displayName: '119' },
+	{ id: SECTION_ID.S_119A, displayName: '119A' },
+	{ id: SECTION_ID.S_119B, displayName: '119B' },
+	{ id: SECTION_ID.S_119D, displayName: '119D' },
+	{ id: SECTION_ID.S_149, displayName: '149' },
+	{ id: SECTION_ID.S_193, displayName: '193' },
+	{ id: SECTION_ID.S_247, displayName: '247' },
+	{ id: SECTION_ID.S_251, displayName: '251' },
+	{ id: SECTION_ID.S_257, displayName: '257' },
+	{ id: SECTION_ID.S_258, displayName: '258' },
+	{ id: SECTION_ID.S_261, displayName: '261' },
+	{ id: SECTION_ID.ARTICLE_12, displayName: 'Article 12' },
+	{ id: SECTION_ID.ARTICLE_17, displayName: 'Article 17' },
+	{ id: SECTION_ID.PART_1_SCH_6, displayName: 'Part 1 Schedule 6' },
+	{ id: SECTION_ID.SCH_14_A, displayName: 'Schedule 14 A' },
+	{ id: SECTION_ID.SCH_14_D, displayName: 'Schedule 14 D' }
+];

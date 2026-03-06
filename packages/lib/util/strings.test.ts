@@ -1,6 +1,14 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { stringToKebab, checkAnswerlength, checkRequiredAnswer, toCamelCase } from './strings.ts';
+import {
+	stringToKebab,
+	checkAnswerlength,
+	checkRequiredAnswer,
+	toCamelCase,
+	shouldTruncateComment,
+	truncateComment,
+	nl2br
+} from './strings.ts';
 
 describe('String Utils', () => {
 	describe('stringToKebab', () => {
@@ -127,6 +135,51 @@ describe('String Utils', () => {
 		it('should only affect the first character', () => {
 			assert.strictEqual(toCamelCase('ALLCAPS'), 'aLLCAPS');
 			assert.strictEqual(toCamelCase('With Spaces'), 'with Spaces');
+		});
+	});
+
+	describe('shouldTruncateComment', () => {
+		it('should return true if it length > the max length', () => {
+			assert.strictEqual(shouldTruncateComment('test comment', 5), true);
+		});
+
+		it('should return false if it length < the max length', () => {
+			assert.strictEqual(shouldTruncateComment('test comment', 50), false);
+		});
+
+		it('should return false if it length === the max length', () => {
+			assert.strictEqual(shouldTruncateComment('test', 4), false);
+		});
+
+		it('should default to 100 if no max is passed', () => {
+			assert.strictEqual(shouldTruncateComment('test'), false);
+		});
+	});
+
+	describe('truncateComment', () => {
+		it('should truncate if it is > max length', () => {
+			assert.strictEqual(
+				truncateComment('test comment', '/cases', 5),
+				'test ... <a class="govuk-link govuk-link--no-visited-state" href="/cases">Read more</a>'
+			);
+		});
+
+		it('should not truncate if it is < max length', () => {
+			assert.strictEqual(truncateComment('test comment', '/cases', 20), 'test comment');
+		});
+
+		it('should default to 100 if no max passed in', () => {
+			assert.strictEqual(truncateComment('test comment', '/cases'), 'test comment');
+		});
+	});
+
+	describe('nl2br', () => {
+		it('should swap new lines for <br>', () => {
+			assert.strictEqual(nl2br('First line\nSecond line\r\nThird line'), 'First line<br>Second line<br>Third line');
+			assert.strictEqual(
+				nl2br('First line\n\n\n\n\nSecond line\r\nThird line'),
+				'First line<br><br><br><br><br>Second line<br>Third line'
+			);
 		});
 	});
 });

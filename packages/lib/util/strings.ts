@@ -39,6 +39,45 @@ export function checkRequiredAnswer(value: string, errorMessage: string, pageLin
 }
 
 /**
+ * The max length standard for a case note comment.
+ */
+const COMMENT_MAX_LENGTH = 100;
+
+/**
  * Converts string to camelCase
  */
 export const toCamelCase = (str: string) => str.charAt(0).toLowerCase() + str.slice(1);
+
+/**
+ * Checks if comment is big enough to warrant truncating
+ */
+export function shouldTruncateComment(comment: string, maxLength = COMMENT_MAX_LENGTH) {
+	return comment?.length > maxLength;
+}
+
+/**
+ * Truncates a comment adding an ellipsis + a "Read more" link
+ */
+export function truncateComment(comment: string, href: string, maxLength = COMMENT_MAX_LENGTH) {
+	if (shouldTruncateComment(comment, maxLength)) {
+		const truncated = comment.substring(0, maxLength);
+		return `${truncated}... ${truncatedReadMoreCommentLink(href)}`;
+	}
+	return comment;
+}
+
+/**
+ * Generates a "Read more" link
+ */
+export function truncatedReadMoreCommentLink(href: string) {
+	return `<a class="govuk-link govuk-link--no-visited-state" href="${href}">Read more</a>`;
+}
+
+/**
+ * replaces new line chars with a <br>
+ */
+export function nl2br(value: string) {
+	if (!value) return '';
+
+	return value.replace(/\r\n|\n/g, '<br>');
+}

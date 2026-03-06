@@ -17,3 +17,6 @@ export { SITE_VISITS_ID } from './site-visit-type.ts';
 export { OBJECTOR_STATUS_ID } from './objector-status.ts';
 export { CONTACT_TYPE_ID } from './contact-type.ts';
 export { DECISION_MAKER_TYPE_ID } from './decision-maker-type.ts';
+export { NOTE_TYPE_ID } from './note-type.ts';
+export { ACT_ID } from './act.ts';
+export { SECTION_ID } from './section.ts';

@@ -22,6 +22,10 @@ export const PROCEDURE_STATUSES = [
 		displayName: 'Fallen away'
 	},
 	{
+		id: PROCEDURE_STATUS_ID.PENDING,
+		displayName: 'Pending'
+	},
+	{
 		id: PROCEDURE_STATUS_ID.WITHDRAWN,
 		displayName: 'Withdrawn'
 	}

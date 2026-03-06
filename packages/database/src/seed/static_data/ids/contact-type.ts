@@ -1,6 +1,7 @@
 export const CONTACT_TYPE_ID = Object.freeze({
 	ACQUIRING_AUTHORITY: 'acquiring-authority',
 	AGENT: 'agent',
+	APPLICANT_APPELLANT: 'applicant-appellant',
 	CASE_OFFICER: 'case-officer',
 	COMMONS_REGISTRATION_AUTHORITY: 'commons-registration-authority',
 	CONSULTEE: 'consultee',
@@ -21,6 +22,7 @@ export const CONTACT_TYPE_ID = Object.freeze({
 	OTHER_PARTY: 'other-party',
 	POTENTIAL_CLAIMANT: 'potential-claimant',
 	PROGRAMME_OFFICER: 'programme-officer',
+	RELEVANT_AUTHORITY: 'relevant-authority',
 	REPRESENTER: 'representer',
 	REPRESENTATIVE: 'representative',
 	SECRETARY_OF_STATE: 'secretary-of-state',

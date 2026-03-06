@@ -17,6 +17,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 		const reference = res.locals?.journeyResponse?.answers?.reference;
 		const caseName = res.locals?.journeyResponse?.answers?.name;
 		const caseNotes = res.locals?.journeyResponse?.answers?.caseNotes;
+		const allCaseNotesCount = res.locals?.journeyResponse?.answers?._count?.Notes || 0;
 
 		const id = req.params.id;
 
@@ -30,14 +31,20 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 
 		const baseUrl = req.baseUrl;
 
+		const lastModifiedDate = res.locals.lastModified?.updatedDate;
+
 		await list(req, res, '', {
 			reference,
 			caseName,
 			notes: caseNotes || [],
+			allCaseNotesCount,
 			baseUrl,
 			backLinkUrl: res.locals.backLinkUrl || '/cases',
 			caseUpdated,
-			currentUrl: req.originalUrl
+			currentUrl: req.originalUrl,
+			lastModifiedDate,
+			lastModifiedBy: res.locals.lastModified?.by || null,
+			closedDate: res.locals.lastModified?.closedDate || null
 		});
 	};
 }
@@ -79,12 +86,14 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				Costs: true,
 				Abeyance: true,
 				Notes: {
+					take: 4,
+					orderBy: { createdAt: 'desc' },
 					include: {
-						Author: true
+						Author: true,
+						NoteType: true
 					}
 				},
 				Authority: true,
-				Applicant: true,
 				Outcome: {
 					include: {
 						CaseDecisions: {
@@ -100,7 +109,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 					include: {
 						HearingVenue: true,
 						InquiryVenue: true,
-						ConferenceVenue: true
+						ConferenceVenue: true,
+						Inspector: true
 					}
 				},
 				Inspectors: {
@@ -115,7 +125,12 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				},
 				RelatedCases: true,
 				LinkedCases: true,
-				CaseOfficer: true
+				CaseOfficer: true,
+				_count: {
+					select: {
+						Notes: true
+					}
+				}
 			}
 		});
 
@@ -130,11 +145,15 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 			groupId
 		});
 
+		const lastModified = await service.audit.getLastModifiedInfo(id, groupMembers);
+
 		const answers = caseToViewModel(caseToView, groupMembers);
 
-		const finalAnswers = combineSessionAndDbData(res, answers);
+		const removedIds = (req.session.removedListItems || []) as string[];
 
-		const questions = getQuestions(groupMembers, answers.inspectorDetails);
+		const finalAnswers = combineSessionAndDbData(res, answers, removedIds);
+
+		const questions = getQuestions(groupMembers, answers);
 
 		// put these on locals for the list controller
 		res.locals.originalAnswers = { ...answers };
@@ -146,6 +165,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 		if (section && !manageListQuestion) {
 			res.locals.backLinkUrl = req.baseUrl;
 		}
+
+		res.locals.lastModified = lastModified;
 
 		if (next) next();
 	};
@@ -165,20 +186,25 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
  * - Previosly: doing so will show UI with the original 3 (as it is pulling the data from DB)
  * - Now: it will correctly show 3 inspectors with 2's name changed
  */
-export function combineSessionAndDbData(res: Response, answers: Record<string, any>) {
+export function combineSessionAndDbData(res: Response, answers: Record<string, unknown>, removedIds: string[] = []) {
 	const finalAnswers = { ...answers };
-	if (!res.locals.journeyResponse?.answers) return finalAnswers;
 
-	const sessionAnswers = res.locals.journeyResponse.answers;
+	const sessionAnswers = res.locals.journeyResponse?.answers || {};
 
-	Object.keys(sessionAnswers).forEach((key) => {
+	Object.keys(answers).forEach((key) => {
 		const dbValue = answers[key];
 		const sessionValue = sessionAnswers[key];
 
-		if (Array.isArray(dbValue) && Array.isArray(sessionValue)) {
-			finalAnswers[key] = mergeArraysById(dbValue, sessionValue);
+		if (Array.isArray(dbValue)) {
+			finalAnswers[key] = mergeArraysById(dbValue, sessionValue || [], 'id', removedIds);
 		} else {
-			finalAnswers[key] = sessionValue;
+			finalAnswers[key] = sessionValue !== undefined ? sessionValue : dbValue;
+		}
+	});
+
+	Object.keys(sessionAnswers).forEach((key) => {
+		if (!(key in answers)) {
+			finalAnswers[key] = sessionAnswers[key];
 		}
 	});
 	return finalAnswers;
@@ -196,8 +222,8 @@ export function combineSessionAndDbData(res: Response, answers: Record<string, a
  * Without this, the example from combineSessionAndDbData would show 4 inspectors (3 DB inspectors + 1 session inspector),
  * where the session inspector should have replaced one of the 3 inspectors from DB.
  */
-export function mergeArraysById(dbArray: any[], sessionArray: any[], idKey = 'id') {
-	const merged = [...dbArray];
+export function mergeArraysById(dbArray: any[], sessionArray: any[], idKey = 'id', removedIds: string[] = []) {
+	const merged = dbArray.filter((dbItem) => !removedIds.includes(dbItem[idKey]));
 
 	sessionArray.forEach((sessionItem) => {
 		const existingIndex = merged.findIndex(
