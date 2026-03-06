@@ -83,6 +83,11 @@ resource "azurerm_key_vault_secret" "sql_admin_connection_string" {
   )
   content_type = "connection-string"
 
+  depends_on = [
+    azurerm_private_endpoint.keyvault,
+    azurerm_private_dns_zone_virtual_network_link.keyvault
+  ]
+
   tags = local.tags
 }
 
@@ -101,6 +106,11 @@ resource "azurerm_key_vault_secret" "sql_app_connection_string" {
     ]
   )
   content_type = "connection-string"
+
+  depends_on = [
+    azurerm_private_endpoint.keyvault,
+    azurerm_private_dns_zone_virtual_network_link.keyvault
+  ]
 
   tags = local.tags
 }
