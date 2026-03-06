@@ -1,8 +1,10 @@
-import type { CommonLand } from '../types/subTypes.ts';
+import type { CommonLand } from '../../types/subTypes.ts';
 
 class CommonLandSubtypePage {
 	isPageDisplayed(): void {
-		cy.contains('h1', 'Which Common Land subtype is it?').should('exist').and('be.visible');
+		cy.verifyPageLoaded('Common Land subtype');
+		cy.verifyPageTitle('Which Common Land subtype is it?');
+		cy.verifyPageURL('/cases/create-a-case/questions/common-land-subtype');
 
 		const labels = [
 			'Commons for Ecclesiastical Purposes',

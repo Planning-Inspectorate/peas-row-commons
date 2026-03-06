@@ -1,6 +1,13 @@
+import type { Journeys } from '../types/journeys.ts';
+import HeaderUtility from 'cypress/pageUtilities/header.utility.ts';
+import FooterUtility from 'cypress/pageUtilities/footer.utility.ts';
+
 class CaseCreatedPage {
-	isPageDisplayed(): void {
-		cy.contains('h1.govuk-panel__title', 'New case has been created').should('exist').and('be.visible');
+	isPageDisplayed(journey: Journeys): void {
+		HeaderUtility.isHeaderDisplayed();
+		cy.verifyPageLoaded('New case has been created');
+		cy.verifyPageTitle('New case has been created');
+		cy.verifyPageURL('/success');
 
 		cy.contains('.govuk-panel__body', 'The case reference number').should('exist').and('be.visible');
 
@@ -13,14 +20,20 @@ class CaseCreatedPage {
 				if (!ref) throw new Error('Test Failed: Case reference number is empty');
 			});
 
+		this.validateRefNumberAgainstJourney(journey);
+
 		cy.contains('a.govuk-link', 'Continue to case details page')
 			.should('exist')
 			.and('be.visible')
 			.and('have.attr', 'href')
 			.and('match', /^\/cases\/[0-9a-f-]+$/i);
+
+		FooterUtility.isFooterDisplayed();
 	}
 
-	validateReferenceNumber(expectedPrefix: string): void {
+	private validateRefNumberAgainstJourney(journey: Journeys): void {
+		const escapedPrefix = Cypress._.escapeRegExp(journey.referencePrefix);
+
 		cy.get('.govuk-panel__body strong')
 			.should('exist')
 			.invoke('text')
@@ -28,8 +41,8 @@ class CaseCreatedPage {
 				const ref = text.trim();
 
 				expect(ref).to.match(
-					new RegExp(`^${expectedPrefix}\\d{5}$`),
-					`Expected reference to start with ${expectedPrefix}`
+					new RegExp(`^${escapedPrefix}\\d{5}$`),
+					`Expected reference to start with ${journey.referencePrefix}`
 				);
 			});
 	}

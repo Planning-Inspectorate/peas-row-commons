@@ -1,6 +1,6 @@
 import type { Journeys } from '../types/journeys.ts';
 
-export const journeys: Journeys[] = [
+export const planningJourneys: Journeys[] = [
 	{
 		name: 'Planning > Drought > Drought Permits',
 		caseworkArea: 'planning',

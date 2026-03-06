@@ -1,8 +1,8 @@
-class WhoAuthorityPage {
+class CaseOfficerPage {
 	isPageDisplayed(): void {
-		cy.contains('label.govuk-label--l[for="caseOfficerId"]', 'Who is the assigned case officer?')
-			.should('exist')
-			.and('be.visible');
+		cy.verifyPageLoaded('Who is the assigned case officer?');
+		cy.verifyPageTitle('Who is the assigned case officer?');
+		cy.verifyPageURL('/cases/create-a-case/questions/case-officer');
 
 		cy.get('input[role="combobox"][aria-controls="caseOfficerId__listbox"]')
 			.should('exist')
@@ -41,4 +41,4 @@ class WhoAuthorityPage {
 	}
 }
 
-export default new WhoAuthorityPage();
+export default new CaseOfficerPage();

@@ -1,8 +1,11 @@
-import type { Drought } from '../types/subTypes.ts';
+import type { Drought } from '../../types/subTypes.ts';
 
 class DroughtSubtypePage {
 	isPageDisplayed(): void {
-		cy.contains('h1', 'Which Drought subtype is it?').should('exist').and('be.visible');
+		cy.verifyPageLoaded('Drought subtype');
+		cy.verifyPageTitle('Which Drought subtype is it?');
+		cy.verifyPageURL('/cases/create-a-case/questions/drought-subtype');
+
 		cy.contains('label', 'Drought Permits').should('exist').and('be.visible');
 		cy.contains('label', 'Drought Orders').should('exist').and('be.visible');
 		cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible');

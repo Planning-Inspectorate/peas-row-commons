@@ -2,7 +2,9 @@ import type { CaseType } from '../types/workAreaCaseTypes.ts';
 
 class CaseTypePage {
 	isPageDisplayed(): void {
-		cy.contains('h1', 'Which case type is it?').should('exist').and('be.visible');
+		cy.verifyPageLoaded('Which case type is it?');
+		cy.verifyPageTitle('Which case type is it?');
+		cy.verifyPageURL('/cases/create-a-case/questions/peas-type-of-case');
 
 		const planningOptions = [
 			'Drought',

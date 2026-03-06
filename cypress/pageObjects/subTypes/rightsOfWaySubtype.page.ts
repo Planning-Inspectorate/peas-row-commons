@@ -1,8 +1,10 @@
-import type { RightOfWay } from '../types/subTypes.ts';
+import type { RightOfWay } from '../../types/subTypes.ts';
 
-class RightOfWaySubtypePage {
+class RightsOfWaySubtypePage {
 	isPageDisplayed(): void {
-		cy.contains('h1', 'Which Rights of Way subtype is it?').should('exist').and('be.visible');
+		cy.verifyPageLoaded('Rights of Way subtype');
+		cy.verifyPageTitle('Which Rights of Way subtype is it?');
+		cy.verifyPageURL('/cases/create-a-case/questions/row-subtype');
 
 		const labels = [
 			'Dispensation for Serving Notice HA80',
@@ -48,4 +50,4 @@ class RightOfWaySubtypePage {
 	}
 }
 
-export default new RightOfWaySubtypePage();
+export default new RightsOfWaySubtypePage();

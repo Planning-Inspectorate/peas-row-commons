@@ -29,3 +29,50 @@ Cypress.Commands.add('authVisit', (endpoint: string) => {
 		});
 	});
 });
+
+Cypress.Commands.add('verifyPageLoaded', (pageName) => {
+	cy.window({ timeout: 12000 })
+		.its('document.readyState')
+		.should('eq', 'complete')
+		.then((readyState) => {
+			if (readyState !== 'complete') {
+				throw new Error(`${pageName} - page did not fully load in time - Test Failed`);
+			}
+		});
+});
+
+Cypress.Commands.add('verifyPageURL', (contains: string | string[], options?: { timeout?: number }) => {
+	const timeout = options?.timeout ?? 12_000;
+	const expectedParts = Array.isArray(contains) ? contains : [contains];
+
+	cy.window({ timeout })
+		.its('document.readyState')
+		.should('eq', 'complete')
+		.then(() => {
+			const baseUrl = Cypress.config('baseUrl') as string | undefined;
+
+			cy.url().then((currentUrl) => {
+				if (baseUrl) {
+					expect(currentUrl, 'URL should start with baseUrl').to.include(baseUrl);
+				}
+
+				for (const part of expectedParts) {
+					expect(currentUrl, `URL should include "${part}"`).to.include(part);
+				}
+			});
+		});
+});
+
+Cypress.Commands.add('verifyPageTitle', (expectedTitle: string, options?: { timeout?: number }) => {
+	const timeout = options?.timeout ?? 12_000;
+
+	cy.get('h1', { timeout })
+		.should('exist')
+		.and('be.visible')
+		.invoke('text')
+		.then((text) => {
+			const actual = text.trim();
+
+			expect(actual, `Expected page title to be "${expectedTitle}" but found "${actual}"`).to.eq(expectedTitle);
+		});
+});

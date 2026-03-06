@@ -5,9 +5,9 @@ export type DateField = {
 };
 
 export type UkAddress = {
-	line1?: string;
-	line2?: string;
-	town?: string;
-	county?: string;
-	postcode?: string;
+	line1: string;
+	line2: string;
+	town: string;
+	county: string;
+	postcode: string;
 };

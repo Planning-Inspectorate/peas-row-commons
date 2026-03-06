@@ -11,7 +11,9 @@ type DateErrorExpectation = {
 
 class ReceivedDatePage {
 	isPageDisplayed(): void {
-		cy.contains('h1', 'When was the case received?').should('exist').and('be.visible');
+		cy.verifyPageLoaded('Case received date');
+		cy.verifyPageTitle('When was the case received?');
+		cy.verifyPageURL('/cases/create-a-case/questions/case-received-date');
 
 		cy.contains('#receivedDate-hint', 'For example, 27 3 2007').should('exist').and('be.visible');
 
@@ -30,32 +32,33 @@ class ReceivedDatePage {
 		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
 	}
 
-	enterDate(day?: string, month?: string, year?: string): DateField {
+	enterDate(date?: DateField): DateField {
 		const randomDate = generateRandomDate();
 
-		const date: DateField = {
-			day: day ?? randomDate.day,
-			month: month ?? randomDate.month,
-			year: year ?? randomDate.year
-		};
+		const valueToUse = date ?? randomDate;
 
-		cy.get('#receivedDate_day').should('exist').and('be.visible').clear().type(date.day).should('have.value', date.day);
+		cy.get('#receivedDate_day')
+			.should('exist')
+			.and('be.visible')
+			.clear()
+			.type(valueToUse.day)
+			.should('have.value', valueToUse.day);
 
 		cy.get('#receivedDate_month')
 			.should('exist')
 			.and('be.visible')
 			.clear()
-			.type(date.month)
-			.should('have.value', date.month);
+			.type(valueToUse.month)
+			.should('have.value', valueToUse.month);
 
 		cy.get('#receivedDate_year')
 			.should('exist')
 			.and('be.visible')
 			.clear()
-			.type(date.year)
-			.should('have.value', date.year);
+			.type(valueToUse.year)
+			.should('have.value', valueToUse.year);
 
-		return date;
+		return valueToUse;
 	}
 
 	validateReceivedDateErrorState(state: DateErrorState): void {

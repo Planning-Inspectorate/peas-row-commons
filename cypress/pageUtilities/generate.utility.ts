@@ -25,7 +25,7 @@ export function buildCaseName(journeyName: string): string {
 		hour12: false
 	});
 
-	return `${lastSegment} - ${date} - ${time}`;
+	return `Auto-${lastSegment}-${date}-${time}`;
 }
 
 export function buildNameWithRandomSuffix(journeyName: string): string {
@@ -62,13 +62,10 @@ export function generateRandomDate(): DateField {
 
 export function generateUkAddress(): UkAddress {
 	return {
-		line1: faker.helpers.maybe(() => faker.location.streetAddress(), { probability: 0.7 }),
-		line2: faker.helpers.maybe(() => faker.location.secondaryAddress(), { probability: 0.4 }),
-		town: faker.helpers.maybe(() => faker.location.city(), { probability: 0.7 }),
-		county: faker.helpers.maybe(() => faker.location.county(), { probability: 0.6 }),
-		postcode: faker.helpers.maybe(
-			() => faker.location.zipCode('??# #??'), // UK-style
-			{ probability: 0.7 }
-		)
+		line1: faker.helpers.maybe(() => faker.location.streetAddress(), { probability: 0.7 }) ?? '',
+		line2: faker.helpers.maybe(() => faker.location.secondaryAddress(), { probability: 0.4 }) ?? '',
+		town: faker.helpers.maybe(() => faker.location.city(), { probability: 0.7 }) ?? '',
+		county: faker.helpers.maybe(() => faker.location.county(), { probability: 0.6 }) ?? '',
+		postcode: faker.helpers.maybe(() => faker.location.zipCode('??# #??').toUpperCase(), { probability: 0.7 }) ?? ''
 	};
 }

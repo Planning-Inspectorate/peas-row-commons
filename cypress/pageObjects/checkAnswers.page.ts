@@ -1,11 +1,10 @@
 export const expectedKeys = [
 	'What area does this new case relate to?',
-	'Which case type is it?',
-	'Which Common Land subtype is it?',
+	'subtype is it?',
 	'What is the case name?',
 	'What is the external reference? (optional)',
 	'When was the case received?',
-	'Who is the applicant?',
+	'Who is the applicant or appellant?',
 	'What is the site address?',
 	'What is the site location if no address was added?',
 	'Who is the authority? (optional)',
@@ -41,11 +40,10 @@ class CheckAnswersPage {
 	validateCheckYourAnswersRows(): void {
 		const mandatoryKeys: readonly CheckYourAnswersKey[] = [
 			'What area does this new case relate to?',
-			'Which case type is it?',
-			'Which Common Land subtype is it?',
+			'subtype is it?',
 			'What is the case name?',
 			'When was the case received?',
-			'Who is the applicant?',
+			'Who is the applicant or appellant?',
 			'Who is the assigned case officer?'
 		];
 
@@ -105,6 +103,10 @@ class CheckAnswersPage {
 					cy.wrap($link).click();
 				});
 			});
+	}
+
+	clickAcceptAndSubmitButton(): void {
+		cy.contains('button', 'Accept & Submit').should('exist').and('be.visible').click();
 	}
 }
 

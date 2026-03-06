@@ -1,8 +1,10 @@
-import type { CoastalAccess } from '../types/subTypes.ts';
+import type { CoastalAccess } from '../../types/subTypes.ts';
 
 class CommonLandSubtypePage {
 	isPageDisplayed(): void {
-		cy.contains('h1', 'Which Coastal Access subtype is it?').should('exist').and('be.visible');
+		cy.verifyPageLoaded('Coastal Access subtype');
+		cy.verifyPageTitle('Which Coastal Access subtype is it?');
+		cy.verifyPageURL('/cases/create-a-case/questions/coastal-subtype');
 
 		const labels = ['Coastal access appeal', 'Notice appeal', 'Objection', 'Restriction appeal (access land)'];
 

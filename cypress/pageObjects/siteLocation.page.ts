@@ -1,5 +1,8 @@
 class SiteApplicantPage {
 	isPageDisplayed(): void {
+		cy.verifyPageLoaded('Applicant or appellant details');
+		cy.verifyPageTitle('Who is the applicant or appellant?');
+		cy.verifyPageURL('/cases/create-a-case/questions/applicant-details');
 		cy.contains('label', 'What is the site location if no address was added?').should('exist').and('be.visible');
 		cy.contains('#location-hint', 'For example, name of common, village green, area or body of water')
 			.should('exist')

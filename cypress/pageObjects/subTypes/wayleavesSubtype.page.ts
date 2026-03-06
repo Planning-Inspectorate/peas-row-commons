@@ -1,8 +1,10 @@
-import type { Wayleaves } from '../types/subTypes.ts';
+import type { Wayleaves } from '../../types/subTypes.ts';
 
 class WayleavesSubtypePage {
 	isPageDisplayed(): void {
-		cy.contains('h1', 'What Wayleaves subtype is it?').should('exist').and('be.visible');
+		cy.verifyPageLoaded('Wayleaves subtype');
+		cy.verifyPageTitle('What Wayleaves subtype is it?');
+		cy.verifyPageURL('/cases/create-a-case/questions/wayleaves-subtype');
 
 		cy.contains('label', 'New lines').should('exist').and('be.visible');
 		cy.contains('label', 'Tree lopping').should('exist').and('be.visible');

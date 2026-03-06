@@ -2,7 +2,10 @@ import type { WorkArea } from '../types/workAreaCaseTypes.ts';
 
 class CaseworkAreaPage {
 	isPageDisplayed(): void {
-		cy.contains('h1', 'Which case type is it?').should('be.visible');
+		cy.verifyPageLoaded('Case list');
+		cy.verifyPageURL('create-a-case/questions/casework-area');
+		cy.verifyPageTitle('What area does this new case relate to?');
+
 		cy.contains('label', 'Planning, Environmental and Applications').should('be.visible');
 		cy.contains('label', 'Rights of Way and Common Land').should('be.visible');
 	}
