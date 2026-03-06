@@ -3,7 +3,7 @@ import {
 	dateISOStringToDisplayTime12hr,
 	getDayFromISODate
 } from '@pins/peas-row-commons-lib/util/dates.ts';
-import type { CaseListFields, CaseNoteFields, CaseOfficer } from './types.ts';
+import type { CaseDecisionFields, CaseListFields, CaseNoteFields, CaseOfficer, CaseProcedureFields } from './types.ts';
 import { formatInTimeZone } from 'date-fns-tz';
 import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
 import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address.ts';
@@ -12,6 +12,8 @@ import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
 import { nl2br, truncateComment } from '@pins/peas-row-commons-lib/util/strings.ts';
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
+import { DECISION_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-type.ts';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
 
 function formatValue(value: any) {
 	if (typeof value === 'boolean') {
@@ -21,6 +23,37 @@ function formatValue(value: any) {
 }
 
 const NESTED_SECTIONS: (keyof CaseListFields)[] = ['Dates', 'Costs', 'Abeyance', 'Notes', 'Outcome'];
+
+/**
+ * Procedures are sorted in chronologically in ascending order by default from DB.
+ *
+ * However, we need to add an edge scenario, whereby if two+ procedures are added at
+ * the same time and >=1 of them are a Site Visit then they should appear first.
+ */
+export function sortProceduresChronologically(procedures?: CaseProcedureFields[]) {
+	if (!procedures || procedures.length === 0) {
+		return [];
+	}
+
+	return [...procedures].sort((a, b) => {
+		const dateA = new Date(a.createdDate || 0).getTime();
+		const dateB = new Date(b.createdDate || 0).getTime();
+
+		if (dateA !== dateB) {
+			return dateA - dateB;
+		}
+
+		// This only gets run if dates are identical, and if so we push
+		// the Site Visit procedures above any of the other ones.
+		const isASiteVisit = a.procedureTypeId === PROCEDURES_ID.SITE_VISIT;
+		const isBSiteVisit = b.procedureTypeId === PROCEDURES_ID.SITE_VISIT;
+
+		if (isASiteVisit && !isBSiteVisit) return -1;
+		if (!isASiteVisit && isBSiteVisit) return 1;
+
+		return 0;
+	});
+}
 
 /**
  * Maps the Procedures array from the DB into a procedureDetails array.
@@ -165,18 +198,10 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 			inspectorId: inspector.Inspector.idpUserId
 		})) || [];
 
-	const outcomeDetails =
-		caseRow.Outcome?.CaseDecisions?.map((decision) => ({
-			...decision,
-			decisionMakerOfficerId:
-				decision.decisionMakerTypeId === DECISION_MAKER_TYPE_ID.OFFICER ? decision.DecisionMaker?.idpUserId : undefined,
-			decisionMakerInspectorId:
-				decision.decisionMakerTypeId === DECISION_MAKER_TYPE_ID.INSPECTOR
-					? decision.DecisionMaker?.idpUserId
-					: undefined
-		})) || undefined;
+	const outcomeDetails = mapAndSortDecisions(caseRow.Outcome?.CaseDecisions);
 
-	const procedureDetails = mapProceduresToArray(mergedData.Procedures || []);
+	const sortedProcedures = sortProceduresChronologically(mergedData.Procedures);
+	const procedureDetails = mapProceduresToArray(sortedProcedures || []);
 	delete mergedData.Procedures;
 
 	const sanitisedData: Record<string, any> = {};
@@ -227,6 +252,41 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 		act: act?.id
 	};
 }
+
+/**
+ * Take the pre-sorted decisions (ascending by created date)
+ * and add the bespoke logic to make sure 'Decision' type decisions
+ * come last.
+ */
+export const mapAndSortDecisions = (decisions?: CaseDecisionFields[]) => {
+	if (!decisions || decisions.length === 0) {
+		return undefined;
+	}
+
+	// 1. Get the data into the correct format
+	const mappedDecisions = decisions.map((decision) => {
+		const isOfficer = decision.decisionMakerTypeId === DECISION_MAKER_TYPE_ID.OFFICER;
+		const isInspector = decision.decisionMakerTypeId === DECISION_MAKER_TYPE_ID.INSPECTOR;
+		const userId = decision.DecisionMaker?.idpUserId;
+
+		return {
+			...decision,
+			decisionMakerOfficerId: isOfficer ? userId : undefined,
+			decisionMakerInspectorId: isInspector ? userId : undefined
+		};
+	});
+
+	// 2. Sort the data, keeping chronological order but pushing 'decisions' to the end
+	return mappedDecisions.sort((a, b) => {
+		const isADecision = a.DecisionType?.id === DECISION_TYPE_ID.DECISION;
+		const isBDecision = b.DecisionType?.id === DECISION_TYPE_ID.DECISION;
+
+		if (isADecision && !isBDecision) return 1;
+		if (!isADecision && isBDecision) return -1;
+
+		return 0;
+	});
+};
 
 /**
  * Maps the raw case data into data presented in the UI.
