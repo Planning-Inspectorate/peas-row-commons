@@ -1121,7 +1121,11 @@ export const PROCEDURE_MANAGE_LIST_QUESTION = {
 		question: 'Check procedure details',
 		fieldName: 'procedureDetails',
 		url: 'check-procedure-details',
-		viewData: { emptyName: 'procedure' },
+		viewData: {
+			emptyName: 'procedure',
+			emptyNamePlural: 'procedures'
+		},
+		titleSingular: 'procedure',
 		columns: [
 			{
 				header: 'Type',
