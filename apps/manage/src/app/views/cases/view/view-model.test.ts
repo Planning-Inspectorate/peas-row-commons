@@ -1,6 +1,18 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { caseToViewModel, mapNotes, mapProceduresToArray } from './view-model.ts';
+import {
+	caseToViewModel,
+	mapAndSortDecisions,
+	mapNotes,
+	mapProceduresToArray,
+	sortProceduresChronologically
+} from './view-model.ts';
+import {
+	DECISION_TYPE_ID,
+	DECISION_MAKER_TYPE_ID,
+	PROCEDURES_ID
+} from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
+import type { CaseDecisionFields, CaseProcedureFields } from './types.ts';
 
 describe('view-model', () => {
 	const groupMembers = {
@@ -321,6 +333,161 @@ describe('view-model', () => {
 			assert.ok(result.caseNotes[0].truncatedCommentText.includes('...'));
 		});
 	});
+
+	describe('mapAndSortDecisions', () => {
+		it('should return undefined when passed an undefined or empty array', async () => {
+			assert.strictEqual(mapAndSortDecisions(undefined), undefined);
+			assert.strictEqual(mapAndSortDecisions([]), undefined);
+		});
+
+		it('should correctly map decisionMakerOfficerId and decisionMakerInspectorId based on type', async () => {
+			const input = [
+				{
+					id: 1,
+					decisionMakerTypeId: DECISION_MAKER_TYPE_ID.OFFICER,
+					DecisionMaker: { idpUserId: 'officer-123' }
+				},
+				{
+					id: 2,
+					decisionMakerTypeId: DECISION_MAKER_TYPE_ID.INSPECTOR,
+					DecisionMaker: { idpUserId: 'inspector-456' }
+				},
+				{
+					id: 3,
+					decisionMakerTypeId: 'SOME_OTHER_ROLE',
+					DecisionMaker: { idpUserId: 'other-789' }
+				}
+			];
+
+			const result = mapAndSortDecisions(input as unknown as CaseDecisionFields[]);
+
+			assert.ok(result);
+			assert.strictEqual(result.length, 3);
+
+			assert.strictEqual(result[0].decisionMakerOfficerId, 'officer-123');
+			assert.strictEqual(result[0].decisionMakerInspectorId, undefined);
+
+			assert.strictEqual(result[1].decisionMakerOfficerId, undefined);
+			assert.strictEqual(result[1].decisionMakerInspectorId, 'inspector-456');
+
+			assert.strictEqual(result[2].decisionMakerOfficerId, undefined);
+			assert.strictEqual(result[2].decisionMakerInspectorId, undefined);
+		});
+
+		it('should push DECISION types to the end while preserving chronological order of others', async () => {
+			const input = [
+				{ id: 1, name: 'Normal 1', DecisionType: { id: 'OTHER_TYPE' } },
+				{ id: 2, name: 'Decision 1', DecisionType: { id: DECISION_TYPE_ID.DECISION } },
+				{ id: 3, name: 'Normal 2', DecisionType: { id: 'ANOTHER_TYPE' } },
+				{ id: 4, name: 'Decision 2', DecisionType: { id: DECISION_TYPE_ID.DECISION } }
+			];
+
+			const result = mapAndSortDecisions(input as unknown as CaseDecisionFields[]);
+
+			assert.ok(result);
+			assert.strictEqual(result.length, 4);
+
+			assert.strictEqual(result[0].id, 1);
+			assert.strictEqual(result[1].id, 3);
+			assert.strictEqual(result[2].id, 2);
+			assert.strictEqual(result[3].id, 4);
+		});
+
+		it('should not mutate the original array order', async () => {
+			const input = [
+				{ id: 1, DecisionType: { id: DECISION_TYPE_ID.DECISION } },
+				{ id: 2, DecisionType: { id: 'OTHER' } }
+			];
+
+			mapAndSortDecisions(input as unknown as CaseDecisionFields[]);
+
+			assert.strictEqual(input[0].id, 1);
+			assert.strictEqual(input[1].id, 2);
+		});
+	});
+
+	describe('sortProceduresChronologically', () => {
+		it('should return an empty array when passed undefined or an empty array', async () => {
+			const undefinedResult = sortProceduresChronologically(undefined);
+			assert.deepStrictEqual(undefinedResult, []);
+
+			const emptyResult = sortProceduresChronologically([]);
+			assert.deepStrictEqual(emptyResult, []);
+		});
+
+		it('should not mutate the original array order', async () => {
+			const input = [
+				{ id: 1, procedureDate: '2024-01-01', SiteVisitType: { id: 'sv' } },
+				{ id: 2, procedureDate: '2024-01-01' }
+			];
+
+			sortProceduresChronologically(input as unknown as CaseProcedureFields[]);
+
+			assert.strictEqual(input[0].id, 1);
+			assert.strictEqual(input[1].id, 2);
+		});
+
+		it('should perfectly preserve the original database order if dates are different', async () => {
+			const input = [
+				{ id: 1, procedureDate: '2024-05-01' },
+				{ id: 2, procedureDate: '2023-01-01' },
+				{ id: 3, procedureDate: '2024-12-01' }
+			];
+
+			const result = sortProceduresChronologically(input as unknown as CaseProcedureFields[]);
+
+			assert.strictEqual(result.length, 3);
+			assert.strictEqual(result[0].id, 1);
+			assert.strictEqual(result[1].id, 2);
+			assert.strictEqual(result[2].id, 3);
+		});
+
+		it('should push a Site Visit to the top if it shares the exact same date as another procedure', async () => {
+			const sharedDate = '2024-03-06T10:00:00.000Z';
+
+			const input = [
+				{ id: 1, name: 'Hearing', procedureDate: sharedDate },
+				{ id: 2, name: 'Site Visit', procedureDate: sharedDate, procedureTypeId: PROCEDURES_ID.SITE_VISIT },
+				{ id: 3, name: 'Inquiry', procedureDate: sharedDate }
+			];
+
+			const result = sortProceduresChronologically(input as unknown as CaseProcedureFields[]);
+
+			assert.strictEqual(result.length, 3);
+
+			assert.strictEqual(result[0].id, 2);
+
+			assert.strictEqual(result[1].id, 1);
+			assert.strictEqual(result[2].id, 3);
+		});
+
+		it('should preserve original order if two items share a date but NEITHER are site visits', async () => {
+			const sharedDate = '2024-03-06T00:00:00.000Z';
+
+			const input = [
+				{ id: 1, procedureDate: sharedDate },
+				{ id: 2, procedureDate: sharedDate }
+			];
+
+			const result = sortProceduresChronologically(input as unknown as CaseProcedureFields[]);
+
+			assert.strictEqual(result[0].id, 1);
+			assert.strictEqual(result[1].id, 2);
+		});
+
+		it('should safely handle items completely missing a procedureDate', async () => {
+			const input = [
+				{ id: 1, name: 'No Date Normal' }, // procedureDate is undefined -> evaluates to 0
+				{ id: 2, name: 'No Date Site Visit', procedureTypeId: PROCEDURES_ID.SITE_VISIT }
+			];
+
+			const result = sortProceduresChronologically(input as unknown as CaseProcedureFields[]);
+
+			assert.strictEqual(result[0].id, 2);
+			assert.strictEqual(result[1].id, 1);
+		});
+	});
+
 	describe('mapProceduresToArray', () => {
 		it('should return undefined if input is not an array', () => {
 			assert.strictEqual(mapProceduresToArray(null as any), undefined);
