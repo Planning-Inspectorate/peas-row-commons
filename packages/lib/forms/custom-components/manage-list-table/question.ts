@@ -16,6 +16,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 
 	constructor(params: TableManageListQuestionParameters) {
 		super(params);
+
 		this.summaryLimit = params.summaryLimit || 2;
 		this.showAnswersInSummary = params.showAnswersInSummary || false;
 		this.hideRemoveOnLastItem = params.hideRemoveOnLastItem || false;
@@ -84,7 +85,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	 * its own button text.
 	 */
 	private addButtonText(viewModel: QuestionViewModel): void {
-		viewModel.continueButtonText = 'Save and continue';
+		viewModel.continueButtonText = this.viewData.continueOnly ? 'Continue' : 'Save and continue';
 		viewModel.addMoreButtonText = 'Add details';
 		viewModel.cancelButtonText = 'Cancel';
 	}

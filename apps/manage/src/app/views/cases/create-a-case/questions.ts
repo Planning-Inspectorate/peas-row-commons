@@ -248,7 +248,9 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			viewData: {
 				emptyName: 'applicant or appellant',
 				emptyNamePlural: 'applicants or appellants',
-				hideButtonsEmpty: true
+				hideButtonsEmpty: true,
+				hideCancel: true,
+				continueOnly: true
 			},
 			titleSingular: 'applicant or appellant',
 			showAnswersInSummary: true
