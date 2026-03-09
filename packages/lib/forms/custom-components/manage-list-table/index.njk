@@ -41,11 +41,13 @@
                             attributes: { "data-cy":"button-save-and-continue"}
                         }) }}
 
-                        {{ govukButton({
-                            text: cancelButtonText,
-                            href: backLinkUrl,
-                            classes: "govuk-button--secondary"
-                        }) }}
+                        {% if not hideCancel %}
+                            {{ govukButton({
+                                text: cancelButtonText,
+                                href: backLinkUrl,
+                                classes: "govuk-button--secondary"
+                            }) }}
+                        {% endif %}
                     </div>
                 {% endif %}
             </form>
