@@ -117,7 +117,9 @@ export function createJourney(questions: Record<string, any>, response: JourneyR
 				.addQuestion(questions.decisionPublishedDate)
 				.endMultiQuestionCondition('outcome-details'),
 			...dynamicOutcomeSections,
-			new Section('Documents', 'documents').addQuestion(questions.filesLocation),
+			new Section('Additional resource locations', 'additional-resource-locations')
+				.addQuestion(questions.filesLocation)
+				.addQuestion(questions.relevantWebsiteLinks),
 			new Section('Withdrawal or abeyance', 'withdrawal-abeyance')
 				.addQuestion(questions.withdrawalDate)
 				.addQuestion(questions.abeyanceStartDate)
