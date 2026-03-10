@@ -124,11 +124,11 @@ export function createJourney(questions: Record<string, any>, response: JourneyR
 				.addQuestion(questions.withdrawalDate)
 				.addQuestion(questions.abeyanceStartDate)
 				.addQuestion(questions.abeyanceEndDate),
-			new Section('Costs', 'costs')
+			new Section('Invoicing', 'invoicing')
 				.addQuestion(questions.rechargeable)
 				.addQuestion(questions.finalCost)
-				.addQuestion(questions.feeReceived)
 				.addQuestion(questions.invoiceSent)
+				.addQuestion(questions.feeReceived)
 		],
 		taskListUrl: '',
 		journeyTemplate: 'views/layouts/forms-question.njk',
