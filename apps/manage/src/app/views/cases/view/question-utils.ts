@@ -220,50 +220,6 @@ export const DATE_QUESTIONS = {
 			]
 		}
 	}),
-	consentDeadlineDate: dateQuestion({
-		fieldName: 'consentDeadlineDate',
-		title: 'Deadline for consent',
-		question: 'What is the deadline for consent?',
-		url: 'deadline-consent',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'deadline-consent/remove'
-				}
-			]
-		}
-	}),
-	ogdDueDate: dateQuestion({
-		fieldName: 'ogdDueDate',
-		title: 'Date due to Other Government Department (OGD)',
-		question: 'What date is the decision due to Other Government Department (OGD)?',
-		url: 'date-due-in-ogd',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'date-due-in-ogd/remove'
-				}
-			]
-		}
-	}),
-	proposalLetterDate: dateQuestion({
-		fieldName: 'proposalLetterDate',
-		title: 'Proposal letter date',
-		question: 'What date was the proposal letter sent?',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'proposal-letter-date/remove'
-				}
-			]
-		}
-	}),
 	expiryDate: dateQuestion({
 		fieldName: 'expiryDate',
 		title: 'Date decision must be issued by / expiry date',
@@ -281,7 +237,7 @@ export const DATE_QUESTIONS = {
 	}),
 	partiesDecisionNotificationDeadlineDate: dateQuestion({
 		fieldName: 'partiesDecisionNotificationDeadlineDate',
-		title: 'Date to notify parties of decision',
+		title: 'Date to notify parties of decision date',
 		question: 'When should the parties be notified of a final decision by?',
 		url: 'date-parties-must-be-notified-decision',
 		viewData: {
@@ -305,21 +261,6 @@ export const DATE_QUESTIONS = {
 					text: 'Remove and save',
 					type: 'submit',
 					formaction: 'target-decision-date/remove'
-				}
-			]
-		}
-	}),
-	caseOfficerVerificationDate: dateQuestion({
-		fieldName: 'caseOfficerVerificationDate',
-		title: 'Case officer verification date',
-		question: 'When did the case officer verify the case?',
-		url: 'case-officer-verification-date',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'case-officer-verification-date/remove'
 				}
 			]
 		}

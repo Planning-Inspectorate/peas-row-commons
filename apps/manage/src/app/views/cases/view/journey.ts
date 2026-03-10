@@ -44,6 +44,7 @@ export function createJourney(questions: Record<string, any>, response: JourneyR
 				.addQuestion(questions.caseSubtype)
 				.addQuestion(questions.act)
 				.addQuestion(questions.consentSought)
+				.addQuestion(questions.priority)
 				.addQuestion(questions.inspectorBand)
 				.addQuestion(questions.relatedCaseDetails, new ManageListSection().addQuestion(questions.addRelatedCase))
 				.addQuestion(
@@ -66,8 +67,7 @@ export function createJourney(questions: Record<string, any>, response: JourneyR
 				)
 				.addQuestion(questions.siteAddress)
 				.addQuestion(questions.location)
-				.addQuestion(questions.authority)
-				.addQuestion(questions.priority),
+				.addQuestion(questions.authority),
 			new Section('Team', 'team')
 				.addQuestion(questions.caseOfficer)
 				.addQuestion(
@@ -75,18 +75,14 @@ export function createJourney(questions: Record<string, any>, response: JourneyR
 					new ManageListSection().addQuestion(questions.inspector).addQuestion(questions.inspectorAllocatedDate)
 				),
 			new Section('Timetable', 'timetable')
-				.addQuestion(questions.receivedDate)
-				.addQuestion(questions.startDate)
 				.addQuestion(questions.expectedSubmissionDate)
+				.addQuestion(questions.receivedDate)
 				.addQuestion(questions.targetDecisionDate)
-				.addQuestion(questions.caseOfficerVerificationDate)
-				.addQuestion(questions.proposedModificationsDate)
+				.addQuestion(questions.startDate)
 				.addQuestion(questions.objectionPeriodEndsDate)
-				.addQuestion(questions.consentDeadlineDate)
-				.addQuestion(questions.ogdDueDate)
-				.addQuestion(questions.proposalLetterDate)
+				.addQuestion(questions.partiesDecisionNotificationDeadlineDate)
 				.addQuestion(questions.expiryDate)
-				.addQuestion(questions.partiesDecisionNotificationDeadlineDate),
+				.addQuestion(questions.proposedModificationsDate),
 			new Section('Key contacts', 'key-contacts')
 				.addQuestion(
 					questions.objectorDetails,
