@@ -1,5 +1,5 @@
 export const OBJECTOR_STATUS_ID = {
-	ADMISSABLE: 'admissable',
+	ADMISSIBLE: 'admissible',
 	UPHELD: 'upheld',
 	WITHDRAWN: 'withdrawn',
 	NA: 'na'
