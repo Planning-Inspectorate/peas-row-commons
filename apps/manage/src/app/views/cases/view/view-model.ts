@@ -133,7 +133,7 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 	});
 
 	if (caseRow.Authority) {
-		mergedData.authorityName = caseRow.Authority.name;
+		mergedData.authorityId = caseRow.Authority.id;
 		delete mergedData.Authority;
 	}
 

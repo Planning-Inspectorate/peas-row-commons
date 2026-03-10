@@ -39,6 +39,10 @@ import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-compo
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
+import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../../config.ts';
+import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
+import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
+import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
 
@@ -46,6 +50,25 @@ type RadioOption = { text: string; value: string } | { divider: string };
 export const OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER = OBJECTOR_STATUSES.map(
 	(s) => ({ text: s.displayName, value: s.id }) as RadioOption
 ).toSpliced(-1, 0, { divider: 'or' });
+
+const getAuthorityOptions = () => {
+	let LPAs: Prisma.AuthorityUncheckedCreateInput[];
+	try {
+		const env = loadEnvironmentConfig();
+		// this is to avoid a database read when the data is static - but it does vary by environment
+		// the options here should match the dev/prod seed scripts
+		LPAs = env === ENVIRONMENT_NAME.PROD ? AUTHORITIES_PROD : AUTHORITIES_DEV;
+	} catch (error) {
+		// Fallback to dev data if there's an issue loading the config or data, to ensure the app can still function.
+		// This would likely only be triggered by tests
+		console.error(error);
+		LPAs = AUTHORITIES_DEV;
+	}
+	return [
+		{ text: '', value: '' }, // ensure there is a 'null' option so the first LPA isn't selected by default
+		...LPAs.map((t) => ({ text: t.name, value: t.id })).sort((a, b) => a.text.localeCompare(b.text))
+	];
+};
 
 interface FormattingContext {
 	getQuestion: (fieldName: string) => Question | undefined;
@@ -559,20 +582,13 @@ export const CASE_DETAILS_QUESTIONS = {
 		]
 	},
 	authority: {
-		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
+		type: COMPONENT_TYPES.SELECT,
 		title: 'Authority (LPA, OMA, CRA)',
 		question: 'Who is the authority?',
 		hint: 'Enter the Local Planning Authority or Common Registration Authority (optional)',
-		fieldName: 'authorityName',
+		fieldName: 'authorityId',
 		url: 'authority',
-		validators: [
-			new StringValidator({
-				maxLength: {
-					maxLength: 150,
-					maxLengthMessage: 'Authority must be less than 150 characters'
-				}
-			})
-		]
+		options: getAuthorityOptions()
 	},
 	priority: {
 		type: COMPONENT_TYPES.RADIO,

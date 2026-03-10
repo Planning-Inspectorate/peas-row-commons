@@ -77,13 +77,13 @@ describe('view-model', () => {
 				id: '123',
 				receivedDate: new Date(),
 				Authority: {
-					name: 'Local Council'
+					id: '123'
 				}
 			};
 
 			const result: any = caseToViewModel(input as any, groupMembers);
 
-			assert.strictEqual(result.authorityName, 'Local Council');
+			assert.strictEqual(result.authorityId, '123');
 
 			assert.strictEqual(result.Authority, undefined);
 		});

@@ -19,7 +19,7 @@
     "db-migrate-prod": "npm run migrate-prod --workspace @pins/peas-row-commons-database",
     "db-generate": "npm run generate --workspace @pins/peas-row-commons-database",
     "db-seed": "npm run seed --workspace @pins/peas-row-commons-database",
-    "db-seed-prod": "npm run seed:prod --workspace @pins/peas-row-commons-database",
+    "db-seed-prod": "npm run seed-prod --workspace @pins/peas-row-commons-database",
     "format": "prettier --write .",
     "format-check": "prettier --check .",
     "lint": "npx eslint .",

@@ -24,7 +24,8 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 		},
 		location: answers.location,
 		Type: { connect: { id: caseType } },
-		Status: { connect: { id: CASE_STATUS_ID.NEW_CASE } } // All created cases start at "new-case"
+		Status: { connect: { id: CASE_STATUS_ID.NEW_CASE } }, // All created cases start at "new-case"
+		Authority: { connect: { id: answers.authorityId } }
 	};
 
 	// otherSosCasework takes priority, indicating a "user entered" subtype
@@ -70,14 +71,6 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 	if (mappedApplicants.length) {
 		input.Contacts = {
 			create: mappedApplicants
-		};
-	}
-
-	if (answers.authority) {
-		input.Authority = {
-			create: {
-				name: answers.authority
-			}
 		};
 	}
 
