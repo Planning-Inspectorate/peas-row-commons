@@ -65,6 +65,7 @@ describe('case details journey', () => {
 					'caseSubtype',
 					'act',
 					'consentSought',
+					'priority',
 					'inspectorBand',
 					'relatedCaseDetails',
 					'linkedCaseDetails'
@@ -83,8 +84,7 @@ describe('case details journey', () => {
 					'applicantDetails',
 					'siteAddress',
 					'location',
-					'authority',
-					'priority'
+					'authority'
 				]
 			},
 			{
@@ -96,18 +96,14 @@ describe('case details journey', () => {
 				title: 'Timetable',
 				segment: 'timetable',
 				questions: [
-					'receivedDate',
-					'startDate',
 					'expectedSubmissionDate',
+					'receivedDate',
 					'targetDecisionDate',
-					'caseOfficerVerificationDate',
-					'proposedModificationsDate',
+					'startDate',
 					'objectionPeriodEndsDate',
-					'consentDeadlineDate',
-					'ogdDueDate',
-					'proposalLetterDate',
+					'partiesDecisionNotificationDeadlineDate',
 					'expiryDate',
-					'partiesDecisionNotificationDeadlineDate'
+					'proposedModificationsDate'
 				]
 			},
 			{
