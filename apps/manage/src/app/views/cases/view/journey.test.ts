@@ -171,9 +171,9 @@ describe('case details journey', () => {
 				]
 			},
 			{
-				title: 'Documents',
-				segment: 'documents',
-				questions: ['filesLocation']
+				title: 'Additional resource locations',
+				segment: 'additional-resource-locations',
+				questions: ['filesLocation', 'relevantWebsiteLinks']
 			},
 			{
 				title: 'Withdrawal or abeyance',

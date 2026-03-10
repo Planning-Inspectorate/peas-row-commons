@@ -344,15 +344,32 @@ export const DATE_QUESTIONS = {
 export const DOCUMENTS_QUESTIONS = {
 	filesLocation: {
 		type: COMPONENT_TYPES.TEXT_ENTRY,
-		title: 'Files location',
-		question: 'Where are the files located?',
+		title: 'Offline document location',
+		question: 'Where are the paper documents relating to the case stored?',
 		fieldName: 'filesLocation',
-		url: 'files-location',
+		url: 'offline-document-location',
+		hint: 'e.g. Sealed orders, paper letters',
 		validators: [
 			new StringValidator({
 				maxLength: {
 					maxLength: 250,
-					maxLengthMessage: 'Files location must be 250 characters or less'
+					maxLengthMessage: 'Offline document location must be 250 characters or less'
+				}
+			})
+		]
+	},
+	relevantWebsiteLinks: {
+		type: COMPONENT_TYPES.TEXT_ENTRY,
+		title: 'Relevant website links',
+		question: 'What are the relevant website links?',
+		fieldName: 'relevantWebsiteLinks',
+		url: 'relevant-website-links',
+		hint: 'e.g. third party website for deposited documents',
+		validators: [
+			new StringValidator({
+				maxLength: {
+					maxLength: 250,
+					maxLengthMessage: 'Relevant website links must be 250 characters or less'
 				}
 			})
 		]

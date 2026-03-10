@@ -53,6 +53,8 @@ model Case {
   Dates                    CaseDates?
   /// Physical location of real-world files
   filesLocation            String?
+  /// Website links helpful for the case
+  relevantWebsiteLinks     String?
   Folders                  Folder[]
   Costs                    CaseCosts?
   Abeyance                 CaseAbeyance?
