@@ -181,9 +181,9 @@ describe('case details journey', () => {
 				questions: ['withdrawalDate', 'abeyanceStartDate', 'abeyanceEndDate']
 			},
 			{
-				title: 'Costs',
-				segment: 'costs',
-				questions: ['rechargeable', 'finalCost', 'feeReceived', 'invoiceSent']
+				title: 'Invoicing',
+				segment: 'invoicing',
+				questions: ['rechargeable', 'finalCost', 'invoiceSent', 'feeReceived']
 			}
 		];
 
