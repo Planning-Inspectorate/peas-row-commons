@@ -600,7 +600,7 @@ model ContactType {
 }
 
 model ObjectorStatus {
-  /// unique machine-readable name, not generated, e.g. "admissable"
+  /// unique machine-readable name, not generated, e.g. "admissible"
   id          String    @id
   displayName String?
   Contacts    Contact[]
