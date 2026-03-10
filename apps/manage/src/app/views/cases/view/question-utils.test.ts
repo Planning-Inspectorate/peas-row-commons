@@ -1,4 +1,6 @@
-import { describe, it } from 'node:test';
+process.env.ENVIRONMENT = 'dev';
+
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
 	dateQuestion,
@@ -10,6 +12,12 @@ import {
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 
 describe('questions utils', () => {
+	beforeEach(() => {
+		process.env.ENVIRONMENT = 'dev'; // Used to get Authorities
+	});
+	afterEach(() => {
+		delete process.env.ENVIRONMENT;
+	});
 	describe('dateQuestion factory', () => {
 		it('should create a date question with defaults based on fieldName', () => {
 			const fieldName = 'testDateParameter';
@@ -31,6 +39,7 @@ describe('questions utils', () => {
 		});
 
 		it('should accept overrides for title, question, url and hint', () => {
+			process.env.ENVIRONMENT = 'dev'; // Used to get Authorities
 			const overrides = {
 				fieldName: 'testField',
 				title: 'Custom Title',
@@ -48,6 +57,7 @@ describe('questions utils', () => {
 		});
 
 		it('should pass through viewData', () => {
+			process.env.ENVIRONMENT = 'dev'; // Used to get Authorities
 			const viewData = { someProp: 'someValue' };
 			const question = dateQuestion({ fieldName: 'test', viewData });
 
@@ -119,6 +129,7 @@ describe('questions utils', () => {
 		});
 
 		it('should return just the role "Officer" if the answer row is missing', () => {
+			process.env.ENVIRONMENT = 'dev'; // Used to get Authorities
 			const row = {};
 			const context = createMockContext();
 
@@ -128,6 +139,7 @@ describe('questions utils', () => {
 		});
 
 		it('should format Inspector with name when answer is present', () => {
+			process.env.ENVIRONMENT = 'dev'; // Used to get Authorities
 			const row = { decisionMakerInspectorId: 'inspector-456' };
 			const context = createMockContext('Jane Inspector');
 
@@ -137,6 +149,7 @@ describe('questions utils', () => {
 		});
 
 		it('should return "Secretary of State" for SoS type', () => {
+			process.env.ENVIRONMENT = 'dev'; // Used to get Authorities
 			const row = {};
 			const context = createMockContext();
 
@@ -146,6 +159,7 @@ describe('questions utils', () => {
 		});
 
 		it('should return an em-dash "—" for unknown types', () => {
+			process.env.ENVIRONMENT = 'dev'; // Used to get Authorities
 			const row = {};
 			const context = createMockContext();
 
@@ -155,6 +169,7 @@ describe('questions utils', () => {
 		});
 
 		it('should return just the role if formatting returns empty value', () => {
+			process.env.ENVIRONMENT = 'dev'; // Used to get Authorities
 			const row = { decisionMakerOfficerId: 'officer-123' };
 			const context = {
 				mockJourney: {},

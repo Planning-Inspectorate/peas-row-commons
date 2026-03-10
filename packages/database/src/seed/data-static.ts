@@ -23,6 +23,7 @@ import {
 	SECTIONS
 } from './static_data/index.ts';
 import { CASE_STATUSES } from './static_data/status.ts';
+import { AUTHORITY_STATUSES } from './static_data/authority-status.ts';
 
 type ReferenceDataInput = {
 	id: string;
@@ -49,7 +50,7 @@ async function upsertReferenceData<T extends ReferenceDataInput>({
 
 /**
  * Seeds important static data (like enums) into the database.
- * Uses a for-loop as oppose to Promise.all due to some queries
+ * Uses a for-loop as opposed to Promise.all due to some queries
  * (specifically subtypes) overloading the connection pool.
  */
 export async function seedStaticData(dbClient: PrismaClient) {
@@ -139,6 +140,10 @@ export async function seedStaticData(dbClient: PrismaClient) {
 
 	for (const input of SECTIONS) {
 		await upsertReferenceData({ delegate: dbClient.section, input });
+	}
+
+	for (const input of AUTHORITY_STATUSES) {
+		await upsertReferenceData({ delegate: dbClient.authorityStatus, input });
 	}
 
 	console.log('static data seed complete');

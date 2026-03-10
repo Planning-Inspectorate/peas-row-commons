@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'url';
 import type { BaseConfig } from '@pins/peas-row-commons-lib/app/config-types.d.ts';
 import type { BlobStoreConfig } from '@pins/peas-row-commons-lib/blob-store/types.d.ts';
+import { loadEnvFile } from 'node:process';
 
 export interface Config extends BaseConfig {
 	appHostname: string;
@@ -202,7 +203,11 @@ export function loadBuildConfig(): BuildConfig {
  */
 export function loadEnvironmentConfig(): string {
 	// load configuration from .env file into process.env
-	dotenv.config();
+	try {
+		loadEnvFile();
+	} catch {
+		/* ignore errors here */
+	}
 
 	// get values from the environment
 	const { ENVIRONMENT } = process.env;

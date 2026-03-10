@@ -156,12 +156,12 @@ describe('Case Mapper', () => {
 		it('should map the authority correctly if provided', () => {
 			const answers = {
 				...getBaseAnswers(),
-				authority: 'Local Council'
+				authorityId: '123'
 			};
 
 			const result = mapAnswersToCaseInput(answers, 'REF-007');
 
-			assert.deepStrictEqual(result.Authority?.create, { name: 'Local Council' });
+			assert.deepStrictEqual(result.Authority?.connect, { id: '123' });
 		});
 	});
 });

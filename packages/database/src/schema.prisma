@@ -64,8 +64,8 @@ model Case {
   Status                   CaseStatus?                   @relation(fields: [statusId], references: [id])
   advertisedModificationId String?
   AdvertisedModification   AdvertisedModificationStatus? @relation(fields: [advertisedModificationId], references: [id])
-  authorityid              String?                       @db.UniqueIdentifier
-  Authority                Authority?                    @relation(fields: [authorityid], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  authorityId              String?                       @db.UniqueIdentifier
+  Authority                Authority?                    @relation(fields: [authorityId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   priorityId               String?
   Priority                 CasePriority?                 @relation(fields: [priorityId], references: [id])
   /// The relevant legislation / act
@@ -331,12 +331,6 @@ model DraftDocument {
   mimeType   String @default("application/octet-stream")
 
   @@index([sessionKey, caseId])
-}
-
-model Authority {
-  id   String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  name String
-  Case Case[]
 }
 
 model InspectorBand {
@@ -625,4 +619,23 @@ model LinkedCase {
   isLead    Boolean @default(false)
   caseId    String  @db.UniqueIdentifier
   Case      Case    @relation(fields: [caseId], references: [id])
+}
+
+/// Authority represents the authority responsible for the case, e.g. local council
+model Authority {
+  id       String           @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  name     String
+  pinsCode String
+  statusId String?
+  Status   AuthorityStatus? @relation(fields: [statusId], references: [id])
+  Case     Case[]
+
+  @@index([pinsCode])
+}
+
+model AuthorityStatus {
+  /// unique machine-readable name, not generated, e.g. "active"
+  id          String      @id
+  displayName String?
+  Authority   Authority[]
 }

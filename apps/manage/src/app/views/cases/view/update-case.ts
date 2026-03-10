@@ -489,16 +489,7 @@ function handleInspectors(flatData: Record<string, any>, prismaPayload: Prisma.C
 function handleAuthority(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
 	if (!Object.hasOwn(flatData, 'authorityName')) return;
 
-	const authorityData = {
-		name: flatData.authorityName
-	};
-
-	prismaPayload.Authority = {
-		upsert: {
-			create: authorityData,
-			update: authorityData
-		}
-	};
+	prismaPayload.Authority = { connect: { id: flatData.authorityName } };
 
 	delete flatData.authorityName;
 }
