@@ -3,13 +3,22 @@ import type { Prisma, PrismaClient } from '@pins/peas-row-commons-database/src/c
 type DbClient = PrismaClient | Prisma.TransactionClient;
 
 /**
- * Generates a case reference based on existing data, incrementing from the last
+ * Starting number for manually created cases.
+ * Cases 00001-09999 are reserved for migrated cases (from Horizon/spreadsheets).
+ * Manual cases start from 10001 to avoid reference number collisions during migration.
+ */
+const MANUAL_CASE_START = 10001;
+
+/**
+ * Generates a unique case reference for manually created cases.
+ * Finds the next available number in the manual range (10001+) for the given prefix.
  */
 export async function generateCaseReference(db: DbClient, prefix: string): Promise<string> {
 	const latestCase = await db.case.findFirst({
 		where: {
 			reference: {
-				startsWith: prefix
+				startsWith: prefix,
+				gte: `${prefix}${MANUAL_CASE_START}`
 			}
 		},
 		orderBy: {
@@ -20,7 +29,7 @@ export async function generateCaseReference(db: DbClient, prefix: string): Promi
 		}
 	});
 
-	let nextId = 1;
+	let nextId = MANUAL_CASE_START;
 
 	if (latestCase) {
 		const currentId = extractIdFromReference(latestCase.reference);
@@ -29,7 +38,7 @@ export async function generateCaseReference(db: DbClient, prefix: string): Promi
 		}
 	}
 
-	return `${prefix}${nextId.toString().padStart(5, '0')}`;
+	return `${prefix}${nextId}`;
 }
 
 /**
