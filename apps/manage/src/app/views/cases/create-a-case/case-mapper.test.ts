@@ -163,5 +163,16 @@ describe('Case Mapper', () => {
 
 			assert.deepStrictEqual(result.Authority?.connect, { id: '123' });
 		});
+
+		it('should not have an Authority key if no authority provided', () => {
+			const answers = {
+				...getBaseAnswers(),
+				authorityId: ''
+			};
+
+			const result = mapAnswersToCaseInput(answers, 'REF-008');
+
+			assert.deepStrictEqual(result.Authority, undefined);
+		});
 	});
 });
