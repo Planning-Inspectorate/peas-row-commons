@@ -5,7 +5,8 @@ import {
 	dateISOStringToDisplayDate,
 	getDayFromISODate,
 	safeConvertTo24Hour,
-	formatDateTime
+	formatDateTime,
+	toDateOrNull
 } from './dates.ts';
 
 describe('Date Helpers', () => {
@@ -88,6 +89,7 @@ describe('Date Helpers', () => {
 			assert.strictEqual(getDayFromISODate(null as any), '');
 		});
 	});
+
 	describe('safeConvertTo24Hour', () => {
 		it('should convert 12am to 0', () => {
 			const result = safeConvertTo24Hour(12, 'am');
@@ -130,6 +132,49 @@ describe('Date Helpers', () => {
 			const input = new Date('2026-03-15T09:05:00.000Z');
 			const result = formatDateTime(input);
 			assert.strictEqual(result.time, result.time.toLowerCase());
+		});
+	});
+
+	describe('toDateOrNull', () => {
+		it('should return a valid Date for an ISO string', () => {
+			const result = toDateOrNull('2026-11-10T00:00:00.000Z');
+			assert.ok(result instanceof Date);
+			assert.strictEqual(result.toISOString(), '2026-11-10T00:00:00.000Z');
+		});
+
+		it('should return a valid Date for a Date object', () => {
+			const input = new Date('2026-12-10T00:00:00.000Z');
+			const result = toDateOrNull(input);
+			assert.ok(result instanceof Date);
+			assert.strictEqual(result.toISOString(), '2026-12-10T00:00:00.000Z');
+		});
+
+		it('should return null for null', () => {
+			assert.strictEqual(toDateOrNull(null), null);
+		});
+
+		it('should return null for undefined', () => {
+			assert.strictEqual(toDateOrNull(undefined), null);
+		});
+
+		it('should return null for an empty string', () => {
+			assert.strictEqual(toDateOrNull(''), null);
+		});
+
+		it('should return null for Invalid Date', () => {
+			assert.strictEqual(toDateOrNull(new Date('invalid')), null);
+		});
+
+		it('should return null for a non-date string', () => {
+			assert.strictEqual(toDateOrNull('not-a-date'), null);
+		});
+
+		it('should return null for 0', () => {
+			assert.strictEqual(toDateOrNull(0), null);
+		});
+
+		it('should return null for false', () => {
+			assert.strictEqual(toDateOrNull(false), null);
 		});
 	});
 });

@@ -6,6 +6,7 @@ import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validato
 import NumericValidator from '@planning-inspectorate/dynamic-forms/src/validator/numeric-validator.js';
 import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
+import CustomDatePeriodValidator from '@pins/peas-row-commons-lib/validators/custom-date-period-validator.ts';
 
 import {
 	INVOICE_STATUSES,
@@ -374,54 +375,6 @@ export const COSTS_QUESTIONS = {
 	}
 };
 
-export const ABEYANCE_QUESTIONS = {
-	withdrawalDate: dateQuestion({
-		fieldName: 'withdrawalDate',
-		title: 'Withdrawal date',
-		question: 'When was the case withdrawn?',
-		url: 'withdrawal-date',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'withdrawal-date/remove'
-				}
-			]
-		}
-	}),
-	abeyanceStartDate: dateQuestion({
-		fieldName: 'abeyanceStartDate',
-		title: 'Abeyance start date',
-		question: 'When did the abeyance period start?',
-		url: 'abeyance-start-date',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'abeyance-start-date/remove'
-				}
-			]
-		}
-	}),
-	abeyanceEndDate: dateQuestion({
-		fieldName: 'abeyanceEndDate',
-		title: 'Abeyance end date',
-		question: 'When did the abeyance period end?',
-		url: 'abeyance-end-date',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'abeyance-end-date/remove'
-				}
-			]
-		}
-	})
-};
-
 export const CASE_DETAILS_QUESTIONS = {
 	reference: {
 		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
@@ -495,6 +448,27 @@ export const CASE_DETAILS_QUESTIONS = {
 				}
 			]
 		}
+	},
+	abeyancePeriod: {
+		type: COMPONENT_TYPES.DATE_PERIOD,
+		title: 'Abeyance period',
+		question: 'What is the abeyance period?',
+		fieldName: 'abeyancePeriod',
+		url: 'abeyance-period',
+		dateFormat: 'd MMMM yyyy',
+		validators: [
+			new CustomDatePeriodValidator(
+				'abeyance period',
+				{ ensureFuture: false, ensurePast: false },
+				{ ensureFuture: false, ensurePast: false },
+				true, // endDateAfterStartDate
+				true, // endOptional
+				'Abeyance start date must be before the abeyance end date' // error message
+			)
+		],
+		labels: { start: 'Start', end: 'End' },
+		hintStart: 'For example, 27 3 2007',
+		hintEnd: 'For example, 27 3 2007'
 	},
 	advertisedModificationStatus: {
 		type: COMPONENT_TYPES.RADIO,
@@ -1904,7 +1878,6 @@ export const ALL_QUESTIONS = {
 	...DATE_QUESTIONS,
 	...DOCUMENTS_QUESTIONS,
 	...COSTS_QUESTIONS,
-	...ABEYANCE_QUESTIONS,
 	...CASE_DETAILS_QUESTIONS,
 	...TEAM_QUESTIONS,
 	...OVERVIEW_QUESTIONS,

@@ -1,6 +1,6 @@
 import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert';
-import { buildUpdateCase, mapCasePayload } from './update-case.ts';
+import { buildUpdateCase, mapCasePayload, handleAbeyancePeriod } from './update-case.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
 import { ACT_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/act.ts';
@@ -698,6 +698,82 @@ describe('Update Case Controller', () => {
 
 			assert.strictEqual(proceduresPayload.upsert.length, 1);
 			assert.strictEqual(proceduresPayload.upsert[0].create.ProcedureType.connect.id, 'hearing');
+		});
+	});
+
+	describe('handleAbeyancePeriod', () => {
+		it('should map abeyancePeriod to Abeyance upsert', () => {
+			const flatData: Record<string, unknown> = {
+				abeyancePeriod: {
+					start: '2026-11-10T00:00:00.000Z',
+					end: '2026-12-10T00:00:00.000Z'
+				}
+			};
+			const prismaPayload: any = {};
+
+			handleAbeyancePeriod(flatData, prismaPayload);
+
+			assert.deepStrictEqual(prismaPayload.Abeyance, {
+				upsert: {
+					create: {
+						abeyanceStartDate: new Date('2026-11-10T00:00:00.000Z'),
+						abeyanceEndDate: new Date('2026-12-10T00:00:00.000Z')
+					},
+					update: {
+						abeyanceStartDate: new Date('2026-11-10T00:00:00.000Z'),
+						abeyanceEndDate: new Date('2026-12-10T00:00:00.000Z')
+					}
+				}
+			});
+			assert.strictEqual(flatData.abeyancePeriod, undefined);
+		});
+
+		it('should handle null end date', () => {
+			const flatData: Record<string, unknown> = {
+				abeyancePeriod: {
+					start: '2026-11-10T00:00:00.000Z',
+					end: null
+				}
+			};
+			const prismaPayload: any = {};
+
+			handleAbeyancePeriod(flatData, prismaPayload);
+
+			assert.strictEqual(prismaPayload.Abeyance.upsert.create.abeyanceEndDate, null);
+			assert.ok(prismaPayload.Abeyance.upsert.create.abeyanceStartDate instanceof Date);
+		});
+
+		it('should handle Invalid Date end date', () => {
+			const flatData: Record<string, unknown> = {
+				abeyancePeriod: {
+					start: '2026-11-10T00:00:00.000Z',
+					end: new Date('invalid')
+				}
+			};
+			const prismaPayload: any = {};
+
+			handleAbeyancePeriod(flatData, prismaPayload);
+
+			assert.strictEqual(prismaPayload.Abeyance.upsert.create.abeyanceEndDate, null);
+		});
+
+		it('should not modify prismaPayload when abeyancePeriod is not present', () => {
+			const flatData: Record<string, unknown> = { someOtherField: 'value' };
+			const prismaPayload: any = {};
+
+			handleAbeyancePeriod(flatData, prismaPayload);
+
+			assert.strictEqual(prismaPayload.Abeyance, undefined);
+		});
+
+		it('should handle null abeyancePeriod', () => {
+			const flatData: Record<string, unknown> = { abeyancePeriod: null };
+			const prismaPayload: any = {};
+
+			handleAbeyancePeriod(flatData, prismaPayload);
+
+			assert.strictEqual(prismaPayload.Abeyance.upsert.create.abeyanceStartDate, null);
+			assert.strictEqual(prismaPayload.Abeyance.upsert.create.abeyanceEndDate, null);
 		});
 	});
 });
