@@ -329,7 +329,11 @@ declare module '@planning-inspectorate/dynamic-forms/src/validator/string-valida
 declare module '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js' {
 	import Validator from '@planning-inspectorate/dynamic-forms/src/validator/validator.js';
 	export default class DateValidator extends Validator {
-		constructor(options: any);
+		constructor(
+			inputLabel: string,
+			dateValidationSettings?: { ensureFuture: boolean; ensurePast: boolean },
+			errorMessages?: Record<string, string>
+		);
 	}
 }
 

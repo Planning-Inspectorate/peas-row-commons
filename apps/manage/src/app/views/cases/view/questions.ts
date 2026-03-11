@@ -5,7 +5,6 @@ import {
 	DATE_QUESTIONS,
 	DOCUMENTS_QUESTIONS,
 	COSTS_QUESTIONS,
-	ABEYANCE_QUESTIONS,
 	CASE_DETAILS_QUESTIONS,
 	TEAM_QUESTIONS,
 	createTeamQuestions,
@@ -42,7 +41,6 @@ export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }, answ
 		...DATE_QUESTIONS,
 		...DOCUMENTS_QUESTIONS,
 		...COSTS_QUESTIONS,
-		...ABEYANCE_QUESTIONS,
 		...CASE_DETAILS_QUESTIONS,
 		...KEY_CONTACTS_QUESTIONS,
 		// Questions where we need to inject some

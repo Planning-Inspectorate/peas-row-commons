@@ -22,7 +22,7 @@ function formatValue(value: any) {
 	return value;
 }
 
-const NESTED_SECTIONS: (keyof CaseListFields)[] = ['Dates', 'Costs', 'Abeyance', 'Notes', 'Outcome'];
+const NESTED_SECTIONS: (keyof CaseListFields)[] = ['Dates', 'Costs', 'Notes', 'Outcome'];
 
 /**
  * Procedures are sorted in chronologically in ascending order by default from DB.
@@ -164,6 +164,15 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 			delete mergedData[sectionKey];
 		}
 	});
+
+	if (caseRow.Abeyance) {
+		mergedData.abeyancePeriod = {
+			start: caseRow.Abeyance.abeyanceStartDate ?? undefined,
+			end: caseRow.Abeyance.abeyanceEndDate ?? undefined
+		};
+
+		delete mergedData.Abeyance;
+	}
 
 	if (caseRow.Authority) {
 		mergedData.authorityId = caseRow.Authority.id;

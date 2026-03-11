@@ -16,6 +16,7 @@ import { getFieldDisplayNames } from './question-utils.ts';
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
 import { remapFlattenedFieldsToArray } from '@pins/peas-row-commons-lib/util/remap-flattened-fields.ts';
+import { toDateOrNull } from '@pins/peas-row-commons-lib/util/dates.ts';
 import { mapProceduresToArray, sortProceduresChronologically } from './view-model.ts';
 
 interface HandlerParams {
@@ -206,6 +207,7 @@ function generateNestedQuery(mainTableData: Record<string, any>, nestedData: Rec
 function handleUniqueDataCases(flatData: Record<string, unknown>, prismaPayload: Prisma.CaseUpdateInput) {
 	handleAuthority(flatData, prismaPayload);
 	handleAddress(flatData, prismaPayload);
+	handleAbeyancePeriod(flatData, prismaPayload);
 	handleInspectors(flatData, prismaPayload);
 	handleContacts(flatData, prismaPayload, CONTACT_MAPPINGS);
 	handleRelatedCases(flatData, prismaPayload);
@@ -216,6 +218,32 @@ function handleUniqueDataCases(flatData: Record<string, unknown>, prismaPayload:
 	handleOutcomes(flatData, prismaPayload);
 	handleActAndSection(flatData, prismaPayload);
 	updateClosedDate(flatData, prismaPayload);
+}
+
+/**
+ * Handles mapping the abeyancePeriod composite field back to the
+ * CaseAbeyance relation's individual date fields.
+ */
+export function handleAbeyancePeriod(flatData: Record<string, unknown>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (!Object.hasOwn(flatData, 'abeyancePeriod')) {
+		return;
+	}
+
+	const period = flatData.abeyancePeriod as { start?: string | null; end?: string | null } | null;
+
+	const abeyanceData = {
+		abeyanceStartDate: toDateOrNull(period?.start),
+		abeyanceEndDate: toDateOrNull(period?.end)
+	};
+
+	prismaPayload.Abeyance = {
+		upsert: {
+			create: abeyanceData,
+			update: abeyanceData
+		}
+	};
+
+	delete flatData.abeyancePeriod;
 }
 
 /**

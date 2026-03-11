@@ -233,7 +233,6 @@ model CaseAbeyance {
   id                String    @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   abeyanceStartDate DateTime?
   abeyanceEndDate   DateTime?
-  withdrawalDate    DateTime?
   caseId            String    @unique @db.UniqueIdentifier
   Case              Case      @relation(fields: [caseId], references: [id])
 }

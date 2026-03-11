@@ -61,3 +61,18 @@ export function formatDateTime(dateTime: Date): { date: string; time: string } {
 
 	return { date, time };
 }
+
+/**
+ * Converts a value to a valid Date or null.
+ * Handles cases where date components (e.g. from DATE_PERIOD)
+ * produce an Invalid Date when fields are left blank.
+ */
+export function toDateOrNull(value: unknown): Date | null {
+	if (!value) {
+		return null;
+	}
+
+	const date = new Date(value as string);
+
+	return isNaN(date.getTime()) ? null : date;
+}

@@ -9,7 +9,6 @@ export const RELATION_MAP: Record<string, string[]> = {
 		'proposedModificationsDate'
 	],
 	Costs: ['rechargeable', 'finalCost', 'feeReceived', 'invoiceSent'],
-	Abeyance: ['withdrawalDate', 'abeyanceStartDate', 'abeyanceEndDate'],
 	Outcome: ['partiesNotifiedDate', 'orderDecisionDispatchDate', 'sealedOrderReturnedDate', 'decisionPublishedDate']
 };
 

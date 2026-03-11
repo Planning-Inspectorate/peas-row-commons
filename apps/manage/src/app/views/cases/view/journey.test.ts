@@ -80,6 +80,7 @@ describe('case details journey', () => {
 					'historicalReference',
 					'caseName',
 					'caseStatus',
+					'abeyancePeriod',
 					'advertisedModificationStatus',
 					'applicantDetails',
 					'siteAddress',
@@ -172,11 +173,6 @@ describe('case details journey', () => {
 				questions: ['filesLocation', 'relevantWebsiteLinks']
 			},
 			{
-				title: 'Withdrawal or abeyance',
-				segment: 'withdrawal-abeyance',
-				questions: ['withdrawalDate', 'abeyanceStartDate', 'abeyanceEndDate']
-			},
-			{
 				title: 'Invoicing',
 				segment: 'invoicing',
 				questions: ['rechargeable', 'finalCost', 'invoiceSent', 'feeReceived']
@@ -204,6 +200,31 @@ describe('case details journey', () => {
 				);
 			});
 		});
+	});
+
+	it('should have abeyancePeriod in the Case details section between caseStatus and advertisedModificationStatus', () => {
+		const mockRes = {};
+		const mockReq = { params: { id: '123' }, baseUrl: '/case/123/details' };
+
+		const mockQuestions = new Proxy(
+			{},
+			{
+				get: (_target, prop) => ({ fieldName: prop })
+			}
+		);
+
+		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any);
+
+		const caseDetailsSection = journey.sections.find((s: any) => s.name === 'Case details');
+		assert.ok(caseDetailsSection, 'Case details section should exist');
+
+		const fieldNames = caseDetailsSection.questions.map((q: any) => q.fieldName);
+		const statusIdx = fieldNames.indexOf('caseStatus');
+		const abeyanceIdx = fieldNames.indexOf('abeyancePeriod');
+		const advertisedIdx = fieldNames.indexOf('advertisedModificationStatus');
+
+		assert.ok(abeyanceIdx > statusIdx, 'abeyancePeriod should come after caseStatus');
+		assert.ok(abeyanceIdx < advertisedIdx, 'abeyancePeriod should come before advertisedModificationStatus');
 	});
 
 	it('should have a Procedures section with procedureDetails as a manage list question', () => {
