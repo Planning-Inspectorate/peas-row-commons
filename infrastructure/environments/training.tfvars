@@ -53,6 +53,13 @@ monitoring_config = {
   log_daily_cap                        = 0.1
 }
 
+odw_config = {
+  enabled_peering     = true
+  resource_group_name = "pins-rg-network-odw-prod-uks"
+  vnet_name           = "vnet-odw-prod-uks"
+  subscription_id     = "a82fd28d-5989-4e06-a0bb-1a5d859f9e0c"
+}
+
 storage_config = {
   replication_type = "LRS"
 }
