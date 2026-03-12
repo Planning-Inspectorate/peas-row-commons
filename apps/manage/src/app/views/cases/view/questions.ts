@@ -20,10 +20,15 @@ import {
 
 import type { CaseOfficer } from './types.ts';
 import { CUSTOM_COMPONENT_CLASSES } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
+import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 
-export function getQuestions(groupMembers: { caseOfficers: CaseOfficer[] }, answers: Record<string, unknown>) {
+export function getQuestions(
+	groupMembers: { caseOfficers: CaseOfficer[] },
+	allUsers: Prisma.UserGetPayload<{ select: { id: true; idpUserId: true; legacyId: true } }>[],
+	answers: Record<string, unknown>
+) {
 	// We must generate team questions due to the varying nature of groupMembers
-	const generatedTeamQuestions = createTeamQuestions(TEAM_QUESTIONS, groupMembers);
+	const generatedTeamQuestions = createTeamQuestions(TEAM_QUESTIONS, groupMembers, allUsers);
 	const generateOutcomeQuestions = createOutcomeQuestions(
 		OUTCOME_QUESTIONS,
 		groupMembers,

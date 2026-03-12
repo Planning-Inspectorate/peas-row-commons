@@ -20,10 +20,12 @@ import {
 	DECISION_MAKER_TYPES,
 	NOTE_TYPES,
 	ACTS,
-	SECTIONS
+	SECTIONS,
+	CASE_STATUSES
 } from './static_data/index.ts';
-import { CASE_STATUSES } from './static_data/status.ts';
 import { AUTHORITY_STATUSES } from './static_data/authority-status.ts';
+
+import { LEGACY_CONTACT_TYPES, LEGACY_SECTIONS } from './static_data/legacy/index.ts';
 
 type ReferenceDataInput = {
 	id: string;
@@ -144,6 +146,21 @@ export async function seedStaticData(dbClient: PrismaClient) {
 
 	for (const input of AUTHORITY_STATUSES) {
 		await upsertReferenceData({ delegate: dbClient.authorityStatus, input });
+	}
+
+	/**
+	 * Legacy data from migrated cases, these will not be displayed to the user
+	 * but need to exist in the table so the FK-PK join works.
+	 *
+	 * Keep separate in inserts for clear logic and intent
+	 */
+
+	for (const input of LEGACY_CONTACT_TYPES) {
+		await upsertReferenceData({ delegate: dbClient.contactType, input });
+	}
+
+	for (const input of LEGACY_SECTIONS) {
+		await upsertReferenceData({ delegate: dbClient.section, input });
 	}
 
 	console.log('static data seed complete');

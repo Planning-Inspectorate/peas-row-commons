@@ -81,65 +81,68 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 
 		logger.info({ id }, 'view case');
 
-		const caseToView = await db.case.findUnique({
-			where: { id },
-			include: {
-				SiteAddress: true,
-				SubType: true,
-				Type: true,
-				Dates: true,
-				Costs: true,
-				Abeyance: true,
-				Notes: {
-					take: 4,
-					orderBy: { createdAt: 'desc' },
-					include: {
-						Author: true,
-						NoteType: true
-					}
-				},
-				Authority: true,
-				Outcome: {
-					include: {
-						CaseDecisions: {
-							orderBy: { createdDate: 'asc' },
-							include: {
-								DecisionMaker: true,
-								DecisionMakerType: true,
-								DecisionType: true
+		const [caseToView, allUsers] = await db.$transaction([
+			db.case.findUnique({
+				where: { id },
+				include: {
+					SiteAddress: true,
+					SubType: true,
+					Type: true,
+					Dates: true,
+					Costs: true,
+					Abeyance: true,
+					Notes: {
+						take: 4,
+						orderBy: { createdAt: 'desc' },
+						include: {
+							Author: true,
+							NoteType: true
+						}
+					},
+					Authority: true,
+					Outcome: {
+						include: {
+							CaseDecisions: {
+								orderBy: { createdDate: 'asc' },
+								include: {
+									DecisionMaker: true,
+									DecisionMakerType: true,
+									DecisionType: true
+								}
 							}
 						}
-					}
-				},
-				Procedures: {
-					orderBy: { createdDate: 'asc' },
-					include: {
-						HearingVenue: true,
-						InquiryVenue: true,
-						ConferenceVenue: true,
-						Inspector: true
-					}
-				},
-				Inspectors: {
-					include: {
-						Inspector: true
-					}
-				},
-				Contacts: {
-					include: {
-						Address: true
-					}
-				},
-				RelatedCases: true,
-				LinkedCases: true,
-				CaseOfficer: true,
-				_count: {
-					select: {
-						Notes: true
+					},
+					Procedures: {
+						orderBy: { createdDate: 'asc' },
+						include: {
+							HearingVenue: true,
+							InquiryVenue: true,
+							ConferenceVenue: true,
+							Inspector: true
+						}
+					},
+					Inspectors: {
+						include: {
+							Inspector: true
+						}
+					},
+					Contacts: {
+						include: {
+							Address: true
+						}
+					},
+					RelatedCases: true,
+					LinkedCases: true,
+					CaseOfficer: true,
+					_count: {
+						select: {
+							Notes: true
+						}
 					}
 				}
-			}
-		});
+			}),
+			db.user.findMany() // Find all users in app so far, needed for legacy users which aren't in IDP
+		]);
 
 		if (caseToView === null) {
 			return notFoundHandler(req, res);
@@ -160,7 +163,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 
 		const finalAnswers = combineSessionAndDbData(res, answers, removedIds);
 
-		const questions = getQuestions(groupMembers, answers);
+		const questions = getQuestions(groupMembers, allUsers, answers);
 
 		// put these on locals for the list controller
 		res.locals.originalAnswers = { ...answers };

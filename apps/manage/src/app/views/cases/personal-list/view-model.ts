@@ -16,8 +16,11 @@ export function casesToViewModel(cases: CaseListFields[], groupMembers: { caseOf
 			const inspectorId = insp.Inspector?.idpUserId;
 			const mappedInspector = allUsers.find((user) => user.id === inspectorId);
 
+			// Attempts to find the user in entra, otherwise falls back to plain text 'idpUserId' then finally just 'Unknown'
+			const userName = mappedInspector?.displayName || caseOfficerId || 'Unknown';
+
 			return {
-				displayName: mappedInspector?.displayName || 'Unknown'
+				displayName: userName
 			};
 		});
 

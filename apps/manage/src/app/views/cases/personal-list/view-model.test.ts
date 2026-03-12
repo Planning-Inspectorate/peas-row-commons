@@ -29,7 +29,7 @@ describe('casesToViewModel', () => {
 		assert.strictEqual(result[0].reference, 'APP/123');
 	});
 
-	it('should return "Unknown" for inspectors and undefined for case officers if they are not in the Entra group', () => {
+	it('should return idpUserId for inspectors and undefined for case officers if they are not in the Entra group', () => {
 		const mockCases = [
 			{
 				id: 'case-2',
@@ -41,7 +41,7 @@ describe('casesToViewModel', () => {
 		const result = casesToViewModel(mockCases, mockGroupMembers);
 
 		assert.strictEqual(result[0].caseOfficerName, undefined);
-		assert.strictEqual(result[0].mappedInspectors[0].displayName, 'Unknown');
+		assert.strictEqual(result[0].mappedInspectors[0].displayName, 'ghost-user');
 	});
 
 	it('should safely handle cases with no Case Officer and no Inspectors', () => {

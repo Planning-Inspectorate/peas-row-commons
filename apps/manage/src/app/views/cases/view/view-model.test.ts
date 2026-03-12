@@ -266,7 +266,7 @@ describe('view-model', () => {
 			assert.strictEqual(result.caseNotes.length, 2);
 
 			assert.strictEqual(result.caseNotes[0].commentText, 'New note');
-			assert.strictEqual(result.caseNotes[0].userName, 'Unknown');
+			assert.strictEqual(result.caseNotes[0].userName, 'user_2');
 
 			assert.strictEqual(result.caseNotes[1].commentText, 'Old note');
 			assert.strictEqual(result.caseNotes[1].userName, 'Oscar');
