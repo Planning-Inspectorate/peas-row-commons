@@ -83,12 +83,45 @@
                     </fieldset>
                 </div>
 
-                {{ govukButton({
-                    text: "Select folder",
-                    type: "submit",
-                    attributes: { "data-cy":"button-save-and-continue" }
-                }) }}
+                <div class="govuk-button-group">
+                    {{ govukButton({
+                        text: "Select folder",
+                        type: "submit",
+                        attributes: { "data-cy":"button-save-and-continue" }
+                    }) }}
+
+                    {{ govukButton({
+                        text: "Remove selection",
+                        classes: "govuk-button--secondary",
+                        type: "button",
+                        attributes: { 
+                            "id": "remove-folder-selection",
+                            "data-cy": "button-remove-selection" 
+                        }
+                    }) }}
+                </div>
             </form>
         </div>
     </div>
+    <script type="module" {% if cspNonce %}nonce="{{ cspNonce }}"{% endif %}>
+        // Handles the clearing of selected radio buttons if the user wishes to make
+        // a different selection.
+        document.addEventListener('DOMContentLoaded', function() {
+            const clearBtn = document.getElementById('remove-folder-selection');
+
+            if (!clearBtn) return;
+            
+            clearBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+
+                const form = clearBtn.closest('form');
+                const radios = form.querySelectorAll('input[type="radio"]');
+                
+                // Just loop through and set all to false
+                for (const radio of radios) {
+                    radio.checked = false;
+                }
+            });
+        });
+    </script>
 {% endblock %}
