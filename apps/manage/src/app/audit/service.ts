@@ -151,10 +151,15 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 
 				const user = groupMembers.caseOfficers.find((member) => member.id === caseRow.UpdatedBy?.idpUserId);
 
+				// 1. Try and get a user from entra and show their name
+				// 2. Otherwise just show the idpUserId in plain text
+				// 3. Otherwise show Unknown
+				const userName = user?.displayName || caseRow.UpdatedBy?.idpUserId || 'Unknown';
+
 				return {
 					updatedDate,
 					closedDate,
-					by: user?.displayName || 'Unknown'
+					by: userName
 				};
 			} catch (error) {
 				logger.error(

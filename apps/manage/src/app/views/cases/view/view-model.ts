@@ -14,6 +14,7 @@ import { nl2br, truncateComment } from '@pins/peas-row-commons-lib/util/strings.
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
 import { DECISION_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-type.ts';
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
+import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/legacy/act-sections.ts';
 
 function formatValue(value: any) {
 	if (typeof value === 'boolean') {
@@ -239,8 +240,10 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOff
 	const mappedContacts = mapContacts(genericContacts, 'contact');
 
 	// Some acts do not have sections so we need to nullish coalesce in that check.
+	// We combine act sections with the legacy act sections so that old horizon data
+	// is still visible in the UI.
 	const act = mergedData.actId
-		? ACT_SECTIONS.find(
+		? [...ACT_SECTIONS, ...LEGACY_ACT_SECTIONS].find(
 				(actSection) =>
 					actSection.actId === mergedData.actId && (actSection.sectionId ?? null) === (mergedData.sectionId ?? null)
 			)
@@ -318,7 +321,7 @@ export const mapNotes = (
 				time: dateISOStringToDisplayTime12hr(caseNote.createdAt),
 				commentText: nl2br(caseNote.comment),
 				truncatedCommentText: nl2br(truncateComment(caseNote.comment, `/cases/${caseId}/case-notes`)),
-				userName: user?.displayName || 'Unknown'
+				userName: user?.displayName || caseNote.Author.idpUserId || 'Unknown' // Attempts to find the user in entra, otherwise falls back to plain text 'idpUserId' then finally just 'Unknown'
 			};
 		})
 	};
