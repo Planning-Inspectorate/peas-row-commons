@@ -69,7 +69,11 @@ describe('Case Controller', () => {
 		const mockDb = {
 			case: {
 				findUnique: mock.fn()
-			}
+			},
+			user: {
+				findMany: mock.fn()
+			},
+			$transaction: mock.fn(async (promises) => Promise.all(promises))
 		};
 
 		const mockService = {
@@ -98,6 +102,7 @@ describe('Case Controller', () => {
 			const mockRes = newMockRes();
 
 			mockDb.case.findUnique.mock.mockImplementationOnce(() => null as any);
+			mockDb.user.findMany.mock.mockImplementationOnce(() => null as any);
 
 			const middleware = buildGetJourneyMiddleware(mockService as any);
 			await middleware(mockReq as any, mockRes as any, mockNext);
@@ -115,11 +120,15 @@ describe('Case Controller', () => {
 			};
 			const mockRes: any = { locals: {} };
 			const mockDb = {
+				$transaction: mock.fn(async (promises) => Promise.all(promises)),
 				case: {
 					findUnique: mock.fn(() => ({
 						id: 'case-1',
 						receivedDate: Date.now()
 					}))
+				},
+				user: {
+					findMany: mock.fn(() => [])
 				}
 			};
 			const next = mock.fn();

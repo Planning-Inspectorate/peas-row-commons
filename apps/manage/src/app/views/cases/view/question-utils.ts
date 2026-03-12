@@ -43,6 +43,8 @@ import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../../config.ts';
 import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
 import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
 import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { LEGACY_CONTACT_TYPES } from '@pins/peas-row-commons-database/src/seed/static_data/legacy/contact-types.ts';
+import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/legacy/act-sections.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
 
@@ -614,13 +616,14 @@ export const OVERVIEW_QUESTIONS = {
 		options: CASE_SUBTYPES.map((type) => ({ text: type.displayName, value: type.id }))
 	},
 	act: {
-		type: COMPONENT_TYPES.SELECT,
+		type: CUSTOM_COMPONENTS.LEGACY_SELECT,
 		title: 'Act',
 		question: 'What is the relevant legislation or act for this case?',
 		fieldName: 'act',
 		url: 'act',
 		validators: [new RequiredValidator('Select a legislation/act')],
 		options: [{ text: '', value: '' }, ...ACT_SECTIONS.map((type) => ({ text: type.displayName, value: type.id }))],
+		legacyOptions: LEGACY_ACT_SECTIONS.map((act) => ({ text: act.displayName, value: act.id })),
 		viewData: {
 			extraActionButtons: [
 				{
@@ -749,7 +752,7 @@ export const OVERVIEW_QUESTIONS = {
 
 export const TEAM_QUESTIONS = {
 	caseOfficer: {
-		type: COMPONENT_TYPES.SELECT,
+		type: CUSTOM_COMPONENTS.LEGACY_SELECT,
 		title: 'Case officer',
 		question: 'Who is the assigned case officer?',
 		fieldName: 'caseOfficerId',
@@ -773,7 +776,7 @@ export const TEAM_QUESTIONS = {
 		]
 	},
 	inspector: {
-		type: COMPONENT_TYPES.SELECT,
+		type: CUSTOM_COMPONENTS.LEGACY_SELECT,
 		title: 'Inspector',
 		question: 'Who is the inspector?',
 		fieldName: 'inspectorId',
@@ -796,7 +799,8 @@ export const TEAM_QUESTIONS = {
  */
 export function createTeamQuestions(
 	teamQuestions: typeof TEAM_QUESTIONS,
-	groupMembers: { caseOfficers: CaseOfficer[] }
+	groupMembers: { caseOfficers: CaseOfficer[] },
+	allUsers: Prisma.UserGetPayload<{ select: { id: true; idpUserId: true; legacyId: true } }>[]
 ) {
 	const options = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
 
@@ -806,11 +810,13 @@ export function createTeamQuestions(
 		...teamQuestions,
 		caseOfficer: {
 			...teamQuestions.caseOfficer,
-			options
+			options,
+			legacyOptions: allUsers.map((user) => ({ text: user.idpUserId, value: user.idpUserId }))
 		},
 		inspector: {
 			...teamQuestions.inspector,
-			options
+			options,
+			legacyOptions: allUsers.map((user) => ({ text: user.idpUserId, value: user.idpUserId }))
 		}
 	};
 }
@@ -1081,7 +1087,7 @@ export const KEY_CONTACTS_QUESTIONS = {
 		titleSingular: 'contact'
 	},
 	contactType: {
-		type: COMPONENT_TYPES.RADIO,
+		type: CUSTOM_COMPONENTS.LEGACY_RADIO,
 		title: 'Contact type',
 		question: 'What is your contact type?',
 		fieldName: 'contactTypeId',
@@ -1092,6 +1098,10 @@ export const KEY_CONTACTS_QUESTIONS = {
 		).map((type) => ({
 			text: type.displayName,
 			value: type.id
+		})),
+		legacyOptions: LEGACY_CONTACT_TYPES.map((legacyContactType) => ({
+			text: legacyContactType.displayName,
+			value: legacyContactType.id
 		})),
 		viewData: { tableHeader: 'Contact type' }
 	},
