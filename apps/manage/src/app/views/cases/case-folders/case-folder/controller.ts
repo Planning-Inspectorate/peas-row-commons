@@ -13,6 +13,8 @@ import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.t
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { Request } from 'express';
 import type { FolderBreadcrumb } from '../types.ts';
+import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
+import { JOURNEY_ID } from '../../move-file/journey/journey.ts';
 
 export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
@@ -124,6 +126,9 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 		const documentsViewModel = documents ? createDocumentsViewModel(documents, PREVIEW_MIME_TYPES) : [];
 
 		const baseFoldersUrl = `/cases/${id}/case-folders`;
+
+		// Makes sure that we don't have any lingering session data from half-completed MOVE journeys
+		clearDataFromSession({ req, journeyId: JOURNEY_ID });
 
 		return res.render('views/cases/case-folders/case-folder/view.njk', {
 			pageHeading: caseRow?.name,
