@@ -208,7 +208,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 
 		let formattedAnswer = notStartedText;
 
-		if (answer && Array.isArray(answer)) {
+		if (answer && Array.isArray(answer) && answer.length) {
 			if (this.showAnswersInSummary) {
 				const answers = answer.map((a) => this.formatItemAnswers(a));
 				const uniqueId = `list-${Math.floor(Math.random() * 100000)}`;
@@ -219,7 +219,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 					uniqueId,
 					enableToggle: answers.length > this.summaryLimit
 				});
-			} else if (answer.length > 0) {
+			} else {
 				formattedAnswer = `${answer.length} ${this.title}`;
 			}
 		}
@@ -267,5 +267,17 @@ export default class TableManageListQuestion extends ManageListQuestion {
 					answer: formatted
 				};
 			});
+	}
+
+	/**
+	 * For this manage list item, if it is an array and that array is empty then just super to the parent
+	 * with null so it displays the correct text.
+	 */
+	getAction(sectionSegment: string, journey: Journey, answer: Record<string, unknown>[] | null) {
+		if (answer && Array.isArray(answer) && !answer.length) {
+			return super.getAction(sectionSegment, journey, null);
+		}
+
+		return super.getAction(sectionSegment, journey, answer);
 	}
 }

@@ -3,11 +3,13 @@ import assert from 'node:assert';
 import TableManageListQuestion from './question.ts';
 import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
 import type {
+	ActionLink,
 	Question,
 	QuestionViewModel,
 	SummaryListItem
 } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 
 describe('TableManageListQuestion', () => {
 	let tableQuestion: TableManageListQuestion;
@@ -176,6 +178,67 @@ describe('TableManageListQuestion', () => {
 			assert.throws(() => {
 				tableQuestion.addCustomDataToViewModel(mockViewModel);
 			}, /manage list section not set/);
+		});
+	});
+
+	describe('formatAnswerForSummary()', () => {
+		it('should return notStartedText when answer is an empty array', () => {
+			const mockJourney = {
+				getCurrentQuestionUrl: () => '/current-url'
+			} as unknown as Journey;
+			tableQuestion.notStartedText = 'Not started yet';
+
+			const result = tableQuestion.formatAnswerForSummary('segment', mockJourney, []);
+
+			assert.strictEqual(result.length, 1);
+			assert.strictEqual(result[0].value, 'Not started yet');
+		});
+
+		it('should return notStartedText when answer is null', () => {
+			const mockJourney = {
+				getCurrentQuestionUrl: () => '/current-url'
+			} as unknown as Journey;
+			tableQuestion.notStartedText = 'No items added';
+
+			const result = tableQuestion.formatAnswerForSummary('segment', mockJourney, null);
+
+			assert.strictEqual(result.length, 1);
+			assert.strictEqual(result[0].value, 'No items added');
+		});
+	});
+
+	describe('getAction()', () => {
+		it('should return an action with "Add" text when the answer array is empty', () => {
+			const mockJourney = {
+				getCurrentQuestionUrl: () => '/current-url'
+			} as unknown as Journey;
+
+			const result = tableQuestion.getAction('segment', mockJourney, []) as ActionLink;
+
+			assert.strictEqual(result?.text, 'Answer');
+			assert.strictEqual(result?.visuallyHiddenText, 'What items do you want to add?');
+		});
+
+		it('should return an action with "Change" text when the answer array has items', () => {
+			const mockJourney = {
+				getCurrentQuestionUrl: () => '/current-url'
+			} as unknown as Journey;
+
+			const result = tableQuestion.getAction('segment', mockJourney, [{ id: '123' }]) as ActionLink;
+
+			assert.strictEqual(result?.text, 'Change');
+			assert.strictEqual(result?.visuallyHiddenText, 'What items do you want to add?');
+		});
+
+		it('should return an action with "Add" text when the answer is null', () => {
+			const mockJourney = {
+				getCurrentQuestionUrl: () => '/current-url'
+			} as unknown as Journey;
+
+			const result = tableQuestion.getAction('segment', mockJourney, null) as ActionLink;
+
+			assert.strictEqual(result?.text, 'Answer');
+			assert.strictEqual(result?.visuallyHiddenText, 'What items do you want to add?');
 		});
 	});
 });
