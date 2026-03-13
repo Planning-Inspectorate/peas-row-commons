@@ -175,5 +175,131 @@ describe('ManageListItemsCompleteValidator', () => {
 			assert.strictEqual(result.context.errors.length, 1);
 			assert.strictEqual(result.context.errors[0].msg, "Add 'Address'");
 		});
+
+		it('should pass if at least one field in an OR group (|) is filled', async () => {
+			const validator = new ManageListItemsCompleteValidator({
+				'firstName|lastName': 'Name'
+			});
+
+			const mockQuestion = {
+				fieldName: 'myList',
+				section: {
+					questions: [
+						{ fieldName: 'firstName', shouldDisplay: () => true },
+						{ fieldName: 'lastName', shouldDisplay: () => true }
+					]
+				}
+			} as unknown as ManageListQuestion;
+
+			const mockJourneyResponse = {
+				answers: {
+					myList: [
+						{ firstName: 'John', lastName: '' },
+						{ firstName: '', lastName: 'Doe' }
+					]
+				}
+			} as unknown as JourneyResponse;
+
+			const validationChain = validator.validate(mockQuestion, mockJourneyResponse);
+			const req = { body: {} };
+
+			const result = await validationChain.run(req);
+
+			assert.strictEqual(result.context.errors.length, 0);
+		});
+
+		it('should fail if all visible fields in an OR group (|) are empty', async () => {
+			const validator = new ManageListItemsCompleteValidator({
+				'firstName|lastName': 'Name'
+			});
+
+			const mockQuestion = {
+				fieldName: 'myList',
+				section: {
+					questions: [
+						{ fieldName: 'firstName', shouldDisplay: () => true },
+						{ fieldName: 'lastName', shouldDisplay: () => true }
+					]
+				}
+			} as unknown as ManageListQuestion;
+
+			const mockJourneyResponse = {
+				answers: {
+					myList: [{ firstName: '', lastName: null }]
+				}
+			} as unknown as JourneyResponse;
+
+			const validationChain = validator.validate(mockQuestion, mockJourneyResponse);
+			const req = { body: {} };
+
+			const result = await validationChain.run(req);
+
+			assert.strictEqual(result.context.errors.length, 1);
+			assert.strictEqual(result.context.errors[0].msg, "Add 'Name'");
+		});
+
+		it('should correctly handle OR groups (|) when some fields are conditionally hidden', async () => {
+			const validator = new ManageListItemsCompleteValidator({
+				'firstName|lastName': 'Name'
+			});
+
+			const mockQuestion = {
+				fieldName: 'myList',
+				section: {
+					questions: [
+						// firstName is hidden, so it shouldn't count towards the OR logic at all
+						{ fieldName: 'firstName', shouldDisplay: () => false },
+						{ fieldName: 'lastName', shouldDisplay: () => true }
+					]
+				}
+			} as unknown as ManageListQuestion;
+
+			const mockJourneyResponse = {
+				answers: {
+					myList: [
+						// Even though firstName has a value, it is hidden so it doesn't count
+						// and this should fail beccause there is no lastName
+						{ firstName: 'Ghost Value', lastName: '' }
+					]
+				}
+			} as unknown as JourneyResponse;
+
+			const validationChain = validator.validate(mockQuestion, mockJourneyResponse);
+			const req = { body: {} };
+
+			const result = await validationChain.run(req);
+
+			assert.strictEqual(result.context.errors.length, 1);
+			assert.strictEqual(result.context.errors[0].msg, "Add 'Name'");
+		});
+
+		it('should pass an OR group (|) if all fields in the group are conditionally hidden', async () => {
+			const validator = new ManageListItemsCompleteValidator({
+				'firstName|lastName': 'Name'
+			});
+
+			const mockQuestion = {
+				fieldName: 'myList',
+				section: {
+					questions: [
+						{ fieldName: 'firstName', shouldDisplay: () => false },
+						{ fieldName: 'lastName', shouldDisplay: () => false }
+					]
+				}
+			} as unknown as ManageListQuestion;
+
+			const mockJourneyResponse = {
+				answers: {
+					myList: [{ firstName: '', lastName: '' }]
+				}
+			} as unknown as JourneyResponse;
+
+			const validationChain = validator.validate(mockQuestion, mockJourneyResponse);
+			const req = { body: {} };
+
+			const result = await validationChain.run(req);
+
+			assert.strictEqual(result.context.errors.length, 0);
+		});
 	});
 });

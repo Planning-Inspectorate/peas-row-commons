@@ -8,6 +8,9 @@ import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/que
  * Validator for the manage list table.
  * Passed an object of required fields, if the journey response
  * doesn't have an answer for all the keys for all the rows, it will throw an error.
+ *
+ * Required fields can be single keys e.g. 'contactName' or concatenations of multiple
+ * fields, which are then OR'd together e.g. 'firstName|lastName' where at least one is needed.
  */
 export default class ManageListItemsCompleteValidator extends BaseValidator {
 	requiredFields: Record<string, string>;
@@ -56,36 +59,31 @@ export default class ManageListItemsCompleteValidator extends BaseValidator {
 	}
 
 	/**
-	 * Checks row in the manage list table for each required question.
+	 * Checks row in the manage list table for each required question or OR group.
 	 */
 	private validateSingleItem(item: Record<string, unknown>, questions: Question[]): string[] {
 		const itemErrors: string[] = [];
 
-		for (const [fieldName, customErrorMessage] of Object.entries(this.requiredFields)) {
-			const subQuestion = questions.find((q: Question) => q.fieldName === fieldName);
+		for (const [key, customErrorMessage] of Object.entries(this.requiredFields)) {
+			const fieldNames = key.split('|');
 
-			if (this.isQuestionRequiredAndEmpty(subQuestion, item, fieldName)) {
+			const visibleFields = fieldNames.filter((fieldName) => {
+				const subQuestion = questions.find((q: Question) => q.fieldName === fieldName);
+				return subQuestion?.shouldDisplay ? subQuestion.shouldDisplay({ answers: item } as JourneyResponse) : true;
+			});
+
+			if (visibleFields.length === 0) {
+				continue;
+			}
+
+			const areAllVisibleFieldsEmpty = visibleFields.every((fieldName) => this.isEmpty(item[fieldName]));
+
+			if (areAllVisibleFieldsEmpty) {
 				itemErrors.push(customErrorMessage);
 			}
 		}
 
 		return itemErrors;
-	}
-
-	/**
-	 * Checks if the question is visible (needed for conditional logic)
-	 * and if so checks to make sure it is not empty.
-	 */
-	private isQuestionRequiredAndEmpty(
-		subQuestion: Question | undefined,
-		item: Record<string, unknown>,
-		fieldName: string
-	): boolean {
-		const isVisible = subQuestion?.shouldDisplay
-			? subQuestion.shouldDisplay({ answers: item } as JourneyResponse)
-			: true;
-
-		return isVisible && this.isEmpty(item[fieldName]);
 	}
 
 	/**
