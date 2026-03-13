@@ -65,6 +65,7 @@ describe('case details journey', () => {
 					'caseSubtype',
 					'act',
 					'consentSought',
+					'priority',
 					'inspectorBand',
 					'relatedCaseDetails',
 					'linkedCaseDetails'
@@ -83,8 +84,7 @@ describe('case details journey', () => {
 					'applicantDetails',
 					'siteAddress',
 					'location',
-					'authority',
-					'priority'
+					'authority'
 				]
 			},
 			{
@@ -96,18 +96,14 @@ describe('case details journey', () => {
 				title: 'Timetable',
 				segment: 'timetable',
 				questions: [
-					'receivedDate',
-					'startDate',
 					'expectedSubmissionDate',
+					'receivedDate',
 					'targetDecisionDate',
-					'caseOfficerVerificationDate',
-					'proposedModificationsDate',
+					'startDate',
 					'objectionPeriodEndsDate',
-					'consentDeadlineDate',
-					'ogdDueDate',
-					'proposalLetterDate',
+					'partiesDecisionNotificationDeadlineDate',
 					'expiryDate',
-					'partiesDecisionNotificationDeadlineDate'
+					'proposedModificationsDate'
 				]
 			},
 			{
@@ -171,9 +167,9 @@ describe('case details journey', () => {
 				]
 			},
 			{
-				title: 'Documents',
-				segment: 'documents',
-				questions: ['filesLocation']
+				title: 'Additional resource locations',
+				segment: 'additional-resource-locations',
+				questions: ['filesLocation', 'relevantWebsiteLinks']
 			},
 			{
 				title: 'Withdrawal or abeyance',
@@ -181,9 +177,9 @@ describe('case details journey', () => {
 				questions: ['withdrawalDate', 'abeyanceStartDate', 'abeyanceEndDate']
 			},
 			{
-				title: 'Costs',
-				segment: 'costs',
-				questions: ['rechargeable', 'finalCost', 'feeReceived', 'invoiceSent']
+				title: 'Invoicing',
+				segment: 'invoicing',
+				questions: ['rechargeable', 'finalCost', 'invoiceSent', 'feeReceived']
 			}
 		];
 

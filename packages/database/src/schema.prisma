@@ -53,6 +53,8 @@ model Case {
   Dates                    CaseDates?
   /// Physical location of real-world files
   filesLocation            String?
+  /// Website links helpful for the case
+  relevantWebsiteLinks     String?
   Folders                  Folder[]
   Costs                    CaseCosts?
   Abeyance                 CaseAbeyance?
@@ -64,8 +66,8 @@ model Case {
   Status                   CaseStatus?                   @relation(fields: [statusId], references: [id])
   advertisedModificationId String?
   AdvertisedModification   AdvertisedModificationStatus? @relation(fields: [advertisedModificationId], references: [id])
-  authorityid              String?                       @db.UniqueIdentifier
-  Authority                Authority?                    @relation(fields: [authorityid], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  authorityId              String?                       @db.UniqueIdentifier
+  Authority                Authority?                    @relation(fields: [authorityId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   priorityId               String?
   Priority                 CasePriority?                 @relation(fields: [priorityId], references: [id])
   /// The relevant legislation / act
@@ -176,20 +178,12 @@ model CaseDates {
   startDate                               DateTime?
   /// When it is expected that the case will be submitted
   expectedSubmissionDate                  DateTime?
-  /// Date offer for consent ends
-  consentDeadlineDate                     DateTime?
-  /// Due date for Other Government Departments (OGD)
-  ogdDueDate                              DateTime?
-  /// Date proposal letter sent to e.g. Secretary of State
-  proposalLetterDate                      DateTime?
   /// Date the case expires
   expiryDate                              DateTime?
   /// Date parties sent an event notification
   partiesDecisionNotificationDeadlineDate DateTime?
   /// Date for the target decision
   targetDecisionDate                      DateTime?
-  /// Date when the case officer verified the case
-  caseOfficerVerificationDate             DateTime?
   /// Date proposed modifications were advertised
   proposedModificationsDate               DateTime?
   /// Date the objection period ends
@@ -333,12 +327,6 @@ model DraftDocument {
   @@index([sessionKey, caseId])
 }
 
-model Authority {
-  id   String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  name String
-  Case Case[]
-}
-
 model InspectorBand {
   /// unique machine-readable name, not generated, e.g. "1"
   id          String  @id
@@ -365,11 +353,14 @@ model CaseOutcome {
 
 /// The many decisions that could be made for the outcome (1-many)
 model CaseDecision {
-  id            String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  caseOutcomeId String? @db.UniqueIdentifier
+  id String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+
+  /// The date the Decision row was inserted into the table
+  createdDate DateTime @default(now())
 
   /// Parent Relation
-  CaseOutcome CaseOutcome? @relation(fields: [caseOutcomeId], references: [id])
+  caseOutcomeId String?      @db.UniqueIdentifier
+  CaseOutcome   CaseOutcome? @relation(fields: [caseOutcomeId], references: [id])
 
   /// Decision Maker (who)
   decisionMakerTypeId String?
@@ -417,6 +408,9 @@ model Outcome {
 
 model Procedure {
   id String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+
+  /// The date the procedure row was inserted into the table
+  createdDate DateTime @default(now())
 
   /// Core procedure data
   procedureTypeId             String?
@@ -606,7 +600,7 @@ model ContactType {
 }
 
 model ObjectorStatus {
-  /// unique machine-readable name, not generated, e.g. "admissable"
+  /// unique machine-readable name, not generated, e.g. "admissible"
   id          String    @id
   displayName String?
   Contacts    Contact[]
@@ -625,4 +619,23 @@ model LinkedCase {
   isLead    Boolean @default(false)
   caseId    String  @db.UniqueIdentifier
   Case      Case    @relation(fields: [caseId], references: [id])
+}
+
+/// Authority represents the authority responsible for the case, e.g. local council
+model Authority {
+  id       String           @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  name     String
+  pinsCode String
+  statusId String?
+  Status   AuthorityStatus? @relation(fields: [statusId], references: [id])
+  Case     Case[]
+
+  @@index([pinsCode])
+}
+
+model AuthorityStatus {
+  /// unique machine-readable name, not generated, e.g. "active"
+  id          String      @id
+  displayName String?
+  Authority   Authority[]
 }

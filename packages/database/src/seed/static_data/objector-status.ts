@@ -2,8 +2,8 @@ import { OBJECTOR_STATUS_ID } from './ids/index.ts';
 
 export const OBJECTOR_STATUSES = [
 	{
-		id: OBJECTOR_STATUS_ID.ADMISSABLE,
-		displayName: 'Admissable'
+		id: OBJECTOR_STATUS_ID.ADMISSIBLE,
+		displayName: 'Admissible'
 	},
 	{
 		id: OBJECTOR_STATUS_ID.UPHELD,

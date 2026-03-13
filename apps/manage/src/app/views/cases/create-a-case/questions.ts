@@ -6,6 +6,7 @@ import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator
 import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 import { CASEWORK_AREAS } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+import { AUTHORITY_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/authority-status.ts';
 import {
 	PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES,
 	RIGHTS_OF_WAY_COMMON_LAND_TYPES
@@ -32,10 +33,31 @@ import {
 	CUSTOM_COMPONENTS
 } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
+import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../../config.ts';
+import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
+import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
+import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 
 export function getQuestions(groupMembers = { caseOfficers: [] }) {
+	let LPAs: Prisma.AuthorityUncheckedCreateInput[];
+	try {
+		const env = loadEnvironmentConfig();
+		// this is to avoid a database read when the data is static - but it does vary by environment
+		// the options here should match the dev/prod seed scripts
+		LPAs = env === ENVIRONMENT_NAME.PROD ? AUTHORITIES_PROD : AUTHORITIES_DEV;
+	} catch (error) {
+		// Fallback to dev data if there's an issue loading the config or data, to ensure the app can still function.
+		// This would likely only be triggered by tests
+		console.log(error);
+		LPAs = AUTHORITIES_DEV;
+	}
+	const lpaOptions = [
+		{ text: '', value: '' }, // ensure there is a 'null' option so the first LPA isn't selected by default
+		...LPAs.map((t) => (t.statusId === AUTHORITY_STATUS_ID.LIVE ? { text: t.name, value: t.id } : null))
+			.filter((value) => value != null)
+			.sort((a, b) => a.text.localeCompare(b.text))
+	];
 	const mappedGroupMembers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
-
 	mappedGroupMembers.unshift({ text: '', value: '' });
 
 	const questions = {
@@ -191,17 +213,17 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 		},
 		siteAddress: {
 			type: COMPONENT_TYPES.ADDRESS,
-			title: 'What is the site address?',
-			question: 'What is the site address?',
-			hint: '(optional)',
+			title: 'What is the site address? (optional)',
+			question: 'What is the site address? (optional)',
+			hint: 'You are able to add a site location on the next page if there is no site address.',
 			fieldName: 'siteAddress',
 			url: 'site-address',
 			validators: [new AddressValidator()]
 		},
 		location: {
 			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
-			title: 'What is the site location if no address was added?',
-			question: 'What is the site location if no address was added?',
+			title: 'What is the site location if no address was added? (optional)',
+			question: 'What is the site location if no address was added? (optional)',
 			hint: 'For example, name of common, village green, area or body of water',
 			fieldName: 'location',
 			url: 'location',
@@ -215,20 +237,13 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			]
 		},
 		authority: {
-			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
+			type: COMPONENT_TYPES.SELECT,
 			title: 'Who is the authority? (optional)',
 			question: 'Who is the authority? (optional)',
 			hint: 'Enter the Local Planning Authority or Common Registration Authority',
-			fieldName: 'authority',
+			fieldName: 'authorityId',
 			url: 'authority',
-			validators: [
-				new StringValidator({
-					maxLength: {
-						maxLength: 150,
-						maxLengthMessage: 'Authority must be less than 150 characters'
-					}
-				})
-			]
+			options: lpaOptions
 		},
 		caseOfficer: {
 			type: COMPONENT_TYPES.SELECT,
@@ -248,7 +263,9 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			viewData: {
 				emptyName: 'applicant or appellant',
 				emptyNamePlural: 'applicants or appellants',
-				hideButtonsEmpty: true
+				hideButtonsEmpty: true,
+				hideCancel: true,
+				continueOnly: true
 			},
 			titleSingular: 'applicant or appellant',
 			showAnswersInSummary: true

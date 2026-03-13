@@ -73,12 +73,9 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 		};
 	}
 
-	if (answers.authority) {
-		input.Authority = {
-			create: {
-				name: answers.authority
-			}
-		};
+	// Authority is optional in create a case, so could be an empty string
+	if (answers.authorityId) {
+		input.Authority = { connect: { id: answers.authorityId } };
 	}
 
 	return input;

@@ -1,0 +1,22 @@
+BEGIN TRY
+
+BEGIN TRAN;
+
+-- AlterTable
+ALTER TABLE [dbo].[CaseDecision] ADD [createdDate] DATETIME2 NOT NULL CONSTRAINT [CaseDecision_createdDate_df] DEFAULT CURRENT_TIMESTAMP;
+
+-- AlterTable
+ALTER TABLE [dbo].[Procedure] ADD [createdDate] DATETIME2 NOT NULL CONSTRAINT [Procedure_createdDate_df] DEFAULT CURRENT_TIMESTAMP;
+
+COMMIT TRAN;
+
+END TRY
+BEGIN CATCH
+
+IF @@TRANCOUNT > 0
+BEGIN
+    ROLLBACK TRAN;
+END;
+THROW
+
+END CATCH

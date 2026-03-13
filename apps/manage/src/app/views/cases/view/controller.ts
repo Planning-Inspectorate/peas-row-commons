@@ -19,6 +19,8 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 		const caseNotes = res.locals?.journeyResponse?.answers?.caseNotes;
 		const allCaseNotesCount = res.locals?.journeyResponse?.answers?._count?.Notes || 0;
 
+		const firstVisit = req?.query?.firstVisit;
+
 		const id = req.params.id;
 
 		if (!id) {
@@ -34,6 +36,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 		const lastModifiedDate = res.locals.lastModified?.updatedDate;
 
 		await list(req, res, '', {
+			caseId: id,
 			reference,
 			caseName,
 			notes: caseNotes || [],
@@ -44,7 +47,9 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 			currentUrl: req.originalUrl,
 			lastModifiedDate,
 			lastModifiedBy: res.locals.lastModified?.by || null,
-			closedDate: res.locals.lastModified?.closedDate || null
+			closedDate: res.locals.lastModified?.closedDate || null,
+			// If this is the first time visiting the case after creation, we auto expand the section list
+			expandSectionList: firstVisit === 'true'
 		});
 	};
 }
@@ -97,6 +102,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				Outcome: {
 					include: {
 						CaseDecisions: {
+							orderBy: { createdDate: 'asc' },
 							include: {
 								DecisionMaker: true,
 								DecisionMakerType: true,
@@ -106,6 +112,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 					}
 				},
 				Procedures: {
+					orderBy: { createdDate: 'asc' },
 					include: {
 						HearingVenue: true,
 						InquiryVenue: true,

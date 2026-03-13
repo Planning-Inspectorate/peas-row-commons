@@ -1,4 +1,4 @@
-import { describe, it } from 'node:test';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert';
 import { createJourney } from './journey.ts';
 import type { Handler, Request } from 'express';
@@ -7,6 +7,12 @@ import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journe
 import { getQuestions } from './questions.ts';
 
 describe('create-a-case journey', () => {
+	beforeEach(() => {
+		process.env.ENVIRONMENT = 'dev'; // Used to get Authorities
+	});
+	afterEach(() => {
+		delete process.env.ENVIRONMENT;
+	});
 	it('should throw error when used with wrong router structure', () => {
 		assert.throws(() => createJourney('create-a-case', {}, {} as Handler, { baseUrl: '/wrong' } as Request));
 	});

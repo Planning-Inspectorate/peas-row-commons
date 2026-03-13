@@ -145,16 +145,18 @@ describe('Update Case Controller', () => {
 			assert.strictEqual((result as any).Dates.upsert.create.startDate, '2025-01-01');
 		});
 
-		it('should transform authority fields into Authority upsert payload', () => {
+		it('should transform authority fields into Authority connect', () => {
 			const input = {
-				authorityName: 'Local Council'
+				authorityName: '123'
 			};
 			const result = mapCasePayload(input);
 
 			const authorityUpdate = (result as any).Authority;
 			assert.ok(authorityUpdate, 'Should have Authority property');
 
-			assert.strictEqual(authorityUpdate.upsert.create.name, 'Local Council');
+			assert.deepStrictEqual(authorityUpdate.connect, {
+				id: '123'
+			});
 
 			assert.strictEqual((result as any).authorityName, undefined);
 		});
@@ -281,6 +283,7 @@ describe('Update Case Controller', () => {
 			const input = {
 				outcomeDetails: [
 					{
+						id: 'outcome-1',
 						decisionMakerTypeId: 'officer',
 						decisionMakerOfficerId: 'officer-123',
 						outcomeId: 'allowed',
@@ -294,14 +297,20 @@ describe('Update Case Controller', () => {
 			const outcomePayload = (result as any).Outcome;
 
 			assert.ok(outcomePayload);
-			assert.deepStrictEqual(outcomePayload.upsert.update.CaseDecisions.deleteMany, {});
 
-			const decision = outcomePayload.upsert.create.CaseDecisions.create[0];
+			assert.deepStrictEqual(outcomePayload.upsert.update.CaseDecisions.deleteMany, { id: { notIn: ['outcome-1'] } });
 
-			assert.strictEqual(decision.DecisionMaker.connectOrCreate.create.idpUserId, 'officer-123');
-			assert.strictEqual(decision.Outcome.connect.id, 'allowed');
-			assert.deepStrictEqual(decision.outcomeDate, new Date('2025-03-15'));
-			assert.deepStrictEqual(decision.decisionReceivedDate, new Date('2025-03-16'));
+			const createDecision = outcomePayload.upsert.create.CaseDecisions.create[0];
+			assert.strictEqual(createDecision.id, 'outcome-1');
+			assert.strictEqual(createDecision.DecisionMaker.connectOrCreate.create.idpUserId, 'officer-123');
+			assert.strictEqual(createDecision.Outcome.connect.id, 'allowed');
+			assert.deepStrictEqual(createDecision.outcomeDate, new Date('2025-03-15'));
+			assert.deepStrictEqual(createDecision.decisionReceivedDate, new Date('2025-03-16'));
+
+			const nestedUpsert = outcomePayload.upsert.update.CaseDecisions.upsert[0];
+			assert.strictEqual(nestedUpsert.where.id, 'outcome-1');
+			assert.strictEqual(nestedUpsert.update.DecisionMaker.connectOrCreate.create.idpUserId, 'officer-123');
+
 			assert.strictEqual((result as any).outcomeDetails, undefined);
 		});
 
@@ -481,15 +490,17 @@ describe('Update Case Controller', () => {
 	});
 
 	describe('mapCasePayload (Procedure Details)', () => {
-		it('should transform procedureDetails array into Procedures deleteMany/create payload', () => {
+		it('should transform procedureDetails array into Procedures upsert/deleteMany payload', () => {
 			const input = {
 				procedureDetails: [
 					{
+						id: 'proc-1',
 						procedureTypeId: 'hearing',
 						procedureStatusId: 'active',
 						siteVisitDate: '2025-06-15'
 					},
 					{
+						id: 'proc-2',
 						procedureTypeId: 'inquiry',
 						procedureStatusId: 'completed'
 					}
@@ -499,15 +510,15 @@ describe('Update Case Controller', () => {
 			const result = mapCasePayload(input);
 			const proceduresUpdate = (result as any).Procedures;
 
-			assert.ok(proceduresUpdate, 'Should have Procedures property');
-			assert.deepStrictEqual(proceduresUpdate.deleteMany, {});
-			assert.strictEqual(proceduresUpdate.create.length, 2);
+			assert.ok(proceduresUpdate);
+			assert.deepStrictEqual(proceduresUpdate.deleteMany, { id: { notIn: ['proc-1', 'proc-2'] } });
+			assert.strictEqual(proceduresUpdate.upsert.length, 2);
 
-			assert.strictEqual(proceduresUpdate.create[0].ProcedureType.connect.id, 'hearing');
-			assert.strictEqual(proceduresUpdate.create[0].ProcedureStatus.connect.id, 'active');
-			assert.ok(proceduresUpdate.create[0].siteVisitDate instanceof Date);
+			assert.strictEqual(proceduresUpdate.upsert[0].create.ProcedureType.connect.id, 'hearing');
+			assert.strictEqual(proceduresUpdate.upsert[0].create.ProcedureStatus.connect.id, 'active');
+			assert.ok(proceduresUpdate.upsert[0].create.siteVisitDate instanceof Date);
 
-			assert.strictEqual(proceduresUpdate.create[1].ProcedureType.connect.id, 'inquiry');
+			assert.strictEqual(proceduresUpdate.upsert[1].create.ProcedureType.connect.id, 'inquiry');
 
 			assert.strictEqual((result as any).procedureDetails, undefined);
 		});
@@ -516,6 +527,7 @@ describe('Update Case Controller', () => {
 			const input = {
 				procedureDetails: [
 					{
+						id: 'proc-3',
 						procedureTypeId: 'hearing',
 						hearingTargetDate: '2025-03-15',
 						confirmedHearingDate: '2025-04-01',
@@ -525,7 +537,7 @@ describe('Update Case Controller', () => {
 			};
 
 			const result = mapCasePayload(input);
-			const proc = (result as any).Procedures.create[0];
+			const proc = (result as any).Procedures.upsert[0].create;
 
 			assert.ok(proc.hearingTargetDate instanceof Date);
 			assert.ok(proc.confirmedHearingDate instanceof Date);
@@ -536,6 +548,7 @@ describe('Update Case Controller', () => {
 			const input = {
 				procedureDetails: [
 					{
+						id: 'proc-4',
 						procedureTypeId: 'hearing',
 						procedureStatusId: 'active'
 					}
@@ -543,20 +556,21 @@ describe('Update Case Controller', () => {
 			};
 
 			const result = mapCasePayload(input);
-			const proc = (result as any).Procedures.create[0];
+			const proc = (result as any).Procedures.upsert[0].create;
 
 			assert.strictEqual(proc.siteVisitDate, null);
 			assert.strictEqual(proc.hearingTargetDate, null);
 			assert.strictEqual(proc.inquiryTargetDate, null);
 			assert.strictEqual(proc.inHouseDate, null);
-			assert.strictEqual(proc.AdminProcedureType, undefined, 'Missing FK should not produce a connect');
-			assert.strictEqual(proc.SiteVisitType, undefined, 'Missing FK should not produce a connect');
+			assert.strictEqual(proc.AdminProcedureType, undefined);
+			assert.strictEqual(proc.SiteVisitType, undefined);
 		});
 
 		it('should handle inquiry-specific fields in procedure payload', () => {
 			const input = {
 				procedureDetails: [
 					{
+						id: 'proc-5',
 						procedureTypeId: 'inquiry',
 						inquiryTargetDate: '2025-06-01',
 						confirmedInquiryDate: '2025-07-01',
@@ -568,7 +582,7 @@ describe('Update Case Controller', () => {
 			};
 
 			const result = mapCasePayload(input);
-			const proc = (result as any).Procedures.create[0];
+			const proc = (result as any).Procedures.upsert[0].create;
 
 			assert.ok(proc.inquiryTargetDate instanceof Date);
 			assert.ok(proc.confirmedInquiryDate instanceof Date);
@@ -581,6 +595,7 @@ describe('Update Case Controller', () => {
 			const input = {
 				procedureDetails: [
 					{
+						id: 'proc-6',
 						procedureTypeId: 'admin',
 						adminProcedureType: 'case-officer',
 						inHouseDate: '2025-03-01'
@@ -589,7 +604,7 @@ describe('Update Case Controller', () => {
 			};
 
 			const result = mapCasePayload(input);
-			const proc = (result as any).Procedures.create[0];
+			const proc = (result as any).Procedures.upsert[0].create;
 
 			assert.strictEqual(proc.AdminProcedureType.connect.id, 'case-officer');
 			assert.ok(proc.inHouseDate instanceof Date);
@@ -608,6 +623,7 @@ describe('Update Case Controller', () => {
 			const input = {
 				procedureDetails: [
 					{
+						id: 'proc-7',
 						procedureTypeId: 'inquiry',
 						conferenceDate: '2025-04-01',
 						conferenceFormatId: 'virtual',
@@ -621,7 +637,7 @@ describe('Update Case Controller', () => {
 			};
 
 			const result = mapCasePayload(input);
-			const proc = (result as any).Procedures.create[0];
+			const proc = (result as any).Procedures.upsert[0].create;
 
 			assert.ok(proc.conferenceDate instanceof Date);
 			assert.strictEqual(proc.ConferenceFormat.connect.id, 'virtual');
@@ -636,6 +652,7 @@ describe('Update Case Controller', () => {
 			const input = {
 				procedureDetails: [
 					{
+						id: 'proc-8',
 						procedureTypeId: 'written-reps',
 						offerForWrittenRepresentationsDate: '2025-05-01'
 					}
@@ -643,7 +660,7 @@ describe('Update Case Controller', () => {
 			};
 
 			const result = mapCasePayload(input);
-			const proc = (result as any).Procedures.create[0];
+			const proc = (result as any).Procedures.upsert[0].create;
 
 			assert.ok(proc.offerForWrittenRepresentationsDate instanceof Date);
 		});
@@ -654,7 +671,13 @@ describe('Update Case Controller', () => {
 			const req = { params: { id: 'case-123' }, session: {} };
 			const data = {
 				answers: {
-					procedureDetails: [{ procedureTypeId: 'hearing', procedureStatusId: 'active' }]
+					procedureDetails: [
+						{
+							id: 'proc-123',
+							procedureTypeId: 'hearing',
+							procedureStatusId: 'active'
+						}
+					]
 				}
 			};
 
@@ -667,9 +690,14 @@ describe('Update Case Controller', () => {
 			assert.strictEqual(mockUpdate.mock.callCount(), 1);
 
 			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
-			assert.ok(updateArgs.data.Procedures, 'Should have Procedures in update payload');
-			assert.deepStrictEqual(updateArgs.data.Procedures.deleteMany, {});
-			assert.strictEqual(updateArgs.data.Procedures.create.length, 1);
+			const proceduresPayload = updateArgs.data.Procedures;
+
+			assert.ok(proceduresPayload, 'Should have Procedures in update payload');
+
+			assert.deepStrictEqual(proceduresPayload.deleteMany, { id: { notIn: ['proc-123'] } });
+
+			assert.strictEqual(proceduresPayload.upsert.length, 1);
+			assert.strictEqual(proceduresPayload.upsert[0].create.ProcedureType.connect.id, 'hearing');
 		});
 	});
 });

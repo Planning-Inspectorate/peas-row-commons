@@ -57,6 +57,12 @@ export type CaseListFields = Prisma.CaseGetPayload<{ select: typeof caseListSele
 
 export type CaseNoteFields = Prisma.CaseNoteGetPayload<{ select: Prisma.CaseNoteSelect }>;
 
+export type CaseDecisionFields = Prisma.CaseDecisionGetPayload<{
+	include: { DecisionType: true; DecisionMaker: true };
+}>;
+
+export type CaseProcedureFields = Prisma.ProcedureGetPayload<{ include: { ProcedureType: true } }>;
+
 export type CaseOfficer = {
 	id: string;
 	displayName: string;

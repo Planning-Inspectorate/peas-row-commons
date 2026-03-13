@@ -16,7 +16,7 @@ import { getFieldDisplayNames } from './question-utils.ts';
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
 import { remapFlattenedFieldsToArray } from '@pins/peas-row-commons-lib/util/remap-flattened-fields.ts';
-import { mapProceduresToArray } from './view-model.ts';
+import { mapProceduresToArray, sortProceduresChronologically } from './view-model.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -50,12 +50,23 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 		if (hasFlattenedProcedureFields) {
 			const existingCase = await db.case.findUnique({
 				where: { id },
-				include: { Procedures: true }
+				include: {
+					Procedures: {
+						orderBy: {
+							createdDate: 'asc'
+						},
+						include: { ProcedureType: true } // Not needed but satisfies parameter type below
+					}
+				}
 			});
+
+			// Apply the same sortProceduresChronologically function in the save logic,
+			// so the indices match between display and save.
+			const sortedProcedures = sortProceduresChronologically(existingCase?.Procedures);
 
 			remapFlattenedFieldsToArray(
 				rawAnswers,
-				mapProceduresToArray(existingCase?.Procedures || []) || [],
+				mapProceduresToArray(sortedProcedures || []) || [],
 				/^procedureDetails_(\d+)_(.+)$/,
 				'procedureDetails'
 			);
@@ -208,15 +219,21 @@ function handleUniqueDataCases(flatData: Record<string, unknown>, prismaPayload:
 }
 
 /**
- * Handles the creation and deletion of numerous outcomes + the single level data stored on the
- * 1-1 join table.
+ * Handles the creation, deletion, and updating of Outcomes, an important update to this function now means
+ * that when creating a new outcome we insert the FE generated GUID as the ID, this allows us to do upserts
+ * making this function a lot simpler.
  */
 export function handleOutcomes(flatData: Record<string, unknown>, prismaPayload: Prisma.CaseUpdateInput) {
 	if (!Object.hasOwn(flatData, 'outcomeDetails') || !Array.isArray(flatData.outcomeDetails)) {
 		return;
 	}
 
-	const mappedDecisions = flatData.outcomeDetails.map((item) => {
+	const upserts = [];
+	// Used for deleting, if an id has not been provided then we can assume it has been removed,
+	// as the entire array of items is passed in for updating every save.
+	const providedIds = [];
+
+	for (const item of flatData.outcomeDetails) {
 		const decisionMakerId =
 			item.decisionMakerTypeId === DECISION_MAKER_TYPE_ID.OFFICER
 				? item.decisionMakerOfficerId
@@ -224,7 +241,7 @@ export function handleOutcomes(flatData: Record<string, unknown>, prismaPayload:
 					? item.decisionMakerInspectorId
 					: null;
 
-		return {
+		const decisionData = {
 			outcomeDate: item.outcomeDate ? new Date(item.outcomeDate) : null,
 			decisionReceivedDate: item.decisionReceivedDate ? new Date(item.decisionReceivedDate) : null,
 			grantedWithConditionsComment: item.grantedWithConditionsComment || null,
@@ -241,17 +258,36 @@ export function handleOutcomes(flatData: Record<string, unknown>, prismaPayload:
 				}
 			})
 		};
-	});
+
+		providedIds.push(item.id);
+
+		upserts.push({
+			where: { id: item.id },
+			update: decisionData,
+			create: {
+				...decisionData,
+				id: item.id
+			}
+		});
+	}
+
+	// Just in case nothing is provided and we get an `[undefined]`
+	const validIds = providedIds.filter(Boolean);
 
 	prismaPayload.Outcome = {
 		upsert: {
 			create: {
-				CaseDecisions: { create: mappedDecisions }
+				CaseDecisions: {
+					create: [...upserts.map((u) => u.create)]
+				}
 			},
 			update: {
 				CaseDecisions: {
-					deleteMany: {},
-					create: mappedDecisions
+					...(upserts.length > 0 && { upsert: upserts }),
+
+					deleteMany: {
+						id: { notIn: validIds }
+					}
 				}
 			}
 		}
@@ -261,20 +297,23 @@ export function handleOutcomes(flatData: Record<string, unknown>, prismaPayload:
 }
 
 /**
- * Handles the deletion and re-creation of procedures from the new
- * dynamic procedureDetails array.
- *
- * Uses deleteMany + create pattern (same as outcomes, inspectors, etc.)
- * to replace all procedures with the current set.
+ * Handles the creation, deletion, and updating of Procedures
+ * Uses FE generated GUIDs for the ID to perform smart upserts just like the above handleOutcomes,
+ * which means we can do upserts and deletions relatively simply
  */
-function handleProcedureDetails(flatData: Record<string, unknown>, prismaPayload: Prisma.CaseUpdateInput) {
+export function handleProcedureDetails(flatData: Record<string, unknown>, prismaPayload: Prisma.CaseUpdateInput) {
 	if (!Object.hasOwn(flatData, 'procedureDetails') || !Array.isArray(flatData.procedureDetails)) {
 		delete flatData.procedureDetails;
 		return;
 	}
 
-	const mappedProcedures = flatData.procedureDetails.map(
-		(proc: Prisma.ProcedureUncheckedCreateWithoutCaseInput): Prisma.ProcedureUncheckedCreateWithoutCaseInput => ({
+	const upserts = [];
+	// Used for deleting, if an id has not been provided then we can assume it has been removed,
+	// as the entire array of items is passed in for updating every save.
+	const providedIds = [];
+
+	for (const proc of flatData.procedureDetails) {
+		const procedureData = {
 			...(proc.procedureTypeId && {
 				ProcedureType: { connect: { id: proc.procedureTypeId } }
 			}),
@@ -378,12 +417,29 @@ function handleProcedureDetails(flatData: Record<string, unknown>, prismaPayload
 			offerForWrittenRepresentationsDate: proc.offerForWrittenRepresentationsDate
 				? new Date(proc.offerForWrittenRepresentationsDate as string)
 				: null
-		})
-	);
+		};
+
+		providedIds.push(proc.id);
+
+		upserts.push({
+			where: { id: proc.id },
+			update: procedureData,
+			create: {
+				...procedureData,
+				id: proc.id
+			}
+		});
+	}
+
+	// Just in case nothing is provided and we get an `[undefined]`
+	const validIds = providedIds.filter(Boolean);
 
 	prismaPayload.Procedures = {
-		deleteMany: {},
-		create: mappedProcedures
+		...(upserts.length > 0 && { upsert: upserts }),
+
+		deleteMany: {
+			id: { notIn: validIds }
+		}
 	};
 
 	delete flatData.procedureDetails;
@@ -489,16 +545,7 @@ function handleInspectors(flatData: Record<string, any>, prismaPayload: Prisma.C
 function handleAuthority(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
 	if (!Object.hasOwn(flatData, 'authorityName')) return;
 
-	const authorityData = {
-		name: flatData.authorityName
-	};
-
-	prismaPayload.Authority = {
-		upsert: {
-			create: authorityData,
-			update: authorityData
-		}
-	};
+	prismaPayload.Authority = { connect: { id: flatData.authorityName } };
 
 	delete flatData.authorityName;
 }

@@ -3,13 +3,9 @@ export const RELATION_MAP: Record<string, string[]> = {
 		'startDate',
 		'objectionPeriodEndsDate',
 		'expectedSubmissionDate',
-		'consentDeadlineDate',
-		'ogdDueDate',
-		'proposalLetterDate',
 		'expiryDate',
 		'partiesDecisionNotificationDeadlineDate',
 		'targetDecisionDate',
-		'caseOfficerVerificationDate',
 		'proposedModificationsDate'
 	],
 	Costs: ['rechargeable', 'finalCost', 'feeReceived', 'invoiceSent'],

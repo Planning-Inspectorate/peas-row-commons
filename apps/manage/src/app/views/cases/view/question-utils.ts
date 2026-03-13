@@ -39,6 +39,10 @@ import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-compo
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
+import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../../config.ts';
+import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
+import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
+import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
 
@@ -46,6 +50,25 @@ type RadioOption = { text: string; value: string } | { divider: string };
 export const OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER = OBJECTOR_STATUSES.map(
 	(s) => ({ text: s.displayName, value: s.id }) as RadioOption
 ).toSpliced(-1, 0, { divider: 'or' });
+
+const getAuthorityOptions = () => {
+	let LPAs: Prisma.AuthorityUncheckedCreateInput[];
+	try {
+		const env = loadEnvironmentConfig();
+		// this is to avoid a database read when the data is static - but it does vary by environment
+		// the options here should match the dev/prod seed scripts
+		LPAs = env === ENVIRONMENT_NAME.PROD ? AUTHORITIES_PROD : AUTHORITIES_DEV;
+	} catch (error) {
+		// Fallback to dev data if there's an issue loading the config or data, to ensure the app can still function.
+		// This would likely only be triggered by tests
+		console.error(error);
+		LPAs = AUTHORITIES_DEV;
+	}
+	return [
+		{ text: '', value: '' }, // ensure there is a 'null' option so the first LPA isn't selected by default
+		...LPAs.map((t) => ({ text: t.name, value: t.id })).sort((a, b) => a.text.localeCompare(b.text))
+	];
+};
 
 interface FormattingContext {
 	getQuestion: (fieldName: string) => Question | undefined;
@@ -197,50 +220,6 @@ export const DATE_QUESTIONS = {
 			]
 		}
 	}),
-	consentDeadlineDate: dateQuestion({
-		fieldName: 'consentDeadlineDate',
-		title: 'Deadline for consent',
-		question: 'What is the deadline for consent?',
-		url: 'deadline-consent',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'deadline-consent/remove'
-				}
-			]
-		}
-	}),
-	ogdDueDate: dateQuestion({
-		fieldName: 'ogdDueDate',
-		title: 'Date due to Other Government Department (OGD)',
-		question: 'What date is the decision due to Other Government Department (OGD)?',
-		url: 'date-due-in-ogd',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'date-due-in-ogd/remove'
-				}
-			]
-		}
-	}),
-	proposalLetterDate: dateQuestion({
-		fieldName: 'proposalLetterDate',
-		title: 'Proposal letter date',
-		question: 'What date was the proposal letter sent?',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'proposal-letter-date/remove'
-				}
-			]
-		}
-	}),
 	expiryDate: dateQuestion({
 		fieldName: 'expiryDate',
 		title: 'Date decision must be issued by / expiry date',
@@ -258,7 +237,7 @@ export const DATE_QUESTIONS = {
 	}),
 	partiesDecisionNotificationDeadlineDate: dateQuestion({
 		fieldName: 'partiesDecisionNotificationDeadlineDate',
-		title: 'Date to notify parties of decision',
+		title: 'Date to notify parties of decision date',
 		question: 'When should the parties be notified of a final decision by?',
 		url: 'date-parties-must-be-notified-decision',
 		viewData: {
@@ -286,21 +265,6 @@ export const DATE_QUESTIONS = {
 			]
 		}
 	}),
-	caseOfficerVerificationDate: dateQuestion({
-		fieldName: 'caseOfficerVerificationDate',
-		title: 'Case officer verification date',
-		question: 'When did the case officer verify the case?',
-		url: 'case-officer-verification-date',
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'case-officer-verification-date/remove'
-				}
-			]
-		}
-	}),
 	proposedModificationsDate: dateQuestion({
 		fieldName: 'proposedModificationsDate',
 		title: 'Date proposed modifications advertised',
@@ -321,15 +285,32 @@ export const DATE_QUESTIONS = {
 export const DOCUMENTS_QUESTIONS = {
 	filesLocation: {
 		type: COMPONENT_TYPES.TEXT_ENTRY,
-		title: 'Files location',
-		question: 'Where are the files located?',
+		title: 'Offline document location',
+		question: 'Where are the paper documents relating to the case stored?',
 		fieldName: 'filesLocation',
-		url: 'files-location',
+		url: 'offline-document-location',
+		hint: 'e.g. Sealed orders, paper letters',
 		validators: [
 			new StringValidator({
 				maxLength: {
 					maxLength: 250,
-					maxLengthMessage: 'Files location must be 250 characters or less'
+					maxLengthMessage: 'Offline document location must be 250 characters or less'
+				}
+			})
+		]
+	},
+	relevantWebsiteLinks: {
+		type: COMPONENT_TYPES.TEXT_ENTRY,
+		title: 'Relevant website links',
+		question: 'What are the relevant website links?',
+		fieldName: 'relevantWebsiteLinks',
+		url: 'relevant-website-links',
+		hint: 'e.g. third party website for deposited documents',
+		validators: [
+			new StringValidator({
+				maxLength: {
+					maxLength: 250,
+					maxLengthMessage: 'Relevant website links must be 250 characters or less'
 				}
 			})
 		]
@@ -559,20 +540,13 @@ export const CASE_DETAILS_QUESTIONS = {
 		]
 	},
 	authority: {
-		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
+		type: COMPONENT_TYPES.SELECT,
 		title: 'Authority (LPA, OMA, CRA)',
 		question: 'Who is the authority?',
 		hint: 'Enter the Local Planning Authority or Common Registration Authority (optional)',
-		fieldName: 'authorityName',
+		fieldName: 'authorityId',
 		url: 'authority',
-		validators: [
-			new StringValidator({
-				maxLength: {
-					maxLength: 150,
-					maxLengthMessage: 'Authority must be less than 150 characters'
-				}
-			})
-		]
+		options: getAuthorityOptions()
 	},
 	priority: {
 		type: COMPONENT_TYPES.RADIO,
@@ -1147,7 +1121,11 @@ export const PROCEDURE_MANAGE_LIST_QUESTION = {
 		question: 'Check procedure details',
 		fieldName: 'procedureDetails',
 		url: 'check-procedure-details',
-		viewData: { emptyName: 'procedure' },
+		viewData: {
+			emptyName: 'procedure',
+			emptyNamePlural: 'procedures'
+		},
+		titleSingular: 'procedure',
 		columns: [
 			{
 				header: 'Type',
