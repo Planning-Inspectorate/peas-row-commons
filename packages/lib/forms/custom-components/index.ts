@@ -7,6 +7,7 @@ import NestedFolderQuestion from './nested-folder-radio/question.ts';
 import OptionalTimeDateTimeInput from './optional-time-date-time-input/question.ts';
 import OutcomesTableQuestion from './manage-list-table/defined-columns-list-table/outcomes-table/question.ts';
 import LegacyRadioQuestion from './radio-with-legacy-options/question.ts';
+import LegacySelectQuestion from './select-with-legacy-options/question.ts';
 
 export const CUSTOM_COMPONENTS = Object.freeze({
 	CONDITIONAL_TEXT_OPTIONS: 'conditional-text-options',
@@ -17,7 +18,8 @@ export const CUSTOM_COMPONENTS = Object.freeze({
 	LINKED_CASES_LIST: 'linked-cases-list',
 	DEFINED_COLUMNS_LIST: 'defined-columns-list',
 	OUTCOMES_LIST: 'outcomes-list',
-	LEGACY_RADIO: 'legacy-radio'
+	LEGACY_RADIO: 'legacy-radio',
+	LEGACY_SELECT: 'legacy-select'
 });
 
 export const CUSTOM_COMPONENT_CLASSES = Object.freeze({
@@ -29,5 +31,6 @@ export const CUSTOM_COMPONENT_CLASSES = Object.freeze({
 	[CUSTOM_COMPONENTS.LINKED_CASES_LIST]: LinkedCasesListQuestion,
 	[CUSTOM_COMPONENTS.DEFINED_COLUMNS_LIST]: DefinedColumnsTableQuestion,
 	[CUSTOM_COMPONENTS.OUTCOMES_LIST]: OutcomesTableQuestion,
-	[CUSTOM_COMPONENTS.LEGACY_RADIO]: LegacyRadioQuestion
+	[CUSTOM_COMPONENTS.LEGACY_RADIO]: LegacyRadioQuestion,
+	[CUSTOM_COMPONENTS.LEGACY_SELECT]: LegacySelectQuestion
 });

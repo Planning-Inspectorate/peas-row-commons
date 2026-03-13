@@ -237,7 +237,7 @@ describe('Audit Service', () => {
 			assert.strictEqual(info.by, 'John Smith');
 		});
 
-		it('should return "Unknown" if user not found in group members', async () => {
+		it('should return idpUserId in plain text if user not found in group members', async () => {
 			const mockDb = createMockDb();
 			mockDb.case.findUnique.mock.mockImplementationOnce(() =>
 				Promise.resolve({
@@ -256,7 +256,7 @@ describe('Audit Service', () => {
 
 			const info = await service.getLastModifiedInfo('case-123', groupMembers);
 
-			assert.strictEqual(info.by, 'Unknown');
+			assert.strictEqual(info.by, 'user-999');
 		});
 
 		it('should return null values and log error if case row does not exist', async () => {
@@ -333,7 +333,7 @@ describe('Audit Service', () => {
 
 			const info = await service.getLastModifiedInfo('case-123', groupMembers);
 
-			assert.strictEqual(info.by, 'Unknown');
+			assert.strictEqual(info.by, 'user-123');
 		});
 	});
 });
