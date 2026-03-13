@@ -162,7 +162,7 @@ export const createPersonQuestions = ({ section, db, url, label, hint, viewData 
 			validators: [
 				new AtLeastOneFieldValidator({
 					fields: [`${db}FirstName`, `${db}LastName`, `${db}OrgName`],
-					errorMessage: 'Enter at least one of first name, last name or company name'
+					errorMessage: 'Add at least one of First name, Last name or Company or organisation name'
 				}),
 				new MultiFieldInputValidator({
 					fields: [

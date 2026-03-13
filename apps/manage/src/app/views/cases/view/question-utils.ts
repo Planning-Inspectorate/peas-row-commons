@@ -686,7 +686,12 @@ export const OVERVIEW_QUESTIONS = {
 		url: 'check-linked-cases',
 		showAnswersInSummary: true,
 		viewData: { emptyName: 'linked case' },
-		titleSingular: 'linked case'
+		titleSingular: 'linked case',
+		validators: [
+			new ManageListItemsCompleteValidator({
+				linkedCaseIsLead: 'whether the case is the lead case'
+			})
+		]
 	},
 	linkedCaseReference: {
 		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // Multi because we want an H1 header and an inline question too.
@@ -1072,7 +1077,14 @@ export const KEY_CONTACTS_QUESTIONS = {
 		fieldName: 'objectorDetails',
 		url: 'objector-details',
 		viewData: { emptyName: 'objector' },
-		titleSingular: 'objector'
+		titleSingular: 'objector',
+		validators: [
+			new ManageListItemsCompleteValidator({
+				'objectorFirstName|objectorLastName|objectorOrgName':
+					'at least one of First name, Last name or Company or organisation name',
+				objectorStatusId: 'Objector status'
+			})
+		]
 	},
 	...createPersonQuestions({
 		section: 'objector',
@@ -1102,11 +1114,14 @@ export const KEY_CONTACTS_QUESTIONS = {
 		question: 'Check contact details',
 		fieldName: 'contactDetails',
 		url: 'contact-details',
-		viewData: {
-			emptyName: 'contact',
-			continueButtonText: 'Continue'
-		},
-		titleSingular: 'contact'
+		viewData: { emptyName: 'contact' },
+		titleSingular: 'contact',
+		validators: [
+			new ManageListItemsCompleteValidator({
+				'contactFirstName|contactLastName|contactOrgName':
+					'at least one of First name, Last name or Company or organisation name'
+			})
+		]
 	},
 	contactType: {
 		type: CUSTOM_COMPONENTS.LEGACY_RADIO,
