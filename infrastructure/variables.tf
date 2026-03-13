@@ -82,6 +82,22 @@ variable "monitoring_config" {
   })
 }
 
+variable "odw_config" {
+  description = "Config for the ODW vnet integration"
+  type = object({
+    enabled_peering     = bool
+    resource_group_name = string
+    vnet_name           = string
+    subscription_id     = string
+  })
+  default = ({
+    enabled_peering     = false
+    resource_group_name = ""
+    vnet_name           = ""
+    subscription_id     = ""
+  })
+}
+
 variable "storage_config" {
   description = "The replication type for the storage account"
   type = object({
