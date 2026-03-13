@@ -12,6 +12,7 @@ export interface PersonConfig {
 	url: string;
 	label: string;
 	hint?: string;
+	viewData?: Record<string, unknown>;
 }
 
 /**
@@ -141,7 +142,7 @@ export function handleContacts(
 /**
  * Boilerplate for creating a "contact" question in questions.ts
  */
-export const createPersonQuestions = ({ section, db, url, label, hint }: PersonConfig) => {
+export const createPersonQuestions = ({ section, db, url, label, hint, viewData = {} }: PersonConfig) => {
 	const labelLower = label.toLowerCase();
 
 	return {
@@ -152,7 +153,7 @@ export const createPersonQuestions = ({ section, db, url, label, hint }: PersonC
 			fieldName: `${section}Name`,
 			url: `${url}-name`,
 			hint: hint || 'Enter the name of the individual, the organisation, or both.',
-			viewData: { tableHeader: 'Name' },
+			viewData: { ...viewData, tableHeader: 'Name' },
 			inputFields: [
 				{ fieldName: `${db}FirstName`, label: 'First name' },
 				{ fieldName: `${db}LastName`, label: 'Last name' },
@@ -196,7 +197,7 @@ export const createPersonQuestions = ({ section, db, url, label, hint }: PersonC
 			fieldName: `${db}Address`,
 			url: `${url}-address`,
 			validators: [new AddressValidator()],
-			viewData: { tableHeader: 'Address' }
+			viewData: { ...viewData, tableHeader: 'Address' }
 		},
 		[`${section}ContactDetails`]: {
 			type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
@@ -204,7 +205,7 @@ export const createPersonQuestions = ({ section, db, url, label, hint }: PersonC
 			question: `${label === 'Contact' ? 'What are the contact details?' : label + ' contact details'} (optional)`,
 			fieldName: `${section}Details`,
 			url: `${url}-contact-details`,
-			viewData: { tableHeader: 'Contact' },
+			viewData: { ...viewData, tableHeader: 'Contact' },
 			inputFields: [
 				{ fieldName: `${db}Email`, label: 'Email address' },
 				{ fieldName: `${db}TelephoneNumber`, label: 'Phone number' }

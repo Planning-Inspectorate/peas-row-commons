@@ -588,7 +588,10 @@ export const CASE_DETAILS_QUESTIONS = {
 		hint: `
 			Enter the name of the main party. This could be an applicant, appellant or server.
 			Enter the name of the individual, the company or both.
-		`
+		`,
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	})
 };
 
@@ -681,7 +684,10 @@ export const OVERVIEW_QUESTIONS = {
 		fieldName: 'addRelatedCase',
 		url: 'add-related-cases',
 		inputFields: [{ fieldName: 'relatedCaseReference', label: 'Related case reference' }],
-		viewData: { tableHeader: 'Related case reference' },
+		viewData: {
+			tableHeader: 'Related case reference',
+			continueButtonText: 'Continue'
+		},
 		validators: [
 			new MultiFieldInputValidator({
 				fields: [
@@ -712,7 +718,10 @@ export const OVERVIEW_QUESTIONS = {
 		fieldName: 'addlinkedCase',
 		url: 'linked-case-reference',
 		inputFields: [{ fieldName: 'linkedCaseReference', label: 'Linked case reference' }],
-		viewData: { tableHeader: 'Linked case reference' },
+		viewData: {
+			tableHeader: 'Linked case reference',
+			continueButtonText: 'Continue'
+		},
 		validators: [
 			new MultiFieldInputValidator({
 				fields: [
@@ -732,7 +741,10 @@ export const OVERVIEW_QUESTIONS = {
 		question: 'Is this the lead case?',
 		fieldName: 'linkedCaseIsLead',
 		url: 'is-lead',
-		viewData: { tableHeader: 'Lead?' },
+		viewData: {
+			tableHeader: 'Lead?',
+			continueButtonText: 'Continue'
+		},
 		options: [
 			{
 				text: 'Yes',
@@ -779,14 +791,20 @@ export const TEAM_QUESTIONS = {
 		fieldName: 'inspectorId',
 		url: 'inspector',
 		validators: [new RequiredValidator('Select an inspector')],
-		viewData: { tableHeader: 'Inspector name' }
+		viewData: {
+			tableHeader: 'Inspector name',
+			continueButtonText: 'Continue'
+		}
 	},
 	inspectorAllocatedDate: dateQuestion({
 		fieldName: 'inspectorAllocatedDate',
 		title: 'Inspector allocated date',
 		question: 'What date was the inspector appointed?',
 		url: 'inspector-allocated-date',
-		viewData: { tableHeader: 'Date appointed' }
+		viewData: {
+			tableHeader: 'Date appointed',
+			continueButtonText: 'Continue'
+		}
 	})
 };
 
@@ -855,7 +873,10 @@ export const OUTCOME_QUESTIONS = {
 		fieldName: 'decisionTypeId',
 		url: 'type-of-decision',
 		validators: [new RequiredValidator('Select a type of decision or report')],
-		options: DECISION_TYPES.map((status) => ({ text: status.displayName, value: status.id }))
+		options: DECISION_TYPES.map((status) => ({ text: status.displayName, value: status.id })),
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	},
 	decisionMakerType: {
 		type: COMPONENT_TYPES.RADIO,
@@ -864,7 +885,10 @@ export const OUTCOME_QUESTIONS = {
 		fieldName: 'decisionMakerTypeId',
 		url: 'decision-maker-type',
 		validators: [new RequiredValidator('Select the decision maker')],
-		options: DECISION_MAKER_TYPES.map((status) => ({ text: status.displayName, value: status.id }))
+		options: DECISION_MAKER_TYPES.map((status) => ({ text: status.displayName, value: status.id })),
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	},
 	decisionMakerInspector: {
 		type: COMPONENT_TYPES.RADIO,
@@ -873,7 +897,10 @@ export const OUTCOME_QUESTIONS = {
 		question: 'Who is the inspector?',
 		fieldName: 'decisionMakerInspectorId',
 		url: 'inspector-decision-maker',
-		validators: [new RequiredValidator('Select the inspector')]
+		validators: [new RequiredValidator('Select the inspector')],
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	},
 	decisionMakerOfficer: {
 		type: COMPONENT_TYPES.SELECT,
@@ -881,7 +908,10 @@ export const OUTCOME_QUESTIONS = {
 		question: 'Who is the officer?',
 		fieldName: 'decisionMakerOfficerId',
 		url: 'officer-decision-maker',
-		validators: [new RequiredValidator('Select the officer')]
+		validators: [new RequiredValidator('Select the officer')],
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	},
 	outcome: {
 		type: CUSTOM_COMPONENTS.CONDITIONAL_TEXT_OPTIONS,
@@ -912,20 +942,29 @@ export const OUTCOME_QUESTIONS = {
 			}
 
 			return option;
-		})
+		}),
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	},
 	outcomeDate: dateQuestion({
 		fieldName: 'outcomeDate',
 		title: 'Outcome date',
 		question: 'What is the outcome date?',
-		hint: 'Date of the decision, proposal, report or recommendation. For example 27 3 2007.'
+		hint: 'Date of the decision, proposal, report or recommendation. For example 27 3 2007.',
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	}),
 	decisionReceivedDate: dateQuestion({
 		fieldName: 'decisionReceivedDate',
 		title: 'Outcome received date',
 		question: 'When was the outcome received? (optional)',
 		hint: 'Required if the decision was determined external to PINS. For example 27 3 2007.',
-		overrideValidator: OptionalDateValidator
+		overrideValidator: OptionalDateValidator,
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	}),
 	partiesNotifiedDate: dateQuestion({
 		fieldName: 'partiesNotifiedDate',
@@ -1059,7 +1098,10 @@ export const KEY_CONTACTS_QUESTIONS = {
 		section: 'objector',
 		db: 'objector',
 		url: 'objector',
-		label: 'Objector'
+		label: 'Objector',
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	}),
 	objectorStatus: {
 		type: COMPONENT_TYPES.RADIO,
@@ -1069,7 +1111,10 @@ export const KEY_CONTACTS_QUESTIONS = {
 		url: 'objector-status',
 		validators: [new RequiredValidator("Select the status of the objector, or 'Not applicable'")],
 		options: OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER,
-		viewData: { tableHeader: 'Status' }
+		viewData: {
+			tableHeader: 'Status',
+			continueButtonText: 'Continue'
+		}
 	},
 	contactDetails: {
 		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
@@ -1077,7 +1122,10 @@ export const KEY_CONTACTS_QUESTIONS = {
 		question: 'Check contact details',
 		fieldName: 'contactDetails',
 		url: 'contact-details',
-		viewData: { emptyName: 'contact' },
+		viewData: {
+			emptyName: 'contact',
+			continueButtonText: 'Continue'
+		},
 		titleSingular: 'contact'
 	},
 	contactType: {
@@ -1093,13 +1141,19 @@ export const KEY_CONTACTS_QUESTIONS = {
 			text: type.displayName,
 			value: type.id
 		})),
-		viewData: { tableHeader: 'Contact type' }
+		viewData: {
+			tableHeader: 'Contact type',
+			continueButtonText: 'Continue'
+		}
 	},
 	...createPersonQuestions({
 		section: 'contact',
 		db: 'contact',
 		url: 'contact',
-		label: 'Contact'
+		label: 'Contact',
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	})
 };
 
@@ -1195,7 +1249,10 @@ export const PROCEDURE_QUESTIONS = {
 		fieldName: 'procedureTypeId',
 		url: 'type-of-procedure',
 		validators: [new RequiredValidator('Select a procedure')],
-		options: PROCEDURES.map((status) => ({ text: status.displayName, value: status.id }))
+		options: PROCEDURES.map((status) => ({ text: status.displayName, value: status.id })),
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	},
 	procedureStatus: {
 		type: COMPONENT_TYPES.RADIO,
@@ -1204,7 +1261,10 @@ export const PROCEDURE_QUESTIONS = {
 		fieldName: 'procedureStatusId',
 		url: 'status-of-procedure',
 		validators: [new RequiredValidator('Select a status')],
-		options: PROCEDURE_STATUSES.map((status) => ({ text: status.displayName, value: status.id }))
+		options: PROCEDURE_STATUSES.map((status) => ({ text: status.displayName, value: status.id })),
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	},
 	procedureAdminType: {
 		type: COMPONENT_TYPES.RADIO,
@@ -1213,7 +1273,10 @@ export const PROCEDURE_QUESTIONS = {
 		fieldName: 'adminProcedureType',
 		url: 'admin-procedure-type',
 		validators: [new RequiredValidator("Select an 'in house' admin procedure type")],
-		options: ADMIN_PROCEDURES.map((status) => ({ text: status.displayName, value: status.id }))
+		options: ADMIN_PROCEDURES.map((status) => ({ text: status.displayName, value: status.id })),
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	},
 	procedureSiteVisitType: {
 		type: COMPONENT_TYPES.RADIO,
@@ -1222,7 +1285,10 @@ export const PROCEDURE_QUESTIONS = {
 		fieldName: 'siteVisitTypeId',
 		url: 'type-of-site-visit',
 		validators: [new RequiredValidator('Select a site visit type')],
-		options: SITE_VISITS.map((status) => ({ text: status.displayName, value: status.id }))
+		options: SITE_VISITS.map((status) => ({ text: status.displayName, value: status.id })),
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	},
 	// Dupicate of procedureSiteVisitType as we require different conditions based on
 	// procedure type and Dynamic Forms does not allow you to do this with the same
@@ -1243,7 +1309,10 @@ export const PROCEDURE_QUESTIONS = {
 		question: 'Who is the inspector?',
 		fieldName: 'inspectorId',
 		url: 'procedure-inspector',
-		validators: [new RequiredValidator('Select an inspector')]
+		validators: [new RequiredValidator('Select an inspector')],
+		viewData: {
+			continueButtonText: 'Continue'
+		}
 	},
 
 	// =========================================================================
