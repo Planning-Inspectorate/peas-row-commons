@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 
 import CommonActionsUtility from 'cypress/pageUtilities/commonActions.utility.ts';
-import CasesListPage from 'cypress/pageObjects/cases.page.ts';
+import CasesListPage from 'cypress/pageObjects/caseList.page.ts';
 import HeaderUtility from 'cypress/pageUtilities/header.utility.ts';
 import CaseWorkAreaPage from 'cypress/pageObjects/caseWorkArea.page.ts';
 import CaseTypePage from 'cypress/pageObjects/caseType.page.ts';
@@ -27,7 +27,7 @@ import WhoAuthorityPage from 'cypress/pageObjects/whoAuthority.page.ts';
 import CaseOfficerPage from 'cypress/pageObjects/caseOfficer.page.ts';
 import CheckAnswersPage from 'cypress/pageObjects/checkAnswers.page.ts';
 import CaseCreatedPage from 'cypress/pageObjects/caseCreated.page.ts';
-import CasesPage from 'cypress/pageObjects/cases.page.ts';
+import CaseDetailsPage from 'cypress/pageObjects/caseDetails.page.ts';
 
 import type { Journeys } from '../../types/journeys.ts';
 import { planningJourneys } from 'cypress/fixtures/planningCaseJourneys.ts';
@@ -104,7 +104,7 @@ describe('Planning Inspectorate > Case creation', () => {
 			CaseCreatedPage.isPageDisplayed(journey);
 			CaseCreatedPage.clickContinueToCaseDetails();
 
-			CasesPage.isPageDisplayed();
+			CaseDetailsPage.isPageDisplayed();
 		});
 	});
 });

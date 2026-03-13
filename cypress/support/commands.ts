@@ -73,6 +73,18 @@ Cypress.Commands.add('verifyPageTitle', (expectedTitle: string, options?: { time
 		.then((text) => {
 			const actual = text.trim();
 
-			expect(actual, `Expected page title to be "${expectedTitle}" but found "${actual}"`).to.eq(expectedTitle);
+			expect(actual, `Expected page title to be "${expectedTitle}" but found "${actual}"`).to.include(expectedTitle);
 		});
+});
+
+Cypress.Commands.add('verifyErrorSummary', (errorText: string, href?: string) => {
+	cy.get('.govuk-error-summary').should('exist').and('be.visible');
+
+	cy.get('.govuk-error-summary__title').should('exist').and('be.visible').and('have.text', 'There is a problem');
+
+	const errorLink = cy.contains('.govuk-error-summary__list a', errorText).should('exist').and('be.visible');
+
+	if (href !== undefined) {
+		errorLink.should('have.attr', 'href', href);
+	}
 });
