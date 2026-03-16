@@ -439,7 +439,7 @@ export const CASE_DETAILS_QUESTIONS = {
 		question: 'What is the case status?',
 		fieldName: 'statusId',
 		url: 'case-status',
-		validators: [],
+		validators: [new RequiredValidator('Select a case status')],
 		options: CASE_STATUSES.map((status) => ({ text: status.displayName, value: status.id })),
 		viewData: {
 			extraActionButtons: [
@@ -478,7 +478,7 @@ export const CASE_DETAILS_QUESTIONS = {
 		question: 'Which round of advertised modifications is the case at?',
 		fieldName: 'advertisedModificationId',
 		url: 'advertised-modifications-status',
-		validators: [],
+		validators: [new RequiredValidator('Select the round of advertised modifications')],
 		options: ADVERTISED_MODIFICATIONS.map((status) => ({ text: status.displayName, value: status.id })),
 		viewData: {
 			extraActionButtons: [
@@ -530,7 +530,7 @@ export const CASE_DETAILS_QUESTIONS = {
 		question: 'What is the priority?',
 		fieldName: 'priorityId',
 		url: 'priority',
-		validators: [],
+		validators: [new RequiredValidator('Select a priority')],
 		options: PRIORITIES.map((priority) => ({ text: priority.displayName, value: priority.id })),
 		viewData: {
 			extraActionButtons: [
