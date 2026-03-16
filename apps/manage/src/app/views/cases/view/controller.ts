@@ -11,6 +11,7 @@ import { getQuestions } from './questions.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
 import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
+import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 
 export function buildViewCaseDetails(): AsyncRequestHandler {
 	return async (req, res) => {
@@ -27,13 +28,20 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 			throw new Error('id param required');
 		}
 
-		const caseUpdated = readSessionData(req, id, 'updated', false);
+		const caseUpdated = readSessionData(req, id, 'updated', { section: '' });
 
 		clearAllSessionData(req, res, id);
 
 		const baseUrl = req.baseUrl;
 
 		const lastModifiedDate = res.locals.lastModified?.updatedDate;
+
+		const matchedSection =
+			typeof caseUpdated === 'object' && caseUpdated.section
+				? res.locals.journey.sections.find((section: Section) => section.segment === caseUpdated.section)
+				: undefined;
+
+		const sectionName = matchedSection?.name || '';
 
 		await list(req, res, '', {
 			caseId: id,
@@ -43,7 +51,10 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 			allCaseNotesCount,
 			baseUrl,
 			backLinkUrl: res.locals.backLinkUrl || '/cases',
-			caseUpdated,
+			caseUpdatedParams: {
+				updated: !!sectionName,
+				html: sectionName ? buildSuccessHtml(sectionName) : ''
+			},
 			currentUrl: req.originalUrl,
 			lastModifiedDate,
 			lastModifiedBy: res.locals.lastModified?.by || null,
@@ -268,4 +279,21 @@ function clearAllSessionData(req: Request, res: Response, id: string) {
 		res.locals.errorSummary = errors;
 	}
 	clearSessionData(req, id, 'updateErrors', 'cases');
+}
+
+/**
+ * Takes a section name and builds the html around it so we can anchor to
+ * the correct section after successful update.
+ *
+ * Replaces spaces with hyphens for consistency in URL
+ */
+function buildSuccessHtml(section: string) {
+	const safeAnchorId = section.toLowerCase().replace(/\s+/g, '-');
+
+	return `
+		<p class="govuk-notification-banner__heading">
+      		Case has been updated.
+			<a class="govuk-notification-banner__link" href="#${safeAnchorId}">Return to section</a>
+    	</p>
+	`;
 }

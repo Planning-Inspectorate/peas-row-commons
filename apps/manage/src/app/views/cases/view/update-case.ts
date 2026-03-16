@@ -28,7 +28,7 @@ interface HandlerParams {
 export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 	return async ({ req, data }: HandlerParams) => {
 		const { db, logger, audit } = service;
-		const { id } = req.params;
+		const { id, section } = req.params;
 
 		if (!id) {
 			throw new Error(`invalid update case request, id param required (id:${id})`);
@@ -100,7 +100,7 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 		// We clear the session after we have updated the case to avoid ghost data
 		clearDataFromSession({ req, journeyId: JOURNEY_ID });
 
-		addSessionData(req, id, { updated: true });
+		addSessionData(req, id, { updated: { section } });
 
 		logger.info({ id }, 'case updated');
 	};

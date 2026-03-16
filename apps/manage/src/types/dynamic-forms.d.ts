@@ -287,6 +287,8 @@ declare module '@planning-inspectorate/dynamic-forms/src/section.js' {
 		withCondition(condition: (response: any) => boolean): Section;
 		startMultiQuestionCondition(key: string, condition: (response: any) => boolean): Section;
 		endMultiQuestionCondition(key: string): Section;
+		name: string;
+		segment: string;
 	}
 }
 
