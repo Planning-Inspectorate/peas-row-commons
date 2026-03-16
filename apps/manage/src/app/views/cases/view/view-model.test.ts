@@ -574,22 +574,6 @@ describe('view-model', () => {
 			assert.ok(result[0].siteVisitDate);
 		});
 
-		it('should convert boolean values to yes/no strings', () => {
-			const input = [
-				{
-					procedureTypeId: 'hearing',
-					hearingInTarget: true,
-					inquiryInTarget: false
-				}
-			];
-
-			const result = mapProceduresToArray(input);
-
-			assert.ok(result);
-			assert.strictEqual(result[0].hearingInTarget, 'yes');
-			assert.strictEqual(result[0].inquiryInTarget, 'no');
-		});
-
 		it('should map HearingVenue relation to hearingVenue with UI address format', () => {
 			const input = [
 				{
@@ -676,8 +660,7 @@ describe('view-model', () => {
 				{
 					procedureTypeId: 'hearing',
 					siteVisitDate: testDate,
-					hearingFormatId: 'face-to-face',
-					lengthOfHearingEvent: 5
+					hearingFormatId: 'face-to-face'
 				}
 			];
 
@@ -686,7 +669,6 @@ describe('view-model', () => {
 			assert.ok(result);
 			assert.strictEqual(result[0].siteVisitDate, testDate);
 			assert.strictEqual(result[0].hearingFormatId, 'face-to-face');
-			assert.strictEqual(result[0].lengthOfHearingEvent, 5);
 		});
 	});
 

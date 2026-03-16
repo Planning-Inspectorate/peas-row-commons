@@ -399,8 +399,6 @@ export function handleProcedureDetails(flatData: Record<string, unknown>, prisma
 			partiesNotifiedOfHearingDate: proc.partiesNotifiedOfHearingDate
 				? new Date(proc.partiesNotifiedOfHearingDate as string)
 				: null,
-			lengthOfHearingEvent: proc.lengthOfHearingEvent ?? null,
-			hearingInTarget: proc.hearingInTarget ?? null,
 			hearingPreparationTimeDays: proc.hearingPreparationTimeDays ?? null,
 			hearingTravelTimeDays: proc.hearingTravelTimeDays ?? null,
 			hearingSittingTimeDays: proc.hearingSittingTimeDays ?? null,
@@ -410,7 +408,6 @@ export function handleProcedureDetails(flatData: Record<string, unknown>, prisma
 			inquiryTargetDate: proc.inquiryTargetDate ? new Date(proc.inquiryTargetDate as string) : null,
 			earliestInquiryDate: proc.earliestInquiryDate ? new Date(proc.earliestInquiryDate as string) : null,
 			confirmedInquiryDate: proc.confirmedInquiryDate ? new Date(proc.confirmedInquiryDate as string) : null,
-			inquiryFinishedDate: proc.inquiryFinishedDate ? new Date(proc.inquiryFinishedDate as string) : null,
 			inquiryClosedDate: proc.inquiryClosedDate ? new Date(proc.inquiryClosedDate as string) : null,
 			inquiryDateNotificationDate: proc.inquiryDateNotificationDate
 				? new Date(proc.inquiryDateNotificationDate as string)
@@ -421,8 +418,6 @@ export function handleProcedureDetails(flatData: Record<string, unknown>, prisma
 			partiesNotifiedOfInquiryDate: proc.partiesNotifiedOfInquiryDate
 				? new Date(proc.partiesNotifiedOfInquiryDate as string)
 				: null,
-			lengthOfInquiryEvent: proc.lengthOfInquiryEvent ?? null,
-			inquiryInTarget: proc.inquiryInTarget ?? null,
 			inquiryPreparationTimeDays: proc.inquiryPreparationTimeDays ?? null,
 			inquiryTravelTimeDays: proc.inquiryTravelTimeDays ?? null,
 			inquirySittingTimeDays: proc.inquirySittingTimeDays ?? null,
@@ -444,7 +439,8 @@ export function handleProcedureDetails(flatData: Record<string, unknown>, prisma
 			inHouseDate: proc.inHouseDate ? new Date(proc.inHouseDate as string) : null,
 			offerForWrittenRepresentationsDate: proc.offerForWrittenRepresentationsDate
 				? new Date(proc.offerForWrittenRepresentationsDate as string)
-				: null
+				: null,
+			deadlineForConsentDate: proc.deadlineForConsentDate ? new Date(proc.deadlineForConsentDate as string) : null
 		};
 
 		providedIds.push(proc.id);

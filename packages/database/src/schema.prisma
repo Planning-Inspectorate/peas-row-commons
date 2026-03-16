@@ -445,8 +445,6 @@ model Procedure {
   partiesNotifiedOfHearingDate DateTime?
 
   /// Hearing data
-  lengthOfHearingEvent       Decimal?
-  hearingInTarget            Boolean?
   hearingPreparationTimeDays Decimal?
   hearingTravelTimeDays      Decimal?
   hearingSittingTimeDays     Decimal?
@@ -462,7 +460,6 @@ model Procedure {
   inquiryTargetDate    DateTime?
   earliestInquiryDate  DateTime?
   confirmedInquiryDate DateTime?
-  inquiryFinishedDate  DateTime?
   inquiryClosedDate    DateTime?
 
   /// Inquiry notifications
@@ -471,8 +468,6 @@ model Procedure {
   partiesNotifiedOfInquiryDate DateTime?
 
   /// Data around inquiry event, e.g. length, time
-  lengthOfInquiryEvent       Decimal?
-  inquiryInTarget            Boolean?
   inquiryPreparationTimeDays Decimal?
   inquiryTravelTimeDays      Decimal?
   inquirySittingTimeDays     Decimal?
@@ -508,6 +503,9 @@ model Procedure {
   statementsOfCaseReceivedDate       DateTime?
   inHouseDate                        DateTime?
   offerForWrittenRepresentationsDate DateTime?
+
+  /// Other
+  deadlineForConsentDate DateTime?
 
   caseId String @db.UniqueIdentifier
   Case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)

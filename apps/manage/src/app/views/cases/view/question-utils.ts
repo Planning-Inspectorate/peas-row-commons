@@ -46,6 +46,7 @@ import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/
 import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { LEGACY_CONTACT_TYPES } from '@pins/peas-row-commons-database/src/seed/static_data/legacy/contact-types.ts';
 import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/legacy/act-sections.ts';
+import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/admin-procedure-type.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
 
@@ -1176,7 +1177,10 @@ export const PROCEDURE_MANAGE_LIST_QUESTION = {
 		url: 'check-procedure-details',
 		viewData: {
 			emptyName: 'procedure',
-			emptyNamePlural: 'procedures'
+			emptyNamePlural: 'procedures',
+			warningText:
+				'Changing the procedure type will delete the information ' +
+				'you have already entered for an existing procedure.'
 		},
 		titleSingular: 'procedure',
 		columns: [
@@ -1208,7 +1212,23 @@ export const PROCEDURE_MANAGE_LIST_QUESTION = {
 			},
 			{
 				header: 'Inspector',
-				fieldName: 'inspectorId'
+				fieldName: 'inspectorId',
+				format: (value: string, row: Record<string, unknown>): string => {
+					if (
+						row.procedureTypeId === PROCEDURES_ID.ADMIN_IN_HOUSE &&
+						row.adminProcedureType === ADMIN_PROCEDURES_ID.CASE_OFFICER
+					) {
+						return 'N/A';
+					}
+
+					if (value === 'not-allocated') {
+						return 'Not allocated yet';
+					}
+
+					// For real inspector IDs, the table will need to resolve the display name
+					// from the options — return the value as-is and let the existing logic handle it
+					return value || '—';
+				}
 			},
 			{
 				header: 'Status',
@@ -1308,7 +1328,7 @@ export const PROCEDURE_QUESTIONS = {
 		question: 'Who is the inspector?',
 		fieldName: 'inspectorId',
 		url: 'procedure-inspector',
-		validators: [new RequiredValidator('Select an inspector')],
+		validators: [new RequiredValidator('Select an option')],
 		viewData: {
 			continueButtonText: 'Continue'
 		}
@@ -1421,30 +1441,6 @@ export const PROCEDURE_QUESTIONS = {
 			]
 		}
 	}),
-	procedureHearingLength: {
-		type: COMPONENT_TYPES.NUMBER,
-		title: 'Length of event / estimated length (days)',
-		question: 'How long will the hearing take?',
-		fieldName: 'lengthOfHearingEvent',
-		url: 'estimated-hearing-length',
-		suffix: 'days',
-		hint: 'Estimated or actual length',
-		validators: [
-			new NumericValidator({
-				regex: /^$|^\d+(\.\d+)?$/,
-				regexMessage: 'Length of event must only contain numbers'
-			})
-		],
-		viewData: { width: 5 }
-	},
-	procedureHearingInTarget: {
-		type: COMPONENT_TYPES.BOOLEAN,
-		title: 'Hearing in target?',
-		question: 'Was the hearing completed in the target timeframe?',
-		fieldName: 'hearingInTarget',
-		url: 'hearing-in-target',
-		validators: [new RequiredValidator('Select yes if the hearing was completed in the target timeframe')]
-	},
 	procedureHearingClosedDate: dateQuestion({
 		fieldName: 'hearingClosedDate',
 		title: 'Date hearing closed',
@@ -1459,6 +1455,7 @@ export const PROCEDURE_QUESTIONS = {
 		type: COMPONENT_TYPES.NUMBER,
 		title: 'Preparation time (days)',
 		question: 'How long is the hearing preparation time? (optional)',
+		hint: 'For example, 0.5, 1',
 		fieldName: 'hearingPreparationTimeDays',
 		url: 'hearing-preparation-time',
 		suffix: 'days',
@@ -1474,6 +1471,7 @@ export const PROCEDURE_QUESTIONS = {
 		type: COMPONENT_TYPES.NUMBER,
 		title: 'Travel time (days)',
 		question: 'How long is the hearing travel time? (optional)',
+		hint: 'For example, 0.5, 1',
 		fieldName: 'hearingTravelTimeDays',
 		url: 'hearing-travel-time',
 		suffix: 'days',
@@ -1489,6 +1487,7 @@ export const PROCEDURE_QUESTIONS = {
 		type: COMPONENT_TYPES.NUMBER,
 		title: 'Sitting time (days)',
 		question: 'How long is the hearing sitting time? (optional)',
+		hint: 'For example, 0.5, 1',
 		fieldName: 'hearingSittingTimeDays',
 		url: 'hearing-sitting-time',
 		suffix: 'days',
@@ -1504,6 +1503,7 @@ export const PROCEDURE_QUESTIONS = {
 		type: COMPONENT_TYPES.NUMBER,
 		title: 'Reporting time (days)',
 		question: 'How long is the hearing reporting time? (optional)',
+		hint: 'For example, 0.5, 1',
 		fieldName: 'hearingReportingTimeDays',
 		url: 'hearing-reporting-time',
 		suffix: 'days',
@@ -1605,39 +1605,6 @@ export const PROCEDURE_QUESTIONS = {
 			]
 		}
 	}),
-	procedureInquiryLength: {
-		type: COMPONENT_TYPES.NUMBER,
-		title: 'Length of event / estimated length (days)',
-		question: 'How long will the inquiry take?',
-		fieldName: 'lengthOfInquiryEvent',
-		url: 'estimated-inquiry-length',
-		suffix: 'days',
-		validators: [
-			new NumericValidator({
-				regex: /^$|^\d+(\.\d+)?$/,
-				regexMessage: 'Length of event must only contain numbers'
-			})
-		],
-		viewData: { width: 5 }
-	},
-	procedureInquiryFinishedDate: dateQuestion({
-		fieldName: 'inquiryFinishedDate',
-		title: 'Date inquiry finished',
-		question: 'When did the inquiry end? (optional)',
-		url: 'date-inquiry-finished',
-		overrideValidator: OptionalDateValidator,
-		viewData: {
-			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'date-inquiry-finished/remove' }]
-		}
-	}),
-	procedureInquiryInTarget: {
-		type: COMPONENT_TYPES.BOOLEAN,
-		title: 'Event in target?',
-		question: 'Was the inquiry completed in the target timeframe?',
-		fieldName: 'inquiryInTarget',
-		url: 'inquiry-in-target',
-		validators: [new RequiredValidator('Select whether the inquiry was completed in the target timeframe')]
-	},
 	procedureInquiryClosedDate: dateQuestion({
 		fieldName: 'inquiryClosedDate',
 		title: 'Date inquiry closed',
@@ -1652,6 +1619,7 @@ export const PROCEDURE_QUESTIONS = {
 		type: COMPONENT_TYPES.NUMBER,
 		title: 'Preparation time (days)',
 		question: 'How long is the inquiry preparation time? (optional)',
+		hint: 'For example, 0.5, 1',
 		fieldName: 'inquiryPreparationTimeDays',
 		url: 'inquiry-preparation-time',
 		suffix: 'days',
@@ -1667,6 +1635,7 @@ export const PROCEDURE_QUESTIONS = {
 		type: COMPONENT_TYPES.NUMBER,
 		title: 'Travel time (days)',
 		question: 'How long is the inquiry travel time? (optional)',
+		hint: 'For example, 0.5, 1',
 		fieldName: 'inquiryTravelTimeDays',
 		url: 'inquiry-travel-time',
 		suffix: 'days',
@@ -1682,6 +1651,7 @@ export const PROCEDURE_QUESTIONS = {
 		type: COMPONENT_TYPES.NUMBER,
 		title: 'Sitting time (days)',
 		question: 'How long is the inquiry sitting time? (optional)',
+		hint: 'For example, 0.5, 1',
 		fieldName: 'inquirySittingTimeDays',
 		url: 'inquiry-sitting-time',
 		suffix: 'days',
@@ -1697,6 +1667,7 @@ export const PROCEDURE_QUESTIONS = {
 		type: COMPONENT_TYPES.NUMBER,
 		title: 'Reporting time (days)',
 		question: 'How long is the inquiry reporting time? (optional)',
+		hint: 'For example, 0.5, 1',
 		fieldName: 'inquiryReportingTimeDays',
 		url: 'inquiry-reporting-time',
 		suffix: 'days',
@@ -1734,7 +1705,7 @@ export const PROCEDURE_QUESTIONS = {
 		fieldName: 'caseOfficerVerificationDate',
 		title: 'Case officer verification date',
 		question: 'When did the case officer verify the documents? (optional)',
-		hint: 'Have all the necessary Statements of Case, Written Reps procedures, Notices, Proof of Posting and Proofs of Evidence been received?',
+		hint: 'Have all the necessary Statements of Case, Written Reps procedures, Notices, Proof of Posting and Proofs of Evidence been received and have the statutory targets in terms of notifications have been complied with?',
 		url: 'case-officer-verification-case',
 		overrideValidator: OptionalDateValidator,
 		viewData: {
@@ -1868,6 +1839,18 @@ export const PROCEDURE_QUESTIONS = {
 				{ text: 'Remove and save', type: 'submit', formaction: 'date-offer-written-representations/remove' }
 			]
 		}
+	}),
+
+	procedureDeadlineForConsent: dateQuestion({
+		fieldName: 'deadlineForConsentDate',
+		title: 'Deadline for consent',
+		question: 'What is the deadline for consent? (optional)',
+		hint: 'For example, 27 3 2007',
+		url: 'deadline-consent',
+		overrideValidator: OptionalDateValidator,
+		viewData: {
+			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'deadline-consent/remove' }]
+		}
 	})
 };
 
@@ -1886,7 +1869,9 @@ export function createProcedureDetailQuestions(
 	/**
 	 * Add "Not allocated yet" as a fallback option, separated by a divider.
 	 */
-	inspectorOptions.push({ divider: 'or' });
+	if (inspectorOptions.length > 0) {
+		inspectorOptions.push({ divider: 'or' });
+	}
 	inspectorOptions.push({ text: 'Not allocated yet', value: 'not-allocated' });
 
 	return {

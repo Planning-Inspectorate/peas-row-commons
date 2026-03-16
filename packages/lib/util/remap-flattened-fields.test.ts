@@ -80,8 +80,7 @@ describe('remapFlattenedFieldsToArray', () => {
 	it('should merge multiple fields for the same index', () => {
 		const flatData: Record<string, unknown> = {
 			procedureDetails_0_hearingTargetDate: '2025-03-01',
-			procedureDetails_0_hearingFormatId: 'virtual',
-			procedureDetails_0_lengthOfHearingEvent: 3
+			procedureDetails_0_hearingFormatId: 'virtual'
 		};
 		const existing = [{ procedureTypeId: 'hearing', procedureStatusId: 'active' }];
 
@@ -90,7 +89,6 @@ describe('remapFlattenedFieldsToArray', () => {
 		const result = flatData.procedureDetails as Record<string, unknown>[];
 		assert.strictEqual(result[0].hearingTargetDate, '2025-03-01');
 		assert.strictEqual(result[0].hearingFormatId, 'virtual');
-		assert.strictEqual(result[0].lengthOfHearingEvent, 3);
 		assert.strictEqual(result[0].procedureTypeId, 'hearing');
 		assert.strictEqual(result[0].procedureStatusId, 'active');
 	});
