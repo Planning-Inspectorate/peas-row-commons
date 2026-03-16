@@ -20,6 +20,7 @@ import {
 	resetRemovedListItems,
 	trackRemovedItemId
 } from '@pins/peas-row-commons-lib/middleware/manage-list/track-removes.ts';
+import { guardEmptyRemove } from '@pins/peas-row-commons-lib/middleware/guard-empty-remove.ts';
 
 export function createRoutes(service: ManageService) {
 	const router = createRouter({ mergeParams: true });
@@ -81,7 +82,13 @@ export function createRoutes(service: ManageService) {
 	);
 
 	// Deletes answer
-	router.post('/:section/:question/remove', validateIdFormat, getJourney, asyncHandler(clearAndUpdateCase));
+	router.post(
+		'/:section/:question/remove',
+		validateIdFormat,
+		getJourney,
+		guardEmptyRemove,
+		asyncHandler(clearAndUpdateCase)
+	);
 
 	// Load case note routes
 	router.use('/case-notes', caseNoteRoutes);
