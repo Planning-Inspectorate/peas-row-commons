@@ -135,7 +135,7 @@ export function mapProceduresToArray(procedures: any[]): Record<string, any>[] |
 		if (proc.InquiryVenue) mapped.inquiryVenue = mapAddressDbToViewModel(proc.InquiryVenue);
 		if (proc.ConferenceVenue) mapped.conferenceVenue = mapAddressDbToViewModel(proc.ConferenceVenue);
 
-		if (proc.Inspector) mapped.inspectorId = proc.Inspector.idpUserId;
+		mapped.inspectorId = proc.Inspector?.idpUserId ?? 'not-allocated';
 
 		return mapped;
 	});
