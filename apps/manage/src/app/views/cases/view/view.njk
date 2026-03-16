@@ -17,10 +17,10 @@
 {% endblock %}
 
 {% block content %}
-    {% if caseUpdated %}
+    {% if caseUpdatedParams.updated %}
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
-            text: "Case has been updated",
+            html: caseUpdatedParams.html,
             type: "success"
         }) }}
     {% endif %}
@@ -49,7 +49,7 @@
                 {% if section.list.rows.length %}
                     {% set allSections = (allSections.push({
                         heading: section.heading,
-                        href: "#" + (section.heading | lower)
+                        href: "#" + (section.heading | lower | replace(' ', '-'))
                     }), allSections) %}
                 {% endif %}
             {% endfor %}
@@ -125,7 +125,7 @@
                             title: {
                                 text: section.heading
                             },
-                            attributes: {id: section.heading | lower}
+                            attributes: {id: section.heading | lower | replace(' ', '-')}
                         },
                         rows: section.list.rows
                     }) }}

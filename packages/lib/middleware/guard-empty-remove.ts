@@ -10,6 +10,7 @@ import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 export const guardEmptyRemove: RequestHandler = (req, res, next) => {
 	const journey = res.locals.journey;
 	const question = journey.getQuestionByParams(req.params);
+	const { section } = req.params;
 
 	if (!question) {
 		return res.redirect(journey.taskListUrl);
@@ -25,7 +26,7 @@ export const guardEmptyRemove: RequestHandler = (req, res, next) => {
 
 	if (isEmpty) {
 		// Set the session data that triggers the "case updated" message.
-		addSessionData(req, req.params.id, { updated: true });
+		addSessionData(req, req.params.id, { updated: { section } });
 
 		return res.redirect(journey.taskListUrl);
 	}

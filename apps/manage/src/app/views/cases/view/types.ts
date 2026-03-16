@@ -71,3 +71,7 @@ export type CaseOfficer = {
 export type Inspector = {
 	id: string;
 };
+
+export type CaseUpdated = {
+	section: string;
+};
