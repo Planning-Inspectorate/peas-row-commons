@@ -39,8 +39,6 @@ const PROCEDURE_TYPE_FIELD_MAP: Record<string, string[]> = {
 		'hearingDateNotificationDate',
 		'hearingVenueNotificationDate',
 		'earliestHearingDate',
-		'lengthOfHearingEvent',
-		'hearingInTarget',
 		'hearingClosedDate',
 		'hearingPreparationTimeDays',
 		'hearingTravelTimeDays',
@@ -69,9 +67,6 @@ const PROCEDURE_TYPE_FIELD_MAP: Record<string, string[]> = {
 		'inquiryVenue',
 		'inquiryDateNotificationDate',
 		'inquiryVenueNotificationDate',
-		'lengthOfInquiryEvent',
-		'inquiryFinishedDate',
-		'inquiryInTarget',
 		'inquiryClosedDate',
 		'inquiryPreparationTimeDays',
 		'inquiryTravelTimeDays',
@@ -83,7 +78,7 @@ const PROCEDURE_TYPE_FIELD_MAP: Record<string, string[]> = {
 	[PROCEDURES_ID.ADMIN_IN_HOUSE]: ['inHouseDate'],
 
 	/** Written reps-only fields */
-	[PROCEDURES_ID.WRITTEN_REPS]: ['offerForWrittenRepresentationsDate'],
+	[PROCEDURES_ID.WRITTEN_REPS]: ['offerForWrittenRepresentationsDate', 'deadlineForConsentDate'],
 
 	/** Site visit has no extra fields beyond the common ones */
 	[PROCEDURES_ID.SITE_VISIT]: []

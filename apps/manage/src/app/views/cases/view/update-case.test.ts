@@ -574,9 +574,7 @@ describe('Update Case Controller', () => {
 						procedureTypeId: 'inquiry',
 						inquiryTargetDate: '2025-06-01',
 						confirmedInquiryDate: '2025-07-01',
-						inquiryFormatId: 'face-to-face',
-						lengthOfInquiryEvent: 5,
-						inquiryInTarget: true
+						inquiryFormatId: 'face-to-face'
 					}
 				]
 			};
@@ -587,8 +585,6 @@ describe('Update Case Controller', () => {
 			assert.ok(proc.inquiryTargetDate instanceof Date);
 			assert.ok(proc.confirmedInquiryDate instanceof Date);
 			assert.strictEqual(proc.InquiryFormat.connect.id, 'face-to-face');
-			assert.strictEqual(proc.lengthOfInquiryEvent, 5);
-			assert.strictEqual(proc.inquiryInTarget, true);
 		});
 
 		it('should handle admin-specific fields in procedure payload', () => {

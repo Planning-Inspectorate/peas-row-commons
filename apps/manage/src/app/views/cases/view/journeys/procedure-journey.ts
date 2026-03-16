@@ -96,8 +96,8 @@ export function buildProcedureAllQuestionsSection(questions: Record<string, unkn
 			.addQuestion(questions.procedureHearingTargetDate)
 			.addQuestion(questions.procedurePartiesNotifiedOfHearingDate)
 
-			.addQuestion(questions.procedureProofsReceivedDate)
 			.addQuestion(questions.procedureStatementsReceivedDate)
+			.addQuestion(questions.procedureProofsReceivedDate)
 			.addQuestion(questions.procedureCaseOfficerVerificationDate)
 
 			.addQuestion(questions.procedureInquiryOrConference)
@@ -115,8 +115,6 @@ export function buildProcedureAllQuestionsSection(questions: Record<string, unkn
 			.addQuestion(questions.procedureHearingVenue)
 			.addQuestion(questions.procedureHearingDateNotificationDate)
 			.addQuestion(questions.procedureHearingVenueNotificationDate)
-			.addQuestion(questions.procedureHearingLength)
-			.addQuestion(questions.procedureHearingInTarget)
 			.addQuestion(questions.procedureHearingClosedDate)
 			.addQuestion(questions.procedureHearingPreparationTime)
 			.addQuestion(questions.procedureHearingTravelTime)
@@ -130,9 +128,6 @@ export function buildProcedureAllQuestionsSection(questions: Record<string, unkn
 			.addQuestion(questions.procedureInquiryVenue)
 			.addQuestion(questions.procedureInquiryDateNotificationDate)
 			.addQuestion(questions.procedureInquiryVenueNotificationDate)
-			.addQuestion(questions.procedureInquiryLength)
-			.addQuestion(questions.procedureInquiryFinishedDate)
-			.addQuestion(questions.procedureInquiryInTarget)
 			.addQuestion(questions.procedureInquiryClosedDate)
 			.addQuestion(questions.procedureInquiryPreparationTime)
 			.addQuestion(questions.procedureInquiryTravelTime)
@@ -141,5 +136,6 @@ export function buildProcedureAllQuestionsSection(questions: Record<string, unkn
 
 			.addQuestion(questions.procedureInHouseDate)
 			.addQuestion(questions.procedureOfferWrittenRepsDate)
+			.addQuestion(questions.procedureDeadlineForConsent)
 	);
 }
