@@ -1,6 +1,8 @@
 import { describe, it, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { createDocumentsController, createDocumentsFromDrafts } from './controller.ts';
+import type { ManageService } from '#service';
+import type { Response } from 'express';
 
 describe('Create Documents Logic', () => {
 	const mockLogger = {
@@ -92,16 +94,47 @@ describe('Create Documents Logic', () => {
 	});
 
 	describe('createDocumentsController', () => {
-		it('should throw error if required params are missing', async () => {
-			const req = mockReq({ params: { id: 'case-1' } }); // No folder Id passed.
+		it('should handle missing params by redirecting and setting a generic error in session', async () => {
+			const req = mockReq({ params: { id: 'case-1' } });
 			const res = mockRes();
-			const service = { db: {}, logger: mockLogger };
+			const service = { db: {}, logger: mockLogger } as unknown as ManageService;
 
-			const controller = createDocumentsController(service as any);
+			const controller = createDocumentsController(service);
 
-			await assert.rejects(() => controller(req as any, res as any), {
-				message: 'Missing required parameters: id or folderId'
-			});
+			await controller(req, res as unknown as Response);
+
+			assert.strictEqual(res.redirect.mock.callCount(), 1);
+			assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/original-url');
+
+			assert.ok(req.session.files['case-1'].uploadErrors);
+			assert.strictEqual(
+				req.session.files['case-1'].uploadErrors[0].text,
+				'There was a problem saving your documents. Please try again.'
+			);
+		});
+
+		it('should catch NoUploadsError if 0 documents are created and set specific error message', async () => {
+			const db = {
+				draftDocument: {
+					findMany: mock.fn(() => Promise.resolve([])),
+					deleteMany: mock.fn()
+				},
+				document: { createMany: mock.fn() },
+				$transaction: mock.fn(() => Promise.resolve())
+			};
+
+			const service = { db, logger: mockLogger } as unknown as ManageService;
+			const req = mockReq();
+			const res = mockRes();
+
+			const controller = createDocumentsController(service);
+			await controller(req, res as unknown as Response);
+
+			assert.strictEqual(res.redirect.mock.callCount(), 1);
+			assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/original-url');
+
+			assert.ok(req.session.files['case-123'].uploadErrors);
+			assert.strictEqual(req.session.files['case-123'].uploadErrors[0].text, 'Select a file to upload');
 		});
 
 		it('should succeed: redirect to parent folder and set success session data', async () => {
@@ -114,12 +147,12 @@ describe('Create Documents Logic', () => {
 				$transaction: mock.fn(() => Promise.resolve())
 			};
 
-			const service = { db, logger: mockLogger };
+			const service = { db, logger: mockLogger } as unknown as ManageService;
 			const req = mockReq();
 			const res = mockRes();
 
-			const controller = createDocumentsController(service as any);
-			await controller(req as any, res as any);
+			const controller = createDocumentsController(service);
+			await controller(req, res as unknown as Response);
 
 			assert.strictEqual(res.redirect.mock.callCount(), 1);
 			assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/case-folders/case-123/folder-123');
@@ -127,19 +160,19 @@ describe('Create Documents Logic', () => {
 			assert.deepStrictEqual(req.session.folder['folder-123'], { updated: true });
 		});
 
-		it('should fail: redirect to original URL and set error session data', async () => {
+		it('should fail: redirect to original URL and set generic error session data for system errors', async () => {
 			const db = {
 				draftDocument: {
 					findMany: mock.fn(() => Promise.reject(new Error('Transaction Failed')))
 				}
 			};
 
-			const service = { db, logger: mockLogger };
+			const service = { db, logger: mockLogger } as unknown as ManageService;
 			const req = mockReq();
 			const res = mockRes();
 
-			const controller = createDocumentsController(service as any);
-			await controller(req as any, res as any);
+			const controller = createDocumentsController(service);
+			await controller(req, res as unknown as Response);
 
 			assert.strictEqual(res.redirect.mock.callCount(), 1);
 			assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/original-url');

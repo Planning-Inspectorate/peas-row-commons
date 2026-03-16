@@ -4,6 +4,7 @@ import type { Request, Response } from 'express';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { Logger } from 'pino';
+import { NoUploadsError } from './error.ts';
 
 /**
  * Creates the documents controller that is used when
@@ -13,14 +14,18 @@ import type { Logger } from 'pino';
 export function createDocumentsController(service: ManageService) {
 	const { db, logger } = service;
 	return async (req: Request, res: Response) => {
-		const { id, folderId } = req.params;
-
-		if (!id || !folderId) {
-			throw new Error('Missing required parameters: id or folderId');
-		}
-
 		try {
+			const { id, folderId } = req.params;
+
+			if (!id || !folderId) {
+				throw new Error('Missing required parameters: id or folderId');
+			}
+
 			const createdLength = await createDocumentsFromDrafts(req, db, logger, id, folderId);
+
+			if (createdLength === 0) {
+				throw new NoUploadsError('Select a file to upload');
+			}
 
 			logger.info({ id, folderId }, `Created ${createdLength} documents`);
 
@@ -28,14 +33,21 @@ export function createDocumentsController(service: ManageService) {
 
 			const folderUrl = req.baseUrl.replace(/\/upload\/?$/, '');
 			return res.redirect(folderUrl);
-		} catch {
+		} catch (error) {
+			logger.error({ error, caseId: req.params.id }, 'Failed to create documents from drafts');
+
+			const errorMessage =
+				error instanceof NoUploadsError
+					? error.message
+					: 'There was a problem saving your documents. Please try again.';
+
 			addSessionData(
 				req,
-				id,
+				req.params.id,
 				{
 					uploadErrors: [
 						{
-							text: 'There was a problem saving your documents. Please try again.',
+							text: errorMessage,
 							href: '#main-content'
 						}
 					]
