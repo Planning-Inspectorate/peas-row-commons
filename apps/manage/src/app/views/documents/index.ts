@@ -8,8 +8,11 @@ export function createRoutes(service: ManageService): IRouter {
 	const router = createRouter({ mergeParams: true });
 	const downloadDocument = buildDownloadDocument(service);
 
-	// Downloads the document
-	router.use('/:documentId/download', asyncHandler(downloadDocument));
+	// Bulk deleting (e.g. clicking the big download button at top of page)
+	router.post('/download', asyncHandler(downloadDocument));
+
+	// Single file downloading (e.g. clicking on Download inline)
+	router.get('/:documentId/download', asyncHandler(downloadDocument));
 
 	return router;
 }

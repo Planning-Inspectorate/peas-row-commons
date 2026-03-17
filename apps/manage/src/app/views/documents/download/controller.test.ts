@@ -1,6 +1,7 @@
 import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildDownloadDocument } from './controller.ts';
+import { ManageService } from '#service';
 
 describe('buildDownloadDocument', () => {
 	const mockLogger = {
@@ -11,7 +12,7 @@ describe('buildDownloadDocument', () => {
 	} as any;
 
 	const mockDb = {
-		document: { findUnique: mock.fn() }
+		document: { findUnique: mock.fn(), findMany: mock.fn() }
 	} as any;
 
 	const mockBlobStore = {
@@ -21,6 +22,13 @@ describe('buildDownloadDocument', () => {
 	const mockBlobStream = {
 		on: mock.fn(),
 		pipe: mock.fn()
+	};
+
+	const mockArchiveInstance = {
+		on: mock.fn(),
+		pipe: mock.fn(),
+		append: mock.fn(),
+		finalize: mock.fn(() => Promise.resolve())
 	};
 
 	const mockRes = () => {
@@ -46,17 +54,24 @@ describe('buildDownloadDocument', () => {
 		blobStore: mockBlobStore,
 		audit: {
 			record: mock.fn(() => Promise.resolve())
-		}
+		},
+		archiverFactory: mock.fn(() => mockArchiveInstance)
 	};
 
 	beforeEach(() => {
 		mockDb.document.findUnique.mock.resetCalls();
+		mockDb.document.findMany.mock.resetCalls();
 		mockBlobStore.downloadBlob.mock.resetCalls();
 		mockLogger.error.mock.resetCalls();
 		mockLogger.debug.mock.resetCalls();
 
 		mockBlobStream.on.mock.resetCalls();
 		mockBlobStream.pipe.mock.resetCalls();
+
+		mockArchiveInstance.pipe.mock.resetCalls();
+		mockArchiveInstance.append.mock.resetCalls();
+		mockArchiveInstance.finalize.mock.resetCalls();
+		service.archiverFactory.mock.resetCalls();
 	});
 
 	describe('Validation', () => {
@@ -65,20 +80,20 @@ describe('buildDownloadDocument', () => {
 			const res = mockRes();
 
 			await assert.rejects(() => buildDownloadDocument(service as any)(req, res), {
-				message: 'documentId param required'
+				message: 'documentId param required for single downloads'
 			});
 		});
 	});
 
 	describe('Metadata Retrieval (Stage 1)', () => {
-		it('should stop and return undefined if DB returns null (Document not found)', async () => {
+		it('should stop and return undefined if DB returns [] (Documents not found)', async () => {
 			const req = mockReq();
 			const res = mockRes();
 
-			mockDb.document.findUnique.mock.mockImplementation(() => Promise.resolve(null));
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve([]));
 
 			await assert.rejects(() => buildDownloadDocument(service as any)(req, res), {
-				message: 'No document found for id: doc-123'
+				message: 'No documents found for provided ids'
 			});
 
 			assert.strictEqual(mockBlobStore.downloadBlob.mock.callCount(), 0);
@@ -89,7 +104,7 @@ describe('buildDownloadDocument', () => {
 			const res = mockRes();
 			const dbError = new Error('DB Connection Failed');
 
-			mockDb.document.findUnique.mock.mockImplementation(() => Promise.reject(dbError));
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.reject(dbError));
 
 			await assert.rejects(() => buildDownloadDocument(service as any)(req, res), dbError);
 		});
@@ -103,7 +118,7 @@ describe('buildDownloadDocument', () => {
 		};
 
 		const setupSuccessPath = () => {
-			mockDb.document.findUnique.mock.mockImplementation(() => Promise.resolve(validDocument));
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve([validDocument]));
 			mockBlobStore.downloadBlob.mock.mockImplementation(() =>
 				Promise.resolve({
 					readableStreamBody: mockBlobStream,
@@ -120,7 +135,7 @@ describe('buildDownloadDocument', () => {
 
 			await buildDownloadDocument(service as any)(req, res);
 
-			assert.strictEqual(mockDb.document.findUnique.mock.callCount(), 1);
+			assert.strictEqual(mockDb.document.findMany.mock.callCount(), 1);
 
 			assert.strictEqual(mockBlobStore.downloadBlob.mock.callCount(), 1);
 			assert.strictEqual(mockBlobStore.downloadBlob.mock.calls[0].arguments[0], 'container/blob-uuid');
@@ -156,11 +171,13 @@ describe('buildDownloadDocument', () => {
 		});
 
 		it('should correctly encode special characters in filenames', async () => {
-			mockDb.document.findUnique.mock.mockImplementation(() =>
-				Promise.resolve({
-					...validDocument,
-					fileName: 'tést @ file.pdf'
-				})
+			mockDb.document.findMany.mock.mockImplementation(() =>
+				Promise.resolve([
+					{
+						...validDocument,
+						fileName: 'tést @ file.pdf'
+					}
+				])
 			);
 
 			mockBlobStore.downloadBlob.mock.mockImplementation(() =>
@@ -188,7 +205,7 @@ describe('buildDownloadDocument', () => {
 		const validDocument = { id: 'doc-123', blobName: 'blob', fileName: 'file.pdf' };
 
 		beforeEach(() => {
-			mockDb.document.findUnique.mock.mockImplementation(() => Promise.resolve(validDocument));
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve([validDocument]));
 			mockBlobStore.downloadBlob.mock.mockImplementation(() =>
 				Promise.resolve({
 					readableStreamBody: mockBlobStream
@@ -273,13 +290,15 @@ describe('buildDownloadDocument', () => {
 				pipe: mock.fn()
 			};
 
-			mockDb.document.findUnique.mock.mockImplementation(() =>
-				Promise.resolve({
-					id: 'doc-123',
-					caseId: 'case-1',
-					blobName: 'container/blob-uuid',
-					fileName: 'report.pdf'
-				})
+			mockDb.document.findMany.mock.mockImplementation(() =>
+				Promise.resolve([
+					{
+						id: 'doc-123',
+						caseId: 'case-1',
+						blobName: 'container/blob-uuid',
+						fileName: 'report.pdf'
+					}
+				])
 			);
 
 			mockBlobStore.downloadBlob.mock.mockImplementation(() =>
@@ -308,18 +327,88 @@ describe('buildDownloadDocument', () => {
 			});
 			const res = mockRes();
 
-			// Capture the 'finish' listener
 			res.on.mock.mockImplementation((event: string, cb: Function) => {
 				if (event === 'finish') finishCallback = cb;
 			});
 
 			await buildDownloadDocument(service as any)(req, res);
 
-			// Simulate the response finishing
 			await finishCallback!();
 			assert.strictEqual(recordedAudit.caseId, 'case-1');
 			assert.strictEqual(recordedAudit.action, 'FILE_DOWNLOADED');
 			assert.strictEqual(recordedAudit.userId, 'user-999');
+		});
+	});
+	describe('Bulk Zip Download', () => {
+		const validDocuments = [
+			{
+				id: 'doc-1',
+				caseId: 'case-1',
+				blobName: 'blob-uuid-1',
+				fileName: 'test-1.pdf',
+				Case: { reference: 'test/123' }
+			},
+			{
+				id: 'doc-2',
+				caseId: 'case-1',
+				blobName: 'blob-uuid-2',
+				fileName: 'test-2.jpg',
+				Case: { reference: 'test/123/123' }
+			}
+		];
+
+		beforeEach(() => {
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve(validDocuments));
+			mockBlobStore.downloadBlob.mock.mockImplementation(() => Promise.resolve({ readableStreamBody: mockBlobStream }));
+		});
+
+		it('should fetch all blobs and pipe a zip stream to the response', async () => {
+			const req = mockReq({ body: { selectedFiles: ['doc-1', 'doc-2'] }, params: {} });
+			const res = mockRes();
+
+			await buildDownloadDocument(service as unknown as ManageService)(req, res);
+
+			assert.strictEqual(mockDb.document.findMany.mock.callCount(), 1);
+			const whereClause = mockDb.document.findMany.mock.calls[0].arguments[0].where;
+			assert.deepStrictEqual(whereClause.id.in, ['doc-1', 'doc-2']);
+
+			assert.strictEqual(service.archiverFactory.mock.callCount(), 1);
+			assert.strictEqual(mockArchiveInstance.append.mock.callCount(), 2);
+			assert.strictEqual(mockArchiveInstance.finalize.mock.callCount(), 1);
+
+			assert.strictEqual(mockArchiveInstance.append.mock.calls[0].arguments[1].name, 'test-1.pdf');
+			assert.strictEqual(mockArchiveInstance.append.mock.calls[1].arguments[1].name, 'test-2.jpg');
+
+			const today = new Date().toISOString().split('T')[0];
+
+			const expectedFilename = `test-123-bulk-download-${today}.zip`;
+
+			const setHeaderCalls = res.setHeader.mock.calls;
+			const dispositionHeader = setHeaderCalls.find((c: any) => c.arguments[0] === 'Content-Disposition');
+
+			assert.strictEqual(dispositionHeader.arguments[1], `attachment; filename="${expectedFilename}"`);
+		});
+
+		it('should continue zipping if one blob fails to download', async () => {
+			let callCount = 0;
+			mockBlobStore.downloadBlob.mock.mockImplementation(() => {
+				callCount++;
+				if (callCount === 1) {
+					// Fail first azure blob stream
+					return Promise.reject(new Error('Azure Error'));
+				}
+				// Succeed the second
+				return Promise.resolve({ readableStreamBody: mockBlobStream });
+			});
+
+			const req = mockReq({ body: { selectedFiles: ['doc-1', 'doc-2'] }, params: {} });
+			const res = mockRes();
+
+			await buildDownloadDocument(service as unknown as ManageService)(req, res);
+
+			assert.strictEqual(mockLogger.error.mock.callCount(), 1);
+			assert.strictEqual(mockArchiveInstance.append.mock.callCount(), 1);
+			assert.strictEqual(mockArchiveInstance.finalize.mock.callCount(), 1);
 		});
 	});
 });

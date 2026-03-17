@@ -152,7 +152,8 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 				filesDeleted
 			},
 			errorSummary,
-			breadcrumbItems
+			breadcrumbItems,
+			caseId: id
 		});
 	};
 }

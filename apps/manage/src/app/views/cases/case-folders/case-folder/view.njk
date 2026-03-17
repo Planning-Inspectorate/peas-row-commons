@@ -136,6 +136,9 @@
                 <form action="{{ currentPath }}/move-files" method="POST">
                     {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
 
+                    <input type="hidden" name="returnUrl" value="{{ currentPath }}">
+                    <input type="hidden" name="caseId" value="{{ caseId }}">
+
                     <div class="govuk-button-group">
                         {{ govukButton({
                             text: "Upload files",
@@ -151,6 +154,16 @@
                                 attributes: { 
                                     "data-module": "govuk-button",
                                     "data-cy": "move-selected-btn" 
+                                }
+                            }) }}
+
+                            {{ govukButton({
+                                text: "Download selected",
+                                classes: "govuk-button--secondary",
+                                attributes: { 
+                                    "data-module": "govuk-button",
+                                    "data-cy": "download-selected-btn",
+                                    "formaction": "/documents/download"
                                 }
                             }) }}
 
