@@ -53,7 +53,16 @@
         }), rowItems) %}
 
         {% set actionsHtml %}
-            <a class='govuk-link' href="{{ doc.downloadHref }}" data-cy="download-file-{{ doc.id }}">Download</a> | <a class='govuk-link' href="{{ currentUrl }}/{{ doc.id }}/delete" data-cy="delete-file-{{ doc.id }}">Delete</a>
+            <a class='govuk-link' href="{{ doc.downloadHref }}" data-cy="download-file-{{ doc.id }}">Download</a> | 
+            <button 
+                type="submit" 
+                form="inline-delete-form"
+                name="selectedFiles" 
+                value="{{ doc.id }}" 
+                class="govuk-button-as-link" 
+                data-cy="delete-file-{{ doc.id }}">
+                Delete
+            </button>
 
             {% if showFolderLink %}
                 <br>

@@ -11,8 +11,8 @@ describe('Delete File Controllers', () => {
 
 	const mockDb = {
 		document: {
-			findUnique: mock.fn(),
-			update: mock.fn()
+			findMany: mock.fn(),
+			updateMany: mock.fn()
 		}
 	} as any;
 
@@ -28,8 +28,11 @@ describe('Delete File Controllers', () => {
 
 	const mockReq = (overrides = {}) =>
 		({
-			params: { documentId: 'doc-123' },
-			originalUrl: '/cases/1/folders/2/documents/doc-123/delete',
+			params: { id: 'case-1' },
+			body: { selectedFiles: ['doc-123'] },
+			baseUrl: '/cases/case-1/folders/folder-1/documents',
+			originalUrl: '/cases/case-1/folders/folder-1/documents/delete-confirmation',
+			session: { account: { localAccountId: 'user-1' } },
 			...overrides
 		}) as any;
 
@@ -42,177 +45,148 @@ describe('Delete File Controllers', () => {
 	};
 
 	beforeEach(() => {
-		mockDb.document.findUnique.mock.resetCalls();
-		mockDb.document.update.mock.resetCalls();
+		mockDb.document.findMany.mock.resetCalls();
+		mockDb.document.updateMany.mock.resetCalls();
 		mockLogger.error.mock.resetCalls();
 	});
 
 	describe('buildDeleteFileView', () => {
 		describe('Validation', () => {
-			it('should throw error if "documentId" param is missing', async () => {
-				const req = mockReq({ params: {} });
+			it('should add session error and redirect back to baseUrl if no files are selected', async () => {
+				const req = mockReq({ body: {} });
 				const res = mockRes();
 
-				await assert.rejects(() => buildDeleteFileView(service as any)(req, res), {
-					message: 'documentId param required'
-				});
+				await buildDeleteFileView(service as any)(req, res);
+
+				assert.strictEqual(res.redirect.mock.callCount(), 1);
+				assert.strictEqual(res.redirect.mock.calls[0].arguments[0], req.baseUrl);
 			});
 		});
 
 		describe('Happy Path', () => {
-			const validDocument = {
-				id: 'doc-123',
-				fileName: 'test.pdf',
-				caseId: 'case-1',
-				deletedAt: null,
-				Folder: { id: 'folder-1', displayName: 'Evidence' }
-			};
+			const validDocuments = [
+				{
+					id: 'doc-123',
+					fileName: 'test.pdf',
+					caseId: 'case-1',
+					deletedAt: null,
+					Folder: { id: 'folder-1', displayName: 'Evidence' }
+				}
+			];
 
-			it('should render confirmation view if document is active', async () => {
+			it('should render confirmation view with fetched documents', async () => {
 				const req = mockReq();
 				const res = mockRes();
 
-				mockDb.document.findUnique.mock.mockImplementation(() => Promise.resolve(validDocument));
+				mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve(validDocuments));
 
 				await buildDeleteFileView(service as any)(req, res);
 
-				assert.strictEqual(mockDb.document.findUnique.mock.callCount(), 1);
+				assert.strictEqual(mockDb.document.findMany.mock.callCount(), 1);
 				assert.strictEqual(res.render.mock.callCount(), 1);
 
 				const [viewPath, viewData] = res.render.mock.calls[0].arguments;
 				assert.strictEqual(viewPath, 'views/cases/case-folders/case-folder/delete-file/confirmation.njk');
-				assert.strictEqual(viewData.pageHeading, 'Delete file');
-				assert.deepStrictEqual(viewData.documents, [validDocument]);
-
-				assert.strictEqual(viewData.backLinkUrl, '/cases/1/folders/2/documents');
-			});
-
-			it('should render success view immediately if document is already deleted', async () => {
-				const req = mockReq();
-				const res = mockRes();
-
-				const deletedDocument = { ...validDocument, deletedAt: new Date() };
-				mockDb.document.findUnique.mock.mockImplementation(() => Promise.resolve(deletedDocument));
-
-				await buildDeleteFileView(service as any)(req, res);
-
-				assert.strictEqual(res.render.mock.callCount(), 1);
-
-				const [viewPath, viewData] = res.render.mock.calls[0].arguments;
-				assert.strictEqual(viewPath, 'views/cases/case-folders/case-folder/delete-file/success.njk');
-				assert.strictEqual(viewData.pageHeading, 'You have deleted the file');
-				assert.strictEqual(viewData.folderUrl, '/cases/1/folders/2/documents');
+				assert.strictEqual(viewData.pageHeading, 'Delete file(s)');
+				assert.deepStrictEqual(viewData.documents, validDocuments);
+				assert.strictEqual(viewData.backLinkUrl, '/cases/case-1/folders/folder-1');
 			});
 		});
 
 		describe('Error Handling', () => {
-			it('should throw "No document found" if DB returns null', async () => {
+			it('should throw error if DB returns empty array (no documents found)', async () => {
 				const req = mockReq();
 				const res = mockRes();
 
-				mockDb.document.findUnique.mock.mockImplementation(() => Promise.resolve(null));
+				mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve([]));
 
 				await assert.rejects(() => buildDeleteFileView(service as any)(req, res), {
-					message: 'No document found for id: doc-123'
+					message: 'No documents found for provided ids'
 				});
-			});
-
-			it('should propagate generic DB errors', async () => {
-				const req = mockReq();
-				const res = mockRes();
-				const dbError = new Error('Connection failed');
-
-				mockDb.document.findUnique.mock.mockImplementation(() => Promise.reject(dbError));
-
-				await assert.rejects(() => buildDeleteFileView(service as any)(req, res), dbError);
 			});
 		});
 	});
 
 	describe('buildDeleteFileController', () => {
 		describe('Validation', () => {
-			it('should throw error if "documentId" param is missing', async () => {
+			it('should throw error if "id" param is missing', async () => {
 				const req = mockReq({ params: {} });
 				const res = mockRes();
 
 				await assert.rejects(() => buildDeleteFileController(service as any)(req, res), {
-					message: 'documentId param required'
+					message: 'id param required'
+				});
+			});
+
+			it('should throw error if document IDs are missing from body', async () => {
+				const req = mockReq({ body: {} });
+				const res = mockRes();
+
+				await assert.rejects(() => buildDeleteFileController(service as any)(req, res), {
+					message: 'documentIds body param required'
 				});
 			});
 		});
 
 		describe('Happy Path', () => {
-			it('should soft delete document and redirect to original URL', async () => {
-				const req = mockReq();
+			it('should soft delete documents, and redirect to folder URL', async () => {
+				const req = mockReq({
+					originalUrl: '/cases/case-1/folders/folder-1/documents/delete'
+				});
 				const res = mockRes();
 
-				mockDb.document.update.mock.mockImplementation(() => Promise.resolve({}));
+				mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve([{ id: 1 }]));
+				mockDb.document.updateMany.mock.mockImplementation(() => Promise.resolve({}));
 
 				await buildDeleteFileController(service as any)(req, res);
 
-				assert.strictEqual(mockDb.document.update.mock.callCount(), 1);
+				assert.strictEqual(mockDb.document.updateMany.mock.callCount(), 1);
 
-				const updateArgs = mockDb.document.update.mock.calls[0].arguments[0];
-				assert.strictEqual(updateArgs.where.id, 'doc-123');
+				const updateArgs = mockDb.document.updateMany.mock.calls[0].arguments[0];
+				assert.deepStrictEqual(updateArgs.where.id.in, ['doc-123']);
 				assert.ok(updateArgs.data.deletedAt instanceof Date);
 
 				assert.strictEqual(res.redirect.mock.callCount(), 1);
-				assert.strictEqual(res.redirect.mock.calls[0].arguments[0], req.originalUrl);
+				assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/cases/case-1/folders/folder-1');
 			});
 		});
 
 		describe('Error Handling', () => {
-			const validDocument = {
-				id: 'doc-123',
-				fileName: 'test.pdf',
-				caseId: 'case-1',
-				Folder: { id: 'folder-1', displayName: 'Evidence' }
-			};
+			const validDocuments = [
+				{
+					id: 'doc-123',
+					fileName: 'test.pdf',
+					caseId: 'case-1',
+					Folder: { id: 'folder-1', displayName: 'Evidence' }
+				}
+			];
 
-			it('should catch update error, log it, re-fetch doc, and render error view', async () => {
-				const req = mockReq();
+			it('should catch update error, log it, re-fetch docs, and render error view', async () => {
+				const req = mockReq({
+					originalUrl: '/cases/case-1/folders/folder-1/documents/delete-confirmation'
+				});
 				const res = mockRes();
 				const updateError = new Error('Update failed');
 
-				mockDb.document.update.mock.mockImplementation(() => Promise.reject(updateError));
-
-				mockDb.document.findUnique.mock.mockImplementation(() => Promise.resolve(validDocument));
+				mockDb.document.updateMany.mock.mockImplementation(() => Promise.reject(updateError));
+				mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve(validDocuments));
 
 				await buildDeleteFileController(service as any)(req, res);
 
 				assert.strictEqual(mockLogger.error.mock.callCount(), 1);
 				assert.strictEqual(mockLogger.error.mock.calls[0].arguments[0].error, updateError);
 
-				assert.strictEqual(mockDb.document.findUnique.mock.callCount(), 1);
+				assert.strictEqual(mockDb.document.findMany.mock.callCount(), 1);
 
 				assert.strictEqual(res.render.mock.callCount(), 1);
 				const [viewPath, viewData] = res.render.mock.calls[0].arguments;
 
 				assert.strictEqual(viewPath, 'views/cases/case-folders/case-folder/delete-file/confirmation.njk');
-				assert.deepStrictEqual(viewData.documents, [validDocument]);
-				assert.strictEqual(viewData.backLinkUrl, '/cases/1/folders/2/documents');
+				assert.deepStrictEqual(viewData.documents, validDocuments);
+				assert.strictEqual(viewData.backLinkUrl, '/cases/case-1/folders/folder-1');
 
 				assert.strictEqual(res.locals.errorSummary.length, 1);
-				assert.strictEqual(res.locals.errorSummary[0].text, 'Failed to delete document, please try again.');
-			});
-
-			it('should handle failure when re-fetching document details after update error', async () => {
-				const req = mockReq();
-				const res = mockRes();
-
-				mockDb.document.update.mock.mockImplementation(() => Promise.reject(new Error('Update failed')));
-
-				const fetchError = new Error('Fetch failed');
-				mockDb.document.findUnique.mock.mockImplementation(() => Promise.reject(fetchError));
-
-				await buildDeleteFileController(service as any)(req, res);
-
-				assert.strictEqual(mockLogger.error.mock.callCount(), 2);
-				assert.strictEqual(mockLogger.error.mock.calls[1].arguments[0].fetchError, fetchError);
-
-				const viewData = res.render.mock.calls[0].arguments[1];
-				assert.deepStrictEqual(viewData.documents, []);
-				assert.strictEqual(viewData.backLinkUrl, '/');
+				assert.strictEqual(res.locals.errorSummary[0].text, 'Failed to delete documents, please try again.');
 			});
 		});
 	});

@@ -14,10 +14,10 @@ export function createRoutes(service: ManageService) {
 	router.get('/', validateIdFormat, asyncHandler(viewFileSearch));
 
 	// Gets "delete" view
-	router.get('/:documentId/delete', asyncHandler(deleteFileView));
+	router.post('/documents/delete-confirmation', asyncHandler(deleteFileView));
 
 	// "Soft deletes" document
-	router.post('/:documentId/delete', asyncHandler(deleteFileController));
+	router.post('/documents/delete', asyncHandler(deleteFileController));
 
 	return router;
 }

@@ -21,7 +21,7 @@ export function buildHandleMoveSelection(): RequestHandler {
 				req,
 				id,
 				{
-					moveFilesErrors: [
+					filesErrors: [
 						{
 							text: 'Select file(s) to move',
 							href: '#'

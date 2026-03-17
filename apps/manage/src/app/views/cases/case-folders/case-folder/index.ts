@@ -36,11 +36,11 @@ export function createRoutes(service: ManageService) {
 	// Mounts "move files" routes
 	router.use('/move-files', moveFileRoutes);
 
-	// Gets "delete" view
-	router.get('/:documentId/delete', asyncHandler(deleteFileView));
+	// Gets "delete" view (POST request but renders a view)
+	router.post('/documents/delete-confirmation', asyncHandler(deleteFileView));
 
 	// "Soft deletes" document
-	router.post('/:documentId/delete', asyncHandler(deleteFileController));
+	router.post('/documents/delete', asyncHandler(deleteFileController));
 
 	return router;
 }

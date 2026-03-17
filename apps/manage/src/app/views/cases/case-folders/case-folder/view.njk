@@ -54,6 +54,13 @@
             type: "success"
         }) }}
     {% endif %}
+    {% if folderUpdates.filesDeleted %}
+        {{ govukNotificationBanner({
+            classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
+            text: "Selected file(s) deleted",
+            type: "success"
+        }) }}
+    {% endif %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full govuk-!-margin-bottom-3">
             <h2 class="govuk-caption-l" data-cy="case-reference">
@@ -146,6 +153,16 @@
                                     "data-cy": "move-selected-btn" 
                                 }
                             }) }}
+
+                            {{ govukButton({
+                                text: "Delete selected",
+                                classes: "govuk-button--secondary",
+                                attributes: { 
+                                    "data-module": "govuk-button",
+                                    "data-cy": "delete-selected-btn",
+                                    "formaction": currentPath + "/documents/delete-confirmation"
+                                }
+                            }) }}
                         {% endif %}
                     </div>
 
@@ -162,7 +179,7 @@
                         </p>
                         <div class="govuk-grid-row">
                             <div class="govuk-grid-column-full">
-                                {{ documentsTable(documents, currentUrl, true, false) }}
+                                {{ documentsTable(documents, currentPath, true, false) }}
                             </div>
                         </div>
                         {# if uiItems.items is <=1 then pagination options not shown #} 
@@ -172,6 +189,10 @@
                     {% else %}
                         <p class="govuk-body" data-cy="no-documents-message">This folder contains 0 documents</p>
                     {% endif %}
+                </form>
+                {# This is the target form for inline deleting, which is needed independent of the main form to avoid it picking up the checkboxes #}
+                <form id="inline-delete-form" action="{{ currentPath }}/documents/delete-confirmation" method="POST" style="display: none;">
+                    {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
                 </form>
             </div>
         </div>
