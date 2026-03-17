@@ -2,14 +2,23 @@ import type { ManageService } from '#service';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import type { Request, Response } from 'express';
 import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
+import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import type { Document } from '@pins/peas-row-commons-database/src/client/client.ts';
 
 /**
- * Grabs document and meta data for displaying,
- * used inside of the main view but also when
- * re-rendering after an error with POST-ing
+ * Extracts document IDs from the request body.
+ * Ensures we always return an array of strings.
  */
-async function getDocumentContext(db: any, documentId: string, req: Request) {
-	const document = await db.document.findUnique({
+function extractDocumentIds(req: Request): string[] {
+	const rawIds = req.body.selectedFiles;
+	return (Array.isArray(rawIds) ? rawIds : [rawIds]).filter(Boolean);
+}
+
+/**
+ * Grabs meta data for all documents to remove
+ */
+async function getDocumentsContext(db: any, documentIds: string[], req: Request) {
+	const documents = await db.document.findMany({
 		select: {
 			id: true,
 			fileName: true,
@@ -22,20 +31,15 @@ async function getDocumentContext(db: any, documentId: string, req: Request) {
 				}
 			}
 		},
-		where: { id: documentId }
+		where: { id: { in: documentIds } }
 	});
 
-	if (!document) {
-		throw new Error(`No document found for id: ${documentId}`);
+	if (!documents || !documents.length) {
+		throw new Error(`No documents found for provided ids`);
 	}
+	const previousUrl = req.originalUrl.split('/documents/delete-confirmation')[0];
 
-	// We no longer generate these from the folder id and case id because this
-	// controller is used in a couple routes and the backlink and currenUrl
-	// need to be dynamic for where they are called
-	const backLinkUrl = req.originalUrl.replace(`/${documentId}/delete`, '');
-	const currentUrl = req.originalUrl.split('?')[0];
-
-	return { document, backLinkUrl, currentUrl };
+	return { documents, previousUrl };
 }
 
 /**
@@ -48,54 +52,50 @@ function renderConfirmationView(res: Response, context: any, errorSummary?: any[
 	}
 
 	return res.render('views/cases/case-folders/case-folder/delete-file/confirmation.njk', {
-		pageHeading: 'Delete file',
-		backLinkUrl: context.backLinkUrl,
-		documents: context.document ? [context.document] : [],
-		currentUrl: context.currentUrl
+		pageHeading: 'Delete file(s)',
+		backLinkUrl: context.previousUrl,
+		documents: context.documents || [],
+		previousUrl: context.previousUrl
 	});
 }
 
-/**
- * Builds the controller that confirms that the user wants to
- * "delete" the file (soft).
- *
- * If the document has already been deleted then we present
- * the view that says "success".
- */
 export function buildDeleteFileView(service: ManageService) {
 	const { db, logger } = service;
 
 	return async (req: Request, res: Response) => {
-		const { documentId } = req.params;
+		const { id } = req.params;
 
-		if (!documentId) {
-			throw new Error('documentId param required');
+		const documentIds = extractDocumentIds(req);
+
+		// If no files, just refresh and show the error.
+		if (!documentIds?.length) {
+			addSessionData(
+				req,
+				id,
+				{
+					filesErrors: [
+						{
+							text: 'Select file(s) to delete',
+							href: '#'
+						}
+					]
+				},
+				'folder'
+			);
+
+			return res.redirect(req.baseUrl);
 		}
 
 		try {
-			const context = await getDocumentContext(db, documentId, req);
+			const context = await getDocumentsContext(db, documentIds, req);
 
-			// If we have already deleted this document then simply show success
-			if (context.document.deletedAt) {
-				// If we are returning to 'search-results' rather than 'folder'
-				// make sure this is reflected in messaging.
-				const returnMessage = context.backLinkUrl.includes('search-results') ? 'search results' : 'folder';
-
-				return res.render('views/cases/case-folders/case-folder/delete-file/success.njk', {
-					pageHeading: 'You have deleted the file',
-					folderUrl: context.backLinkUrl,
-					returnMessage
-				});
-			}
-
-			// Otherwise show the confirmation screen
 			return renderConfirmationView(res, context);
 		} catch (error: any) {
 			wrapPrismaError({
 				error,
 				logger,
-				message: 'fetching document',
-				logParams: { documentId }
+				message: 'fetching documents',
+				logParams: { documentIds }
 			});
 			throw error;
 		}
@@ -112,46 +112,47 @@ export function buildDeleteFileController(service: ManageService) {
 	const { db, logger, audit } = service;
 
 	return async (req: Request, res: Response) => {
-		const { documentId } = req.params;
+		const { id } = req.params;
 
-		if (!documentId) throw new Error('documentId param required');
+		if (!id) {
+			throw new Error('id param required');
+		}
+
+		const documentIds = extractDocumentIds(req);
+
+		if (!documentIds.length) throw new Error('documentIds body param required');
+
+		let context;
 
 		try {
-			await db.document.update({
-				where: { id: documentId },
+			context = await getDocumentsContext(db, documentIds, req);
+
+			await db.document.updateMany({
+				where: { id: { in: documentIds } },
 				data: {
 					deletedAt: new Date()
 				}
 			});
 
-			await audit.record({
-				caseId: req.params.id,
-				action: AUDIT_ACTIONS.FILE_DELETED,
-				userId: req?.session?.account?.localAccountId
-			});
+			await Promise.all(
+				context.documents.map((doc: Document) =>
+					audit.record({
+						caseId: id,
+						action: AUDIT_ACTIONS.FILE_DELETED,
+						userId: req?.session?.account?.localAccountId,
+						metadata: { fileName: doc.fileName }
+					})
+				)
+			);
 
-			return res.redirect(req.originalUrl);
+			addSessionData(req, id, { filesDeleted: true }, 'folder');
+
+			return res.redirect(req.originalUrl.split('/documents/delete')[0]);
 		} catch (error) {
-			logger.error({ error, documentId }, 'Failed to delete document');
+			logger.error({ error, documentIds }, 'Failed to delete documents');
 
-			const errorMessage = [{ text: 'Failed to delete document, please try again.' }];
-
-			try {
-				const context = await getDocumentContext(db, documentId, req);
-				return renderConfirmationView(res, context, errorMessage);
-			} catch (fetchError) {
-				logger.error({ fetchError }, 'Failed to refetch document for error view');
-
-				return renderConfirmationView(
-					res,
-					{
-						document: null,
-						backLinkUrl: '/',
-						currentUrl: '/'
-					},
-					errorMessage
-				);
-			}
+			const errorMessage = [{ text: 'Failed to delete documents, please try again.' }];
+			return renderConfirmationView(res, context || { documents: [], previousUrl: '/' }, errorMessage);
 		}
 	};
 }

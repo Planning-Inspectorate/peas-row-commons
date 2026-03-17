@@ -93,3 +93,41 @@ $font-family: arial, helvetica, sans-serif;
 		padding-bottom: 0;
 	}
 }
+
+/**
+* We need to trigger a POST request with what looks like an <a> tag, passing in data.
+* To achieve this I have done a button to look like a GOVUK <a> tag to keep accessibility
+* standards (button and form pairing), although appreciate there will be critiques of this idea
+* too.
+*/
+.govuk-button-as-link {
+	background: transparent;
+	border: none;
+	color: #1d70b8;
+	cursor: pointer;
+	display: inline;
+	font-family: inherit;
+	font-size: inherit;
+	margin: 0;
+	padding: 0;
+	text-decoration: underline;
+	text-decoration-thickness: max(1px, 0.0625rem);
+	text-underline-offset: 0.1578em;
+	-webkit-appearance: none;
+	appearance: none;
+
+	&:hover {
+		color: #003078;
+		text-decoration-thickness: max(3px, 0.1875rem, 0.12em);
+	}
+
+	&:focus {
+		background-color: #ffdd00;
+		color: #0b0c0c;
+		box-shadow:
+			0 -2px #ffdd00,
+			0 4px #0b0c0c;
+		outline: none;
+		text-decoration: none;
+	}
+}

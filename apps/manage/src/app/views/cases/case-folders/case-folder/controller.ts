@@ -30,7 +30,7 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 			throw new Error('folderId param required');
 		}
 
-		const [folderUpdated, folderCreated, folderDeleted, folderRenamed, filesMoved, errorSummary] =
+		const [folderUpdated, folderCreated, folderDeleted, folderRenamed, filesMoved, filesDeleted, errorSummary] =
 			readAndClearSessionData(req);
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
@@ -148,7 +148,8 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 				folderCreated,
 				folderDeleted,
 				folderRenamed,
-				filesMoved
+				filesMoved,
+				filesDeleted
 			},
 			errorSummary,
 			breadcrumbItems
@@ -209,18 +210,20 @@ function readAndClearSessionData(req: Request) {
 	const folderUpdated = readSessionData(req, folderId, 'updated', false, 'folder');
 	const folderRenamed = readSessionData(req, folderId, 'renamed', false, 'folder');
 	const filesMoved = readSessionData(req, folderId, 'filesMoved', false, 'folder');
+	const filesDeleted = readSessionData(req, id, 'filesDeleted', false, 'folder');
 	const folderCreated = readSessionData(req, id, 'created', false, 'folder');
 	const folderDeleted = readSessionData(req, id, 'deleted', false, 'folder');
 
-	const errorSummary = readSessionData(req, id, 'moveFilesErrors', false, 'folder');
+	const errorSummary = readSessionData(req, id, 'filesErrors', false, 'folder');
 
 	clearSessionData(req, folderId, 'updated', 'folder');
 	clearSessionData(req, folderId, 'renamed', 'folder');
 	clearSessionData(req, folderId, 'filesMoved', 'folder');
+	clearSessionData(req, id, 'filesDeleted', 'folder');
 	clearSessionData(req, id, 'created', 'folder');
 	clearSessionData(req, id, 'deleted', 'folder');
 
-	clearSessionData(req, id, 'moveFilesErrors', 'folder');
+	clearSessionData(req, id, 'filesErrors', 'folder');
 
-	return [folderUpdated, folderCreated, folderDeleted, folderRenamed, filesMoved, errorSummary];
+	return [folderUpdated, folderCreated, folderDeleted, folderRenamed, filesMoved, filesDeleted, errorSummary];
 }

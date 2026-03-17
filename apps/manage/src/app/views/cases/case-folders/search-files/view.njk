@@ -13,6 +13,13 @@
 {% endblock %}
 
 {% block content %}
+{% if filesDeleted %}
+    {{ govukNotificationBanner({
+        classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
+        text: "Selected file(s) deleted",
+        type: "success"
+    }) }}
+{% endif %}
 <div class="govuk-body">
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full govuk-!-margin-bottom-3">
@@ -63,7 +70,9 @@
                 </div>
                 <div class="govuk-grid-row">
                     <div class="govuk-grid-column-full">
-                        {{ documentsTable(documents, currentUrl, false, true) }}
+                        <form id="inline-delete-form" action="{{ currentUrl }}/documents/delete-confirmation" method="POST">
+                            {{ documentsTable(documents, currentUrl, false, true) }}
+                        </form>
                     </div>
                 </div>
                 {# if uiItems.items is <=1 then pagination options not shown #} 

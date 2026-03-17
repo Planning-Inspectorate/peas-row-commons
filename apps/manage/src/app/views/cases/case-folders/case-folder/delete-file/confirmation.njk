@@ -6,14 +6,19 @@
 
 
 {% block pageTitle %}
-    Document - Delete Document
+    Document - Delete Documents
 {% endblock %}
 
 {% block pageContent %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
 
-            <form action="{{ currentUrl }}" method="post" novalidate>
+            <form action="{{ previousUrl }}/documents/delete" method="post" novalidate>
+                
+                {% for doc in documents %}
+                    <input type="hidden" name="selectedFiles" value="{{ doc.id }}">
+                {% endfor %}
+
                 {{ deleteTable(documents) }}
 
                 {{ govukWarningText({
@@ -22,7 +27,7 @@
                 }) }}
 
                 {{ govukButton({
-                    text: "Delete file",
+                    text: "Delete file(s)",
                     classes: "govuk-button--warning"
                 }) }}
                 
