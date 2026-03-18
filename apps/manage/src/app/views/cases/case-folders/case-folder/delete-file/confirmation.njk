@@ -13,7 +13,7 @@
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
 
-            <form action="{{ previousUrl }}/documents/delete" method="post" novalidate>
+            <form action="{{ deleteUrl }}" method="post" novalidate>
                 
                 {% for doc in documents %}
                     <input type="hidden" name="selectedFiles" value="{{ doc.id }}">

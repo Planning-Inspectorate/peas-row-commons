@@ -70,7 +70,7 @@
                 </div>
                 <div class="govuk-grid-row">
                     <div class="govuk-grid-column-full">
-                        <form id="inline-delete-form" action="{{ currentUrl }}/documents/delete-confirmation" method="POST">
+                        <form id="inline-delete-form" action="{{ currentUrl }}/documents/delete-confirmation?searchCriteria={{searchValue}}" method="POST">
                             {{ documentsTable(documents, currentUrl, false, true) }}
                         </form>
                     </div>
