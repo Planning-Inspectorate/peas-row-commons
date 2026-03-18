@@ -46,6 +46,7 @@ export function createJourney(questions: Record<string, any>, response: JourneyR
 				.addQuestion(questions.consentSought)
 				.addQuestion(questions.priority)
 				.addQuestion(questions.inspectorBand)
+				.addQuestion(questions.procedureDetails, procedureManageList)
 				.addQuestion(questions.relatedCaseDetails, new ManageListSection().addQuestion(questions.addRelatedCase))
 				.addQuestion(
 					questions.linkedCaseDetails,
@@ -101,7 +102,6 @@ export function createJourney(questions: Record<string, any>, response: JourneyR
 						.addQuestion(questions.contactAddress)
 						.addQuestion(questions.contactContactDetails)
 				),
-			new Section('Procedures', 'procedures').addQuestion(questions.procedureDetails, procedureManageList),
 			...dynamicProcedureSections,
 			new Section('Outcome overview', 'outcome')
 				.addQuestion(questions.outcomeDetails, outcomeManageList)
