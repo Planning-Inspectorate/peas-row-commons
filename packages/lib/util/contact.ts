@@ -11,7 +11,8 @@ export interface PersonConfig {
 	db: string;
 	url: string;
 	label: string;
-	hint?: string;
+	hintPrefix?: string;
+	orgNameLabel?: string;
 	viewData?: Record<string, unknown>;
 }
 
@@ -142,7 +143,15 @@ export function handleContacts(
 /**
  * Boilerplate for creating a "contact" question in questions.ts
  */
-export const createPersonQuestions = ({ section, db, url, label, hint, viewData = {} }: PersonConfig) => {
+export const createPersonQuestions = ({
+	section,
+	db,
+	url,
+	label,
+	orgNameLabel,
+	hintPrefix,
+	viewData = {}
+}: PersonConfig) => {
 	const labelLower = label.toLowerCase();
 
 	return {
@@ -152,12 +161,17 @@ export const createPersonQuestions = ({ section, db, url, label, hint, viewData 
 			question: `Who is the ${labelLower}?`,
 			fieldName: `${section}Name`,
 			url: `${url}-name`,
-			hint: hint || 'Enter the name of the individual, the organisation, or both.',
-			viewData: { ...viewData, tableHeader: 'Name' },
+			html: 'views/layouts/person-hint.njk',
+			viewData: {
+				...viewData,
+				tableHeader: 'Name',
+				hintPrefix: hintPrefix || null,
+				orgNameLabel: orgNameLabel || `${label} company name`
+			},
 			inputFields: [
 				{ fieldName: `${db}FirstName`, label: 'First name' },
 				{ fieldName: `${db}LastName`, label: 'Last name' },
-				{ fieldName: `${db}OrgName`, label: `${label} company name` }
+				{ fieldName: `${db}OrgName`, label: orgNameLabel || `${label} company name` }
 			],
 			validators: [
 				new AtLeastOneFieldValidator({
