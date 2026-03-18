@@ -1,6 +1,7 @@
 import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildDeleteFileView, buildDeleteFileController } from './controller.ts';
+import { ManageService } from '#service';
 
 describe('Delete File Controllers', () => {
 	const mockLogger = {
@@ -33,6 +34,7 @@ describe('Delete File Controllers', () => {
 			baseUrl: '/cases/case-1/folders/folder-1/documents',
 			originalUrl: '/cases/case-1/folders/folder-1/documents/delete-confirmation',
 			session: { account: { localAccountId: 'user-1' } },
+			query: {},
 			...overrides
 		}) as any;
 
@@ -91,6 +93,22 @@ describe('Delete File Controllers', () => {
 				assert.deepStrictEqual(viewData.documents, validDocuments);
 				assert.strictEqual(viewData.backLinkUrl, '/cases/case-1/folders/folder-1');
 			});
+
+			it('should persist searchCriteria in backLinkUrl and deleteUrl if present in query', async () => {
+				const req = mockReq({ query: { searchCriteria: 'report' } });
+				const res = mockRes();
+
+				mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve(validDocuments));
+
+				await buildDeleteFileView(service as unknown as ManageService)(req, res);
+
+				assert.strictEqual(res.render.mock.callCount(), 1);
+
+				const viewData = res.render.mock.calls[0].arguments[1];
+
+				assert.strictEqual(viewData.backLinkUrl, '/cases/case-1/folders/folder-1?searchCriteria=report');
+				assert.strictEqual(viewData.deleteUrl, '/cases/case-1/folders/folder-1/documents/delete?searchCriteria=report');
+			});
 		});
 
 		describe('Error Handling', () => {
@@ -148,6 +166,26 @@ describe('Delete File Controllers', () => {
 
 				assert.strictEqual(res.redirect.mock.callCount(), 1);
 				assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/cases/case-1/folders/folder-1');
+			});
+
+			it('should persist searchCriteria in the redirect URL after a successful delete', async () => {
+				const req = mockReq({
+					originalUrl: '/cases/case-1/folders/folder-1/documents/delete',
+					query: { searchCriteria: 'report' }
+				});
+				const res = mockRes();
+
+				mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve([{ id: 1 }]));
+				mockDb.document.updateMany.mock.mockImplementation(() => Promise.resolve({}));
+
+				await buildDeleteFileController(service as unknown as ManageService)(req, res);
+
+				assert.strictEqual(res.redirect.mock.callCount(), 1);
+
+				assert.strictEqual(
+					res.redirect.mock.calls[0].arguments[0],
+					'/cases/case-1/folders/folder-1?searchCriteria=report'
+				);
 			});
 		});
 
