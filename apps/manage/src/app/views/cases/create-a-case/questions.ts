@@ -275,10 +275,8 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			db: 'applicant',
 			url: 'applicant',
 			label: 'Applicant or appellant',
-			hint: `
-				Enter the name of the main party. This could be an applicant, appellant or server.
-				Enter the name of the individual, the company or both.
-			`
+			hintPrefix: 'Enter the name of the main party. This could also be a server.',
+			orgNameLabel: 'Joint applicants/appellants or company name'
 		})
 	};
 

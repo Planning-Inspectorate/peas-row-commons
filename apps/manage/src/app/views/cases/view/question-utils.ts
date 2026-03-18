@@ -561,10 +561,8 @@ export const CASE_DETAILS_QUESTIONS = {
 		db: 'applicant',
 		url: 'applicant',
 		label: 'Applicant or appellant',
-		hint: `
-			Enter the name of the main party. This could be an applicant, appellant or server.
-			Enter the name of the individual, the company or both.
-		`,
+		hintPrefix: 'Enter the name of the main party. This could also be a server.',
+		orgNameLabel: 'Joint applicants/appellants or company name',
 		viewData: {
 			continueButtonText: 'Continue'
 		}
@@ -1091,6 +1089,7 @@ export const KEY_CONTACTS_QUESTIONS = {
 		db: 'objector',
 		url: 'objector',
 		label: 'Objector',
+		orgNameLabel: 'Joint objectors or company name',
 		viewData: {
 			continueButtonText: 'Continue'
 		}
@@ -1150,6 +1149,7 @@ export const KEY_CONTACTS_QUESTIONS = {
 		db: 'contact',
 		url: 'contact',
 		label: 'Contact',
+		orgNameLabel: 'Joint contacts or company name',
 		viewData: {
 			continueButtonText: 'Continue'
 		}

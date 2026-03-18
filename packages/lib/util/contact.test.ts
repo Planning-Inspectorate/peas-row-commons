@@ -142,8 +142,7 @@ describe('createPersonQuestions', () => {
 			section: 'applicantDetails',
 			db: 'applicant',
 			url: 'applicant',
-			label: 'Applicant',
-			hint: 'Custom hint text'
+			label: 'Applicant'
 		});
 
 		assert.ok(result.applicantDetailsName);
@@ -152,7 +151,6 @@ describe('createPersonQuestions', () => {
 
 		assert.strictEqual(result.applicantDetailsName.title, 'Applicant');
 		assert.strictEqual(result.applicantDetailsName.question, 'Who is the applicant?');
-		assert.strictEqual(result.applicantDetailsName.hint, 'Custom hint text');
 
 		assert.strictEqual(result.applicantDetailsContactDetails.title, 'Applicant contact details');
 		assert.strictEqual(result.applicantDetailsContactDetails.question, 'Applicant contact details (optional)');
@@ -191,14 +189,34 @@ describe('createPersonQuestions', () => {
 		assert.strictEqual(contactInputFields[1].fieldName, 'agentDbPrefixTelephoneNumber');
 	});
 
-	it('should use a default hint if one is not provided', () => {
+	it('should pass orgNameLabel through viewData for the html partial', () => {
 		const result = createPersonQuestions({
 			section: 'appellant',
 			db: 'appellant',
 			url: 'appellant',
-			label: 'Appellant'
+			label: 'Appellant',
+			orgNameLabel: 'Joint appellants or company name'
 		});
 
-		assert.strictEqual(result.appellantName.hint, 'Enter the name of the individual, the organisation, or both.');
+		assert.strictEqual(
+			(result.appellantName.viewData as Record<string, unknown>).orgNameLabel,
+			'Joint appellants or company name'
+		);
+	});
+
+	it('should pass hintPrefix through viewData when provided', () => {
+		const result = createPersonQuestions({
+			section: 'applicant',
+			db: 'applicant',
+			url: 'applicant',
+			label: 'Applicant',
+			hintPrefix: 'Enter the name of the main party.',
+			orgNameLabel: 'Joint applicants/appellants or company name'
+		});
+
+		assert.strictEqual(
+			(result.applicantName.viewData as Record<string, unknown>).hintPrefix,
+			'Enter the name of the main party.'
+		);
 	});
 });
