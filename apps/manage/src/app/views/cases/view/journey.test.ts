@@ -67,6 +67,7 @@ describe('case details journey', () => {
 					'consentSought',
 					'priority',
 					'inspectorBand',
+					'procedureDetails',
 					'relatedCaseDetails',
 					'linkedCaseDetails'
 				]
@@ -111,11 +112,6 @@ describe('case details journey', () => {
 				title: 'Key contacts',
 				segment: 'key-contacts',
 				questions: ['objectorDetails', 'contactDetails']
-			},
-			{
-				title: 'Procedures',
-				segment: 'procedures',
-				questions: ['procedureDetails']
 			}
 		];
 
@@ -227,64 +223,34 @@ describe('case details journey', () => {
 		assert.ok(abeyanceIdx < advertisedIdx, 'abeyancePeriod should come before advertisedModificationStatus');
 	});
 
-	it('should have a Procedures section with procedureDetails as a manage list question', () => {
+	it('should have procedureDetails in the Overview section before relatedCaseDetails', () => {
 		const mockRes = {};
 		const mockReq = { params: { id: '123' }, baseUrl: '/case/123/details' };
-
-		const mockQuestions = new Proxy(
-			{},
-			{
-				get: (_target, prop) => ({ fieldName: prop })
-			}
-		);
+		const mockQuestions = new Proxy({}, { get: (_target, prop) => ({ fieldName: prop }) });
 
 		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any);
 
-		const proceduresSection = journey.sections.find((s: any) => s.name === 'Procedures');
-		assert.ok(proceduresSection, 'Should have a Procedures section');
-		assert.strictEqual(proceduresSection.segment, 'procedures');
-		assert.strictEqual(proceduresSection.questions.length, 1);
-		assert.strictEqual(proceduresSection.questions[0].fieldName, 'procedureDetails');
+		const overviewSection = journey.sections.find((s: any) => s.name === 'Overview');
+		const fieldNames = overviewSection.questions.map((q: any) => q.fieldName);
+		const procedureIdx = fieldNames.indexOf('procedureDetails');
+		const relatedIdx = fieldNames.indexOf('relatedCaseDetails');
+
+		assert.ok(procedureIdx >= 0, 'procedureDetails should exist in Overview');
+		assert.ok(procedureIdx < relatedIdx, 'procedureDetails should come before relatedCaseDetails');
 	});
 
-	it('should place dynamic procedure sections between Procedures and Outcome overview', () => {
+	it('should place dynamic procedure sections between Overview and Outcome overview', () => {
 		const mockRes = {};
 		const mockReq = { params: { id: '123' }, baseUrl: '/case/123/details' };
-
-		const mockQuestions = new Proxy(
-			{},
-			{
-				get: (_target, prop) => ({ fieldName: prop })
-			}
-		);
+		const mockQuestions = new Proxy({}, { get: (_target, prop) => ({ fieldName: prop }) });
 
 		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any);
 
-		const proceduresIdx = journey.sections.findIndex((s: any) => s.name === 'Procedures');
+		const overviewIdx = journey.sections.findIndex((s: any) => s.name === 'Overview');
 		const outcomeIdx = journey.sections.findIndex((s: any) => s.name === 'Outcome overview');
 
-		assert.ok(proceduresIdx >= 0, 'Procedures section should exist');
+		assert.ok(overviewIdx >= 0, 'Overview section should exist');
 		assert.ok(outcomeIdx >= 0, 'Outcome overview section should exist');
-		assert.ok(outcomeIdx > proceduresIdx, 'Outcome overview should come after Procedures');
-	});
-
-	it('should place Procedures section after Key contacts', () => {
-		const mockRes = {};
-		const mockReq = { params: { id: '123' }, baseUrl: '/case/123/details' };
-
-		const mockQuestions = new Proxy(
-			{},
-			{
-				get: (_target, prop) => ({ fieldName: prop })
-			}
-		);
-
-		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any);
-
-		const keyContactsIdx = journey.sections.findIndex((s: any) => s.name === 'Key contacts');
-		const proceduresIdx = journey.sections.findIndex((s: any) => s.name === 'Procedures');
-
-		assert.ok(keyContactsIdx >= 0, 'Key contacts section should exist');
-		assert.ok(proceduresIdx > keyContactsIdx, 'Procedures should come after Key contacts');
+		assert.ok(outcomeIdx > overviewIdx, 'Outcome overview should come after Overview');
 	});
 });
