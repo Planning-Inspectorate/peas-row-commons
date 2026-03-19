@@ -1213,7 +1213,11 @@ export const PROCEDURE_MANAGE_LIST_QUESTION = {
 			{
 				header: 'Inspector',
 				fieldName: 'inspectorId',
-				format: (value: string, row: Record<string, unknown>): string => {
+				format: (
+					value: string,
+					row: Record<string, unknown>,
+					{ getQuestion, mockJourney }: FormattingContext
+				): string => {
 					if (
 						row.procedureTypeId === PROCEDURES_ID.ADMIN_IN_HOUSE &&
 						row.adminProcedureType === ADMIN_PROCEDURES_ID.CASE_OFFICER
@@ -1225,8 +1229,13 @@ export const PROCEDURE_MANAGE_LIST_QUESTION = {
 						return 'Not allocated yet';
 					}
 
-					// For real inspector IDs, the table will need to resolve the display name
-					// from the options — return the value as-is and let the existing logic handle it
+					// Grab the relevant question and attempt to format it
+					const question = getQuestion('inspectorId');
+					if (question && row['inspectorId']) {
+						const formatted = question.formatAnswerForSummary('', mockJourney, row['inspectorId']);
+						return `${formatted[0]?.value}`;
+					}
+
 					return value || '—';
 				}
 			},
