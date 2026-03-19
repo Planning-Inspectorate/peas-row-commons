@@ -1419,7 +1419,7 @@ export const PROCEDURE_QUESTIONS = {
 		}
 	},
 	procedureHearingVenue: {
-		type: COMPONENT_TYPES.ADDRESS,
+		type: CUSTOM_COMPONENTS.ADDRESS_WITH_ID,
 		title: 'Hearing venue',
 		question: 'Where is the hearing?',
 		fieldName: 'hearingVenue',
@@ -1583,7 +1583,7 @@ export const PROCEDURE_QUESTIONS = {
 		}
 	},
 	procedureInquiryVenue: {
-		type: COMPONENT_TYPES.ADDRESS,
+		type: CUSTOM_COMPONENTS.ADDRESS_WITH_ID,
 		title: 'Inquiry venue',
 		question: 'What is the inquiry venue?',
 		fieldName: 'inquiryVenue',
@@ -1804,7 +1804,7 @@ export const PROCEDURE_QUESTIONS = {
 		}
 	},
 	procedureCmcVenue: {
-		type: COMPONENT_TYPES.ADDRESS,
+		type: CUSTOM_COMPONENTS.ADDRESS_WITH_ID,
 		title: 'Case management conference venue',
 		question: 'Where is the case management conference?',
 		fieldName: 'conferenceVenue',

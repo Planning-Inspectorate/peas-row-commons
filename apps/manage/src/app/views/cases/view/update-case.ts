@@ -18,6 +18,8 @@ import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_
 import { remapFlattenedFieldsToArray } from '@pins/peas-row-commons-lib/util/remap-flattened-fields.ts';
 import { toDateOrNull } from '@pins/peas-row-commons-lib/util/dates.ts';
 import { mapProceduresToArray, sortProceduresChronologically } from './view-model.ts';
+import { mapAddressViewModelToDb } from '@pins/peas-row-commons-lib/util/address.ts';
+import type { AddressItem } from '@pins/peas-row-commons-lib/util/types.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -443,14 +445,26 @@ export function handleProcedureDetails(flatData: Record<string, unknown>, prisma
 			deadlineForConsentDate: proc.deadlineForConsentDate ? new Date(proc.deadlineForConsentDate as string) : null
 		};
 
+		const hearingPayload = getVenuePayload(proc.hearingVenue);
+		const inquiryPayload = getVenuePayload(proc.inquiryVenue);
+		const conferencePayload = getVenuePayload(proc.conferenceVenue);
+
 		providedIds.push(proc.id);
 
 		upserts.push({
 			where: { id: proc.id },
-			update: procedureData,
+			update: {
+				...procedureData,
+				...(hearingPayload.updateVenue && { HearingVenue: hearingPayload.updateVenue }),
+				...(inquiryPayload.updateVenue && { InquiryVenue: inquiryPayload.updateVenue }),
+				...(conferencePayload.updateVenue && { ConferenceVenue: conferencePayload.updateVenue })
+			},
 			create: {
 				...procedureData,
-				id: proc.id
+				id: proc.id,
+				...(hearingPayload.createVenue && { HearingVenue: hearingPayload.createVenue }),
+				...(inquiryPayload.createVenue && { InquiryVenue: inquiryPayload.createVenue }),
+				...(conferencePayload.createVenue && { ConferenceVenue: conferencePayload.createVenue })
 			}
 		});
 	}
@@ -467,6 +481,28 @@ export function handleProcedureDetails(flatData: Record<string, unknown>, prisma
 	};
 
 	delete flatData.procedureDetails;
+}
+
+/**
+ * Determines whether to return a create / update based on
+ * whether we already have an ID for the address
+ */
+function getVenuePayload(venue: AddressItem) {
+	if (!venue) return { createVenue: undefined, updateVenue: undefined };
+
+	const mappedVenue = mapAddressViewModelToDb(venue);
+
+	if (venue.id) {
+		return {
+			createVenue: { connect: { id: venue.id } },
+			updateVenue: { update: mappedVenue }
+		};
+	}
+
+	return {
+		createVenue: { create: mappedVenue },
+		updateVenue: { create: mappedVenue }
+	};
 }
 
 /**

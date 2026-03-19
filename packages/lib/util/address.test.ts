@@ -20,7 +20,8 @@ describe('Address Utils', () => {
 				addressLine2: 'Westminster',
 				townCity: 'London',
 				county: 'Greater London',
-				postcode: 'SW1A 2AA'
+				postcode: 'SW1A 2AA',
+				id: undefined
 			});
 		});
 

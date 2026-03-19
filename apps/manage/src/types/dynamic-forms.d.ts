@@ -435,6 +435,32 @@ declare module '@planning-inspectorate/dynamic-forms/src/components/date-time/qu
 	}
 }
 
+declare module '@planning-inspectorate/dynamic-forms/src/components/address/question.js' {
+	import type { Question, QuestionParameters } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+
+	export default class AddressQuestion extends Question {
+		requiredFields?: Record<string, boolean>;
+
+		addressLabels: {
+			addressLine1: string;
+			addressLine2: string;
+			townCity: string;
+			county: string;
+			postcode: string;
+		};
+
+		constructor(params: QuestionParameters);
+
+		answerForViewModel(answers: Record<string, unknown>): {
+			addressLine1: string;
+			addressLine2: string;
+			townCity: string;
+			county: string;
+			postcode: string;
+		};
+	}
+}
+
 declare module '@planning-inspectorate/dynamic-forms/src/lib/date-utils.js' {
 	export function parseDateInput(params: any): any;
 	export function formatDateForDisplay(date: any, params: any): any;
