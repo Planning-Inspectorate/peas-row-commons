@@ -46,14 +46,15 @@ describe('handleContacts', () => {
 			prefix: 'contact',
 			dynamicTypeField: 'contactType',
 			hasStatus: false,
-			deleteFilter: { contactTypeId: { not: CONTACT_TYPE_ID.OBJECTOR } }
+			deleteFilter: { contactTypeId: { notIn: [CONTACT_TYPE_ID.OBJECTOR] } }
 		}
 	] as any;
 
-	it('should transform fixed-type contacts (Objectors) correctly', () => {
+	it('should transform fixed-type contacts (Objectors) correctly into upserts', () => {
 		const flatData = {
 			objectorDetails: [
 				{
+					id: 'obj-123',
 					objectorFirstName: 'Jane',
 					objectorLastName: 'Doe',
 					objectorStatusId: 'valid-status',
@@ -70,23 +71,53 @@ describe('handleContacts', () => {
 		const contactsUpdate = prismaPayload.Contacts as any;
 		assert.ok(contactsUpdate, 'Contacts object should be created');
 
-		assert.deepStrictEqual(contactsUpdate.deleteMany.OR, [{ contactTypeId: CONTACT_TYPE_ID.OBJECTOR }]);
+		assert.deepStrictEqual(contactsUpdate.deleteMany.AND, [
+			{ OR: [{ contactTypeId: CONTACT_TYPE_ID.OBJECTOR }] },
+			{ id: { notIn: ['obj-123'] } }
+		]);
 
-		assert.strictEqual(contactsUpdate.create.length, 1);
-		const contact = contactsUpdate.create[0];
-		assert.strictEqual(contact.firstName, 'Jane');
-		assert.deepStrictEqual(contact.ContactType, { connect: { id: CONTACT_TYPE_ID.OBJECTOR } });
-		assert.deepStrictEqual(contact.ObjectorStatus, { connect: { id: 'valid-status' } });
-		assert.deepStrictEqual(contact.Address.create.line1, '123 Fake St');
+		assert.strictEqual(contactsUpdate.upsert.length, 1);
+		const contactUpsert = contactsUpdate.upsert[0];
+
+		assert.strictEqual(contactUpsert.create.id, 'obj-123');
+		assert.strictEqual(contactUpsert.create.firstName, 'Jane');
+		assert.deepStrictEqual(contactUpsert.create.ContactType, { connect: { id: CONTACT_TYPE_ID.OBJECTOR } });
+		assert.deepStrictEqual(contactUpsert.create.ObjectorStatus, { connect: { id: 'valid-status' } });
+		assert.deepStrictEqual(contactUpsert.create.Address.create.line1, '123 Fake St');
+
+		assert.strictEqual(contactUpsert.update.firstName, 'Jane');
+		assert.deepStrictEqual(contactUpsert.update.Address.create.line1, '123 Fake St');
 
 		assert.strictEqual(flatData.objectorDetails, undefined);
 		assert.strictEqual(flatData.someOtherKey, 'preserved');
 	});
 
-	it('should transform dynamic-type contacts (General Contacts) correctly', () => {
+	it('should use Address update/connect if an address ID is provided', () => {
+		const flatData = {
+			objectorDetails: [
+				{
+					id: 'obj-123',
+					objectorFirstName: 'Jane',
+					objectorAddress: { id: 'addr-456', addressLine1: '123 Fake St' }
+				}
+			]
+		};
+
+		const prismaPayload: Prisma.CaseUpdateInput = {};
+
+		handleContacts(flatData, prismaPayload, MOCK_MAPPINGS);
+
+		const contactUpsert = (prismaPayload.Contacts as any).upsert[0];
+
+		assert.deepStrictEqual(contactUpsert.create.Address.connect, { id: 'addr-456' });
+		assert.deepStrictEqual(contactUpsert.update.Address.update.line1, '123 Fake St');
+	});
+
+	it('should transform dynamic-type contacts (General Contacts) correctly into upserts', () => {
 		const flatData = {
 			generalContactDetails: [
 				{
+					id: 'gen-123',
 					contactFirstName: 'Bob',
 					contactType: 'lpa-contact-id'
 				}
@@ -100,19 +131,23 @@ describe('handleContacts', () => {
 		const contactsUpdate = prismaPayload.Contacts as any;
 		assert.ok(contactsUpdate);
 
-		assert.strictEqual(contactsUpdate.create.length, 1);
-		const contact = contactsUpdate.create[0];
+		assert.strictEqual(contactsUpdate.upsert.length, 1);
+		const contactUpsert = contactsUpdate.upsert[0];
 
-		assert.deepStrictEqual(contact.ContactType, { connect: { id: 'lpa-contact-id' } });
-		assert.strictEqual(contact.firstName, 'Bob');
+		assert.deepStrictEqual(contactUpsert.create.ContactType, { connect: { id: 'lpa-contact-id' } });
+		assert.strictEqual(contactUpsert.create.firstName, 'Bob');
 
-		assert.strictEqual(contact.ObjectorStatus, undefined);
-		assert.strictEqual(contact.Address, undefined);
+		assert.strictEqual(contactUpsert.create.ObjectorStatus, undefined);
+		assert.strictEqual(contactUpsert.create.Address, undefined);
 	});
 
-	it('should silently filter out contacts missing a type ID', () => {
+	it('should silently filter out contacts missing a type ID or contact ID', () => {
 		const flatData = {
-			generalContactDetails: [{ contactFirstName: 'Bob', contactType: 'lpa-contact-id' }, { contactFirstName: 'Ghost' }]
+			generalContactDetails: [
+				{ id: 'valid-1', contactFirstName: 'Bob', contactType: 'lpa-contact-id' },
+				{ id: 'missing-type', contactFirstName: 'Ghost' },
+				{ contactFirstName: 'Missing-id', contactType: 'lpa-contact-id' }
+			]
 		};
 
 		const prismaPayload: Prisma.CaseUpdateInput = {};
@@ -121,8 +156,10 @@ describe('handleContacts', () => {
 
 		const contactsUpdate = prismaPayload.Contacts as any;
 
-		assert.strictEqual(contactsUpdate.create.length, 1);
-		assert.strictEqual(contactsUpdate.create[0].firstName, 'Bob');
+		assert.strictEqual(contactsUpdate.upsert.length, 1);
+		assert.strictEqual(contactsUpdate.upsert[0].create.firstName, 'Bob');
+
+		assert.deepStrictEqual(contactsUpdate.deleteMany.AND[1].id.notIn, ['valid-1']);
 	});
 
 	it('should do nothing if flatData does not contain any contact keys', () => {

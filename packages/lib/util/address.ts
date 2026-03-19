@@ -4,6 +4,8 @@
 export function mapAddressDbToViewModel(address: any) {
 	if (!address || typeof address !== 'object') return null;
 	return {
+		// We pass in `id` so that we can use it for upserting on save.
+		id: address.id,
 		addressLine1: address.line1,
 		addressLine2: address.line2,
 		townCity: address.townCity,

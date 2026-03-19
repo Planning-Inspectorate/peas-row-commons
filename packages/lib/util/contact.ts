@@ -1,10 +1,12 @@
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
-import { mapAddressDbToViewModel } from './address.ts';
+import { mapAddressDbToViewModel, mapAddressViewModelToDb } from './address.ts';
 import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
 import AtLeastOneFieldValidator from '../forms/custom-components/multi-field-input/validator.ts';
+import { CUSTOM_COMPONENTS } from '../forms/custom-components/index.ts';
+import type { AddressItem, ContactMappingConfig } from './types.ts';
 
 export interface PersonConfig {
 	section: string;
@@ -68,76 +70,110 @@ export const CONTACT_MAPPINGS = [
 ];
 
 /**
- * Creates & deletes contacts based on the mappings above, currently either creates more "generic" contacts
- * or "objectors" which are contacts with their own section in the UI.
+ * Creates & deletes contacts based on the mappings above.
  */
 export function handleContacts(
-	flatData: Record<string, any>,
+	flatData: Record<string, unknown>,
 	prismaPayload: Prisma.CaseUpdateInput,
-	contactMappings: typeof CONTACT_MAPPINGS
+	contactMappings: ContactMappingConfig[]
 ) {
 	const deleteFilters: { contactTypeId: string | { notIn: string[] } }[] = [];
-	const allNewContacts: Prisma.ContactCreateWithoutCaseInput[] = [];
+	const upserts: Prisma.ContactUpsertWithWhereUniqueWithoutCaseInput[] = [];
+	const providedIds: string[] = [];
 
-	contactMappings.forEach((config) => {
-		if (!Object.hasOwn(flatData, config.sourceKey)) return;
+	for (const config of contactMappings) {
+		if (!Object.hasOwn(flatData, config.sourceKey)) continue;
 
-		const items = flatData[config.sourceKey];
-		const { prefix } = config;
+		const items = flatData[config.sourceKey] as Record<string, unknown>[];
 
-		const mappedContacts = items
-			.map((item: Record<string, any>) => {
-				// If there is a fixed type id, e.g. in Objector, use that
-				// otherwise grab the user-chosen type.
-				const typeId = config.fixedTypeId ?? item[config.dynamicTypeField];
+		for (const item of items) {
+			const upsertPayload = buildContactUpsert(item, config);
 
-				if (!typeId) return null;
-
-				const contact: Prisma.ContactCreateWithoutCaseInput = {
-					ContactType: { connect: { id: typeId } },
-					firstName: item[`${prefix}FirstName`],
-					lastName: item[`${prefix}LastName`],
-					orgName: item[`${prefix}OrgName`],
-					telephoneNumber: item[`${prefix}TelephoneNumber`],
-					email: item[`${prefix}Email`]
-				};
-
-				// Specific check for Objector which has it's own column 'objectorStatusId'
-				if (config.hasStatus && item[`${prefix}StatusId`]) {
-					contact.ObjectorStatus = { connect: { id: item[`${prefix}StatusId`] } };
-				}
-
-				const address = item[`${prefix}Address`];
-				if (address) {
-					contact.Address = {
-						create: {
-							line1: address.addressLine1,
-							line2: address.addressLine2,
-							townCity: address.townCity,
-							county: address.county,
-							postcode: address.postcode
-						}
-					};
-				}
-
-				return contact;
-			})
-			.filter(Boolean);
+			if (upsertPayload) {
+				upserts.push(upsertPayload);
+				providedIds.push(item.id as string);
+			}
+		}
 
 		deleteFilters.push(config.deleteFilter);
-		allNewContacts.push(...mappedContacts);
-
 		delete flatData[config.sourceKey];
-	});
+	}
+
+	const validIds = providedIds.filter(Boolean);
 
 	if (deleteFilters.length > 0) {
 		prismaPayload.Contacts = {
+			...(upserts.length > 0 && { upsert: upserts }),
 			deleteMany: {
-				OR: deleteFilters
-			},
-			create: allNewContacts
+				AND: [{ OR: deleteFilters }, { id: { notIn: validIds } }]
+			}
 		};
 	}
+}
+
+/**
+ * Generates the strictly typed Address payload for both Create and Update operations.
+ */
+function getAddressPayload(address: AddressItem | undefined) {
+	if (!address) return { createAddress: undefined, updateAddress: undefined };
+
+	const addressData = mapAddressViewModelToDb(address);
+
+	if (address.id) {
+		return {
+			createAddress: { connect: { id: address.id } },
+			updateAddress: { update: addressData }
+		};
+	}
+
+	return {
+		createAddress: { create: addressData },
+		updateAddress: { create: addressData }
+	};
+}
+
+/**
+ * Builds a single Contact upsert payload.
+ * Safely shares scalar fields between the Create and Update inputs to keep it DRY.
+ */
+function buildContactUpsert(
+	item: Record<string, unknown>,
+	config: ContactMappingConfig
+): Prisma.ContactUpsertWithWhereUniqueWithoutCaseInput | null {
+	const typeId =
+		config.fixedTypeId ?? (config.dynamicTypeField ? (item[config.dynamicTypeField] as string) : undefined);
+	const itemId = item.id as string | undefined;
+
+	if (!typeId || !itemId) return null;
+
+	const { prefix } = config;
+
+	const sharedFields = {
+		ContactType: { connect: { id: typeId } },
+		firstName: item[`${prefix}FirstName`] as string,
+		lastName: item[`${prefix}LastName`] as string,
+		orgName: item[`${prefix}OrgName`] as string,
+		telephoneNumber: item[`${prefix}TelephoneNumber`] as string,
+		email: item[`${prefix}Email`] as string,
+		...(config.hasStatus && item[`${prefix}StatusId`]
+			? { ObjectorStatus: { connect: { id: item[`${prefix}StatusId`] as string } } }
+			: {})
+	};
+
+	const { createAddress, updateAddress } = getAddressPayload(item[`${prefix}Address`] as AddressItem | undefined);
+
+	return {
+		where: { id: itemId },
+		create: {
+			id: itemId,
+			...sharedFields,
+			...(createAddress && { Address: createAddress })
+		},
+		update: {
+			...sharedFields,
+			...(updateAddress && { Address: updateAddress })
+		}
+	};
 }
 
 /**
@@ -205,7 +241,7 @@ export const createPersonQuestions = ({
 			]
 		},
 		[`${section}Address`]: {
-			type: COMPONENT_TYPES.ADDRESS,
+			type: CUSTOM_COMPONENTS.ADDRESS_WITH_ID,
 			title: `${label} address details`,
 			question: `${label} address details (optional)`,
 			fieldName: `${db}Address`,

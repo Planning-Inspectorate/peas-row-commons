@@ -1,0 +1,113 @@
+{% extends layoutTemplate %}
+
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/fieldset/macro.njk" import govukFieldset %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% set addressLine1= question.fieldName + "_addressLine1" %}
+{% set addressLine2= question.fieldName + "_addressLine2" %}
+{% set townCity= question.fieldName + "_townCity" %}
+{% set county= question.fieldName + "_county" %}
+{% set postcode= question.fieldName + "_postcode" %}
+{% set hiddenId= question.fieldName + "_hiddenId" %}
+
+{% block dynQuestionContent %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <form action="" method="post" novalidate>
+                {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
+                {% call govukFieldset({
+                    legend: {
+                        text: question.question,
+                        classes: "govuk-fieldset__legend--l",
+                        isPageHeading: true
+                    }
+                }) %}
+                    {% if question.hint %}
+                        <div class="govuk-hint">{{ question.hint }}</div>
+                    {% endif %}
+
+                    {% if question.html %}
+                        {% include question.html ignore missing %}
+                    {% endif %}
+
+                    {{ govukInput({
+                        label: {
+                            text: question.labels.addressLine1
+                        },
+                        id: "address-line-1",
+                        name: addressLine1,
+                        value: question.value.addressLine1,
+                        autocomplete: "address-line1",
+                        errorMessage: errors[addressLine1] and {
+                            text: errors[addressLine1].msg
+                        }
+                    }) }}
+
+                    {{ govukInput({
+                        label: {
+                            text: question.labels.addressLine2
+                        },
+                        id: "address-line-2",
+                        name: addressLine2,
+                        value: question.value.addressLine2,
+                        autocomplete: "address-line2",
+                        errorMessage: errors[addressLine2] and {
+                            text: errors[addressLine2].msg
+                        }
+                    }) }}
+
+                    {{ govukInput({
+                        label: {
+                            text: question.labels.townCity
+                        },
+                        classes: "govuk-!-width-two-thirds",
+                        id: "address-town",
+                        name: townCity,
+                        value: question.value.townCity,
+                        autocomplete: "address-level2",
+                        errorMessage: errors[townCity] and {
+                            text: errors[townCity].msg
+                        }
+                    }) }}
+
+                    {{ govukInput({
+                        label: {
+                            text: question.labels.county
+                        },
+                        classes: "govuk-!-width-two-thirds",
+                        id: "address-county",
+                        name: county,
+                        value: question.value.county,
+                        autocomplete: "address-level1",
+                        errorMessage: errors[county] and {
+                            text: errors[county].msg
+                        }
+                    }) }}
+
+                    {{ govukInput({
+                        label: {
+                            text: question.labels.postcode
+                        },
+                        classes: "govuk-input--width-10",
+                        id: "address-postcode",
+                        name: postcode,
+                        value: question.value.postcode,
+                        autocomplete: "postal-code",
+                        errorMessage: errors[postcode] and {
+                            text: errors[postcode].msg
+                        }
+                    }) }}
+
+                    <input type="hidden" id="address-hidden-id" name="{{ hiddenId }}" value="{{ question.value.id }}">
+
+                    {{ govukButton({
+                        text: continueButtonText,
+                        type: "submit",
+                        attributes: { "data-cy":"button-save-and-continue"}
+                    }) }}
+                {% endcall %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

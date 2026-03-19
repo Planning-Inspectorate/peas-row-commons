@@ -660,6 +660,79 @@ describe('Update Case Controller', () => {
 
 			assert.ok(proc.offerForWrittenRepresentationsDate instanceof Date);
 		});
+
+		it('should transform hearingVenue into HearingVenue create payload within procedures', () => {
+			const input = {
+				procedureDetails: [
+					{
+						id: 'proc-1',
+						hearingVenue: {
+							addressLine1: '1 Hearing St',
+							addressLine2: 'Floor 2',
+							townCity: 'Bristol',
+							county: 'Avon',
+							postcode: 'BS1 1AA'
+						}
+					}
+				]
+			};
+
+			const result = mapCasePayload(input);
+			const proc = (result as any).Procedures.upsert[0].create;
+
+			assert.ok(proc.HearingVenue, 'Should have HearingVenue property');
+			assert.strictEqual(proc.HearingVenue.create.line1, '1 Hearing St');
+			assert.strictEqual(proc.HearingVenue.create.line2, 'Floor 2');
+			assert.strictEqual(proc.HearingVenue.create.townCity, 'Bristol');
+			assert.strictEqual(proc.HearingVenue.create.county, 'Avon');
+			assert.strictEqual(proc.HearingVenue.create.postcode, 'BS1 1AA');
+		});
+
+		it('should transform inquiryVenue into InquiryVenue create payload within procedures', () => {
+			const input = {
+				procedureDetails: [
+					{
+						id: 'proc-1',
+						inquiryVenue: {
+							addressLine1: '1 Inquiry St',
+							townCity: 'London',
+							postcode: 'SW1 1AA'
+						}
+					}
+				]
+			};
+
+			const result = mapCasePayload(input);
+			const proc = (result as any).Procedures.upsert[0].create;
+
+			assert.ok(proc.InquiryVenue, 'Should have InquiryVenue property');
+			assert.strictEqual(proc.InquiryVenue.create.line1, '1 Inquiry St');
+			assert.strictEqual(proc.InquiryVenue.create.townCity, 'London');
+			assert.strictEqual(proc.InquiryVenue.create.postcode, 'SW1 1AA');
+		});
+
+		it('should transform conferenceVenue into ConferenceVenue create payload within procedures', () => {
+			const input = {
+				procedureDetails: [
+					{
+						id: 'proc-1',
+						conferenceVenue: {
+							addressLine1: '1 Conf St',
+							townCity: 'Manchester',
+							postcode: 'M1 1AA'
+						}
+					}
+				]
+			};
+
+			const result = mapCasePayload(input);
+			const proc = (result as any).Procedures.upsert[0].create;
+
+			assert.ok(proc.ConferenceVenue, 'Should have ConferenceVenue property');
+			assert.strictEqual(proc.ConferenceVenue.create.line1, '1 Conf St');
+			assert.strictEqual(proc.ConferenceVenue.create.townCity, 'Manchester');
+			assert.strictEqual(proc.ConferenceVenue.create.postcode, 'M1 1AA');
+		});
 	});
 
 	describe('buildUpdateCase (procedure updates)', () => {

@@ -8,6 +8,7 @@ import OptionalTimeDateTimeInput from './optional-time-date-time-input/question.
 import OutcomesTableQuestion from './manage-list-table/defined-columns-list-table/outcomes-table/question.ts';
 import LegacyRadioQuestion from './radio-with-legacy-options/question.ts';
 import LegacySelectQuestion from './select-with-legacy-options/question.ts';
+import AddressWithIdQuestion from './address-with-id/question.ts';
 
 export const CUSTOM_COMPONENTS = Object.freeze({
 	CONDITIONAL_TEXT_OPTIONS: 'conditional-text-options',
@@ -19,7 +20,8 @@ export const CUSTOM_COMPONENTS = Object.freeze({
 	DEFINED_COLUMNS_LIST: 'defined-columns-list',
 	OUTCOMES_LIST: 'outcomes-list',
 	LEGACY_RADIO: 'legacy-radio',
-	LEGACY_SELECT: 'legacy-select'
+	LEGACY_SELECT: 'legacy-select',
+	ADDRESS_WITH_ID: 'address-with-id'
 });
 
 export const CUSTOM_COMPONENT_CLASSES = Object.freeze({
@@ -32,5 +34,6 @@ export const CUSTOM_COMPONENT_CLASSES = Object.freeze({
 	[CUSTOM_COMPONENTS.DEFINED_COLUMNS_LIST]: DefinedColumnsTableQuestion,
 	[CUSTOM_COMPONENTS.OUTCOMES_LIST]: OutcomesTableQuestion,
 	[CUSTOM_COMPONENTS.LEGACY_RADIO]: LegacyRadioQuestion,
-	[CUSTOM_COMPONENTS.LEGACY_SELECT]: LegacySelectQuestion
+	[CUSTOM_COMPONENTS.LEGACY_SELECT]: LegacySelectQuestion,
+	[CUSTOM_COMPONENTS.ADDRESS_WITH_ID]: AddressWithIdQuestion
 });
