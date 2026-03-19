@@ -4,6 +4,7 @@
 {% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
 {% from "govuk/components/breadcrumbs/macro.njk" import govukBreadcrumbs %}
 {% from "views/layouts/components/header.njk" import header %}
+{% from "ui/footer/pins-footer.njk" import pinsFooter %}
 
 {% block head %}
 	{# setup the header tags, to link to the styles #}
@@ -76,15 +77,7 @@
 	{% endblock %}
 
 {% block footer %}
-	<footer class="govuk-footer" role="contentinfo">
-		<div class="govuk-width-container ">
-			<div class="govuk-footer__meta">
-				<div class="govuk-footer__meta-item govuk-footer__meta-item">
-					<!-- footer container -->
-				</div>
-			</div>
-		</div>
-	</footer>
+	{{ pinsFooter(config.footerLinks) }}
 
 	<script type="module" {% if cspNonce %}nonce={{ cspNonce }}{% endif %} src="/assets/js/govuk-frontend.min.js"></script>
 	<script type="module" {% if cspNonce %}nonce={{ cspNonce }}{% endif %}>
