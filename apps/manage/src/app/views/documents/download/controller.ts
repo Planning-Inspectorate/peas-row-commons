@@ -10,6 +10,7 @@ import archiver from 'archiver';
 import type { Readable } from 'stream';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
+import { generateUniqueFilename } from '@pins/peas-row-commons-lib/util/files.ts';
 
 /**
  * Extracts document IDs from the request body.
@@ -160,14 +161,16 @@ async function streamZipToResponse(
 
 	archive.pipe(res);
 
+	const seenFileNames = new Set<string>();
+
 	for (const doc of documents) {
 		try {
 			const downloadResponse = await blobStore.downloadBlob(doc.blobName);
 			const stream = downloadResponse?.readableStreamBody;
 
 			if (stream) {
-				// Clashing file names are fine, handled by OS on unzip
-				archive.append(stream as Readable, { name: doc.fileName });
+				const uniqueName = generateUniqueFilename(doc.fileName, seenFileNames);
+				archive.append(stream as Readable, { name: uniqueName });
 			} else {
 				logger.warn({ documentId: doc.id }, 'No stream found for document to zip');
 			}
