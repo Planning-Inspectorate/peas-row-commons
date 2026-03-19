@@ -1,0 +1,22 @@
+{% macro pinsFooter(footerLinks) %}
+    <footer class="pins-footer" role="contentinfo">
+        <div class="pins-footer-row">
+            <div class="pins-footer-container govuk-width-container">
+                <div class="govuk-footer__meta">
+                    <div>
+                        <ul class="govuk-footer__inline-list">
+                            {% for footerLink in footerLinks %}
+                                <li class="govuk-footer__inline-list-item">
+                                    <a class="govuk-footer__link" target="_blank" href="{{footerLink.link}}">{{footerLink.text}}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div>
+                        <span class="govuk-footer__copyright">© Planning Inspectorate</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+{% endmacro %}

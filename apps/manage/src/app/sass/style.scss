@@ -8,6 +8,7 @@ $font-family: arial, helvetica, sans-serif;
 );
 @forward 'node_modules/@ministryofjustice/frontend/moj/all';
 @use 'node_modules/@pins/peas-row-commons-lib/ui/header/pins-header';
+@use 'node_modules/@pins/peas-row-commons-lib/ui/footer/pins-footer';
 
 // set font-family for any autocomplete menu items
 .autocomplete__menu {

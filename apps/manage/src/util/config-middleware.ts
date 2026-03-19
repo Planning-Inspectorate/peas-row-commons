@@ -6,8 +6,14 @@ import type { Handler } from 'express';
 export function addLocalsConfiguration(): Handler {
 	return (req, res, next) => {
 		res.locals.config = {
-			styleFile: 'style-5b348a6d.css',
-			headerTitle: 'MPESC'
+			styleFile: 'style-f5033ea1.css',
+			headerTitle: 'MPESC',
+			footerLinks: [
+				{
+					text: 'Report a problem',
+					link: 'https://forms.cloud.microsoft/e/MnyPPC4e1V'
+				}
+			]
 		};
 		next();
 	};
