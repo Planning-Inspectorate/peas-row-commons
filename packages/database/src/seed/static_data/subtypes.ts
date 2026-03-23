@@ -142,11 +142,6 @@ export const COMMON_LAND_SUBTYPES = [
 		parentTypeId: CASE_TYPES_ID.COMMON_LAND
 	},
 	{
-		id: CASE_SUBTYPES_ID.CORRECTION_CL_REGISTER,
-		displayName: 'Correction of the Common Land or Village Green Registers',
-		parentTypeId: CASE_TYPES_ID.COMMON_LAND
-	},
-	{
 		id: CASE_SUBTYPES_ID.DEREGISTRATION_EXCHANGE,
 		displayName: 'Deregistration & Exchange',
 		parentTypeId: CASE_TYPES_ID.COMMON_LAND
@@ -174,6 +169,11 @@ export const COMMON_LAND_SUBTYPES = [
 	{
 		id: CASE_SUBTYPES_ID.PUBLIC_ACCESS_LIMITATIONS,
 		displayName: 'Public Access to Commons - limitations and restrictions',
+		parentTypeId: CASE_TYPES_ID.COMMON_LAND
+	},
+	{
+		id: CASE_SUBTYPES_ID.REFERRED_APPLICATIONS,
+		displayName: 'Referred applications from Commons Registration Authorities',
 		parentTypeId: CASE_TYPES_ID.COMMON_LAND
 	},
 	{
