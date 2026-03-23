@@ -19,6 +19,7 @@
     "@ministryofjustice/frontend": "*",
     "@planning-inspectorate/dynamic-forms": "*",
     "accessible-autocomplete": "*",
+    "archiver": "*",
     "body-parser": "*",
     "connect-redis": "*",
     "dotenv": "*",
