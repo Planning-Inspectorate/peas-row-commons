@@ -406,17 +406,10 @@ export const CASE_DETAILS_QUESTIONS = {
 	historicalReference: {
 		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
 		title: 'Historical reference',
-		question: 'What is the historical reference for the case?',
+		question: 'not editable',
 		fieldName: 'historicalReference',
-		url: 'historical-reference',
-		validators: [
-			new StringValidator({
-				maxLength: {
-					maxLength: 50,
-					maxLengthMessage: 'Historical reference must be less than 50 characters'
-				}
-			})
-		]
+		url: '',
+		editable: false
 	},
 	caseName: {
 		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
