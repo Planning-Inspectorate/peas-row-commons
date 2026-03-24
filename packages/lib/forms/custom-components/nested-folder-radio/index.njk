@@ -121,6 +121,12 @@
                 for (const radio of radios) {
                     radio.checked = false;
                 }
+
+                // We need to make sure all conditionals (children) are closed too
+                const conditionals = form.querySelectorAll('.govuk-radios__conditional');
+                for (const conditional of conditionals) {
+                    conditional.classList.add('govuk-radios__conditional--hidden');
+                }
             });
         });
     </script>
