@@ -12,6 +12,7 @@ import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/ut
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
 import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import { hasAnyContacts } from '../contacts-download/index.ts';
 
 export function buildViewCaseDetails(): AsyncRequestHandler {
 	return async (req, res) => {
@@ -43,6 +44,8 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 
 		const sectionName = matchedSection?.name || '';
 
+		const hasContacts = hasAnyContacts(res.locals?.journeyResponse?.answers ?? {});
+
 		await list(req, res, '', {
 			caseId: id,
 			reference,
@@ -55,6 +58,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 				updated: !!sectionName,
 				html: sectionName ? buildSuccessHtml(sectionName) : ''
 			},
+			hasContacts,
 			currentUrl: req.originalUrl,
 			lastModifiedDate,
 			lastModifiedBy: res.locals.lastModified?.by || null,

@@ -46,6 +46,16 @@
                         "data-cy": "download-case-button"
                     }
                 }) }}
+                {% if hasContacts %}
+                    {{ govukButton({
+                        text: "Download all contacts",
+                        href: baseUrl + "/download/contacts",
+                        classes: "govuk-button--secondary",
+                        attributes: {
+                            "data-cy": "download-contacts-button"
+                        }
+                    }) }}
+                {% endif %}
             </div>
 
             <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible govuk-!-margin-top-0">
