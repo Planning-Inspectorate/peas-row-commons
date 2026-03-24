@@ -1,0 +1,57 @@
+{#
+    Contact List PDF
+
+    Renders all contacts (excluding objectors and applicants/appellants)
+    for a case in a table format for offline use.
+#}
+{% extends "views/cases/case-download/views/pdf-base.njk" %}
+
+{% block title %}Contact list{% endblock %}
+
+{% block content %}
+
+    <h1>Contact list</h1>
+
+    <table class="details-grid" style="margin-bottom: 20px;">
+        <tr>
+            <th>Case reference</th>
+            <td>{{ reference }}</td>
+        </tr>
+        <tr>
+            <th>Case name</th>
+            <td>{{ caseName }}</td>
+        </tr>
+        <tr>
+            <th>Total contacts</th>
+            <td>{{ contacts.length }}</td>
+        </tr>
+    </table>
+
+    {% if contacts.length > 0 %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Name</th>
+                    <th>Organisation</th>
+                    <th>Email</th>
+                    <th>Telephone</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contact in contacts %}
+                <tr class="avoid-break">
+                    <td>{{ contact.contactType | fallback('-') }}</td>
+                    <td>{{ contact.firstName | fallback('') }} {{ contact.lastName | fallback('') }}</td>
+                    <td>{{ contact.orgName | fallback('-') }}</td>
+                    <td>{{ contact.email | fallback('-') }}</td>
+                    <td>{{ contact.telephoneNumber | fallback('-') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty-state">No contacts recorded for this case.</p>
+    {% endif %}
+
+{% endblock %}

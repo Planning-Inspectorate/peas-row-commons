@@ -1,0 +1,496 @@
+{#
+    Case Details PDF
+
+    Renders the full case summary for offline viewing by inspectors.
+    Matches every section visible on the case details page.
+
+    Excludes case notes and case history.
+#} 
+{% extends "views/cases/case-download/views/pdf-base.njk" %}
+
+{% block title %}Case details{% endblock %}
+
+{% block content %}
+
+    <h1>Case details</h1>
+
+    {# ──────────────────────────────────────────────────────────────
+         Overview
+         ────────────────────────────────────────────────────────────── #}
+    <h2>Overview</h2>
+    <table class="details-grid">
+        <tr>
+            <th>Case reference</th>
+            <td>{{ reference }}</td>
+        </tr>
+        <tr>
+            <th>Case name</th>
+            <td>{{ caseName }}</td>
+        </tr>
+        {% if caseType %}
+        <tr>
+            <th>Case type</th>
+            <td>{{ caseType }}</td>
+        </tr>
+        {% endif %}
+        {% if caseSubType %}
+        <tr>
+            <th>Subtype</th>
+            <td>{{ caseSubType }}</td>
+        </tr>
+        {% endif %}
+        {% if act %}
+        <tr>
+            <th>Act</th>
+            <td>{{ act }}</td>
+        </tr>
+        {% endif %}
+        {% if consentSought %}
+        <tr>
+            <th>Consent sought</th>
+            <td>{{ consentSought }}</td>
+        </tr>
+        {% endif %}
+        {% if inspectorBand %}
+        <tr>
+            <th>Inspector band</th>
+            <td>{{ inspectorBand }}</td>
+        </tr>
+        {% endif %}
+    </table>
+
+    {# ──────────────────────────────────────────────────────────────
+         Case details
+         ────────────────────────────────────────────────────────────── #}
+    <hr class="section-break">
+    <h2>Case details</h2>
+    <table class="details-grid">
+        {% if caseStatus %}
+        <tr>
+            <th>Case status</th>
+            <td>{{ caseStatus }}</td>
+        </tr>
+        {% endif %}
+        {% if externalReference %}
+        <tr>
+            <th>External reference</th>
+            <td>{{ externalReference }}</td>
+        </tr>
+        {% endif %}
+        {% if historicalReference %}
+        <tr>
+            <th>Historical reference</th>
+            <td>{{ historicalReference }}</td>
+        </tr>
+        {% endif %}
+        {% if authority %}
+        <tr>
+            <th>Authority</th>
+            <td>{{ authority }}</td>
+        </tr>
+        {% endif %}
+        {% if priority %}
+        <tr>
+            <th>Priority</th>
+            <td>{{ priority }}</td>
+        </tr>
+        {% endif %}
+        {% if advertisedModification %}
+        <tr>
+            <th>Advertised modification status</th>
+            <td>{{ advertisedModification }}</td>
+        </tr>
+        {% endif %}
+        {% if abeyance %}
+        <tr>
+            <th>Abeyance period</th>
+            <td>
+                Start: {{ abeyance.start | date('d MMMM yyyy') }}
+                {% if abeyance.end %} End: {{ abeyance.end | date('d MMMM yyyy') }}{% endif %}
+            </td>
+        </tr>
+        {% endif %}
+    </table>
+
+    {# Site address #}
+    <h3>Site</h3>
+    {% if siteAddress %}
+        <div class="address-block">
+            {% if siteAddress.addressLine1 %}{{ siteAddress.addressLine1 }}<br>{% endif %}
+            {% if siteAddress.addressLine2 %}{{ siteAddress.addressLine2 }}<br>{% endif %}
+            {% if siteAddress.townCity %}{{ siteAddress.townCity }}<br>{% endif %}
+            {% if siteAddress.county %}{{ siteAddress.county }}<br>{% endif %}
+            {% if siteAddress.postcode %}{{ siteAddress.postcode }}{% endif %}
+        </div>
+    {% elif location %}
+        <p>{{ location }}</p>
+    {% else %}
+        <p class="empty-state">No site address available.</p>
+    {% endif %}
+
+    {% if location and siteAddress %}
+        <table class="details-grid">
+            <tr>
+                <th>Site location</th>
+                <td>{{ location }}</td>
+            </tr>
+        </table>
+    {% endif %}
+
+    {# Applicant / appellant #}
+    <h3>Applicant or appellant</h3>
+    {% if applicants.length > 0 %}
+        {% for applicant in applicants %}
+            <div class="avoid-break">
+                <table class="details-grid">
+                    <tr>
+                        <th>Name</th>
+                        <td>{{ applicant.firstName | fallback('') }} {{ applicant.lastName | fallback('') }}</td>
+                    </tr>
+                    {% if applicant.orgName %}
+                    <tr>
+                        <th>Organisation</th>
+                        <td>{{ applicant.orgName }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if applicant.email %}
+                    <tr>
+                        <th>Email</th>
+                        <td>{{ applicant.email }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if applicant.telephoneNumber %}
+                    <tr>
+                        <th>Telephone</th>
+                        <td>{{ applicant.telephoneNumber }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if applicant.address %}
+                    <tr>
+                        <th>Address</th>
+                        <td class="address-block">
+                            {% if applicant.address.addressLine1 %}{{ applicant.address.addressLine1 }}<br>{% endif %}
+                            {% if applicant.address.addressLine2 %}{{ applicant.address.addressLine2 }}<br>{% endif %}
+                            {% if applicant.address.townCity %}{{ applicant.address.townCity }}<br>{% endif %}
+                            {% if applicant.address.county %}{{ applicant.address.county }}<br>{% endif %}
+                            {% if applicant.address.postcode %}{{ applicant.address.postcode }}{% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </table>
+                {% if not loop.last %}<br>{% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="empty-state">No applicant or appellant details available.</p>
+    {% endif %}
+
+    {# ──────────────────────────────────────────────────────────────
+         Team
+         ────────────────────────────────────────────────────────────── #}
+    <hr class="section-break">
+    <h2>Team</h2>
+    <table class="details-grid">
+        <tr>
+            <th>Case officer</th>
+            <td>{{ caseOfficer | fallback('Not assigned') }}</td>
+        </tr>
+    </table>
+
+    {% if inspectors.length > 0 %}
+        <h3>Inspectors</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Date allocated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inspector in inspectors %}
+                <tr>
+                    <td>{{ inspector.name }}</td>
+                    <td>{{ inspector.allocatedDate | date('d MMMM yyyy') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {# ──────────────────────────────────────────────────────────────
+         Timetable (Key dates)
+         ────────────────────────────────────────────────────────────── #}
+    <hr class="section-break">
+    <h2>Timetable</h2>
+    <table class="details-grid">
+        <tr>
+            <th>Case received / submitted</th>
+            <td>{{ dates.received | date('d MMMM yyyy') }}</td>
+        </tr>
+        <tr>
+            <th>Start date</th>
+            <td>{{ dates.start | date('d MMMM yyyy') }}</td>
+        </tr>
+        <tr>
+            <th>Expected submission date</th>
+            <td>{{ dates.expectedSubmission | date('d MMMM yyyy') }}</td>
+        </tr>
+        <tr>
+            <th>Date decision must be issued by / expiry date</th>
+            <td>{{ dates.expiry | date('d MMMM yyyy') }}</td>
+        </tr>
+        <tr>
+            <th>Target decision date</th>
+            <td>{{ dates.targetDecision | date('d MMMM yyyy') }}</td>
+        </tr>
+        <tr>
+            <th>Objection period ends</th>
+            <td>{{ dates.objectionPeriodEnds | date('d MMMM yyyy') }}</td>
+        </tr>
+        <tr>
+            <th>Date to notify parties of decision date</th>
+            <td>{{ dates.partiesDecisionNotificationDeadline | date('d MMMM yyyy') }}</td>
+        </tr>
+        <tr>
+            <th>Date proposed modifications advertised</th>
+            <td>{{ dates.proposedModifications | date('d MMMM yyyy') }}</td>
+        </tr>
+    </table>
+
+    {# ──────────────────────────────────────────────────────────────
+         Key contacts (summary counts — details are in separate PDFs)
+         ────────────────────────────────────────────────────────────── #}
+    <hr class="section-break">
+    <h2>Key contacts</h2>
+    <table class="details-grid">
+        <tr>
+            <th>Objectors</th>
+            <td>See Objector list PDF</td>
+        </tr>
+        <tr>
+            <th>Contacts</th>
+            <td>See Contact list PDF</td>
+        </tr>
+    </table>
+
+    {# ──────────────────────────────────────────────────────────────
+         Procedures — each rendered as a full card matching the UI
+         ────────────────────────────────────────────────────────────── #}
+    {% if procedures.length > 0 %}
+        {% for proc in procedures %}
+            <hr class="section-break">
+            <div class="avoid-break">
+                <h2>{{ proc.type | fallback('Procedure') }} ({{ proc.status | fallback('Unknown') }})</h2>
+                <table class="details-grid">
+                    <tr>
+                        <th>Procedure type</th>
+                        <td>{{ proc.type | fallback('-') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Procedure status</th>
+                        <td>{{ proc.status | fallback('-') }}</td>
+                    </tr>
+                    {% if proc.adminType %}
+                    <tr>
+                        <th>Admin procedure type</th>
+                        <td>{{ proc.adminType }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <th>Inspector</th>
+                        <td>{{ proc.inspector | fallback('-') }}</td>
+                    </tr>
+                    {% if proc.siteVisitType %}
+                    <tr>
+                        <th>Type of site visit</th>
+                        <td>{{ proc.siteVisitType }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr>
+                        <th>Site visit date</th>
+                        <td>{{ proc.siteVisitDate | date('d MMMM yyyy') }}</td>
+                    </tr>
+                    {% if proc.hearingFormat %}
+                    <tr>
+                        <th>Hearing type</th>
+                        <td>{{ proc.hearingFormat }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if proc.inquiryFormat %}
+                    <tr>
+                        <th>Inquiry type</th>
+                        <td>{{ proc.inquiryFormat }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if proc.conferenceFormat %}
+                    <tr>
+                        <th>Case management conference type</th>
+                        <td>{{ proc.conferenceFormat }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if proc.preInquiryMeetingFormat %}
+                    <tr>
+                        <th>Pre inquiry meeting format</th>
+                        <td>{{ proc.preInquiryMeetingFormat }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if proc.inquiryOrConference %}
+                    <tr>
+                        <th>Pre inquiry meeting or case management conference</th>
+                        <td>{{ proc.inquiryOrConference }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {# ──────────────────────────────────────────────────────────────
+         Outcome overview
+         ────────────────────────────────────────────────────────────── #}
+    <hr class="section-break">
+    <h2>Outcome overview</h2>
+    {% if outcomes.length > 0 %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Decision type</th>
+                    <th>Decision maker</th>
+                    <th>Outcome</th>
+                    <th>Outcome date</th>
+                    <th>Received date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for outcome in outcomes %}
+                <tr class="avoid-break">
+                    <td>{{ outcome.decisionType | fallback('-') }}</td>
+                    <td>
+                        {{ outcome.decisionMakerType | fallback('-') }}
+                        {% if outcome.decisionMaker %}<br><small>{{ outcome.decisionMaker }}</small>{% endif %}
+                    </td>
+                    <td>{{ outcome.outcome | fallback('-') }}</td>
+                    <td>{{ outcome.outcomeDate | date('d MMMM yyyy') }}</td>
+                    <td>{{ outcome.decisionReceivedDate | date('d MMMM yyyy') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if outcomeDates %}
+        <h3>Outcome dates</h3>
+        <table class="details-grid">
+            <tr>
+                <th>Parties notified of outcome</th>
+                <td>{{ outcomeDates.partiesNotifiedDate | date('d MMMM yyyy') }}</td>
+            </tr>
+            <tr>
+                <th>Order decision dispatch</th>
+                <td>{{ outcomeDates.orderDecisionDispatchDate | date('d MMMM yyyy') }}</td>
+            </tr>
+            <tr>
+                <th>Sealed order returned</th>
+                <td>{{ outcomeDates.sealedOrderReturnedDate | date('d MMMM yyyy') }}</td>
+            </tr>
+            <tr>
+                <th>Decision published</th>
+                <td>{{ outcomeDates.decisionPublishedDate | date('d MMMM yyyy') }}</td>
+            </tr>
+        </table>
+        {% endif %}
+    {% else %}
+        <table class="details-grid">
+            <tr>
+                <th>Type of decision or report</th>
+                <td>-</td>
+            </tr>
+        </table>
+    {% endif %}
+
+    {# ──────────────────────────────────────────────────────────────
+         Additional resource locations
+         ────────────────────────────────────────────────────────────── #}
+    <hr class="section-break">
+    <h2>Additional resource locations</h2>
+    <table class="details-grid">
+        <tr>
+            <th>Offline document location</th>
+            <td>{{ filesLocation | fallback('-') }}</td>
+        </tr>
+        <tr>
+            <th>Relevant website links</th>
+            <td>{{ relevantWebsiteLinks | fallback('-') }}</td>
+        </tr>
+    </table>
+
+    {# ──────────────────────────────────────────────────────────────
+         Invoicing
+         ────────────────────────────────────────────────────────────── #}
+    <hr class="section-break">
+    <h2>Invoicing</h2>
+    <table class="details-grid">
+        <tr>
+            <th>Rechargeable</th>
+            <td>{{ costs.rechargeable | yesNo if costs else '-' }}</td>
+        </tr>
+        <tr>
+            <th>Final cost</th>
+            <td>{% if costs and costs.finalCost %}£{{ costs.finalCost }}{% else %}-{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Invoice sent</th>
+            <td>{{ costs.invoiceSent | fallback('-') if costs else '-' }}</td>
+        </tr>
+        <tr>
+            <th>Fee received</th>
+            <td>{{ costs.feeReceived | yesNo if costs else '-' }}</td>
+        </tr>
+    </table>
+
+    {# ──────────────────────────────────────────────────────────────
+         Related cases
+         ────────────────────────────────────────────────────────────── #}
+    {% if relatedCases.length > 0 %}
+        <hr class="section-break">
+        <h2>Related cases</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ref in relatedCases %}
+                <tr>
+                    <td>{{ ref }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    {# ──────────────────────────────────────────────────────────────
+         Linked cases
+         ────────────────────────────────────────────────────────────── #}
+    {% if linkedCases.length > 0 %}
+        <hr class="section-break">
+        <h2>Linked cases</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Reference</th>
+                    <th>Lead case?</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for linked in linkedCases %}
+                <tr>
+                    <td>{{ linked.reference }}</td>
+                    <td>{{ linked.isLead | yesNo }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+{% endblock %}

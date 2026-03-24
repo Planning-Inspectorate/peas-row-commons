@@ -166,7 +166,7 @@ async function streamZipToResponse(
 		zlib: { level: 5 }
 	});
 
-	archive.on('error', (err) => {
+	archive.on('error', (err: Error) => {
 		logger.error({ err }, 'Error zipping files');
 		res.destroy(err);
 	});

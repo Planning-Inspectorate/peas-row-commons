@@ -22,6 +22,7 @@ import {
 } from '@pins/peas-row-commons-lib/middleware/manage-list/track-removes.ts';
 import { guardEmptyRemove } from '@pins/peas-row-commons-lib/middleware/guard-empty-remove.ts';
 import { loadQuestionSpecificErrors, loadQuestionSpecificValidation } from './middleware.ts';
+import { buildDownloadCase } from '../case-download/index.ts';
 
 export function createRoutes(service: ManageService) {
 	const router = createRouter({ mergeParams: true });
@@ -95,6 +96,8 @@ export function createRoutes(service: ManageService) {
 
 	// Load case note routes
 	router.use('/case-notes', caseNoteRoutes);
+
+	router.get('/download', validateIdFormat, asyncHandler(buildDownloadCase(service)));
 
 	return router;
 }
