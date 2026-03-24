@@ -13,3 +13,4 @@ export type {
 	PdfAddress,
 	PdfContact
 } from './types.ts';
+export { createDownloadRoutes } from './router.ts';
