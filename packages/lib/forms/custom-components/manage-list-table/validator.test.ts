@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import ManageListItemsCompleteValidator from './validator.ts';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import type ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
+import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js';
 
 describe('ManageListItemsCompleteValidator', () => {
 	describe('validate()', () => {
@@ -296,6 +297,35 @@ describe('ManageListItemsCompleteValidator', () => {
 
 			const validationChain = validator.validate(mockQuestion, mockJourneyResponse);
 			const req = { body: {} };
+
+			const result = await validationChain.run(req);
+
+			assert.strictEqual(result.context.errors.length, 0);
+		});
+
+		it('should pass if request is a REMOVE even if the journey is incomplete / failing', async () => {
+			const validator = new ManageListItemsCompleteValidator({
+				'firstName|lastName': 'Enter a name'
+			});
+
+			const mockQuestion = {
+				fieldName: 'myList',
+				section: {
+					questions: [
+						{ fieldName: 'firstName', shouldDisplay: () => true },
+						{ fieldName: 'lastName', shouldDisplay: () => true }
+					]
+				}
+			} as unknown as ManageListQuestion;
+
+			const mockJourneyResponse = {
+				answers: {
+					myList: [{ firstName: '', lastName: null }]
+				}
+			} as unknown as JourneyResponse;
+
+			const validationChain = validator.validate(mockQuestion, mockJourneyResponse);
+			const req = { body: {}, params: { manageListAction: MANAGE_LIST_ACTIONS.REMOVE } };
 
 			const result = await validationChain.run(req);
 

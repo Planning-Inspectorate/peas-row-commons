@@ -3,6 +3,7 @@ import BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/ba
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
 import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js';
 
 /**
  * Validator for the manage list table.
@@ -21,10 +22,17 @@ export default class ManageListItemsCompleteValidator extends BaseValidator {
 	}
 
 	/**
-	 * Entry function for validation, called on submit of page
+	 * Entry function for validation, called on submit of page.
+	 *
+	 * Do not run if we are in a 'remove' check, as we want to be able
+	 * to remove "invalid" items.
 	 */
 	validate(questionObj: ManageListQuestion, journeyResponse: JourneyResponse) {
-		return body().custom(async () => {
+		return body().custom(async (_, { req }) => {
+			if (req.params?.manageListAction === MANAGE_LIST_ACTIONS.REMOVE) {
+				return true;
+			}
+
 			const listItems = journeyResponse?.answers?.[questionObj.fieldName] || [];
 
 			if (listItems.length === 0) {
