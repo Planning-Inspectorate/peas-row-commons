@@ -1,0 +1,195 @@
+{#
+    Base layout for case download PDFs.
+
+    Provides the HTML structure, print-optimised CSS, and GOV.UK-styled
+    typography. Child templates extend this and fill the `content` block.
+#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Case Download{% endblock %} - {{ reference }}</title>
+    <style>
+        /* ============================================
+             GOV.UK-inspired print styles for PDF output
+             ============================================ */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "GDS Transport", Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #0b0c0c;
+        }
+
+        /* --- Typography --- */
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #0b0c0c;
+        }
+
+        h2 {
+            font-size: 19px;
+            font-weight: 700;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            color: #0b0c0c;
+        }
+
+        h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-top: 15px;
+            margin-bottom: 8px;
+        }
+
+        p {
+            margin-bottom: 10px;
+        }
+
+        /* --- Header --- */
+
+        .pdf-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #0b0c0c;
+        }
+
+        .pdf-header__reference {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .pdf-header__branding {
+            font-size: 12px;
+            color: #505a5f;
+        }
+
+        /* --- Footer --- */
+
+        .pdf-footer {
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #b1b4b6;
+            font-size: 11px;
+            color: #505a5f;
+        }
+
+        /* --- Details grid (key-value pairs) --- */
+
+        .details-grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+
+        .details-grid tr {
+            border-bottom: 1px solid #b1b4b6;
+        }
+
+        .details-grid th {
+            font-weight: 700;
+            text-align: left;
+            padding: 8px 15px 8px 0;
+            width: 40%;
+            vertical-align: top;
+            color: #0b0c0c;
+        }
+
+        .details-grid td {
+            padding: 8px 0;
+            vertical-align: top;
+        }
+
+        .details-grid tr:last-child {
+            border-bottom: none;
+        }
+
+        /* --- Tables (for lists of contacts/objectors) --- */
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .data-table thead th {
+            font-weight: 700;
+            text-align: left;
+            padding: 10px 8px;
+            border-bottom: 2px solid #0b0c0c;
+            font-size: 13px;
+        }
+
+        .data-table tbody td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #b1b4b6;
+            vertical-align: top;
+            font-size: 13px;
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: 2px solid #0b0c0c;
+        }
+
+        /* --- Utility classes --- */
+
+        .section-break {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            border: none;
+            border-top: 1px solid #b1b4b6;
+        }
+
+        .empty-state {
+            color: #505a5f;
+            font-style: italic;
+            padding: 10px 0;
+        }
+
+        .address-block {
+            line-height: 1.6;
+        }
+
+        /* --- Page break helpers for multi-section PDFs --- */
+
+        .page-break-before {
+            page-break-before: always;
+        }
+
+        .avoid-break {
+            page-break-inside: avoid;
+        }
+    </style>
+</head>
+<body>
+
+    {# Page header with case reference #}
+    <header class="pdf-header">
+        <span class="pdf-header__reference">{{ reference }}</span>
+        <span class="pdf-header__branding">Planning Inspectorate</span>
+    </header>
+
+    {# Main content — filled by child templates #}
+    {% block content %}{% endblock %}
+
+    {# Footer with generation timestamp #}
+    <footer class="pdf-footer">
+        Generated on {{ generatedDate | date('d MMMM yyyy') }} at {{ generatedDate | date('HH:mm') }}
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,57 @@
+{#
+    Objector List PDF
+
+    Renders all objectors for a case in a table format for offline use.
+    Each objector shows name, organisation, contact details, and status.
+#}
+{% extends "views/cases/case-download/views/pdf-base.njk" %}
+
+{% block title %}Objector list{% endblock %}
+
+{% block content %}
+
+    <h1>Objector list</h1>
+
+    <table class="details-grid" style="margin-bottom: 20px;">
+        <tr>
+            <th>Case reference</th>
+            <td>{{ reference }}</td>
+        </tr>
+        <tr>
+            <th>Case name</th>
+            <td>{{ caseName }}</td>
+        </tr>
+        <tr>
+            <th>Total objectors</th>
+            <td>{{ objectors.length }}</td>
+        </tr>
+    </table>
+
+    {% if objectors.length > 0 %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Organisation</th>
+                    <th>Email</th>
+                    <th>Telephone</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for objector in objectors %}
+                <tr class="avoid-break">
+                    <td>{{ objector.firstName | fallback('') }} {{ objector.lastName | fallback('') }}</td>
+                    <td>{{ objector.orgName | fallback('-') }}</td>
+                    <td>{{ objector.email | fallback('-') }}</td>
+                    <td>{{ objector.telephoneNumber | fallback('-') }}</td>
+                    <td>{{ objector.status | fallback('-') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty-state">No objectors recorded for this case.</p>
+    {% endif %}
+
+{% endblock %}

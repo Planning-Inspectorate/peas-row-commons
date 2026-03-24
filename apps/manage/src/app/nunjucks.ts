@@ -1,7 +1,9 @@
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import nunjucks from 'nunjucks';
+import nunjucks, { type Environment } from 'nunjucks';
+import { format } from 'date-fns';
 import { loadBuildConfig } from './config.ts';
+import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
 
 /**
  * Configure nunjucks with govuk and app folders for loading views
@@ -22,7 +24,7 @@ export function configureNunjucks(): nunjucks.Environment {
 	const appDir = path.join(config.srcDir, 'app');
 
 	// configure nunjucks
-	return nunjucks.configure(
+	const env = nunjucks.configure(
 		// ensure nunjucks templates can use govuk-frontend components, and templates we've defined in `web/src/app`
 		[dynamicFormsRoot, govukFrontendRoot, appDir, mojFrontendRoot, customFormsRoot, libUi],
 		{
@@ -34,4 +36,58 @@ export function configureNunjucks(): nunjucks.Environment {
 			lstripBlocks: true
 		}
 	);
+
+	registerFilters(env);
+
+	return env;
+}
+
+/**
+ * Registers all custom Nunjucks filters.
+ */
+function registerFilters(env: Environment): void {
+	/**
+	 * Formats a date value into a human-readable string.
+	 *
+	 * Accepts ISO strings, Date objects, or timestamps.
+	 * Returns 'N/A' for null/undefined values.
+	 */
+	env.addFilter('date', (value: string | Date | number | null | undefined, formatStr: string): string => {
+		if (value === null || value === undefined) {
+			return GENERAL_CONSTANTS.NOT_APPLICABLE;
+		}
+
+		try {
+			const dateObj = value instanceof Date ? value : new Date(value);
+
+			// Guard against invalid dates (NaN timestamp)
+			if (isNaN(dateObj.getTime())) {
+				return GENERAL_CONSTANTS.NOT_APPLICABLE;
+			}
+
+			return format(dateObj, formatStr);
+		} catch {
+			return GENERAL_CONSTANTS.NOT_APPLICABLE;
+		}
+	});
+
+	/**
+	 * Converts a value to 'Yes' or 'No'.
+	 */
+	env.addFilter('yesNo', (value: boolean | null | undefined): string => {
+		if (value === true) return 'Yes';
+		if (value === false) return 'No';
+		return GENERAL_CONSTANTS.NOT_APPLICABLE;
+	});
+
+	/**
+	 * Provides a fallback value when the input is null, undefined, or empty string.
+	 */
+	env.addFilter('fallback', (value: unknown, fallbackText: string = GENERAL_CONSTANTS.NOT_APPLICABLE): string => {
+		if (value === null || value === undefined || value === '') {
+			return fallbackText;
+		}
+
+		return String(value);
+	});
 }

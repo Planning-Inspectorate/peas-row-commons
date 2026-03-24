@@ -38,6 +38,14 @@
                     href: baseUrl + "/case-folders",
                     classes: "govuk-button--secondary"
                 }) }}
+                {{ govukButton({
+                    text: "Download this case",
+                    href: baseUrl + "/download",
+                    classes: "govuk-button--secondary",
+                    attributes: {
+                        "data-cy": "download-case-button"
+                    }
+                }) }}
             </div>
 
             <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible govuk-!-margin-top-0">

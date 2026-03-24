@@ -31,6 +31,7 @@
     "nunjucks": "*",
     "pino": "*",
     "pino-pretty": "*",
+    "puppeteer": "*",
     "redis": "*",
     "date-fns-tz": "*",
     "multer": "*",
