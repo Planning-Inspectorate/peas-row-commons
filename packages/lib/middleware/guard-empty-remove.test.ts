@@ -112,4 +112,48 @@ describe('guardEmptyRemove', () => {
 			assert.strictEqual(next.mock.callCount(), 0);
 		});
 	});
+
+	describe('calls next when date sub-fields are present', () => {
+		test('should call next when date sub-fields exist even if main field is undefined', () => {
+			const journey = mockJourney('hearingClosedDate');
+			const res = mockRes(journey);
+			const req = mockReq({
+				hearingClosedDate_day: '',
+				hearingClosedDate_month: '',
+				hearingClosedDate_year: ''
+			});
+			const next = mock.fn();
+
+			guardEmptyRemove(req as any, res as any, next);
+
+			assert.strictEqual(next.mock.callCount(), 1);
+			assert.strictEqual(res.redirect.mock.callCount(), 0);
+		});
+
+		test('should call next when only some date sub-fields are present', () => {
+			const journey = mockJourney('siteVisitDate');
+			const res = mockRes(journey);
+			const req = mockReq({
+				siteVisitDate_day: '15'
+			});
+			const next = mock.fn();
+
+			guardEmptyRemove(req as any, res as any, next);
+
+			assert.strictEqual(next.mock.callCount(), 1);
+			assert.strictEqual(res.redirect.mock.callCount(), 0);
+		});
+
+		test('should redirect when no date sub-fields and no main field value', () => {
+			const journey = mockJourney('hearingClosedDate');
+			const res = mockRes(journey);
+			const req = mockReq({});
+			const next = mock.fn();
+
+			guardEmptyRemove(req as any, res as any, next);
+
+			assert.strictEqual(res.redirect.mock.callCount(), 1);
+			assert.strictEqual(next.mock.callCount(), 0);
+		});
+	});
 });

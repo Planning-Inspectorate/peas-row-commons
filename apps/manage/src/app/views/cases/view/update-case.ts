@@ -47,6 +47,12 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 			return;
 		}
 
+		if (clearAnswer) {
+			Object.keys(rawAnswers).forEach((key) => {
+				rawAnswers[key] = null;
+			});
+		}
+
 		// Fetch existing procedures if any flattened procedure fields are present
 		const hasFlattenedProcedureFields = Object.keys(rawAnswers).some((key) => /^procedureDetails_\d+_/.test(key));
 
@@ -73,12 +79,6 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 				/^procedureDetails_(\d+)_(.+)$/,
 				'procedureDetails'
 			);
-		}
-
-		if (clearAnswer) {
-			Object.keys(rawAnswers).forEach((key) => {
-				rawAnswers[key] = null;
-			});
 		}
 
 		if (Object.keys(rawAnswers).length === 0) {
@@ -365,85 +365,71 @@ export function handleProcedureDetails(flatData: Record<string, unknown>, prisma
 						}
 					}
 				}),
-			...(proc.hearingFormatId && {
-				HearingFormat: { connect: { id: proc.hearingFormatId } }
-			}),
-			...(proc.inquiryFormatId && {
-				InquiryFormat: { connect: { id: proc.inquiryFormatId } }
-			}),
-			...(proc.conferenceFormatId && {
-				ConferenceFormat: { connect: { id: proc.conferenceFormatId } }
-			}),
-			...(proc.preInquiryMeetingFormatId && {
-				PreInquiryMeetingFormat: { connect: { id: proc.preInquiryMeetingFormatId } }
-			}),
-			...(proc.inquiryOrConferenceId && {
-				InquiryOrConference: { connect: { id: proc.inquiryOrConferenceId } }
-			}),
 
 			// Scalar date fields
-			siteVisitDate: proc.siteVisitDate ? new Date(proc.siteVisitDate as string) : null,
-			caseOfficerVerificationDate: proc.caseOfficerVerificationDate
-				? new Date(proc.caseOfficerVerificationDate as string)
-				: null,
+			siteVisitDate: toDateOrNull(proc.siteVisitDate),
+			caseOfficerVerificationDate: toDateOrNull(proc.caseOfficerVerificationDate),
 
 			// Hearing fields
-			hearingTargetDate: proc.hearingTargetDate ? new Date(proc.hearingTargetDate as string) : null,
-			earliestHearingDate: proc.earliestHearingDate ? new Date(proc.earliestHearingDate as string) : null,
-			confirmedHearingDate: proc.confirmedHearingDate ? new Date(proc.confirmedHearingDate as string) : null,
-			hearingClosedDate: proc.hearingClosedDate ? new Date(proc.hearingClosedDate as string) : null,
-			hearingDateNotificationDate: proc.hearingDateNotificationDate
-				? new Date(proc.hearingDateNotificationDate as string)
-				: null,
-			hearingVenueNotificationDate: proc.hearingVenueNotificationDate
-				? new Date(proc.hearingVenueNotificationDate as string)
-				: null,
-			partiesNotifiedOfHearingDate: proc.partiesNotifiedOfHearingDate
-				? new Date(proc.partiesNotifiedOfHearingDate as string)
-				: null,
+			hearingTargetDate: toDateOrNull(proc.hearingTargetDate),
+			earliestHearingDate: toDateOrNull(proc.earliestHearingDate),
+			confirmedHearingDate: toDateOrNull(proc.confirmedHearingDate),
+			hearingClosedDate: toDateOrNull(proc.hearingClosedDate),
+			hearingDateNotificationDate: toDateOrNull(proc.hearingDateNotificationDate),
+			hearingVenueNotificationDate: toDateOrNull(proc.hearingVenueNotificationDate),
+			partiesNotifiedOfHearingDate: toDateOrNull(proc.partiesNotifiedOfHearingDate),
 			hearingPreparationTimeDays: proc.hearingPreparationTimeDays ?? null,
 			hearingTravelTimeDays: proc.hearingTravelTimeDays ?? null,
 			hearingSittingTimeDays: proc.hearingSittingTimeDays ?? null,
 			hearingReportingTimeDays: proc.hearingReportingTimeDays ?? null,
 
 			// Inquiry fields
-			inquiryTargetDate: proc.inquiryTargetDate ? new Date(proc.inquiryTargetDate as string) : null,
-			earliestInquiryDate: proc.earliestInquiryDate ? new Date(proc.earliestInquiryDate as string) : null,
-			confirmedInquiryDate: proc.confirmedInquiryDate ? new Date(proc.confirmedInquiryDate as string) : null,
-			inquiryClosedDate: proc.inquiryClosedDate ? new Date(proc.inquiryClosedDate as string) : null,
-			inquiryDateNotificationDate: proc.inquiryDateNotificationDate
-				? new Date(proc.inquiryDateNotificationDate as string)
-				: null,
-			inquiryVenueNotificationDate: proc.inquiryVenueNotificationDate
-				? new Date(proc.inquiryVenueNotificationDate as string)
-				: null,
-			partiesNotifiedOfInquiryDate: proc.partiesNotifiedOfInquiryDate
-				? new Date(proc.partiesNotifiedOfInquiryDate as string)
-				: null,
+			inquiryTargetDate: toDateOrNull(proc.inquiryTargetDate),
+			earliestInquiryDate: toDateOrNull(proc.earliestInquiryDate),
+			confirmedInquiryDate: toDateOrNull(proc.confirmedInquiryDate),
+			inquiryClosedDate: toDateOrNull(proc.inquiryClosedDate),
+			inquiryDateNotificationDate: toDateOrNull(proc.inquiryDateNotificationDate),
+			inquiryVenueNotificationDate: toDateOrNull(proc.inquiryVenueNotificationDate),
+			partiesNotifiedOfInquiryDate: toDateOrNull(proc.partiesNotifiedOfInquiryDate),
 			inquiryPreparationTimeDays: proc.inquiryPreparationTimeDays ?? null,
 			inquiryTravelTimeDays: proc.inquiryTravelTimeDays ?? null,
 			inquirySittingTimeDays: proc.inquirySittingTimeDays ?? null,
 			inquiryReportingTimeDays: proc.inquiryReportingTimeDays ?? null,
 
 			// Conference / pre-inquiry fields
-			conferenceDate: proc.conferenceDate ? new Date(proc.conferenceDate as string) : null,
-			conferenceNoteSentDate: proc.conferenceNoteSentDate ? new Date(proc.conferenceNoteSentDate as string) : null,
-			preInquiryMeetingDate: proc.preInquiryMeetingDate ? new Date(proc.preInquiryMeetingDate as string) : null,
-			preInquiryNoteSentDate: proc.preInquiryNoteSentDate ? new Date(proc.preInquiryNoteSentDate as string) : null,
+			conferenceDate: toDateOrNull(proc.conferenceDate),
+			conferenceNoteSentDate: toDateOrNull(proc.conferenceNoteSentDate),
+			preInquiryMeetingDate: toDateOrNull(proc.preInquiryMeetingDate),
+			preInquiryNoteSentDate: toDateOrNull(proc.preInquiryNoteSentDate),
 
 			// Document dates
-			proofsOfEvidenceReceivedDate: proc.proofsOfEvidenceReceivedDate
-				? new Date(proc.proofsOfEvidenceReceivedDate as string)
-				: null,
-			statementsOfCaseReceivedDate: proc.statementsOfCaseReceivedDate
-				? new Date(proc.statementsOfCaseReceivedDate as string)
-				: null,
-			inHouseDate: proc.inHouseDate ? new Date(proc.inHouseDate as string) : null,
-			offerForWrittenRepresentationsDate: proc.offerForWrittenRepresentationsDate
-				? new Date(proc.offerForWrittenRepresentationsDate as string)
-				: null,
-			deadlineForConsentDate: proc.deadlineForConsentDate ? new Date(proc.deadlineForConsentDate as string) : null
+			proofsOfEvidenceReceivedDate: toDateOrNull(proc.proofsOfEvidenceReceivedDate),
+			statementsOfCaseReceivedDate: toDateOrNull(proc.statementsOfCaseReceivedDate),
+			inHouseDate: toDateOrNull(proc.inHouseDate),
+			offerForWrittenRepresentationsDate: toDateOrNull(proc.offerForWrittenRepresentationsDate),
+			deadlineForConsentDate: toDateOrNull(proc.deadlineForConsentDate)
 		};
+
+		const RELATION_FIELDS = [
+			{ key: 'hearingFormatId', relation: 'HearingFormat' },
+			{ key: 'inquiryFormatId', relation: 'InquiryFormat' },
+			{ key: 'conferenceFormatId', relation: 'ConferenceFormat' },
+			{ key: 'preInquiryMeetingFormatId', relation: 'PreInquiryMeetingFormat' },
+			{ key: 'inquiryOrConferenceId', relation: 'InquiryOrConference' }
+		];
+
+		const relationCreate: Record<string, unknown> = {};
+		const relationUpdate: Record<string, unknown> = {};
+
+		for (const { key, relation } of RELATION_FIELDS) {
+			if (proc[key]) {
+				const payload = { [relation]: { connect: { id: proc[key] } } };
+				Object.assign(relationCreate, payload);
+				Object.assign(relationUpdate, payload);
+			} else {
+				Object.assign(relationUpdate, { [relation]: { disconnect: true } });
+			}
+		}
 
 		const hearingPayload = getVenuePayload(proc.hearingVenue);
 		const inquiryPayload = getVenuePayload(proc.inquiryVenue);
@@ -455,6 +441,7 @@ export function handleProcedureDetails(flatData: Record<string, unknown>, prisma
 			where: { id: proc.id },
 			update: {
 				...procedureData,
+				...relationUpdate,
 				...(hearingPayload.updateVenue && { HearingVenue: hearingPayload.updateVenue }),
 				...(inquiryPayload.updateVenue && { InquiryVenue: inquiryPayload.updateVenue }),
 				...(conferencePayload.updateVenue && { ConferenceVenue: conferencePayload.updateVenue })
@@ -462,6 +449,7 @@ export function handleProcedureDetails(flatData: Record<string, unknown>, prisma
 			create: {
 				...procedureData,
 				id: proc.id,
+				...relationCreate,
 				...(hearingPayload.createVenue && { HearingVenue: hearingPayload.createVenue }),
 				...(inquiryPayload.createVenue && { InquiryVenue: inquiryPayload.createVenue }),
 				...(conferencePayload.createVenue && { ConferenceVenue: conferencePayload.createVenue })
