@@ -644,6 +644,31 @@ describe('Update Case Controller', () => {
 			assert.strictEqual(proc.InquiryOrConference.connect.id, 'both');
 		});
 
+		it('should connect relation fields on create and disconnect on update when null', () => {
+			const input = {
+				procedureDetails: [
+					{
+						id: 'proc-9',
+						procedureTypeId: 'inquiry',
+						conferenceFormatId: null,
+						hearingFormatId: 'face-to-face'
+					}
+				]
+			};
+
+			const result = mapCasePayload(input);
+			const upsert = (result as any).Procedures.upsert[0];
+
+			// Update should disconnect null relations
+			assert.deepStrictEqual(upsert.update.ConferenceFormat, { disconnect: true });
+			// Update should connect provided relations
+			assert.deepStrictEqual(upsert.update.HearingFormat, { connect: { id: 'face-to-face' } });
+
+			// Create should only have connect, no disconnect
+			assert.strictEqual(upsert.create.ConferenceFormat, undefined);
+			assert.deepStrictEqual(upsert.create.HearingFormat, { connect: { id: 'face-to-face' } });
+		});
+
 		it('should handle written reps fields in procedure payload', () => {
 			const input = {
 				procedureDetails: [
