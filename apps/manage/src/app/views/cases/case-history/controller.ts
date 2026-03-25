@@ -4,6 +4,8 @@ import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
 import { createCaseHistoryViewModel } from './view-model.ts';
+import { getPageData, getPaginationParams } from '../../pagination/pagination-utils.ts';
+import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 
 export function buildViewCaseHistory(service: ManageService): AsyncRequestHandler {
 	const { db, audit, logger, getEntraClient } = service;
@@ -38,7 +40,31 @@ export function buildViewCaseHistory(service: ManageService): AsyncRequestHandle
 			return notFoundHandler(req, res);
 		}
 
-		const events = await audit.getAllForCase(id);
+		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
+
+		const [events, totalCount] = await Promise.all([
+			audit.getAllForCase(id, { take: pageSize, skip: skipSize }),
+			audit.countForCase(id)
+		]);
+
+		const { totalPages, resultsStartNumber, resultsEndNumber } = getPageData(
+			totalCount || 0,
+			selectedItemsPerPage,
+			pageSize,
+			pageNumber
+		);
+
+		const paginationItems = getPaginationModel(req, totalPages, pageNumber);
+
+		const paginationParams = {
+			selectedItemsPerPage,
+			pageNumber,
+			totalPages,
+			resultsStartNumber,
+			resultsEndNumber,
+			totalCount,
+			uiItems: paginationItems
+		};
 
 		const groupMembers = await getEntraGroupMembers({
 			logger,
@@ -70,7 +96,8 @@ export function buildViewCaseHistory(service: ManageService): AsyncRequestHandle
 			reference: caseRow.reference,
 			backLinkUrl: `/cases/${id}`,
 			backLinkText: 'Back to case details',
-			rows
+			rows,
+			paginationParams
 		});
 	};
 }
