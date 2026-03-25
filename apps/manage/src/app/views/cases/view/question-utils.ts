@@ -47,6 +47,8 @@ import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { LEGACY_CONTACT_TYPES } from '@pins/peas-row-commons-database/src/seed/static_data/legacy/contact-types.ts';
 import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/legacy/act-sections.ts';
 import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/admin-procedure-type.ts';
+import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
+import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
 
@@ -1215,11 +1217,11 @@ export const PROCEDURE_MANAGE_LIST_QUESTION = {
 						row.procedureTypeId === PROCEDURES_ID.ADMIN_IN_HOUSE &&
 						row.adminProcedureType === ADMIN_PROCEDURES_ID.CASE_OFFICER
 					) {
-						return 'N/A';
+						return GENERAL_CONSTANTS.NOT_APPLICABLE;
 					}
 
-					if (value === 'not-allocated') {
-						return 'Not allocated yet';
+					if (value === PROCEDURE_CONSTANTS.NOT_ALLOCATED) {
+						return PROCEDURE_CONSTANTS.NOT_ALLOCATED_DISPLAY;
 					}
 
 					// Grab the relevant question and attempt to format it
@@ -1874,7 +1876,11 @@ export function createProcedureDetailQuestions(
 	if (inspectorOptions.length > 0) {
 		inspectorOptions.push({ divider: 'or' });
 	}
-	inspectorOptions.push({ text: 'Not allocated yet', value: 'not-allocated' });
+
+	inspectorOptions.push({
+		text: PROCEDURE_CONSTANTS.NOT_ALLOCATED_DISPLAY,
+		value: PROCEDURE_CONSTANTS.NOT_ALLOCATED
+	});
 
 	return {
 		...procedureQuestions,

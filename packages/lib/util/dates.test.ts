@@ -8,6 +8,7 @@ import {
 	formatDateTime,
 	toDateOrNull
 } from './dates.ts';
+import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
 
 describe('Date Helpers', () => {
 	describe('dateISOStringToDisplayTime12hr', () => {
@@ -61,7 +62,10 @@ describe('Date Helpers', () => {
 		});
 
 		it('should return custom fallback for null input', () => {
-			assert.strictEqual(dateISOStringToDisplayDate(null as any, 'N/A'), 'N/A');
+			assert.strictEqual(
+				dateISOStringToDisplayDate(null as any, GENERAL_CONSTANTS.NOT_APPLICABLE),
+				GENERAL_CONSTANTS.NOT_APPLICABLE
+			);
 		});
 
 		it('should handle invalid dates gracefully', () => {

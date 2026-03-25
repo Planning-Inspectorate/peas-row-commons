@@ -15,6 +15,7 @@ import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_da
 import { DECISION_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-type.ts';
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
 import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/legacy/act-sections.ts';
+import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
 
 function formatValue(value: any) {
 	if (typeof value === 'boolean') {
@@ -135,7 +136,7 @@ export function mapProceduresToArray(procedures: any[]): Record<string, any>[] |
 		if (proc.InquiryVenue) mapped.inquiryVenue = mapAddressDbToViewModel(proc.InquiryVenue);
 		if (proc.ConferenceVenue) mapped.conferenceVenue = mapAddressDbToViewModel(proc.ConferenceVenue);
 
-		mapped.inspectorId = proc.Inspector?.idpUserId ?? 'not-allocated';
+		mapped.inspectorId = proc.Inspector?.idpUserId ?? PROCEDURE_CONSTANTS.NOT_ALLOCATED;
 
 		return mapped;
 	});
