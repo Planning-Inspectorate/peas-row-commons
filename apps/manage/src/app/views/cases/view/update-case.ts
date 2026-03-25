@@ -20,6 +20,7 @@ import { toDateOrNull } from '@pins/peas-row-commons-lib/util/dates.ts';
 import { mapProceduresToArray, sortProceduresChronologically } from './view-model.ts';
 import { mapAddressViewModelToDb } from '@pins/peas-row-commons-lib/util/address.ts';
 import type { AddressItem } from '@pins/peas-row-commons-lib/util/types.ts';
+import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -356,15 +357,6 @@ export function handleProcedureDetails(flatData: Record<string, unknown>, prisma
 			...(proc.siteVisitTypeId && {
 				SiteVisitType: { connect: { id: proc.siteVisitTypeId } }
 			}),
-			...(proc.inspectorId &&
-				proc.inspectorId !== 'not-allocated' && {
-					Inspector: {
-						connectOrCreate: {
-							where: { idpUserId: proc.inspectorId },
-							create: { idpUserId: proc.inspectorId }
-						}
-					}
-				}),
 
 			// Scalar date fields
 			siteVisitDate: toDateOrNull(proc.siteVisitDate),
@@ -442,6 +434,16 @@ export function handleProcedureDetails(flatData: Record<string, unknown>, prisma
 			update: {
 				...procedureData,
 				...relationUpdate,
+				...(proc.inspectorId && proc.inspectorId !== PROCEDURE_CONSTANTS.NOT_ALLOCATED
+					? {
+							Inspector: {
+								connectOrCreate: {
+									where: { idpUserId: proc.inspectorId },
+									create: { idpUserId: proc.inspectorId }
+								}
+							}
+						}
+					: { Inspector: { disconnect: true } }),
 				...(hearingPayload.updateVenue && { HearingVenue: hearingPayload.updateVenue }),
 				...(inquiryPayload.updateVenue && { InquiryVenue: inquiryPayload.updateVenue }),
 				...(conferencePayload.updateVenue && { ConferenceVenue: conferencePayload.updateVenue })
@@ -450,6 +452,15 @@ export function handleProcedureDetails(flatData: Record<string, unknown>, prisma
 				...procedureData,
 				id: proc.id,
 				...relationCreate,
+				...(proc.inspectorId &&
+					proc.inspectorId !== PROCEDURE_CONSTANTS.NOT_ALLOCATED && {
+						Inspector: {
+							connectOrCreate: {
+								where: { idpUserId: proc.inspectorId },
+								create: { idpUserId: proc.inspectorId }
+							}
+						}
+					}),
 				...(hearingPayload.createVenue && { HearingVenue: hearingPayload.createVenue }),
 				...(inquiryPayload.createVenue && { InquiryVenue: inquiryPayload.createVenue }),
 				...(conferencePayload.createVenue && { ConferenceVenue: conferencePayload.createVenue })
