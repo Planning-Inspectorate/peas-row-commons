@@ -1,6 +1,7 @@
 import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildViewCaseHistory } from './controller.ts';
+import { ManageService } from '#service';
 
 describe('buildViewCaseHistory', () => {
 	const mockLogger = {
@@ -33,6 +34,7 @@ describe('buildViewCaseHistory', () => {
 			query: {},
 			session: {},
 			originalUrl: '/cases/case-123/case-history',
+			baseUrl: '/',
 			...overrides
 		}) as any;
 
@@ -208,6 +210,65 @@ describe('buildViewCaseHistory', () => {
 			await assert.rejects(() => buildViewCaseHistory(buildService() as any)(req, res));
 
 			assert.strictEqual(res.render.mock.callCount(), 0);
+		});
+	});
+
+	describe('Pagination', () => {
+		it('should extract pagination params from request and pass correctly to the audit service', async () => {
+			const req = mockReq({
+				query: { page: '2', itemsPerPage: '25' }
+			});
+			const res = mockRes();
+
+			mockDb.case.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({ name: 'Test Case', reference: 'REF-001' })
+			);
+			mockAudit.getAllForCase.mock.mockImplementation(() => Promise.resolve([]));
+
+			mockAudit.countForCase.mock.mockImplementation(() => Promise.resolve(45));
+
+			await buildViewCaseHistory(buildService() as unknown as ManageService)(req, res);
+
+			assert.strictEqual(mockAudit.getAllForCase.mock.callCount(), 1);
+			const auditArgs = mockAudit.getAllForCase.mock.calls[0].arguments;
+
+			assert.strictEqual(auditArgs[0], 'case-123');
+
+			assert.deepStrictEqual(auditArgs[1], { take: 25, skip: 25 });
+
+			assert.strictEqual(res.render.mock.callCount(), 1);
+			const viewData = res.render.mock.calls[0].arguments[1];
+
+			assert.ok(viewData.paginationParams);
+			assert.strictEqual(viewData.paginationParams.pageNumber, 2);
+			assert.strictEqual(viewData.paginationParams.selectedItemsPerPage, 25);
+			assert.strictEqual(viewData.paginationParams.totalCount, 45);
+
+			assert.strictEqual(viewData.paginationParams.totalPages, 2);
+
+			assert.strictEqual(viewData.paginationParams.resultsStartNumber, 26);
+			assert.strictEqual(viewData.paginationParams.resultsEndNumber, 45);
+		});
+
+		it('should handle default pagination parameters when query is empty', async () => {
+			const req = mockReq({ query: {} });
+			const res = mockRes();
+
+			mockDb.case.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({ name: 'Test Case', reference: 'REF-001' })
+			);
+			mockAudit.getAllForCase.mock.mockImplementation(() => Promise.resolve([]));
+			mockAudit.countForCase.mock.mockImplementation(() => Promise.resolve(5));
+
+			await buildViewCaseHistory(buildService() as unknown as ManageService)(req, res);
+
+			const auditArgs = mockAudit.getAllForCase.mock.calls[0].arguments;
+			const viewData = res.render.mock.calls[0].arguments[1];
+
+			assert.strictEqual(auditArgs[1].skip, 0);
+
+			assert.strictEqual(viewData.paginationParams.pageNumber, 1);
+			assert.strictEqual(viewData.paginationParams.totalCount, 5);
 		});
 	});
 });
