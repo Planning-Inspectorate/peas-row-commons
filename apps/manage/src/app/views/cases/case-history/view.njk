@@ -1,5 +1,8 @@
 {% extends "views/layouts/main.njk" %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
+{% from "govuk/components/pagination/macro.njk" import govukPagination %}
+
+{% import "views/pagination/pagination-options.njk" as paginationOptions %}
 
 {% set title = reference + " - Case history" %}
 
@@ -16,40 +19,54 @@
             <h1 class="govuk-heading-l" data-cy="page-heading">
                 {{ pageHeading }}
             </h1>
+            <div id="pagination" class="govuk-body">
+                {% if rows | length == 0 %}
+                    <p class="govuk-body" data-cy="no-history-message">There is no case history to display</p>
+                {% else %}
+                    <p class="govuk-body govuk-clearfix">
+                        <p class="govuk-body" data-cy="pagination-results-text">
+                            Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalCount > paginationParams.resultsEndNumber else paginationParams.totalCount }}</strong>
+                            of <strong>{{ paginationParams.totalCount }}</strong> results
+                        </p>
+                        <p class="pins-pagination-options">
+                            {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalCount, paginationParams.pageNumber, paginationParams.searchValue) }}
+                        </p>
+                    </p>
 
-            {% if rows | length == 0 %}
-                <p class="govuk-body" data-cy="no-history-message">There is no case history to display</p>
-            {% else %}
-                {% set tableRows = [] %}
-                {% for row in rows %}
-                    {% set tableRows = (tableRows.push([
-                        {
-                            html: row.date + "<br>" + row.time,
-                            attributes: { "data-cy": "history-date-" + loop.index0 }
-                        },
-                        {
-                            text: row.details,
-                            attributes: { "data-cy": "history-details-" + loop.index0 }
-                        },
-                        {
-                            text: row.user,
-                            attributes: { "data-cy": "history-user-" + loop.index0 }
-                        }
-                    ]), tableRows) %}
-                {% endfor %}
+                    {% set tableRows = [] %}
+                    {% for row in rows %}
+                        {% set tableRows = (tableRows.push([
+                            {
+                                html: row.date + "<br>" + row.time,
+                                attributes: { "data-cy": "history-date-" + loop.index0 }
+                            },
+                            {
+                                text: row.details,
+                                attributes: { "data-cy": "history-details-" + loop.index0 }
+                            },
+                            {
+                                text: row.user,
+                                attributes: { "data-cy": "history-user-" + loop.index0 }
+                            }
+                        ]), tableRows) %}
+                    {% endfor %}
 
-                {{ govukTable({
-                    attributes: {
-                        "data-cy": "case-history-table"
-                    },
-                    head: [
-                        { text: "Date and time" },
-                        { text: "Details" },
-                        { text: "User" }
-                    ],
-                    rows: tableRows
-                }) }}
-            {% endif %}
+                    {{ govukTable({
+                        attributes: {
+                            "data-cy": "case-history-table"
+                        },
+                        head: [
+                            { text: "Date and time" },
+                            { text: "Details" },
+                            { text: "User" }
+                        ],
+                        rows: tableRows
+                    }) }}
+                    {% if paginationParams.uiItems.items.length > 1 %}
+                        {{ govukPagination(paginationParams.uiItems) }}
+                    {% endif %}
+                {% endif %}
+            </div>
         </div>
     </div>
 {% endblock %}
