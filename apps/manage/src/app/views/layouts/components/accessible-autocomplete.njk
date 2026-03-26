@@ -1,0 +1,33 @@
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+
+{% macro accessibleAutocomplete(params) %}
+
+    {{ govukSelect({
+        id: params.id,
+        name: params.name,
+        label: params.label,
+        hint: params.hint,
+        errorMessage: params.errorMessage,
+        items: params.items
+    }) }}
+
+    <script {% if params.cspNonce %}nonce="{{ params.cspNonce }}"{% endif %}>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.accessibleAutocomplete) {
+                accessibleAutocomplete.enhanceSelectElement({
+                    selectElement: document.querySelector('#{{ params.id }}'),
+                    onConfirm: () => {
+                        let input = document.querySelector('#{{ params.id }}');
+                        let select = document.querySelector('#{{ params.id }}-select');
+                        let options = Array.from(select.options);
+                        if (!input.value || !options.some(option => option.innerText === input.value)) {
+                            select.options.selectedIndex = -1;
+                        } else {
+                            select.options.selectedIndex = options.findIndex(option => option.innerText === input.value);
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+{% endmacro %}
