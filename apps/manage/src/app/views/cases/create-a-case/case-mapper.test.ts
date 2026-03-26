@@ -65,11 +65,11 @@ describe('Case Mapper', () => {
 
 			const result = mapAnswersToCaseInput(answers, 'REF-002');
 
-			assert.ok(result.SubType?.create);
-			assert.strictEqual(result.SubType.create.displayName, 'My Custom Case Type');
-			assert.strictEqual(result.SubType.create.id, 'my-custom-case-type');
+			assert.ok(result.SubType?.connectOrCreate);
+			assert.strictEqual(result.SubType.connectOrCreate.create.displayName, 'My Custom Case Type');
+			assert.strictEqual(result.SubType.connectOrCreate.create.id, 'my-custom-case-type');
 
-			assert.deepStrictEqual(result.SubType.create.ParentType?.connect, { id: 'public-path' });
+			assert.deepStrictEqual(result.SubType.connectOrCreate.create.ParentType?.connect, { id: 'public-path' });
 		});
 
 		it('should correctly format complex strings for new subtypes (kebab-case)', () => {
@@ -80,7 +80,7 @@ describe('Case Mapper', () => {
 
 			const result = mapAnswersToCaseInput(answers, 'REF-003');
 
-			assert.strictEqual(result.SubType?.create?.id, 'some-weird-name-with-camel-case');
+			assert.strictEqual(result.SubType?.connectOrCreate?.where?.id, 'some-weird-name-with-camel-case');
 		});
 
 		it('should map the site address if at least one field is provided', () => {
