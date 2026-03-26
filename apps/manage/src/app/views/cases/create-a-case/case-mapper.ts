@@ -28,10 +28,17 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 	};
 
 	// otherSosCasework takes priority, indicating a "user entered" subtype
-	// that needs creation.
-	if (answers.otherSosCasework_text) {
+	// that needs creation. We do a connectOrCreate here in case another user
+	// has already entered the same value. Trim just to make sure.
+	const customSosText = answers.otherSosCasework_text?.trim();
+	if (customSosText) {
 		input.SubType = {
-			create: mapOtherSubTypeInput(answers.otherSosCasework_text, caseType)
+			connectOrCreate: {
+				where: {
+					id: generateSubTypeId(answers.otherSosCasework_text)
+				},
+				create: mapOtherSubTypeInput(answers.otherSosCasework_text, caseType)
+			}
 		};
 	} else if (caseSubType) {
 		input.SubType = {
@@ -136,11 +143,22 @@ function mapAddressInput(address: Record<string, string>) {
  */
 function mapOtherSubTypeInput(newSubType: string, caseType: string) {
 	return {
-		id: newSubType
-			.replace(/([a-z])([A-Z])/g, '$1-$2')
-			.replace(/[\s_]+/g, '-')
-			.toLowerCase(),
+		id: generateSubTypeId(newSubType),
 		displayName: newSubType,
 		ParentType: { connect: { id: caseType } }
 	};
+}
+
+/**
+ * Given a subtype string e.g. "Brand new_Type",
+ * will convert into a sensible kebab id, replacing
+ * spaces, transforming to lowercase "brand-new-type"
+ */
+function generateSubTypeId(newSubType: string) {
+	return newSubType
+		.trim()
+		.replace(/([a-z])([A-Z])/g, '$1-$2')
+		.replace(/[^a-zA-Z0-9\s_-]/g, '')
+		.replace(/[\s_]+/g, '-')
+		.toLowerCase();
 }
