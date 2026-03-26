@@ -56,6 +56,7 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 							Folder: true
 						},
 						where: { caseId: id, deletedAt: null },
+						orderBy: { uploadedDate: 'desc' },
 						skip: skipSize,
 						take: pageSize
 					},

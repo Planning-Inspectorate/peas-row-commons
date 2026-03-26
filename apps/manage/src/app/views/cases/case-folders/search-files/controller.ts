@@ -47,6 +47,7 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 						deletedAt: null,
 						caseId: id
 					},
+					orderBy: { uploadedDate: 'desc' },
 					skip: skipSize,
 					take: pageSize
 				})
