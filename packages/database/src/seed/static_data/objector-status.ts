@@ -6,6 +6,10 @@ export const OBJECTOR_STATUSES = [
 		displayName: 'Admissible'
 	},
 	{
+		id: OBJECTOR_STATUS_ID.INADMISSIBLE,
+		displayName: 'Inadmissible'
+	},
+	{
 		id: OBJECTOR_STATUS_ID.UPHELD,
 		displayName: 'Upheld'
 	},
