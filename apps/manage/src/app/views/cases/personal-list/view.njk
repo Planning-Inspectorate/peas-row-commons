@@ -1,6 +1,5 @@
 {% extends "views/layouts/main.njk" %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
-
 {% from "govuk/components/details/macro.njk" import govukDetails %}
 {% from "govuk/components/select/macro.njk" import govukSelect %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
@@ -16,25 +15,52 @@
         <div class="govuk-grid-column-full">
 
             {% set isFilterActive = statusParams.currentStatus and statusParams.currentStatus !== 'all' %}
+            {% set clearFilterUrl = "?userId=" + selectedUserId if selectedUserId else "?" %}
 
-            {# If we have no cases at all, then we give them a specific page with just an H1 and a button to go back #}
             {% if cases | length === 0 and not isFilterActive %}
                 <h1 class="govuk-heading-l" data-cy="page-heading-no-cases">
-                    You are not assigned to any cases
+                    {{ noCasesHeading }}
                 </h1>
 
-                {{ govukButton({
-                    text: "Search all cases",
-                    href: "/cases",
-                    classes: "govuk-button--secondary",
-                    attributes: { "data-cy": "search-all-cases-btn" }
-                }) }}
+                <ul class="govuk-summary-list__actions-list govuk-!-margin-bottom-5">
+                    <li class="govuk-summary-list__actions-list-item">
+                        <a class="govuk-body govuk-link govuk-link--no-visited-state" href="{{viewAnotherHref}}">View another case officer's or inspector's cases</a>
+                    </li>
+                </ul>
+
+                <div class="govuk-button-group">
+                    {% if selectedUserId %}
+                        {{ govukButton({
+                            text: "Return to your cases",
+                            href: "/cases/personal-list",
+                            attributes: { "data-cy": "return-to-cases-btn" }
+                        }) }}
+                    {% endif %}
+                    {{ govukButton({
+                        text: "Search all cases",
+                        href: "/cases",
+                        classes: "govuk-button--secondary",
+                        attributes: { "data-cy": "search-all-cases-btn" }
+                    }) }}
+                </div>
 
             {% else %}
 
                 <h1 class="govuk-heading-l" data-cy="page-heading">
                     {{ pageHeading }}
                 </h1>
+
+                <ul class="govuk-summary-list__actions-list govuk-!-margin-bottom-5">
+                    <li class="govuk-summary-list__actions-list-item">
+                        <a class="govuk-body govuk-link govuk-link--no-visited-state" href="{{viewAnotherHref}}">View another case officer's or inspector's cases</a>
+                    </li>
+
+                    {% if selectedUserId %}
+                    <li class="govuk-summary-list__actions-list-item">
+                        <a class="govuk-body govuk-link govuk-link--no-visited-state" href="/cases/personal-list">Return to my case list</a>
+                    </li>
+                    {% endif %}
+                </ul>
 
                 {% set statusItems = [{ value: "all", text: "All" }] %}
                 {% for status in statusParams.caseStatuses %}
@@ -47,6 +73,10 @@
 
                 {% set filterHtml %}
                     <form method="GET" action="">
+                        {% if selectedUserId %}
+                            <input type="hidden" name="userId" value="{{ selectedUserId }}">
+                        {% endif %}
+
                         {{ govukSelect({
                             id: "status-filter",
                             name: "status",
@@ -63,7 +93,7 @@
                                 classes: "govuk-button--secondary"
                             }) }}
                             
-                            <a class="govuk-link govuk-link--no-visited-state" href="?" data-cy="clear-filter-link-inline">
+                            <a class="govuk-link govuk-link--no-visited-state" href="{{ clearFilterUrl }}" data-cy="clear-filter-link-inline">
                                 Clear filter
                             </a>
                         </div>
@@ -92,8 +122,6 @@
                                 <span class="govuk-hint govuk-!-margin-bottom-0">Unassigned</span>
                             {% endif %}
                         {% endset %}
-
-                        {% set caseOfficerText = case.CaseOfficer.idpUserId if case.CaseOfficer else "Unassigned" %}
 
                         {% set caseRows = (caseRows.push([
                             {
@@ -130,13 +158,14 @@
                         rows: caseRows
                     }) }}
                 
-                {# However, if there are no cases because we have done a filter then we show some different text and layout #}
                 {% else %}
                     <p class="govuk-body" data-cy="no-cases-filtered-text">
                         No cases were found.
                     </p>
                     <p class="govuk-body">
-                        <a href="?" class="govuk-link govuk-link--no-visited-state" data-cy="clear-filter-link">Clear filter</a> to view all assigned cases.
+                        <a href="{{ clearFilterUrl }}" class="govuk-link govuk-link--no-visited-state" data-cy="clear-filter-link">
+                            Clear filter
+                        </a> to view all assigned cases.
                     </p>
                 {% endif %}
 

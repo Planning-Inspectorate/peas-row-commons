@@ -1,0 +1,41 @@
+{% extends "views/layouts/main.njk" %}
+
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% from "views/layouts/components/accessible-autocomplete.njk" import accessibleAutocomplete %}
+
+{% block head %}
+    <link rel="stylesheet" href="/assets/css/accessible-autocomplete.min.css"/>
+    {{ super() }}
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <form action="" method="POST" novalidate>
+                {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
+
+                {{ accessibleAutocomplete({
+                    id: "userId",
+                    name: "userId",
+                    cspNonce: cspNonce,
+                    label: {
+                        text: "Case officer or inspector name",
+                        classes: "govuk-label--l",
+                        isPageHeading: true
+                    },
+                    items: options or []
+                }) }}
+
+                <div class="govuk-button-group">
+                    {{ govukButton({
+                        text: "View",
+                        type: "submit",
+                        attributes: { "data-cy": "button-submit" }
+                    }) }}
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="/assets/js/accessible-autocomplete.min.js"></script>
+{% endblock %}
