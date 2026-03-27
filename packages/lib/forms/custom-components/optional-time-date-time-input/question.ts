@@ -5,6 +5,7 @@ import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/j
 import type { Request } from 'express';
 import type { QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import { safeConvertTo24Hour } from '@pins/peas-row-commons-lib/util/dates.ts';
+import { formatInTimeZone } from 'date-fns-tz';
 
 /**
  * Custom component that behaves the same as DateTimeQuestion but allows
@@ -27,7 +28,7 @@ export default class OptionalTimeDateTimeInput extends DateTimeQuestion {
 
 		if (savedAnswer) {
 			const date = new Date(savedAnswer);
-			const isMidnight = date.getHours() === 0 && date.getMinutes() === 0;
+			const isMidnight = this.isMidnight(date);
 
 			if (isMidnight && viewModel.question?.value) {
 				const valueObj = viewModel.question.value;
@@ -76,7 +77,7 @@ export default class OptionalTimeDateTimeInput extends DateTimeQuestion {
 		if (!answer) return super.formatAnswerForSummary(sectionSegment, journey, answer);
 
 		const date = new Date(answer);
-		const isMidnight = date.getHours() === 0 && date.getMinutes() === 0;
+		const isMidnight = this.isMidnight(date);
 
 		let displayValue: string;
 
@@ -95,5 +96,13 @@ export default class OptionalTimeDateTimeInput extends DateTimeQuestion {
 				action: this.getAction(sectionSegment, journey, answer)
 			}
 		];
+	}
+
+	/**
+	 * Checks if the provided date is midnight in the UK
+	 */
+	isMidnight(date: Date) {
+		const timeInUK = formatInTimeZone(date, 'Europe/London', 'HH:mm');
+		return timeInUK === '00:00';
 	}
 }
