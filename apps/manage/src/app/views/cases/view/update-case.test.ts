@@ -758,6 +758,22 @@ describe('Update Case Controller', () => {
 			assert.strictEqual(proc.ConferenceVenue.create.townCity, 'Manchester');
 			assert.strictEqual(proc.ConferenceVenue.create.postcode, 'M1 1AA');
 		});
+
+		it('should handle decimal columns being passed an empty string by converting to null', () => {
+			const input = {
+				procedureDetails: [
+					{
+						id: 'proc-1',
+						hearingSittingTimeDays: ''
+					}
+				]
+			};
+
+			const result = mapCasePayload(input);
+			const proc = (result as any).Procedures.upsert[0].create;
+
+			assert.strictEqual(proc.hearingSittingTimeDays, null);
+		});
 	});
 
 	describe('buildUpdateCase (procedure updates)', () => {

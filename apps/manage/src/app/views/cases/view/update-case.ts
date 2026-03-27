@@ -370,10 +370,11 @@ export function handleProcedureDetails(flatData: Record<string, unknown>, prisma
 			hearingDateNotificationDate: toDateOrNull(proc.hearingDateNotificationDate),
 			hearingVenueNotificationDate: toDateOrNull(proc.hearingVenueNotificationDate),
 			partiesNotifiedOfHearingDate: toDateOrNull(proc.partiesNotifiedOfHearingDate),
-			hearingPreparationTimeDays: proc.hearingPreparationTimeDays ?? null,
-			hearingTravelTimeDays: proc.hearingTravelTimeDays ?? null,
-			hearingSittingTimeDays: proc.hearingSittingTimeDays ?? null,
-			hearingReportingTimeDays: proc.hearingReportingTimeDays ?? null,
+			// '||' because we get an empty string here, not undefined and the DB is 'Decimal?' so can't take empty string (null fine)
+			hearingPreparationTimeDays: proc.hearingPreparationTimeDays || null,
+			hearingTravelTimeDays: proc.hearingTravelTimeDays || null,
+			hearingSittingTimeDays: proc.hearingSittingTimeDays || null,
+			hearingReportingTimeDays: proc.hearingReportingTimeDays || null,
 
 			// Inquiry fields
 			inquiryTargetDate: toDateOrNull(proc.inquiryTargetDate),
@@ -383,10 +384,11 @@ export function handleProcedureDetails(flatData: Record<string, unknown>, prisma
 			inquiryDateNotificationDate: toDateOrNull(proc.inquiryDateNotificationDate),
 			inquiryVenueNotificationDate: toDateOrNull(proc.inquiryVenueNotificationDate),
 			partiesNotifiedOfInquiryDate: toDateOrNull(proc.partiesNotifiedOfInquiryDate),
-			inquiryPreparationTimeDays: proc.inquiryPreparationTimeDays ?? null,
-			inquiryTravelTimeDays: proc.inquiryTravelTimeDays ?? null,
-			inquirySittingTimeDays: proc.inquirySittingTimeDays ?? null,
-			inquiryReportingTimeDays: proc.inquiryReportingTimeDays ?? null,
+			// '||' because we get an empty string here, not undefined and the DB is 'Decimal?' so can't take empty string (null fine)
+			inquiryPreparationTimeDays: proc.inquiryPreparationTimeDays || null,
+			inquiryTravelTimeDays: proc.inquiryTravelTimeDays || null,
+			inquirySittingTimeDays: proc.inquirySittingTimeDays || null,
+			inquiryReportingTimeDays: proc.inquiryReportingTimeDays || null,
 
 			// Conference / pre-inquiry fields
 			conferenceDate: toDateOrNull(proc.conferenceDate),
