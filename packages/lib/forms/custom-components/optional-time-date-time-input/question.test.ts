@@ -84,6 +84,18 @@ describe('Optional Time Date Time Input', () => {
 			assert.ok(!result[0].value.includes('00:00'));
 		});
 
+		it('should correctly identify midnight during British Summer Time (BST)', () => {
+			// 11pm UTC in summer months is BST midnight
+			const bstMidnightDate = new Date('2023-08-14T23:00:00.000Z');
+			const dateStr = bstMidnightDate.toISOString();
+
+			const result = question.formatAnswerForSummary('segment', mockJourney, dateStr);
+
+			assert.ok(result[0].value.includes('15/08/2023'));
+			assert.ok(!result[0].value.includes('23:00'));
+			assert.ok(!result[0].value.includes('00:00'));
+		});
+
 		it('should return date and time if time is not midnight', () => {
 			const noonDate = new Date('2023-12-25T12:00:00.000Z');
 			const dateStr = noonDate.toISOString();
@@ -158,6 +170,30 @@ describe('Optional Time Date Time Input', () => {
 			const result = question.prepQuestionForRendering(mockSection, mockJourney, {});
 
 			assert.strictEqual(result.question.value.event_date_hour, '10');
+		});
+
+		it('should clear time fields if saved answer is midnight during BST', () => {
+			// 11pm UTC in summer months is BST midnight
+			const bstMidnightDate = new Date('2023-08-14T23:00:00.000Z');
+
+			mockJourney.response.answers['event_date'] = bstMidnightDate.toISOString();
+
+			const mockViewModel = {
+				question: {
+					value: {
+						event_date_hour: '23',
+						event_date_minutes: '00',
+						event_date_period: 'pm'
+					}
+				}
+			};
+
+			parentProto.prepQuestionForRendering = () => mockViewModel;
+
+			const result = question.prepQuestionForRendering(mockSection, mockJourney, {});
+
+			assert.strictEqual(result.question.value.event_date_hour, '');
+			assert.strictEqual(result.question.value.event_date_minutes, '');
 		});
 	});
 });
