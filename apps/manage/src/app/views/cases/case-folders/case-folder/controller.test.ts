@@ -26,7 +26,7 @@ describe('buildViewCaseFolder', () => {
 		({
 			params: { id: 'case-123', folderId: 'folder-456' },
 			query: {},
-			session: {},
+			session: { account: { localAccountId: 'user-456' } },
 			originalUrl: '/cases/case-123/folders/folder-456',
 			...overrides
 		}) as any;

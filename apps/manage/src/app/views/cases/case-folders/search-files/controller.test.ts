@@ -5,7 +5,13 @@ import { buildFileSearchView } from './controller.ts';
 import type { MockDb, MockResponse } from '@pins/peas-row-commons-lib/testing/type.ts';
 
 describe('File Search View Controller', () => {
-	let mockReq: { params: { id: string }; query: Record<string, string>; baseUrl: string; path: string };
+	let mockReq: {
+		params: { id: string };
+		query: Record<string, string>;
+		baseUrl: string;
+		path: string;
+		session: { account: { localAccountId: string } };
+	};
 	let mockRes: MockResponse;
 	let mockDb: MockDb;
 	let mockService: { db: MockDb };
@@ -15,7 +21,8 @@ describe('File Search View Controller', () => {
 			params: { id: 'case-123' },
 			query: {},
 			baseUrl: '/cases/case-123/case-folders/search-results',
-			path: '/'
+			path: '/',
+			session: { account: { localAccountId: 'user-123' } }
 		};
 
 		mockRes = {
@@ -69,7 +76,8 @@ describe('File Search View Controller', () => {
 				uploadedDate: new Date(),
 				size: BigInt(1024),
 				mimeType: 'application/pdf',
-				Folder: { id: 'f1', displayName: 'General' }
+				Folder: { id: 'f1', displayName: 'General' },
+				Case: { id: 'c1', legacyCaseId: 'l1' }
 			},
 			{
 				id: 'doc-2',
@@ -77,7 +85,8 @@ describe('File Search View Controller', () => {
 				uploadedDate: new Date(),
 				size: BigInt(2048),
 				mimeType: 'application/pdf',
-				Folder: { id: 'f1', displayName: 'General' }
+				Folder: { id: 'f1', displayName: 'General' },
+				Case: { id: 'c1', legacyCaseId: 'l1' }
 			}
 		]);
 

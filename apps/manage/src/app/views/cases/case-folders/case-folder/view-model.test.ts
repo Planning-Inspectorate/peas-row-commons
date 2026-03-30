@@ -18,6 +18,10 @@ describe('createDocumentsViewModel', () => {
 			...overrides
 		}) as any;
 
+	const mockCase = {
+		id: 'case-1'
+	} as any;
+
 	it('should map Prisma documents to view models correctly', () => {
 		const inputDocs = [
 			createMockDoc({
@@ -34,7 +38,7 @@ describe('createDocumentsViewModel', () => {
 			})
 		];
 
-		const result = createDocumentsViewModel(inputDocs, PREVIEW_MIME_TYPES);
+		const result = createDocumentsViewModel(inputDocs, mockCase, PREVIEW_MIME_TYPES);
 
 		assert.strictEqual(result.length, 2);
 
@@ -59,7 +63,7 @@ describe('createDocumentsViewModel', () => {
 			createMockDoc({ fileName: '.config' })
 		];
 
-		const result = createDocumentsViewModel(docs, PREVIEW_MIME_TYPES);
+		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
 
 		assert.strictEqual(result[0].fileType, 'GZ');
 		assert.strictEqual(result[1].fileType, 'README');
@@ -70,7 +74,7 @@ describe('createDocumentsViewModel', () => {
 		const summerDate = new Date('2023-07-01T23:30:00Z');
 		const docs = [createMockDoc({ uploadedDate: summerDate })];
 
-		const result = createDocumentsViewModel(docs, PREVIEW_MIME_TYPES);
+		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
 
 		assert.strictEqual(result[0].date, '02 Jul 2023');
 	});
@@ -79,14 +83,62 @@ describe('createDocumentsViewModel', () => {
 		const bigVal = BigInt(1024 * 1024);
 		const docs = [createMockDoc({ size: bigVal })];
 
-		const result = createDocumentsViewModel(docs, PREVIEW_MIME_TYPES);
+		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
 
 		assert.strictEqual(result[0].sizeSort, 1048576);
 		assert.ok(typeof result[0].size === 'string');
 	});
 
 	it('should return empty array if no documents provided', () => {
-		const result = createDocumentsViewModel([], PREVIEW_MIME_TYPES);
+		const result = createDocumentsViewModel([], mockCase, PREVIEW_MIME_TYPES);
 		assert.deepStrictEqual(result, []);
+	});
+
+	it('should default isRead and isFlagged correctly when UserDocuments is empty or missing', () => {
+		const docs = [
+			createMockDoc({
+				id: '1',
+				UserDocuments: []
+			}),
+			createMockDoc({
+				id: '2'
+			})
+		];
+
+		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
+
+		assert.strictEqual(result[0].isRead, false);
+		assert.strictEqual(result[0].isFlagged, false);
+
+		assert.strictEqual(result[1].isRead, false);
+		assert.strictEqual(result[1].isFlagged, false);
+	});
+
+	it('should map isRead and isFlagged correctly when a UserDocument state exists', () => {
+		const docs = [
+			createMockDoc({
+				id: '1',
+				UserDocuments: [{ readStatus: true, flaggedStatus: false }]
+			}),
+			createMockDoc({
+				id: '2',
+				UserDocuments: [{ readStatus: false, flaggedStatus: true }]
+			}),
+			createMockDoc({
+				id: '3',
+				UserDocuments: [{ readStatus: true, flaggedStatus: true }]
+			})
+		];
+
+		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
+
+		assert.strictEqual(result[0].isRead, true);
+		assert.strictEqual(result[0].isFlagged, false);
+
+		assert.strictEqual(result[1].isRead, false);
+		assert.strictEqual(result[1].isFlagged, true);
+
+		assert.strictEqual(result[2].isRead, true);
+		assert.strictEqual(result[2].isFlagged, true);
 	});
 });

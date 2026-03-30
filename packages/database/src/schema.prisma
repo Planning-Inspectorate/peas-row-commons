@@ -93,6 +93,8 @@ model Case {
   RelatedCases             RelatedCase[]
   /// Cases linked to this case
   LinkedCases              LinkedCase[]
+  /// User read statuses for this case's files
+  UserDocuments            UserDocument[]
 }
 
 model Act {
@@ -122,6 +124,7 @@ model User {
   Inspector          Inspector[]    @relation("inspector")
   CaseHistory        CaseHistory[]  @relation("caseHistoryUser")
   ProcedureInspector Procedure[]    @relation("procedureInspector")
+  UserDocuments      UserDocument[]
 }
 
 model CaseworkArea {
@@ -295,17 +298,18 @@ model CasePriority {
 }
 
 model Document {
-  id           String    @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  fileName     String
-  uploadedDate DateTime  @default(now())
-  size         BigInt    @default(0)
-  blobName     String
-  mimeType     String    @default("application/octet-stream")
-  deletedAt    DateTime?
-  caseId       String    @db.UniqueIdentifier
-  Case         Case      @relation(fields: [caseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  folderId     String    @db.UniqueIdentifier
-  Folder       Folder    @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  id            String         @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  fileName      String
+  uploadedDate  DateTime       @default(now())
+  size          BigInt         @default(0)
+  blobName      String
+  mimeType      String         @default("application/octet-stream")
+  deletedAt     DateTime?
+  caseId        String         @db.UniqueIdentifier
+  Case          Case           @relation(fields: [caseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  folderId      String         @db.UniqueIdentifier
+  Folder        Folder         @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  UserDocuments UserDocument[]
 }
 
 /// Indicates a document that has been uploaded
@@ -635,4 +639,23 @@ model AuthorityStatus {
   id          String      @id
   displayName String?
   Authority   Authority[]
+}
+
+/// Tracks user-specific states (read, flagged) for documents
+model UserDocument {
+  id            String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  userId        String  @db.UniqueIdentifier
+  documentId    String  @db.UniqueIdentifier
+  caseId        String  @db.UniqueIdentifier
+  readStatus    Boolean @default(false)
+  flaggedStatus Boolean @default(false)
+
+  User     User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Document Document @relation(fields: [documentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Case     Case     @relation(fields: [caseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  // Only one row per document, per user.
+  @@unique([userId, documentId])
+  // This index should allow fast lookup for a specific user's documents on a case, the main usecase.
+  @@index([caseId, userId])
 }

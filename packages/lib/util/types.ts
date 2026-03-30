@@ -15,3 +15,9 @@ export type AddressItem = {
 	county?: string;
 	postcode?: string;
 };
+
+export type DefaultStatusParams = {
+	legacyCaseId: string | null;
+	statusId: string | null;
+	closedStatuses: string[];
+};
