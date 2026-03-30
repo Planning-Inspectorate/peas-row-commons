@@ -203,8 +203,10 @@
                         <p class="govuk-body" data-cy="no-documents-message">This folder contains 0 documents</p>
                     {% endif %}
                 </form>
-                {# This is the target form for inline deleting, which is needed independent of the main form to avoid it picking up the checkboxes #}
-                <form id="inline-delete-form" action="{{ currentPath }}/documents/delete-confirmation" method="POST" style="display: none;">
+                {# This is the target form for inline status changes, which is needed independent of the main form to avoid it picking up the checkboxes #}
+                <form id="inline-action-form" action="/documents/toggle-action" method="POST" style="display: none;">
+                    <input type="hidden" name="caseId" value="{{ caseId }}">
+                    <input type="hidden" name="returnUrl" value="{{ currentUrl }}">
                     {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
                 </form>
             </div>

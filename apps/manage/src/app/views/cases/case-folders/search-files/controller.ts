@@ -18,6 +18,12 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 		const { id } = req.params;
 		const searchString = req.query?.searchCriteria?.toString().trim() || '';
 
+		const userId = req?.session?.account?.localAccountId;
+
+		if (!userId) {
+			throw new Error('userId required for searching documents');
+		}
+
 		const [filesDeleted] = readAndClearSessionData(req);
 
 		let totalDocuments = 0;
@@ -40,7 +46,15 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 				}),
 				db.document.findMany({
 					include: {
-						Folder: true
+						Folder: true,
+						Case: true,
+						UserDocuments: {
+							where: {
+								User: {
+									idpUserId: userId
+								}
+							}
+						}
 					},
 					where: {
 						...searchCriteria,
@@ -74,7 +88,8 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 			uiItems: paginationItems
 		};
 
-		const documentsViewModel = documents.length > 0 ? createDocumentsViewModel(documents, PREVIEW_MIME_TYPES) : [];
+		const documentsViewModel =
+			documents.length > 0 ? createDocumentsViewModel(documents, documents[0].Case, PREVIEW_MIME_TYPES) : [];
 
 		const returnUrl = req.baseUrl.replace(/\/search-results\/?$/, '');
 

@@ -21,6 +21,7 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 	return async (req, res) => {
 		const id = req.params.id;
 		const folderId = req.params.folderId;
+		const userId = req?.session?.account?.localAccountId;
 
 		if (!id) {
 			throw new Error('id param required');
@@ -28,6 +29,10 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 
 		if (!folderId) {
 			throw new Error('folderId param required');
+		}
+
+		if (!userId) {
+			throw new Error('userId required for folder documents');
 		}
 
 		const [folderUpdated, folderCreated, folderDeleted, folderRenamed, filesMoved, filesDeleted, errorSummary] =
@@ -45,7 +50,9 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 					Case: {
 						select: {
 							reference: true,
-							name: true
+							name: true,
+							statusId: true,
+							legacyCaseId: true
 						}
 					},
 					ChildFolders: {
@@ -53,7 +60,14 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 					},
 					Documents: {
 						include: {
-							Folder: true
+							Folder: true,
+							UserDocuments: {
+								where: {
+									User: {
+										idpUserId: userId
+									}
+								}
+							}
 						},
 						where: { caseId: id, deletedAt: null },
 						skip: skipSize,
@@ -123,7 +137,7 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 
 		const subFoldersViewModel = subFolders ? createFoldersViewModel(subFolders) : [];
 
-		const documentsViewModel = documents ? createDocumentsViewModel(documents, PREVIEW_MIME_TYPES) : [];
+		const documentsViewModel = documents ? createDocumentsViewModel(documents, caseRow, PREVIEW_MIME_TYPES) : [];
 
 		const baseFoldersUrl = `/cases/${id}/case-folders`;
 
