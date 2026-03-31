@@ -49,6 +49,7 @@ import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/st
 import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/admin-procedure-type.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
 import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
+import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
 
@@ -790,23 +791,25 @@ export const TEAM_QUESTIONS = {
  */
 export function createTeamQuestions(
 	teamQuestions: typeof TEAM_QUESTIONS,
-	groupMembers: { caseOfficers: CaseOfficer[] },
+	groupMembers: EntraGroupMembers,
 	allUsers: Prisma.UserGetPayload<{ select: { id: true; idpUserId: true; legacyId: true } }>[]
 ) {
-	const options = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
+	const caseOfficers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
+	caseOfficers.unshift({ text: '', value: '' });
 
-	options.unshift({ text: '', value: '' });
+	const inspectors = groupMembers.inspectors.map(referenceDataToRadioOptions);
+	inspectors.unshift({ text: '', value: '' });
 
 	return {
 		...teamQuestions,
 		caseOfficer: {
 			...teamQuestions.caseOfficer,
-			options,
+			options: caseOfficers,
 			legacyOptions: allUsers.map((user) => ({ text: user.idpUserId, value: user.idpUserId }))
 		},
 		inspector: {
 			...teamQuestions.inspector,
-			options,
+			options: inspectors,
 			legacyOptions: allUsers.map((user) => ({ text: user.idpUserId, value: user.idpUserId }))
 		}
 	};
@@ -1009,23 +1012,22 @@ export const OUTCOME_QUESTIONS = {
  */
 export function createOutcomeQuestions(
 	outcomeQuestions: typeof OUTCOME_QUESTIONS,
-	groupMembers: { caseOfficers: CaseOfficer[] },
+	groupMembers: EntraGroupMembers,
 	inspectors: Record<string, unknown>[]
 ) {
-	const officerOptions = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
-	officerOptions.unshift({ text: '', value: '' });
+	const caseOfficerOptions = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
+	caseOfficerOptions.unshift({ text: '', value: '' });
 
 	const inspectorIds = inspectors?.map((inspector) => inspector.inspectorId);
 
-	const relevantInspectors = [...groupMembers.caseOfficers].filter((member) => inspectorIds.includes(member.id));
-
+	const relevantInspectors = [...groupMembers.inspectors].filter((member) => inspectorIds.includes(member.id));
 	const inspectorOptions = relevantInspectors.map(referenceDataToRadioOptions);
 
 	return {
 		...outcomeQuestions,
 		decisionMakerOfficer: {
 			...outcomeQuestions.decisionMakerOfficer,
-			options: officerOptions
+			options: caseOfficerOptions
 		},
 		decisionMakerInspector: {
 			...outcomeQuestions.decisionMakerInspector,

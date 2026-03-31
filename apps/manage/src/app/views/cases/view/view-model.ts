@@ -3,7 +3,7 @@ import {
 	dateISOStringToDisplayTime12hr,
 	getDayFromISODate
 } from '@pins/peas-row-commons-lib/util/dates.ts';
-import type { CaseDecisionFields, CaseListFields, CaseNoteFields, CaseOfficer, CaseProcedureFields } from './types.ts';
+import type { CaseDecisionFields, CaseListFields, CaseNoteFields, CaseProcedureFields } from './types.ts';
 import { formatInTimeZone } from 'date-fns-tz';
 import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
 import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address.ts';
@@ -16,6 +16,7 @@ import { DECISION_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/stati
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
 import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/legacy/act-sections.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
+import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
 
 function formatValue(value: any) {
 	if (typeof value === 'boolean') {
@@ -146,7 +147,7 @@ export function mapProceduresToArray(procedures: any[]): Record<string, any>[] |
  * Takes raw case data and converts into UI usable data format.
  * Converts the nested nature of join tables into a flat object.
  */
-export function caseToViewModel(caseRow: CaseListFields, groupMembers: { caseOfficers: CaseOfficer[] }) {
+export function caseToViewModel(caseRow: CaseListFields, groupMembers: EntraGroupMembers) {
 	const mergedData: Record<string, any> = { ...caseRow };
 
 	NESTED_SECTIONS.forEach((sectionKey) => {
@@ -306,7 +307,7 @@ export const mapAndSortDecisions = (decisions?: CaseDecisionFields[]) => {
  */
 export const mapNotes = (
 	unmappedCaseNotes: Omit<CaseNoteFields, 'Case'>[],
-	groupMembers: { caseOfficers: CaseOfficer[] },
+	groupMembers: EntraGroupMembers,
 	caseId: string
 ) => {
 	// Sort the cases first so that they are in descending order by creation date.
@@ -314,7 +315,7 @@ export const mapNotes = (
 
 	return {
 		caseNotes: caseNotes.map((caseNote) => {
-			const user = groupMembers.caseOfficers.find((member) => member.id === caseNote.Author.idpUserId);
+			const user = groupMembers.allUsers.find((member) => member.id === caseNote.Author.idpUserId);
 
 			return {
 				date: dateISOStringToDisplayDate(caseNote.createdAt),

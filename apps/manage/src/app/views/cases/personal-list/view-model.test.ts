@@ -6,10 +6,12 @@ import type { CaseListFields } from './types.ts';
 
 describe('casesToViewModel', () => {
 	const mockGroupMembers = {
-		caseOfficers: [
+		caseOfficers: [{ id: 'user-1', displayName: 'Oscar CaseOfficer' }],
+		inspectors: [{ id: 'user-2', displayName: 'Oscar Inspector' }],
+		allUsers: [
 			{ id: 'user-1', displayName: 'Oscar CaseOfficer' },
 			{ id: 'user-2', displayName: 'Oscar Inspector' }
-		] as CaseOfficer[]
+		]
 	};
 
 	it('should map the display names for the Case Officer and Inspectors correctly', () => {

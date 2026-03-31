@@ -9,7 +9,7 @@ import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.t
 
 export function buildViewCaseHistory(service: ManageService): AsyncRequestHandler {
 	const { db, audit, logger, getEntraClient } = service;
-	const groupId = service.authConfig.groups.applicationAccess;
+	const groupIds = service.entraGroupIds;
 
 	return async (req, res) => {
 		const { id } = req.params;
@@ -70,19 +70,19 @@ export function buildViewCaseHistory(service: ManageService): AsyncRequestHandle
 			logger,
 			initClient: getEntraClient,
 			session: req.session,
-			groupId
+			groupIds
 		});
 
 		logger.info(
 			{
 				eventUserIds: events.map((e) => e.userId),
-				groupMemberIds: groupMembers.caseOfficers.map((m) => ({ id: m.id, displayName: m.displayName })),
+				groupMemberIds: groupMembers.allUsers.map((m) => ({ id: m.id, displayName: m.displayName })),
 				sessionUserId: req?.session?.account?.localAccountId
 			},
 			'user ID comparison'
 		);
 
-		const userMap = new Map(groupMembers.caseOfficers.map((member) => [member.id, member.displayName]));
+		const userMap = new Map(groupMembers.allUsers.map((member) => [member.id, member.displayName]));
 
 		const eventsWithUserNames = events.map((event) => ({
 			...event,

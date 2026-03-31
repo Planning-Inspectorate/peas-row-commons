@@ -4,9 +4,7 @@ import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-
 
 export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestHandler {
 	const { logger, getEntraClient } = service;
-	// In current development, the only "group" will be those
-	// with general access to the app.
-	const groupId = service.authConfig.groups.applicationAccess;
+	const groupIds = service.entraGroupIds;
 
 	return async (req, _, next) => {
 		try {
@@ -14,7 +12,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 				logger,
 				initClient: getEntraClient,
 				session: req.session,
-				groupId
+				groupIds
 			});
 
 			// Not happy about this... Ideally I would append to res.locals

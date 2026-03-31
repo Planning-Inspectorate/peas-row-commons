@@ -1,5 +1,7 @@
 import type { GroupMember } from '@pins/peas-row-commons-lib/graph/types.ts';
 
 export interface EntraGroupMembers {
+	allUsers: GroupMember[];
 	caseOfficers: GroupMember[];
+	inspectors: GroupMember[];
 }

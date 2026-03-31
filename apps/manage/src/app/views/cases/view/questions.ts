@@ -18,12 +18,12 @@ import {
 	PROCEDURE_MANAGE_LIST_QUESTION
 } from './question-utils.ts';
 
-import type { CaseOfficer } from './types.ts';
 import { CUSTOM_COMPONENT_CLASSES } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
 
 export function getQuestions(
-	groupMembers: { caseOfficers: CaseOfficer[] },
+	groupMembers: EntraGroupMembers,
 	allUsers: Prisma.UserGetPayload<{ select: { id: true; idpUserId: true; legacyId: true } }>[],
 	answers: Record<string, unknown>
 ) {

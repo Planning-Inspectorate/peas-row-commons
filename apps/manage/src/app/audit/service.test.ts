@@ -224,6 +224,14 @@ describe('Audit Service', () => {
 			const service = buildAuditService(mockDb as any, logger as any);
 
 			const groupMembers = {
+				allUsers: [
+					{ id: 'user-123', displayName: 'John Smith' },
+					{ id: 'user-456', displayName: 'Jane Doe' }
+				],
+				inspectors: [
+					{ id: 'user-123', displayName: 'John Smith' },
+					{ id: 'user-456', displayName: 'Jane Doe' }
+				],
 				caseOfficers: [
 					{ id: 'user-123', displayName: 'John Smith' },
 					{ id: 'user-456', displayName: 'Jane Doe' }
@@ -251,7 +259,9 @@ describe('Audit Service', () => {
 			const service = buildAuditService(mockDb as any, logger as any);
 
 			const groupMembers = {
-				caseOfficers: [{ id: 'user-123', displayName: 'John Smith' }]
+				caseOfficers: [{ id: 'user-123', displayName: 'John Smith' }],
+				allUsers: [{ id: 'user-123', displayName: 'John Smith' }],
+				inspectors: [{ id: 'user-123', displayName: 'John Smith' }]
 			};
 
 			const info = await service.getLastModifiedInfo('case-123', groupMembers);
@@ -266,7 +276,7 @@ describe('Audit Service', () => {
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
 
-			const groupMembers = { caseOfficers: [] };
+			const groupMembers = { caseOfficers: [], inspectors: [], allUsers: [] };
 
 			const info = await service.getLastModifiedInfo('case-123', groupMembers);
 
@@ -289,7 +299,7 @@ describe('Audit Service', () => {
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
 
-			const groupMembers = { caseOfficers: [] };
+			const groupMembers = { caseOfficers: [], inspectors: [], allUsers: [] };
 
 			const info = await service.getLastModifiedInfo('case-123', groupMembers);
 
@@ -306,7 +316,7 @@ describe('Audit Service', () => {
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
 
-			const groupMembers = { caseOfficers: [] };
+			const groupMembers = { caseOfficers: [], inspectors: [], allUsers: [] };
 
 			const info = await service.getLastModifiedInfo('case-123', groupMembers);
 
@@ -329,7 +339,7 @@ describe('Audit Service', () => {
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
 
-			const groupMembers = { caseOfficers: [] };
+			const groupMembers = { caseOfficers: [], inspectors: [], allUsers: [] };
 
 			const info = await service.getLastModifiedInfo('case-123', groupMembers);
 

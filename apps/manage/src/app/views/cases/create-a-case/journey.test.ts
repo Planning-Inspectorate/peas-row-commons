@@ -18,7 +18,7 @@ describe('create-a-case journey', () => {
 	});
 
 	it('should create a journey with no Section title', () => {
-		const questions = getQuestions();
+		const questions = getQuestions({ allUsers: [], inspectors: [], caseOfficers: [] });
 
 		const mockReq = {
 			baseUrl: '/cases/create-a-case'

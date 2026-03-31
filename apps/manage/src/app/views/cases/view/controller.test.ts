@@ -134,6 +134,11 @@ describe('Case Controller', () => {
 			const next = mock.fn();
 			const middleware = buildGetJourneyMiddleware({
 				db: mockDb,
+				entraGroupIds: {
+					allUsers: '123',
+					inspectors: '123',
+					caseOfficers: '123'
+				},
 				logger: mockLogger(),
 				authConfig: {
 					groups: []

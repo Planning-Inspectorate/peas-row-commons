@@ -23,6 +23,14 @@ variable "apps_config" {
       group_application_access = string
     })
 
+    entra = object({
+      group_ids = object({
+        all_users     = string
+        case_officers = string
+        inspectors    = string
+      })
+    })
+
     functions_node_version = number
 
     logging = object({
