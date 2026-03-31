@@ -5,6 +5,7 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { Logger } from 'pino';
 import { NoUploadsError } from './error.ts';
+import { AUDIT_ACTIONS } from '../../../../audit/index.ts';
 
 /**
  * Creates the documents controller that is used when
@@ -12,7 +13,7 @@ import { NoUploadsError } from './error.ts';
  * from "Draft".
  */
 export function createDocumentsController(service: ManageService) {
-	const { db, logger } = service;
+	const { db, logger, audit } = service;
 	return async (req: Request, res: Response) => {
 		try {
 			const { id, folderId } = req.params;
@@ -21,13 +22,45 @@ export function createDocumentsController(service: ManageService) {
 				throw new Error('Missing required parameters: id or folderId');
 			}
 
-			const createdLength = await createDocumentsFromDrafts(req, db, logger, id, folderId);
+			const { createdLength, fileNames } = await createDocumentsFromDrafts(req, db, logger, id, folderId);
 
 			if (createdLength === 0) {
 				throw new NoUploadsError('Select a file to upload');
 			}
 
 			logger.info({ id, folderId }, `Created ${createdLength} documents`);
+
+			// Audit the upload at commit time rather than during individual
+			// file uploads, so we can accurately determine single vs bulk
+			// and avoid auditing files that were removed before committing.
+			const folder = await db.folder.findUnique({
+				where: { id: folderId },
+				select: { displayName: true }
+			});
+
+			const folderName = folder?.displayName ?? folderId;
+
+			if (createdLength === 1) {
+				await audit.record({
+					caseId: id,
+					action: AUDIT_ACTIONS.FILE_UPLOADED,
+					userId: req?.session?.account?.localAccountId,
+					metadata: {
+						fileName: fileNames[0],
+						folderName
+					}
+				});
+			} else {
+				await audit.record({
+					caseId: id,
+					action: AUDIT_ACTIONS.FILES_UPLOADED,
+					userId: req?.session?.account?.localAccountId,
+					metadata: {
+						files: fileNames,
+						folderName
+					}
+				});
+			}
 
 			addSessionData(req, folderId, { updated: true }, 'folder');
 
@@ -71,7 +104,7 @@ export async function createDocumentsFromDrafts(
 	logger: Logger,
 	caseId: string,
 	folderId: string
-): Promise<number> {
+): Promise<{ createdLength: number; fileNames: string[] }> {
 	try {
 		const drafts = await db.draftDocument.findMany({
 			where: {
@@ -83,7 +116,7 @@ export async function createDocumentsFromDrafts(
 
 		if (!drafts || !drafts.length) {
 			logger.info({ caseId }, 'No drafts to commit to DB');
-			return 0;
+			return { createdLength: 0, fileNames: [] };
 		}
 
 		const realDocumentsData = drafts.map((draft) => ({
@@ -110,9 +143,11 @@ export async function createDocumentsFromDrafts(
 			})
 		]);
 
+		const fileNames = drafts.map((draft) => draft.fileName);
+
 		logger.info({ caseId, count: drafts.length }, 'Documents successfully committed to DB');
 
-		return drafts.length;
+		return { createdLength: drafts.length, fileNames };
 	} catch (error: any) {
 		wrapPrismaError({
 			error,

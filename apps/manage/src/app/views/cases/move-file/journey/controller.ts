@@ -9,6 +9,7 @@ import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { Logger } from 'pino';
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { AUDIT_ACTIONS } from '../../../../audit/index.ts';
 
 /**
  * Creates the middleware that fetches the case + folders from the DB
@@ -130,7 +131,7 @@ export async function moveFilesTransaction(
 /**
  * Controller for saving the new folder to the documents. Redirects to the new folder.
  */
-export function buildSaveController({ db, logger }: ManageService): RequestHandler {
+export function buildSaveController({ db, logger, audit }: ManageService): RequestHandler {
 	return async (req, res) => {
 		const { id } = req.params;
 
@@ -138,6 +139,16 @@ export function buildSaveController({ db, logger }: ManageService): RequestHandl
 		if (!state) return;
 
 		const { fileIds, destinationFolderId } = state;
+
+		// Fetch documents with their current folder before the move
+		const documentsBeforeMove = await db.document.findMany({
+			where: { id: { in: fileIds } },
+			select: {
+				id: true,
+				fileName: true,
+				Folder: { select: { displayName: true } }
+			}
+		});
 
 		let destinationFolder;
 		try {
@@ -149,6 +160,20 @@ export function buildSaveController({ db, logger }: ManageService): RequestHandl
 					select: { id: true, displayName: true }
 				});
 			});
+
+			// Audit each file move individually
+			for (const doc of documentsBeforeMove) {
+				await audit.record({
+					caseId: id,
+					action: AUDIT_ACTIONS.FILE_MOVED,
+					userId: req?.session?.account?.localAccountId,
+					metadata: {
+						fileName: doc.fileName,
+						oldFolderName: doc.Folder?.displayName ?? '-',
+						newFolderName: destinationFolder?.displayName ?? '-'
+					}
+				});
+			}
 
 			// Will show the success banner once we have redirected to the new folder page.
 			addSessionData(req, destinationFolderId, { filesMoved: true }, 'folder');

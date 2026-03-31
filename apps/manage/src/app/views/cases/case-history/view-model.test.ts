@@ -127,6 +127,72 @@ describe('createCaseHistoryViewModel', () => {
 		assert.ok('time' in result[0]);
 		assert.ok('details' in result[0]);
 		assert.ok('user' in result[0]);
-		assert.strictEqual(Object.keys(result[0]).length, 4);
+		assert.ok('files' in result[0]);
+		assert.strictEqual(Object.keys(result[0]).length, 5);
+	});
+
+	it('should include files array for bulk upload actions with file metadata', () => {
+		const events = [
+			createMockEvent({
+				action: 'FILES_UPLOADED',
+				metadata: { files: ['doc1.pdf', 'doc2.pdf'], folderName: 'Evidence' }
+			})
+		];
+
+		const result = createCaseHistoryViewModel(events);
+
+		assert.deepStrictEqual(result[0].files, ['doc1.pdf', 'doc2.pdf']);
+	});
+
+	it('should include files array for bulk download actions', () => {
+		const events = [
+			createMockEvent({
+				action: 'FILES_DOWNLOADED',
+				metadata: { files: ['a.pdf', 'b.pdf'], zipName: 'case-files.zip' }
+			})
+		];
+
+		const result = createCaseHistoryViewModel(events);
+
+		assert.deepStrictEqual(result[0].files, ['a.pdf', 'b.pdf']);
+	});
+
+	it('should include files array for bulk delete actions', () => {
+		const events = [
+			createMockEvent({
+				action: 'FILES_DELETED',
+				metadata: { files: ['old.pdf'] }
+			})
+		];
+
+		const result = createCaseHistoryViewModel(events);
+
+		assert.deepStrictEqual(result[0].files, ['old.pdf']);
+	});
+
+	it('should not include files for non-bulk actions even if metadata has files', () => {
+		const events = [
+			createMockEvent({
+				action: 'FILE_UPLOADED',
+				metadata: { files: ['sneaky.pdf'], fileName: 'sneaky.pdf', folderName: 'Docs' }
+			})
+		];
+
+		const result = createCaseHistoryViewModel(events);
+
+		assert.strictEqual(result[0].files, undefined);
+	});
+
+	it('should not include files for bulk actions when metadata has no files array', () => {
+		const events = [
+			createMockEvent({
+				action: 'FILES_UPLOADED',
+				metadata: { folderName: 'Evidence' }
+			})
+		];
+
+		const result = createCaseHistoryViewModel(events);
+
+		assert.strictEqual(result[0].files, undefined);
 	});
 });

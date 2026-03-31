@@ -1,6 +1,12 @@
 import { ManageService } from '#service';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
-import { type Case, Prisma, PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
+import {
+	type Case,
+	type LinkedCase,
+	Prisma,
+	PrismaClient,
+	type RelatedCase
+} from '@pins/peas-row-commons-database/src/client/client.ts';
 import { getRelationForField } from '@pins/peas-row-commons-lib/util/schema-map.ts';
 
 import type { Request, Response } from 'express';
@@ -11,7 +17,7 @@ import { JOURNEY_ID } from './journey.ts';
 import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 import { CONTACT_MAPPINGS, handleContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
-import { AUDIT_ACTIONS } from '../../../audit/index.ts';
+import { AUDIT_ACTIONS, type AuditAction } from '../../../audit/index.ts';
 import { getFieldDisplayNames } from './question-utils.ts';
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
@@ -21,6 +27,22 @@ import { mapProceduresToArray, sortProceduresChronologically } from './view-mode
 import { mapAddressViewModelToDb } from '@pins/peas-row-commons-lib/util/address.ts';
 import type { AddressItem } from '@pins/peas-row-commons-lib/util/types.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
+import {
+	type ContactWithAddress,
+	type InspectorWithUser,
+	type ProcedureWithRelations,
+	type DecisionWithRelations,
+	resolveFieldValues,
+	resolveLinkedCaseAudits,
+	resolveRelatedCaseAudits,
+	resolveContactAudits,
+	resolveInspectorAudits,
+	resolveProcedureAudits,
+	resolveOutcomeAudits
+} from '../../../audit/resolvers/index.ts';
+import { LIST_FIELDS } from '@pins/peas-row-commons-lib/constants/audit.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
+import { getEntraGroupMembers } from '#util/entra-groups.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -30,8 +52,9 @@ interface HandlerParams {
 
 export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 	return async ({ req, data }: HandlerParams) => {
-		const { db, logger, audit } = service;
+		const { db, logger, audit, getEntraClient } = service;
 		const { id, section } = req.params;
+		const groupIds = service.entraGroupIds;
 
 		if (!id) {
 			throw new Error(`invalid update case request, id param required (id:${id})`);
@@ -87,18 +110,236 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 			return;
 		}
 
+		const answersSnapshot = { ...rawAnswers };
+
 		const formattedAnswersForQuery = mapCasePayload(rawAnswers);
 
 		logger.info({ fields: updatedFieldNames }, 'update case input');
 
-		await updateCaseData(id, db, logger, formattedAnswersForQuery);
+		const result = await updateCaseData(id, db, logger, formattedAnswersForQuery);
 
-		await audit.record({
-			caseId: id,
-			action: AUDIT_ACTIONS.FIELD_UPDATED,
-			userId: req?.session?.account?.localAccountId,
-			metadata: { fieldName: getFieldDisplayNames(updatedFieldNames) }
-		});
+		if (result) {
+			try {
+				const previousValues = result.previous as Record<string, unknown>;
+
+				// Load group members once for any resolvers that need name resolution
+				const groupMembers = await getEntraGroupMembers({
+					logger,
+					initClient: getEntraClient,
+					session: req.session,
+					groupIds
+				});
+
+				const userDisplayNameMap = new Map(groupMembers.caseOfficers.map((member) => [member.id, member.displayName]));
+
+				for (const fieldName of updatedFieldNames) {
+					// We handle list fields differently below, skipping auditing here
+					if (LIST_FIELDS.has(fieldName)) {
+						continue;
+					}
+
+					const { oldValue, newValue } = resolveFieldValues(fieldName, previousValues, answersSnapshot[fieldName], {
+						userDisplayNameMap
+					});
+
+					// We don't want to record an audit if the field value hasn't changed
+					if (oldValue === newValue) {
+						continue;
+					}
+
+					let action: AuditAction;
+
+					if (oldValue === '-') {
+						action = AUDIT_ACTIONS.FIELD_SET;
+					} else if (newValue === '-') {
+						action = AUDIT_ACTIONS.FIELD_CLEARED;
+					} else {
+						action = AUDIT_ACTIONS.FIELD_UPDATED;
+					}
+
+					await audit.record({
+						caseId: id,
+						action,
+						userId: req?.session?.account?.localAccountId,
+						metadata: {
+							fieldName: getFieldDisplayNames([fieldName]),
+							oldValue,
+							newValue
+						}
+					});
+				}
+
+				/**
+				 * List-type fields are handled separately from scalar fields because they
+				 * represent one-to-many relationships...
+				 *
+				 * Unlike scalar fields where we compare a single old value to a single new value,
+				 * list fields require diffing two arrays to determine what was added, removed, or
+				 * modified. Each change produces its own audit entry with a specific action
+				 * (e.g. RELATED_CASE_ADDED vs RELATED_CASE_DELETED) rather than a generic
+				 * FIELD_UPDATED.
+				 */
+
+				// Related cases
+				if (answersSnapshot.relatedCaseDetails) {
+					const oldRelatedCases = (previousValues.RelatedCases as RelatedCase[]) ?? [];
+					const newRelatedCases = answersSnapshot.relatedCaseDetails as { relatedCaseReference: string }[];
+
+					const audits = resolveRelatedCaseAudits(
+						id,
+						req?.session?.account?.localAccountId,
+						oldRelatedCases,
+						newRelatedCases
+					);
+
+					await Promise.all(audits.map((entry) => audit.record(entry)));
+				}
+
+				// Linked cases
+				if (answersSnapshot.linkedCaseDetails) {
+					const oldLinkedCases = (previousValues.LinkedCases as LinkedCase[]) ?? [];
+					const newLinkedCases = answersSnapshot.linkedCaseDetails as {
+						linkedCaseReference: string;
+						linkedCaseIsLead: string;
+					}[];
+
+					const audits = resolveLinkedCaseAudits(
+						id,
+						req?.session?.account?.localAccountId,
+						oldLinkedCases,
+						newLinkedCases
+					);
+
+					await Promise.all(audits.map((entry) => audit.record(entry)));
+				}
+
+				// Applicant or appellant
+				if (answersSnapshot.applicantDetails) {
+					const oldApplicants =
+						(previousValues.Contacts as ContactWithAddress[])?.filter(
+							(c) => c.contactTypeId === CONTACT_TYPE_ID.APPLICANT_APPELLANT
+						) ?? [];
+
+					const audits = resolveContactAudits(
+						id,
+						req?.session?.account?.localAccountId,
+						oldApplicants,
+						answersSnapshot.applicantDetails as Record<string, unknown>[],
+						'applicant',
+						{
+							added: AUDIT_ACTIONS.APPLICANT_ADDED,
+							updated: AUDIT_ACTIONS.APPLICANT_UPDATED,
+							deleted: AUDIT_ACTIONS.APPLICANT_DELETED
+						}
+					);
+
+					await Promise.all(audits.map((entry) => audit.record(entry)));
+				}
+
+				// Objector
+				if (answersSnapshot.objectorDetails) {
+					const oldObjectors =
+						(previousValues.Contacts as ContactWithAddress[])?.filter(
+							(c) => c.contactTypeId === CONTACT_TYPE_ID.OBJECTOR
+						) ?? [];
+
+					const audits = resolveContactAudits(
+						id,
+						req?.session?.account?.localAccountId,
+						oldObjectors,
+						answersSnapshot.objectorDetails as Record<string, unknown>[],
+						'objector',
+						{
+							added: AUDIT_ACTIONS.OBJECTOR_ADDED,
+							updated: AUDIT_ACTIONS.OBJECTOR_UPDATED,
+							deleted: AUDIT_ACTIONS.OBJECTOR_DELETED
+						}
+					);
+
+					await Promise.all(audits.map((entry) => audit.record(entry)));
+				}
+
+				// Contact
+				if (answersSnapshot.contactDetails) {
+					const oldContacts =
+						(previousValues.Contacts as ContactWithAddress[])?.filter(
+							(c) =>
+								c.contactTypeId !== CONTACT_TYPE_ID.OBJECTOR && c.contactTypeId !== CONTACT_TYPE_ID.APPLICANT_APPELLANT
+						) ?? [];
+
+					const audits = resolveContactAudits(
+						id,
+						req?.session?.account?.localAccountId,
+						oldContacts,
+						answersSnapshot.contactDetails as Record<string, unknown>[],
+						'contact',
+						{
+							added: AUDIT_ACTIONS.CONTACT_ADDED,
+							updated: AUDIT_ACTIONS.CONTACT_UPDATED,
+							deleted: AUDIT_ACTIONS.CONTACT_DELETED
+						}
+					);
+
+					await Promise.all(audits.map((entry) => audit.record(entry)));
+				}
+
+				// Inspectors
+				if (answersSnapshot.inspectorDetails) {
+					const oldInspectors = (previousValues.Inspectors as InspectorWithUser[]) ?? [];
+					const newInspectors = answersSnapshot.inspectorDetails as {
+						inspectorId: string;
+						inspectorAllocatedDate: string;
+					}[];
+
+					const audits = resolveInspectorAudits(
+						id,
+						req?.session?.account?.localAccountId,
+						oldInspectors,
+						newInspectors,
+						userDisplayNameMap
+					);
+
+					await Promise.all(audits.map((entry) => audit.record(entry)));
+				}
+
+				// Procedures
+				if (answersSnapshot.procedureDetails) {
+					const oldProcedures = (previousValues.Procedures as ProcedureWithRelations[]) ?? [];
+					const newProcedures = answersSnapshot.procedureDetails as Record<string, unknown>[];
+
+					const audits = resolveProcedureAudits(
+						id,
+						req?.session?.account?.localAccountId,
+						oldProcedures,
+						newProcedures,
+						userDisplayNameMap
+					);
+
+					await Promise.all(audits.map((entry) => audit.record(entry)));
+				}
+
+				// Outcomes
+				if (answersSnapshot.outcomeDetails) {
+					const oldDecisions =
+						(previousValues.Outcome as { CaseDecisions?: DecisionWithRelations[] })?.CaseDecisions ?? [];
+					const newDecisions = answersSnapshot.outcomeDetails as Record<string, unknown>[];
+
+					const audits = resolveOutcomeAudits(
+						id,
+						req?.session?.account?.localAccountId,
+						oldDecisions,
+						newDecisions,
+						userDisplayNameMap
+					);
+
+					await Promise.all(audits.map((entry) => audit.record(entry)));
+				}
+			} catch (error: unknown) {
+				// Audit failures should never block the user's operation.
+				// The case data has already been saved successfully above.
+				logger.error({ error, caseId: id }, 'Failed to record audit events');
+			}
+		}
 
 		// We clear the session after we have updated the case to avoid ghost data
 		clearDataFromSession({ req, journeyId: JOURNEY_ID });
@@ -111,27 +352,67 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 
 /**
  * Queries DB and upserts (or removes) data for specified data fields.
+ * Also returns the current (unchanged) case for auditing purposes.
  */
 async function updateCaseData(
 	id: string,
 	db: PrismaClient,
 	logger: Logger,
 	formattedAnswersForQuery: Prisma.CaseUpdateInput
-): Promise<Case | undefined> {
+): Promise<{ previous: Case; updated: Case } | undefined> {
 	try {
 		return await db.$transaction(async ($tx: Prisma.TransactionClient) => {
 			const caseRow = await $tx.case.findUnique({
-				where: { id }
+				where: { id },
+				include: {
+					SiteAddress: true,
+					RelatedCases: true,
+					LinkedCases: true,
+					Contacts: { include: { Address: true } },
+					CaseOfficer: true,
+					Inspectors: { include: { Inspector: true } },
+					Procedures: {
+						include: {
+							ProcedureType: true,
+							ProcedureStatus: true,
+							Inspector: true,
+							HearingFormat: true,
+							InquiryFormat: true,
+							ConferenceFormat: true,
+							PreInquiryMeetingFormat: true,
+							InquiryOrConference: true,
+							HearingVenue: true,
+							InquiryVenue: true,
+							ConferenceVenue: true,
+							AdminProcedureType: true,
+							SiteVisitType: true
+						}
+					},
+					Outcome: {
+						include: {
+							CaseDecisions: {
+								include: {
+									DecisionType: true,
+									DecisionMakerType: true,
+									DecisionMaker: true,
+									Outcome: true
+								}
+							}
+						}
+					}
+				}
 			});
 
 			if (!caseRow) {
 				throw new Error('Case not found');
 			}
 
-			return await $tx.case.update({
+			const updated = await $tx.case.update({
 				where: { id },
 				data: formattedAnswersForQuery
 			});
+
+			return { previous: caseRow, updated };
 		});
 	} catch (error: any) {
 		wrapPrismaError({
