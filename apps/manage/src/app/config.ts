@@ -22,6 +22,11 @@ export interface Config extends BaseConfig {
 	};
 	entra: {
 		cacheTtl: number;
+		groupIds: {
+			allUsers: string;
+			caseOfficers: string;
+			inspectors: string;
+		};
 	};
 }
 
@@ -67,6 +72,9 @@ export function loadConfig(): Config {
 		SESSION_SECRET,
 		SQL_CONNECTION_STRING,
 		ENTRA_GROUP_CACHE_TTL,
+		ENTRA_GROUP_ID_ALL_USERS,
+		ENTRA_GROUP_ID_CASE_OFFICERS,
+		ENTRA_GROUP_ID_INSPECTORS,
 		BLOB_STORE_DISABLED,
 		BLOB_STORE_HOST,
 		BLOB_STORE_CONTAINER,
@@ -97,7 +105,10 @@ export function loadConfig(): Config {
 			AUTH_CLIENT_ID,
 			AUTH_CLIENT_SECRET,
 			AUTH_GROUP_APPLICATION_ACCESS,
-			AUTH_TENANT_ID
+			AUTH_TENANT_ID,
+			ENTRA_GROUP_ID_ALL_USERS,
+			ENTRA_GROUP_ID_CASE_OFFICERS,
+			ENTRA_GROUP_ID_INSPECTORS
 		};
 		for (const [k, v] of Object.entries(props)) {
 			if (v === undefined || v === '') {
@@ -167,7 +178,12 @@ export function loadConfig(): Config {
 		staticDir: buildConfig.staticDir,
 		entra: {
 			// in minutes
-			cacheTtl: parseInt(ENTRA_GROUP_CACHE_TTL || '15')
+			cacheTtl: parseInt(ENTRA_GROUP_CACHE_TTL || '15'),
+			groupIds: {
+				allUsers: ENTRA_GROUP_ID_ALL_USERS || '',
+				caseOfficers: ENTRA_GROUP_ID_CASE_OFFICERS || '',
+				inspectors: ENTRA_GROUP_ID_INSPECTORS || ''
+			}
 		}
 	};
 

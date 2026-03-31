@@ -21,4 +21,11 @@ export interface BaseConfig {
 		secret: string;
 	};
 	staticDir: string;
+	entra: {
+		groupIds: {
+			allUsers: string;
+			caseOfficers: string;
+			inspectors: string;
+		};
+	};
 }

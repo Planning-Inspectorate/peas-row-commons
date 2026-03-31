@@ -82,7 +82,7 @@ async function createCaseNote(id: string, comment: string, authorId: string, db:
 
 export function buildViewCaseNotes(service: ManageService): AsyncRequestHandler {
 	const { db, logger, getEntraClient } = service;
-	const groupId = service.authConfig.groups.applicationAccess;
+	const groupIds = service.entraGroupIds;
 
 	return async (req, res) => {
 		const id = req.params.id;
@@ -129,7 +129,7 @@ export function buildViewCaseNotes(service: ManageService): AsyncRequestHandler 
 			logger,
 			initClient: getEntraClient,
 			session: req.session,
-			groupId
+			groupIds
 		});
 
 		const notes = mapNotes(caseRow.Notes, groupMembers, caseRow.id);

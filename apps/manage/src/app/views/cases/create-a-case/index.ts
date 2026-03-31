@@ -16,6 +16,7 @@ import { ManageService } from '#service';
 import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { buildGetJourneyMiddleware } from './controller.ts';
 import { bounceRemoveCancellation } from '@pins/peas-row-commons-lib/middleware/manage-list/track-removes.ts';
+import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
 
 export function createNewCaseRoutes(service: ManageService): IRouter {
 	const router = createRouter({ mergeParams: true });
@@ -23,14 +24,12 @@ export function createNewCaseRoutes(service: ManageService): IRouter {
 
 	const getJourneyResponse = buildGetJourneyResponseFromSession(JOURNEY_ID);
 
-	const getJourney = buildGetJourney(
-		(req: Request & { groupMembers: { caseOfficers: never[] } }, journeyResponse: Handler) => {
-			const groupMembers = req.groupMembers; // Stored on request object because we do not have access to the response object.
-			const questions = getQuestions(groupMembers);
+	const getJourney = buildGetJourney((req: Request & { groupMembers: EntraGroupMembers }, journeyResponse: Handler) => {
+		const groupMembers = req.groupMembers; // Stored on request object because we do not have access to the response object.
+		const questions = getQuestions(groupMembers);
 
-			return createJourney(JOURNEY_ID, questions, journeyResponse, req);
-		}
-	);
+		return createJourney(JOURNEY_ID, questions, journeyResponse, req);
+	});
 
 	const saveController = buildSaveController(service);
 	const successController = buildSuccessController();

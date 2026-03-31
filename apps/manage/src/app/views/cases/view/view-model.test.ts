@@ -21,6 +21,18 @@ describe('view-model', () => {
 				id: '123',
 				displayName: 'Oscar'
 			}
+		],
+		inspectors: [
+			{
+				id: '123',
+				displayName: 'Oscar'
+			}
+		],
+		allUsers: [
+			{
+				id: '123',
+				displayName: 'Oscar'
+			}
 		]
 	};
 	describe('caseToViewModel', () => {

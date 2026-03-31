@@ -9,6 +9,13 @@ apps_config = {
     client_id                = "a303b5b2-f679-4787-929b-01943f72aa41"
     group_application_access = "408a00a6-c592-4684-acc0-fef83ea32c56"
   }
+  entra = {
+    group_ids = {
+      all_users     = "41627e43-4549-4ec5-bf57-9c869f7aeecb"
+      case_officers = "76d579a1-b620-4c18-82ed-62e7809fd592"
+      inspectors    = "6b9080cc-826b-4842-808e-18e88d9bfd20"
+    }
+  }
   blob_store = {
     disabled = false
   }

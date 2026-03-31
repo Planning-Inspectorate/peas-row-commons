@@ -46,6 +46,11 @@ const buildMockReq = (overrides: Record<string, unknown> = {}): Request =>
 const buildService = (findManyMock: ReturnType<typeof mock.fn>): ManageService =>
 	({
 		db: { case: { findMany: findManyMock } } as unknown as ManageService['db'],
+		entraGroupIds: {
+			allUsers: '123',
+			inspectors: '123',
+			caseOfficers: '123'
+		},
 		logger: {
 			info: mock.fn((msg: string) => {}),
 			error: mock.fn((msg: string) => {}),

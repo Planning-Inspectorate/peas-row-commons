@@ -81,7 +81,7 @@ export function validateIdFormat(req: Request, res: Response, next: NextFunction
 
 export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestHandler {
 	const { db, logger, getEntraClient } = service;
-	const groupId = service.authConfig.groups.applicationAccess;
+	const groupIds = service.entraGroupIds;
 
 	return async (req, res, next) => {
 		const { id, section, manageListQuestion } = req.params;
@@ -163,7 +163,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 			logger,
 			initClient: getEntraClient,
 			session: req.session,
-			groupId
+			groupIds
 		});
 
 		const lastModified = await service.audit.getLastModifiedInfo(id, groupMembers);

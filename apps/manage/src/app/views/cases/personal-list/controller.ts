@@ -6,7 +6,7 @@ import { CASE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static_d
 
 export function buildViewPersonalList(service: ManageService): AsyncRequestHandler {
 	const { db, logger, getEntraClient } = service;
-	const groupId = service.authConfig.groups.applicationAccess;
+	const groupIds = service.entraGroupIds;
 
 	return async (req, res) => {
 		const userId = req?.session?.account?.localAccountId;
@@ -36,7 +36,7 @@ export function buildViewPersonalList(service: ManageService): AsyncRequestHandl
 			logger,
 			initClient: getEntraClient,
 			session: req.session,
-			groupId
+			groupIds
 		});
 
 		// We can run these concurrently because they are unrelated requests, 1 to db, 1 to entra
@@ -46,7 +46,7 @@ export function buildViewPersonalList(service: ManageService): AsyncRequestHandl
 			{
 				userId,
 				caseCount: personalCases.length,
-				groupMemberCount: groupMembers.caseOfficers?.length || 0
+				groupMemberCount: groupMembers.allUsers?.length || 0
 			},
 			'Successfully fetched and combined personal list data'
 		);

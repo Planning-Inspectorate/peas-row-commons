@@ -13,6 +13,15 @@ apps_config = {
     group_application_access = "ecbe9c0c-7cda-49aa-8567-61d7e1c0fdee"
   }
 
+  entra = {
+    group_ids = {
+      # use app access group for developer environments
+      all_users     = "ecbe9c0c-7cda-49aa-8567-61d7e1c0fdee"
+      case_officers = "ecbe9c0c-7cda-49aa-8567-61d7e1c0fdee"
+      inspectors    = "ecbe9c0c-7cda-49aa-8567-61d7e1c0fdee"
+    }
+  }
+
   functions_node_version = 22
 
   logging = {

@@ -40,6 +40,10 @@ export class BaseService {
 		return this.dbClient;
 	}
 
+	get entraGroupIds() {
+		return this.#config.entra.groupIds;
+	}
+
 	get gitSha() {
 		return this.#config.gitSha;
 	}

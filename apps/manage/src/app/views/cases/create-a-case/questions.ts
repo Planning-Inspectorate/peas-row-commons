@@ -37,8 +37,9 @@ import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../../config.ts';
 import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
 import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
 import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
 
-export function getQuestions(groupMembers = { caseOfficers: [] }) {
+export function getQuestions(groupMembers: EntraGroupMembers) {
 	let LPAs: Prisma.AuthorityUncheckedCreateInput[];
 	try {
 		const env = loadEnvironmentConfig();
@@ -57,8 +58,8 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			.filter((value) => value != null)
 			.sort((a, b) => a.text.localeCompare(b.text))
 	];
-	const mappedGroupMembers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
-	mappedGroupMembers.unshift({ text: '', value: '' });
+	const mappedCaseOfficers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
+	mappedCaseOfficers.unshift({ text: '', value: '' });
 
 	const questions = {
 		caseworkArea: {
@@ -252,7 +253,7 @@ export function getQuestions(groupMembers = { caseOfficers: [] }) {
 			fieldName: 'caseOfficerId',
 			url: 'case-officer',
 			validators: [new RequiredValidator('Select a case officer')],
-			options: mappedGroupMembers
+			options: mappedCaseOfficers
 		},
 		applicantDetails: {
 			type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,

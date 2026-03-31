@@ -40,6 +40,11 @@ describe('buildViewCaseHistory', () => {
 
 	const buildService = (overrides = {}) => ({
 		db: mockDb,
+		entraGroupIds: {
+			allUsers: '123',
+			caseOfficers: '123',
+			inspectors: '123'
+		},
 		audit: mockAudit,
 		logger: mockLogger,
 		getEntraClient: () => ({
