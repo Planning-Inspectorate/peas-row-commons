@@ -1,16 +1,23 @@
 import { formatDateTime } from '@pins/peas-row-commons-lib/util/dates.ts';
 import { resolveTemplate, type AuditAction } from '../../../audit/actions.ts';
 import type { AuditEvent } from '../../../audit/types.ts';
+import { BULK_FILE_ACTIONS } from '@pins/peas-row-commons-lib/constants/audit.ts';
 
 export interface CaseHistoryRow {
 	/** Formatted date line: "11 February 2026" */
 	date: string;
 	/** Formatted time line: "2:31pm" */
 	time: string;
-	/** Human-readable detail from the audit template */
+	/**
+	 * Human-readable detail from the audit template.
+	 * May contain HTML for bulk file entries (show/hide toggle).
+	 * Rendered via `html` not `text` in the Nunjucks table.
+	 */
 	details: string;
 	/** Display name of the user who performed the action */
 	user: string;
+	/** File names for bulk file actions — rendered as show/hide in the template */
+	files?: string[];
 }
 
 /**
@@ -23,8 +30,12 @@ export function createCaseHistoryViewModel(events: Array<AuditEvent & { userName
 		return {
 			date,
 			time,
-			details: resolveTemplate(event.action as AuditAction, event.metadata || undefined),
-			user: event.userName
+			details: resolveTemplate(event.action as AuditAction, event.metadata ?? undefined),
+			user: event.userName,
+			files:
+				BULK_FILE_ACTIONS.has(event.action) && Array.isArray(event.metadata?.files)
+					? (event.metadata.files as string[])
+					: undefined
 		};
 	});
 }
