@@ -963,8 +963,7 @@ async function recordAuditEntries(
 			);
 		}
 
-		// ── Fire all audit writes concurrently ───────────────────────────
-		await Promise.all(allAuditEntries.map((entry) => audit.record(entry)));
+		await audit.recordMany(allAuditEntries);
 	} catch (error: unknown) {
 		// Audit failures should never block the user's operation.
 		// The case data has already been saved successfully above.

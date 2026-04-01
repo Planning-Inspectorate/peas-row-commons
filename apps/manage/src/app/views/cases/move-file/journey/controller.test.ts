@@ -9,8 +9,11 @@ describe('Move Files Controller', () => {
 	let mockNext: any;
 	let mockDb: any;
 	let mockService: any;
+	let recordedAudits: any[];
 
 	beforeEach(() => {
+		recordedAudits = [];
+
 		mockReq = {
 			params: { id: 'case-123' },
 			session: {},
@@ -29,13 +32,22 @@ describe('Move Files Controller', () => {
 		mockDb = {
 			case: { findUnique: mock.fn() },
 			folder: { findUnique: mock.fn() },
-			document: { updateMany: mock.fn() },
+			document: {
+				updateMany: mock.fn(),
+				findMany: mock.fn(() => Promise.resolve([]))
+			},
 			$transaction: mock.fn(async (cb) => await cb(mockDb))
 		};
 
 		mockService = {
 			db: mockDb,
-			logger: mockLogger()
+			logger: mockLogger(),
+			audit: {
+				recordMany: (entries: any[]) => {
+					recordedAudits.push(...entries);
+					return Promise.resolve();
+				}
+			}
 		};
 	});
 
@@ -172,6 +184,10 @@ describe('Move Files Controller', () => {
 			mockRes.locals.journeyResponse = { answers: { fileLocation: 'dest-folder-id' } };
 			mockReq.session.moveFilesIds = ['file-1'];
 
+			mockDb.document.findMany.mock.mockImplementation(() =>
+				Promise.resolve([{ id: 'file-1', fileName: 'report.pdf', Folder: { displayName: 'Old Folder' } }])
+			);
+
 			mockDb.folder.findUnique.mock.mockImplementation(() =>
 				Promise.resolve({
 					id: 'dest-folder-id',
@@ -197,6 +213,10 @@ describe('Move Files Controller', () => {
 			mockRes.locals.journeyResponse = { answers: { fileLocation: 'dest-folder-id' } };
 			mockReq.session.moveFilesIds = ['file-1'];
 
+			mockDb.document.findMany.mock.mockImplementation(() =>
+				Promise.resolve([{ id: 'file-1', fileName: 'report.pdf', Folder: { displayName: 'Old Folder' } }])
+			);
+
 			mockDb.folder.findUnique.mock.mockImplementationOnce(() =>
 				Promise.resolve({ id: 'dest-folder-id', caseId: 'case-123' })
 			);
@@ -211,6 +231,144 @@ describe('Move Files Controller', () => {
 			});
 
 			assert.strictEqual(mockRes.redirect.mock.callCount(), 0);
+		});
+
+		it('should record an audit entry for each file moved', async () => {
+			mockRes.locals.journeyResponse = { answers: { fileLocation: 'dest-folder-id' } };
+			mockReq.session = {
+				moveFilesIds: ['file-1', 'file-2'],
+				account: { localAccountId: 'user-999' }
+			};
+
+			mockDb.document.findMany.mock.mockImplementation(() =>
+				Promise.resolve([
+					{ id: 'file-1', fileName: 'report.pdf', Folder: { displayName: 'Source A' } },
+					{ id: 'file-2', fileName: 'invoice.pdf', Folder: { displayName: 'Source B' } }
+				])
+			);
+
+			mockDb.folder.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({
+					id: 'dest-folder-id',
+					caseId: 'case-123',
+					displayName: 'Destination Folder'
+				})
+			);
+
+			mockDb.document.updateMany.mock.mockImplementation(() => Promise.resolve({ count: 2 }));
+
+			const handler = buildSaveController(mockService);
+			await handler(mockReq, mockRes, mockNext);
+
+			assert.strictEqual(recordedAudits.length, 2);
+
+			assert.strictEqual(recordedAudits[0].caseId, 'case-123');
+			assert.strictEqual(recordedAudits[0].action, 'FILE_MOVED');
+			assert.strictEqual(recordedAudits[0].userId, 'user-999');
+			assert.strictEqual(recordedAudits[0].metadata.fileName, 'report.pdf');
+			assert.strictEqual(recordedAudits[0].metadata.oldFolderName, 'Source A');
+			assert.strictEqual(recordedAudits[0].metadata.folderName, 'Destination Folder');
+
+			assert.strictEqual(recordedAudits[1].caseId, 'case-123');
+			assert.strictEqual(recordedAudits[1].action, 'FILE_MOVED');
+			assert.strictEqual(recordedAudits[1].metadata.fileName, 'invoice.pdf');
+			assert.strictEqual(recordedAudits[1].metadata.oldFolderName, 'Source B');
+			assert.strictEqual(recordedAudits[1].metadata.folderName, 'Destination Folder');
+		});
+
+		it('should use fallback dash when source folder name is missing', async () => {
+			mockRes.locals.journeyResponse = { answers: { fileLocation: 'dest-folder-id' } };
+			mockReq.session = {
+				moveFilesIds: ['file-1'],
+				account: { localAccountId: 'user-999' }
+			};
+
+			mockDb.document.findMany.mock.mockImplementation(() =>
+				Promise.resolve([{ id: 'file-1', fileName: 'orphan.pdf', Folder: null }])
+			);
+
+			mockDb.folder.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({
+					id: 'dest-folder-id',
+					caseId: 'case-123',
+					displayName: 'Target'
+				})
+			);
+
+			mockDb.document.updateMany.mock.mockImplementation(() => Promise.resolve({ count: 1 }));
+
+			const handler = buildSaveController(mockService);
+			await handler(mockReq, mockRes, mockNext);
+
+			assert.strictEqual(recordedAudits.length, 1);
+			assert.strictEqual(recordedAudits[0].metadata.oldFolderName, '-');
+			assert.strictEqual(recordedAudits[0].metadata.folderName, 'Target');
+		});
+
+		it('should use fallback dash when destination folder name is missing', async () => {
+			mockRes.locals.journeyResponse = { answers: { fileLocation: 'dest-folder-id' } };
+			mockReq.session = {
+				moveFilesIds: ['file-1'],
+				account: { localAccountId: 'user-999' }
+			};
+
+			mockDb.document.findMany.mock.mockImplementation(() =>
+				Promise.resolve([{ id: 'file-1', fileName: 'doc.pdf', Folder: { displayName: 'Origin' } }])
+			);
+
+			// Transaction returns folder without displayName
+			mockDb.$transaction.mock.mockImplementation(async (cb: any) => {
+				await cb(mockDb);
+				return { id: 'dest-folder-id', displayName: null };
+			});
+
+			mockDb.folder.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({
+					id: 'dest-folder-id',
+					caseId: 'case-123',
+					displayName: null
+				})
+			);
+
+			mockDb.document.updateMany.mock.mockImplementation(() => Promise.resolve({ count: 1 }));
+
+			const handler = buildSaveController(mockService);
+			// This will hit notFoundHandler or redirect depending on the null displayName,
+			// but the audit should still have recorded with a dash
+			try {
+				await handler(mockReq, mockRes, mockNext);
+			} catch {
+				// May throw due to null displayName in redirect path
+			}
+
+			assert.strictEqual(recordedAudits.length, 1);
+			assert.strictEqual(recordedAudits[0].metadata.folderName, '-');
+			assert.strictEqual(recordedAudits[0].metadata.oldFolderName, 'Origin');
+		});
+
+		it('should not record audit entries if no documents were found before move', async () => {
+			mockRes.locals.journeyResponse = { answers: { fileLocation: 'dest-folder-id' } };
+			mockReq.session = {
+				moveFilesIds: ['file-1'],
+				account: { localAccountId: 'user-999' }
+			};
+
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve([]));
+
+			mockDb.folder.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({
+					id: 'dest-folder-id',
+					caseId: 'case-123',
+					displayName: 'Target'
+				})
+			);
+
+			mockDb.document.updateMany.mock.mockImplementation(() => Promise.resolve({ count: 0 }));
+
+			const handler = buildSaveController(mockService);
+			await handler(mockReq, mockRes, mockNext);
+
+			assert.strictEqual(recordedAudits.length, 0);
 		});
 	});
 });

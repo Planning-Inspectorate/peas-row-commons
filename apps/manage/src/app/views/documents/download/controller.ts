@@ -67,29 +67,41 @@ export function buildDownloadDocument(service: ManageService): AsyncRequestHandl
 
 		if (!documents || documents.length === 0) return;
 
+		let zipFileName = '';
+
+		if (documents.length === 1) {
+			await streamDocumentToResponse(res, blobStore, documents[0], isPreview, logger);
+		} else {
+			zipFileName = await streamZipToResponse(res, blobStore, documents, logger, archiverFactory);
+		}
+
 		// Since downloadStream.pipe(res) is async, the function returns before the
 		// stream completes. We listen for 'finish' so the audit event is only
 		// recorded when the response has been fully sent to the client.
 		// If the stream errors or the client aborts, 'finish' won't fire,
 		// so only successful downloads are audited.
 		res.on('finish', async () => {
-			await Promise.all(
-				documents.map((doc) =>
-					audit.record({
-						caseId: doc.caseId,
-						action: AUDIT_ACTIONS.FILE_DOWNLOADED,
-						userId: req?.session?.account?.localAccountId,
-						metadata: { fileName: doc.fileName }
-					})
-				)
-			);
-		});
+			const userId = req?.session?.account?.localAccountId;
 
-		if (documents.length === 1) {
-			await streamDocumentToResponse(res, blobStore, documents[0], isPreview, logger);
-		} else {
-			await streamZipToResponse(res, blobStore, documents, logger, archiverFactory);
-		}
+			if (documents.length === 1) {
+				await audit.record({
+					caseId: documents[0].caseId,
+					action: AUDIT_ACTIONS.FILE_DOWNLOADED,
+					userId,
+					metadata: { fileName: documents[0].fileName }
+				});
+			} else {
+				await audit.record({
+					caseId: documents[0].caseId,
+					action: AUDIT_ACTIONS.FILES_DOWNLOADED,
+					userId,
+					metadata: {
+						zipName: zipFileName,
+						files: documents.map((doc) => doc.fileName)
+					}
+				});
+			}
+		});
 	};
 }
 
@@ -136,7 +148,7 @@ async function streamZipToResponse(
 	documents: (Document & { Case: { reference: string } })[],
 	logger: Logger,
 	archiverFactory: typeof archiver
-) {
+): Promise<string> {
 	if (!blobStore) throw new Error('Blob store client missing');
 
 	// All documents will have the same case join so just take doc 1 to get the reference
@@ -182,6 +194,8 @@ async function streamZipToResponse(
 	}
 
 	await archive.finalize();
+
+	return zipFileName;
 }
 
 /**

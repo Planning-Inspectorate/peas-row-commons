@@ -64,6 +64,61 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 		},
 
 		/**
+		 * Persist multiple audit entries in a single transaction.
+		 *
+		 * This avoids deadlocks that occur when many concurrent transactions
+		 * each try to update the same Case row (e.g. bulk file moves with
+		 * up to 100 files, or case updates that produce many field-level
+		 * audit entries).
+		 *
+		 * All caseHistory rows are created individually, then a single
+		 * case.update sets updatedDate/UpdatedBy once at the end.
+		 */
+		async recordMany(entries: AuditEntry[]): Promise<void> {
+			if (entries.length === 0) return;
+
+			try {
+				const caseId = entries[0].caseId;
+				const userId = entries[0].userId;
+
+				await db.$transaction(async ($tx) => {
+					// Ensure the user exists once, then use the scalar FK for createMany
+					const user = await $tx.user.upsert({
+						where: { idpUserId: userId },
+						create: { idpUserId: userId },
+						update: {}
+					});
+
+					await $tx.caseHistory.createMany({
+						data: entries.map((entry) => ({
+							caseId: entry.caseId,
+							action: entry.action,
+							metadata: JSON.stringify(entry.metadata ?? {}),
+							userId: user.id
+						}))
+					});
+
+					await $tx.case.update({
+						where: { id: caseId },
+						data: {
+							updatedDate: new Date(),
+							updatedById: user.id
+						}
+					});
+				});
+			} catch (error) {
+				logger.error(
+					{
+						error,
+						caseId: entries[0].caseId,
+						entryCount: entries.length
+					},
+					'Failed to record audit events'
+				);
+			}
+		},
+
+		/**
 		 * Retrieve audit events for a case, newest first.
 		 */
 		async getAllForCase(caseId: string, options?: AuditQueryOptions): Promise<AuditEvent[]> {
