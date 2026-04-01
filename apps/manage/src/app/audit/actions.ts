@@ -94,7 +94,6 @@ export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
  *   {fileName}       – name of a single file
  *   {folderName}     – name of a folder
  *   {oldFolderName}  – original folder name (for moves/renames)
- *   {newFolderName}  – new folder name (for moves/renames)
  *   {name}           – name of a person (inspector, contact, etc.)
  *   {entityName}     – original name of the entity for update context
  *   {caseNote}       – the case note text
@@ -116,7 +115,7 @@ export const AUDIT_TEMPLATES: Record<AuditAction, string> = {
 	// Files – single
 	[AUDIT_ACTIONS.FILE_UPLOADED]: '{fileName} was uploaded to {folderName}',
 	[AUDIT_ACTIONS.FILE_DOWNLOADED]: '{fileName} was downloaded',
-	[AUDIT_ACTIONS.FILE_MOVED]: '{fileName} was moved from {oldFolderName} to {newFolderName}',
+	[AUDIT_ACTIONS.FILE_MOVED]: '{fileName} was moved from {oldFolderName} to {folderName}',
 	[AUDIT_ACTIONS.FILE_DELETED]: '{fileName} was removed',
 
 	// Files – bulk (file list is stored in metadata.files and rendered by the frontend)
@@ -127,7 +126,7 @@ export const AUDIT_TEMPLATES: Record<AuditAction, string> = {
 	// Folders
 	[AUDIT_ACTIONS.FOLDER_CREATED]: '{folderName} was created',
 	[AUDIT_ACTIONS.FOLDER_DELETED]: '{folderName} was removed',
-	[AUDIT_ACTIONS.FOLDER_RENAMED]: '{oldFolderName} was renamed from {oldFolderName} to {newFolderName}',
+	[AUDIT_ACTIONS.FOLDER_RENAMED]: '{oldFolderName} was renamed from {oldFolderName} to {folderName}',
 
 	// Case notes
 	[AUDIT_ACTIONS.CASE_NOTE_ADDED]: 'Case note added:\n{caseNote}',

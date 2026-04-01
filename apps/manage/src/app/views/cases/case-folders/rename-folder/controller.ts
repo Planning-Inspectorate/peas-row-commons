@@ -68,6 +68,12 @@ export function buildRenameFolder(service: ManageService): AsyncRequestHandler {
 
 			const { folderName } = req.body;
 
+			// Fetch old name before renaming
+			const existingFolder = await db.folder.findUnique({
+				where: { id: folderId },
+				select: { displayName: true }
+			});
+
 			await renameFolderRecord(db, {
 				name: folderName,
 				folderId
@@ -77,7 +83,10 @@ export function buildRenameFolder(service: ManageService): AsyncRequestHandler {
 				caseId: id,
 				action: AUDIT_ACTIONS.FOLDER_RENAMED,
 				userId: req?.session?.account?.localAccountId,
-				metadata: { folderName }
+				metadata: {
+					oldFolderName: existingFolder?.displayName ?? '-',
+					folderName
+				}
 			});
 
 			addSessionData(req, folderId, { renamed: true }, 'folder');

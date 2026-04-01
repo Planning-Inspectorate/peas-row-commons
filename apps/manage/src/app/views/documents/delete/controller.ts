@@ -131,16 +131,25 @@ export function buildDeleteFileController(service: ManageService) {
 				}
 			});
 
-			await Promise.all(
-				context.documents.map((doc: Document) =>
-					audit.record({
-						caseId: id,
-						action: AUDIT_ACTIONS.FILE_DELETED,
-						userId: req?.session?.account?.localAccountId,
-						metadata: { fileName: doc.fileName }
-					})
-				)
-			);
+			const userId = req?.session?.account?.localAccountId;
+
+			if (context.documents.length === 1) {
+				await audit.record({
+					caseId: id,
+					action: AUDIT_ACTIONS.FILE_DELETED,
+					userId,
+					metadata: { fileName: context.documents[0].fileName }
+				});
+			} else {
+				await audit.record({
+					caseId: id,
+					action: AUDIT_ACTIONS.FILES_DELETED,
+					userId,
+					metadata: {
+						files: context.documents.map((doc: Document) => doc.fileName)
+					}
+				});
+			}
 
 			addSessionData(req, id, { filesDeleted: true }, 'folder');
 

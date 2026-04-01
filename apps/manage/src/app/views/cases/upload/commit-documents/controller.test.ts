@@ -26,7 +26,7 @@ describe('Create Documents Logic', () => {
 	});
 
 	describe('createDocumentsFromDrafts (Helper Function)', () => {
-		it('should return 0 if no drafts are found', async () => {
+		it('should return { createdLength: 0, fileNames: [] } if no drafts are found', async () => {
 			const req = mockReq();
 			const db = {
 				draftDocument: {
@@ -36,7 +36,7 @@ describe('Create Documents Logic', () => {
 
 			const result = await createDocumentsFromDrafts(req, db as any, mockLogger as any, 'case-1', 'folder-1');
 
-			assert.strictEqual(result, 0);
+			assert.deepStrictEqual(result, { createdLength: 0, fileNames: [] });
 			assert.strictEqual(db.draftDocument.findMany.mock.callCount(), 1);
 			assert.deepStrictEqual(db.draftDocument.findMany.mock.calls[0].arguments[0].where, {
 				sessionKey: 'session-abc',
@@ -45,7 +45,7 @@ describe('Create Documents Logic', () => {
 			});
 		});
 
-		it('should commit documents via transaction and return count', async () => {
+		it('should commit documents via transaction and return count and fileNames', async () => {
 			const req = mockReq();
 			const drafts = [
 				{ fileName: 'a.pdf', blobName: 'blob-a', size: 100 },
@@ -65,7 +65,7 @@ describe('Create Documents Logic', () => {
 
 			const result = await createDocumentsFromDrafts(req, db as any, mockLogger as any, 'case-1', 'folder-1');
 
-			assert.strictEqual(result, 2);
+			assert.deepStrictEqual(result, { createdLength: 2, fileNames: ['a.pdf', 'b.pdf'] });
 			assert.strictEqual(db.$transaction.mock.callCount(), 1);
 
 			const createCall = db.document.createMany.mock.calls[0].arguments[0];
@@ -97,7 +97,11 @@ describe('Create Documents Logic', () => {
 		it('should handle missing params by redirecting and setting a generic error in session', async () => {
 			const req = mockReq({ params: { id: 'case-1' } });
 			const res = mockRes();
-			const service = { db: {}, logger: mockLogger } as unknown as ManageService;
+			const service = {
+				db: {},
+				logger: mockLogger,
+				audit: { record: mock.fn(() => Promise.resolve()) }
+			} as unknown as ManageService;
 
 			const controller = createDocumentsController(service);
 
@@ -123,7 +127,11 @@ describe('Create Documents Logic', () => {
 				$transaction: mock.fn(() => Promise.resolve())
 			};
 
-			const service = { db, logger: mockLogger } as unknown as ManageService;
+			const service = {
+				db,
+				logger: mockLogger,
+				audit: { record: mock.fn(() => Promise.resolve()) }
+			} as unknown as ManageService;
 			const req = mockReq();
 			const res = mockRes();
 
@@ -144,11 +152,22 @@ describe('Create Documents Logic', () => {
 					deleteMany: mock.fn()
 				},
 				document: { createMany: mock.fn() },
+				folder: {
+					findUnique: mock.fn(() => Promise.resolve({ displayName: 'Evidence' }))
+				},
 				$transaction: mock.fn(() => Promise.resolve())
 			};
 
-			const service = { db, logger: mockLogger } as unknown as ManageService;
-			const req = mockReq();
+			const mockAudit = { record: mock.fn(() => Promise.resolve()) };
+
+			const service = {
+				db,
+				logger: mockLogger,
+				audit: mockAudit
+			} as unknown as ManageService;
+			const req = mockReq({
+				session: { account: { localAccountId: 'user-1' } }
+			});
 			const res = mockRes();
 
 			const controller = createDocumentsController(service);
@@ -158,6 +177,13 @@ describe('Create Documents Logic', () => {
 			assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/case-folders/case-123/folder-123');
 
 			assert.deepStrictEqual(req.session.folder['folder-123'], { updated: true });
+
+			// Verify single-file audit was recorded
+			assert.strictEqual(mockAudit.record.mock.callCount(), 1);
+			const auditCall = (mockAudit.record.mock.calls[0] as any).arguments[0];
+			assert.strictEqual(auditCall.action, 'FILE_UPLOADED');
+			assert.strictEqual(auditCall.metadata.fileName, 'doc.pdf');
+			assert.strictEqual(auditCall.metadata.folderName, 'Evidence');
 		});
 
 		it('should fail: redirect to original URL and set generic error session data for system errors', async () => {
@@ -167,7 +193,11 @@ describe('Create Documents Logic', () => {
 				}
 			};
 
-			const service = { db, logger: mockLogger } as unknown as ManageService;
+			const service = {
+				db,
+				logger: mockLogger,
+				audit: { record: mock.fn(() => Promise.resolve()) }
+			} as unknown as ManageService;
 			const req = mockReq();
 			const res = mockRes();
 

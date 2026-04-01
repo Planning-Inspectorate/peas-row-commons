@@ -134,12 +134,13 @@ describe('Rename Folder Controller', () => {
 	});
 
 	describe('buildRenameFolder (audit recording)', () => {
-		it('should record audit event when folder is renamed', async () => {
+		it('should record audit event with old and new folder names', async () => {
 			let recordedAudit: any = null;
 
 			const mockService = {
 				db: {
 					folder: {
+						findUnique: () => Promise.resolve({ displayName: 'Old Name' }),
 						update: () => Promise.resolve({})
 					}
 				},
@@ -171,7 +172,49 @@ describe('Rename Folder Controller', () => {
 			assert.strictEqual(recordedAudit.caseId, 'case-1');
 			assert.strictEqual(recordedAudit.action, 'FOLDER_RENAMED');
 			assert.strictEqual(recordedAudit.userId, 'user-789');
-			assert.deepStrictEqual(recordedAudit.metadata, { folderName: 'Renamed Folder' });
+			assert.deepStrictEqual(recordedAudit.metadata, {
+				oldFolderName: 'Old Name',
+				folderName: 'Renamed Folder'
+			});
+		});
+
+		it('should use dash fallback when existing folder is not found', async () => {
+			let recordedAudit: any = null;
+
+			const mockService = {
+				db: {
+					folder: {
+						findUnique: () => Promise.resolve(null),
+						update: () => Promise.resolve({})
+					}
+				},
+				audit: {
+					record: (entry: any) => {
+						recordedAudit = entry;
+						return Promise.resolve();
+					}
+				},
+				logger: {
+					error: () => {}
+				}
+			};
+
+			const req = {
+				baseUrl: '/cases/case-1/case-folders/folder-123/rename-folder',
+				params: { id: 'case-1', folderId: 'folder-123' },
+				body: { folderName: 'New Name' },
+				session: { account: { localAccountId: 'user-789' } }
+			};
+
+			const res = {
+				redirect: () => {}
+			};
+
+			const handler = buildRenameFolder(mockService as any);
+			await handler(req as any, res as any, () => {});
+
+			assert.strictEqual(recordedAudit.metadata.oldFolderName, '-');
+			assert.strictEqual(recordedAudit.metadata.folderName, 'New Name');
 		});
 	});
 });

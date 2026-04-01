@@ -24,7 +24,10 @@ export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler
 		await audit.record({
 			caseId: id,
 			action: AUDIT_ACTIONS.CASE_NOTE_ADDED,
-			userId: req?.session?.account?.localAccountId
+			userId: req?.session?.account?.localAccountId,
+			metadata: {
+				caseNote: comment
+			}
 		});
 
 		logger.info({ id }, 'case note created');

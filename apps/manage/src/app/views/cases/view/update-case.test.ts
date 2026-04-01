@@ -28,7 +28,8 @@ const mockService = {
 	db: mockDb as any,
 	logger: mockLogger(),
 	audit: {
-		record: mock.fn(() => Promise.resolve())
+		record: mock.fn(() => Promise.resolve()),
+		recordMany: mock.fn(() => Promise.resolve())
 	},
 	authConfig: {
 		groups: {
@@ -479,8 +480,8 @@ describe('Update Case Controller', () => {
 						})
 				},
 				audit: {
-					record: (entry: any) => {
-						recordedAudit = entry;
+					recordMany: (entries: any[]) => {
+						recordedAudit = entries[0] ?? null;
 						return Promise.resolve();
 					}
 				},
