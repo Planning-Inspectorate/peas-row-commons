@@ -29,7 +29,20 @@ const mockService = {
 	logger: mockLogger(),
 	audit: {
 		record: mock.fn(() => Promise.resolve())
-	}
+	},
+	authConfig: {
+		groups: {
+			applicationAccess: 'mock-group-id'
+		}
+	},
+	entraGroupIds: {
+		allUsers: 'mock-group-id',
+		caseOfficers: 'mock-group-id',
+		inspectors: 'mock-group-id'
+	},
+	getEntraClient: () => ({
+		listAllGroupMembers: async () => [{ id: 'user-123', displayName: 'Test User' }]
+	})
 };
 
 describe('Update Case Controller', () => {
@@ -455,7 +468,12 @@ describe('Update Case Controller', () => {
 					$transaction: async (callback: any) =>
 						callback({
 							case: {
-								findUnique: () => Promise.resolve({ id: 'case-1', reference: 'REF-001' }),
+								findUnique: () =>
+									Promise.resolve({
+										id: 'case-1',
+										reference: 'REF-001',
+										name: 'Old Name'
+									}),
 								update: () => Promise.resolve({ id: 'case-1', reference: 'REF-001' })
 							}
 						})
@@ -469,7 +487,15 @@ describe('Update Case Controller', () => {
 				logger: {
 					error: () => {},
 					info: () => {}
-				}
+				},
+				entraGroupIds: {
+					allUsers: 'mock-group-id',
+					caseOfficers: 'mock-group-id',
+					inspectors: 'mock-group-id'
+				},
+				getEntraClient: () => ({
+					listAllGroupMembers: async () => [{ id: 'user-123', displayName: 'Test User' }]
+				})
 			};
 
 			const req = {
@@ -485,7 +511,9 @@ describe('Update Case Controller', () => {
 			assert.strictEqual(recordedAudit.caseId, 'case-1');
 			assert.strictEqual(recordedAudit.action, 'FIELD_UPDATED');
 			assert.strictEqual(recordedAudit.userId, 'user-123');
-			assert.deepStrictEqual(recordedAudit.metadata, { fieldName: 'Case name' });
+			assert.strictEqual(recordedAudit.metadata.fieldName, 'Case name');
+			assert.strictEqual(recordedAudit.metadata.oldValue, 'Old Name');
+			assert.strictEqual(recordedAudit.metadata.newValue, 'Updated Name');
 		});
 	});
 
