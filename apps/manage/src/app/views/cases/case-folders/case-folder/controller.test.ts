@@ -10,7 +10,9 @@ describe('buildViewCaseFolder', () => {
 	} as any;
 
 	const mockDb = {
-		folder: { findUnique: mock.fn() }
+		folder: { findUnique: mock.fn(), findMany: mock.fn() },
+		case: { findUnique: mock.fn() },
+		document: { findMany: mock.fn(), count: mock.fn() }
 	} as any;
 
 	const mockRes = () => {
@@ -35,22 +37,52 @@ describe('buildViewCaseFolder', () => {
 
 	beforeEach(() => {
 		mockDb.folder.findUnique.mock.resetCalls();
+		mockDb.folder.findMany.mock.resetCalls();
+		mockDb.case.findUnique.mock.resetCalls();
+		mockDb.document.findMany.mock.resetCalls();
+		mockDb.document.count.mock.resetCalls();
 		mockLogger.error.mock.resetCalls();
+
+		mockDb.case.findUnique.mock.mockImplementation(() =>
+			Promise.resolve({ reference: 'REF-123', name: 'Case Name', statusId: 1, legacyCaseId: null })
+		);
+		mockDb.document.findMany.mock.mockImplementation(() =>
+			Promise.resolve([
+				{
+					id: 'doc-1',
+					fileName: 'doc.pdf',
+					uploadedDate: Date.now(),
+					Folder: { id: 'folder-456', displayName: 'My Folder' },
+					UserDocuments: []
+				}
+			])
+		);
+		mockDb.document.count.mock.mockImplementation(() => Promise.resolve(10));
+		mockDb.folder.findMany.mock.mockImplementation(() =>
+			Promise.resolve([
+				{ id: 'folder-456', displayName: 'My Folder', parentFolderId: 'parent-999' },
+				{ id: 'parent-999', displayName: 'Parent Folder', parentFolderId: null }
+			])
+		);
 	});
 
 	describe('Validation', () => {
 		it('should throw error if "id" param is missing', async () => {
 			const req = mockReq({ params: { folderId: 'folder-456' } });
 			const res = mockRes();
+			const next = mock.fn();
 
-			await assert.rejects(() => buildViewCaseFolder(service as any)(req, res), { message: 'id param required' });
+			await assert.rejects(() => buildViewCaseFolder(service as any)(req, res, next), { message: 'id param required' });
 		});
 
 		it('should throw error if "folderId" param is missing', async () => {
 			const req = mockReq({ params: { id: 'case-123' } });
 			const res = mockRes();
+			const next = mock.fn();
 
-			await assert.rejects(() => buildViewCaseFolder(service as any)(req, res), { message: 'folderId param required' });
+			await assert.rejects(() => buildViewCaseFolder(service as any)(req, res, next), {
+				message: 'folderId param required'
+			});
 		});
 	});
 
@@ -58,31 +90,25 @@ describe('buildViewCaseFolder', () => {
 		it('should fetch folder data and render the view', async () => {
 			const req = mockReq();
 			const res = mockRes();
+			const next = mock.fn();
 
 			const mockFolderData = {
 				id: 'folder-456',
 				displayName: 'My Folder',
 				parentFolderId: null,
-				Case: { reference: 'REF-123', name: 'Case Name' },
+				caseId: 'case-123',
 				ChildFolders: [{ id: 'sub-1', displayName: 'Subfolder' }],
-				Documents: [
-					{
-						id: 'doc-1',
-						fileName: 'doc.pdf',
-						uploadedDate: Date.now(),
-						Folder: { id: 'folder-456', displayName: 'My Folder' }
-					}
-				],
-				_count: { Documents: 10 },
 				ParentFolder: { id: 'parent-999', displayName: 'Parent Folder' }
 			};
 
 			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve(mockFolderData));
 
-			await buildViewCaseFolder(service as any)(req, res);
+			await buildViewCaseFolder(service as any)(req, res, next);
 
-			// Called twice: once for main query, once for getFolderPath
 			assert.strictEqual(mockDb.folder.findUnique.mock.callCount(), 2);
+			assert.strictEqual(mockDb.case.findUnique.mock.callCount(), 1);
+			assert.strictEqual(mockDb.document.findMany.mock.callCount(), 2);
+			assert.strictEqual(mockDb.document.count.mock.callCount(), 2);
 
 			const dbArgs = mockDb.folder.findUnique.mock.calls[0].arguments[0];
 			assert.deepStrictEqual(dbArgs.where, { id: 'folder-456' });
@@ -96,13 +122,13 @@ describe('buildViewCaseFolder', () => {
 			assert.strictEqual(viewData.folderName, 'My Folder');
 
 			assert.strictEqual(viewData.paginationParams.totalDocuments, 10);
+			assert.strictEqual(viewData.paginationParams.totalFilteredDocuments, 10);
 
 			assert.match(viewData.backLinkUrl, /parent-999/);
 
 			assert.strictEqual(viewData.subFolders.length, 1);
 			assert.strictEqual(viewData.documents.length, 1);
 
-			// Verify breadcrumbs are included
 			assert.ok(viewData.breadcrumbItems);
 			assert.strictEqual(viewData.breadcrumbItems[0].text, 'Manage case files');
 		});
@@ -110,20 +136,19 @@ describe('buildViewCaseFolder', () => {
 		it('should render correct backlink when no parent folder exists', async () => {
 			const req = mockReq();
 			const res = mockRes();
+			const next = mock.fn();
 
 			const mockFolderData = {
 				id: 'folder-root',
 				displayName: 'Root Folder',
-				Case: { reference: 'REF-123', name: 'Case Name' },
+				caseId: 'case-123',
 				ChildFolders: [],
-				Documents: [],
-				_count: { Documents: 0 },
 				ParentFolder: null
 			};
 
 			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve(mockFolderData));
 
-			await buildViewCaseFolder(service as any)(req, res);
+			await buildViewCaseFolder(service as any)(req, res, next);
 
 			const viewData = res.render.mock.calls[0].arguments[1];
 
@@ -134,27 +159,45 @@ describe('buildViewCaseFolder', () => {
 	});
 
 	describe('Error Handling', () => {
-		it('should throw "Folder not found" if DB returns null', async () => {
+		it('should pass to notFoundHandler (404) if DB folder returns null', async () => {
 			const req = mockReq();
 			const res = mockRes();
+			const next = mock.fn();
 
 			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve(null));
 
-			await assert.rejects(() => buildViewCaseFolder(service as any)(req, res), { message: 'Folder not found' });
+			await buildViewCaseFolder(service as any)(req, res, next);
 
-			assert.strictEqual(res.render.mock.callCount(), 0);
+			assert.strictEqual(res.status.mock.callCount(), 1);
+			assert.strictEqual(res.status.mock.calls[0].arguments[0], 404);
+			assert.strictEqual(next.mock.callCount(), 0);
 		});
 
-		it('should propagate generic DB errors', async () => {
+		it('should pass to notFoundHandler (404) if Case DB returns null', async () => {
 			const req = mockReq();
 			const res = mockRes();
+			const next = mock.fn();
+
+			mockDb.case.findUnique.mock.mockImplementation(() => Promise.resolve(null));
+
+			await buildViewCaseFolder(service as any)(req, res, next);
+
+			assert.strictEqual(res.status.mock.callCount(), 1);
+			assert.strictEqual(res.status.mock.calls[0].arguments[0], 404);
+			assert.strictEqual(next.mock.callCount(), 0);
+		});
+
+		it('should wrap and throw generic DB errors', async () => {
+			const req = mockReq();
+			const res = mockRes();
+			const next = mock.fn();
 			const dbError = new Error('Database disconnected');
 
 			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.reject(dbError));
 
-			await assert.rejects(() => buildViewCaseFolder(service as any)(req, res), dbError);
+			await assert.rejects(() => buildViewCaseFolder(service as any)(req, res, next), dbError);
 
-			assert.strictEqual(mockLogger.error.mock.callCount(), 0);
+			assert.strictEqual(next.mock.callCount(), 0);
 		});
 	});
 

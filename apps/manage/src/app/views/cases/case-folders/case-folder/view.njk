@@ -227,10 +227,10 @@
                                 {% endif %}
                            {% else %}
                                 {% if filterData.selectedCategories.categories | length > 0 %}
-                                    <p class="govuk-body govuk-!-margin-top-4">No results were found.</p>
-                                    <p class="govuk-body"><a href="{{ currentPath }}" class="govuk-link govuk-link--no-visited-state">Clear filters</a> to view all files.</p>
-                                {% else %}
-                                    <p class="govuk-body govuk-!-margin-top-4" data-cy="no-documents-message">This folder contains 0 documents.</p>
+                                    <p class="govuk-body govuk-!-margin-top-4">
+                                        No files match your selected filters.
+                                        Try <a href="{{ currentPath }}" class="govuk-link govuk-link--no-visited-state">clearing your filters</a>.
+                                    </p>
                                 {% endif %}
                             {% endif %}
                         </form>
