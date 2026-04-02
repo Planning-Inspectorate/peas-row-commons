@@ -1,3 +1,4 @@
+import type { Request } from 'express';
 import type { ManageService } from '#service';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
@@ -5,20 +6,30 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { createFoldersViewModel } from '../view-model.ts';
 import { buildBreadcrumbItems } from '../folder-utils.ts';
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { createDocumentsViewModel } from './view-model.ts';
+import { createDocumentsViewModel, type DocumentWithUserDocuments } from './view-model.ts';
 import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
-import type { Request } from 'express';
 import type { FolderBreadcrumb } from '../types.ts';
 import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 import { JOURNEY_ID } from '../../move-file/journey/journey.ts';
+import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
+import {
+	DocumentFilterGenerator,
+	DOCUMENT_FILTER_VALUES
+} from '@pins/peas-row-commons-lib/util/user-document-filter-generator.ts';
+import { determineDefaultStatuses } from '@pins/peas-row-commons-lib/util/user-document-status.ts';
 
-export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler {
+export function buildViewCaseFolder(
+	service: ManageService,
+	FilterGenerator = DocumentFilterGenerator
+): AsyncRequestHandler {
 	const { db, logger } = service;
-	return async (req, res) => {
+	const filterGenerator = new FilterGenerator();
+
+	return async (req, res, next) => {
 		const id = req.params.id;
 		const folderId = req.params.folderId;
 		const userId = req?.session?.account?.localAccountId;
@@ -40,136 +51,157 @@ export function buildViewCaseFolder(service: ManageService): AsyncRequestHandler
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
-		let caseRow, currentFolder, subFolders, documents, totalDocuments, parentFolder;
 		try {
-			const folderData = await db.folder.findUnique({
-				where: {
-					id: folderId
-				},
-				include: {
-					Case: {
-						select: {
-							reference: true,
-							name: true,
-							statusId: true,
-							legacyCaseId: true
+			const caseData = await db.case.findUnique({
+				select: { reference: true, name: true, statusId: true, legacyCaseId: true },
+				where: { id }
+			});
+
+			if (!caseData) {
+				return notFoundHandler(req, res);
+			}
+
+			const { defaultIsRead, defaultIsFlagged } = determineDefaultStatuses({
+				legacyCaseId: caseData.legacyCaseId,
+				statusId: caseData.statusId,
+				closedStatuses: [
+					CASE_STATUS_ID.CLOSED_OPENED_IN_ERROR,
+					CASE_STATUS_ID.INVALID,
+					CASE_STATUS_ID.WITHDRAWN,
+					CASE_STATUS_ID.REJECTED,
+					CASE_STATUS_ID.CANCELLED,
+					CASE_STATUS_ID.CLOSED
+				]
+			});
+
+			const dynamicDocumentWhere = filterGenerator.createPrismaDocumentWhere(
+				req.query,
+				userId,
+				defaultIsRead,
+				defaultIsFlagged
+			);
+
+			const baseDocumentWhere = {
+				caseId: id,
+				folderId: folderId,
+				deletedAt: null
+			};
+
+			const [folderData, paginatedDocuments, totalFilteredDocuments, allDocumentStatuses, allDocumentsCount] =
+				await Promise.all([
+					db.folder.findUnique({
+						where: { id: folderId },
+						include: {
+							ChildFolders: { where: { caseId: id, deletedAt: null } },
+							ParentFolder: { select: { id: true, displayName: true } }
 						}
-					},
-					ChildFolders: {
-						where: { caseId: id, deletedAt: null }
-					},
-					Documents: {
+					}),
+					db.document.findMany({
+						where: { ...baseDocumentWhere, ...dynamicDocumentWhere },
+						skip: skipSize,
+						take: pageSize,
 						include: {
 							Folder: true,
-							UserDocuments: {
-								where: {
-									User: {
-										idpUserId: userId
-									}
-								}
-							}
+							UserDocuments: { where: { User: { idpUserId: userId } } }
 						},
-						where: { caseId: id, deletedAt: null },
-						orderBy: { uploadedDate: 'desc' },
-						skip: skipSize,
-						take: pageSize
-					},
-					_count: {
+						orderBy: { uploadedDate: 'desc' }
+					}),
+					db.document.count({
+						where: { ...baseDocumentWhere, ...dynamicDocumentWhere }
+					}),
+					db.document.findMany({
+						where: baseDocumentWhere,
 						select: {
-							Documents: {
-								where: { caseId: id, deletedAt: null }
+							UserDocuments: {
+								where: { User: { idpUserId: userId } },
+								select: { readStatus: true, flaggedStatus: true }
 							}
 						}
-					},
-					ParentFolder: {
-						select: {
-							id: true,
-							displayName: true
-						}
-					}
-				}
+					}),
+					db.document.count({
+						where: baseDocumentWhere
+					})
+				]);
+
+			if (!folderData) {
+				return notFoundHandler(req, res);
+			}
+
+			const counts = calculateCountsForFilter(allDocumentStatuses, defaultIsRead, defaultIsFlagged);
+
+			const currentPath = req.originalUrl.split('?')[0];
+			const filterViewModel = filterGenerator.generateFilters(req.query, currentPath, counts);
+
+			const folderPath = await getFolderPath(db, folderId);
+			const breadcrumbItems = buildBreadcrumbItems(id, folderPath);
+
+			const { totalPages, resultsStartNumber, resultsEndNumber } = getPageData(
+				totalFilteredDocuments,
+				selectedItemsPerPage,
+				pageSize,
+				pageNumber
+			);
+
+			const paginationParams = {
+				selectedItemsPerPage,
+				pageNumber,
+				totalPages,
+				resultsStartNumber,
+				resultsEndNumber,
+				totalFilteredDocuments,
+				totalDocuments: allDocumentsCount,
+				uiItems: getPaginationModel(req, totalPages, pageNumber),
+				filtersValue: filterGenerator.createCurrentlySelectedFilterValues(req.query)
+			};
+
+			const subFoldersViewModel = folderData.ChildFolders ? createFoldersViewModel(folderData.ChildFolders) : [];
+			const documentsViewModel = paginatedDocuments
+				? createDocumentsViewModel(paginatedDocuments, caseData, PREVIEW_MIME_TYPES)
+				: [];
+
+			const baseFoldersUrl = `/cases/${id}/case-folders`;
+
+			// Makes sure that we don't have any lingering session data from half-completed MOVE journeys
+			clearDataFromSession({ req, journeyId: JOURNEY_ID });
+
+			return res.render('views/cases/case-folders/case-folder/view.njk', {
+				pageHeading: caseData.name,
+				reference: caseData.reference,
+				folderName: folderData.displayName,
+				backLinkUrl: folderData.ParentFolder
+					? baseFoldersUrl + `/${folderData.ParentFolder.id}/${stringToKebab(folderData.ParentFolder.displayName)}`
+					: baseFoldersUrl,
+				baseFoldersUrl: baseFoldersUrl, // Used for creating the url of the sub-folders
+				subFolders: subFoldersViewModel,
+				currentUrl: req.originalUrl,
+				currentPath: currentPath,
+				documents: documentsViewModel,
+				paginationParams,
+				filterData: filterViewModel,
+				folderUpdates: {
+					folderUpdated,
+					folderCreated,
+					folderDeleted,
+					folderRenamed,
+					filesMoved,
+					filesDeleted
+				},
+				errorSummary,
+				breadcrumbItems,
+				caseId: id
 			});
+		} catch (error: unknown) {
+			if (error instanceof Error) {
+				wrapPrismaError({
+					error,
+					logger,
+					message: 'fetching folder',
+					logParams: { caseId: id, folderId }
+				});
+			}
 
-			if (!folderData) throw new Error('Folder not found');
-
-			const { Case, ChildFolders, Documents, _count, ParentFolder, ...restOfFolder } = folderData;
-
-			caseRow = Case;
-			currentFolder = restOfFolder;
-			subFolders = ChildFolders;
-			documents = Documents;
-			totalDocuments = _count.Documents;
-			parentFolder = ParentFolder;
-		} catch (error: any) {
-			wrapPrismaError({
-				error,
-				logger,
-				message: 'fetching folders',
-				logParams: {}
-			});
+			if (next) next(error);
 		}
-
-		if (!caseRow || !currentFolder || Number.isNaN(totalDocuments)) {
-			return notFoundHandler(req, res);
-		}
-
-		const folderPath = await getFolderPath(db, folderId);
-		const breadcrumbItems = buildBreadcrumbItems(id, folderPath);
-
-		const { totalPages, resultsStartNumber, resultsEndNumber } = getPageData(
-			totalDocuments || 0,
-			selectedItemsPerPage,
-			pageSize,
-			pageNumber
-		);
-
-		// We now generate this in TS rather than inside of Nunjucls
-		const paginationItems = getPaginationModel(req, totalPages, pageNumber);
-
-		const paginationParams = {
-			selectedItemsPerPage,
-			pageNumber,
-			totalPages,
-			resultsStartNumber,
-			resultsEndNumber,
-			totalDocuments,
-			uiItems: paginationItems
-		};
-
-		const subFoldersViewModel = subFolders ? createFoldersViewModel(subFolders) : [];
-
-		const documentsViewModel = documents ? createDocumentsViewModel(documents, caseRow, PREVIEW_MIME_TYPES) : [];
-
-		const baseFoldersUrl = `/cases/${id}/case-folders`;
-
-		// Makes sure that we don't have any lingering session data from half-completed MOVE journeys
-		clearDataFromSession({ req, journeyId: JOURNEY_ID });
-
-		return res.render('views/cases/case-folders/case-folder/view.njk', {
-			pageHeading: caseRow?.name,
-			reference: caseRow?.reference,
-			folderName: currentFolder?.displayName,
-			backLinkUrl: parentFolder
-				? baseFoldersUrl + `/${parentFolder.id}/${stringToKebab(parentFolder.displayName)}`
-				: baseFoldersUrl,
-			baseFoldersUrl: baseFoldersUrl, // Used for creating the url of the sub-folders
-			subFolders: subFoldersViewModel,
-			currentUrl: req.originalUrl,
-			currentPath: req.originalUrl.split('?')[0], // Clean path needed for generating hrefs (without query params)
-			documents: documentsViewModel,
-			paginationParams,
-			folderUpdates: {
-				folderUpdated,
-				folderCreated,
-				folderDeleted,
-				folderRenamed,
-				filesMoved,
-				filesDeleted
-			},
-			errorSummary,
-			breadcrumbItems,
-			caseId: id
-		});
 	};
 }
 
@@ -242,4 +274,30 @@ function readAndClearSessionData(req: Request) {
 	clearSessionData(req, id, 'filesErrors', 'folder');
 
 	return [folderUpdated, folderCreated, folderDeleted, folderRenamed, filesMoved, filesDeleted, errorSummary];
+}
+
+/**
+ * Takes DB count for number of documents with a certain status and calculates the rows.
+ */
+function calculateCountsForFilter(
+	allDocumentStatuses: DocumentWithUserDocuments[],
+	defaultIsRead: boolean,
+	defaultIsFlagged: boolean
+) {
+	const counts = {
+		[DOCUMENT_FILTER_VALUES.READ]: 0,
+		[DOCUMENT_FILTER_VALUES.UNREAD]: 0,
+		[DOCUMENT_FILTER_VALUES.FLAGGED]: 0,
+		[DOCUMENT_FILTER_VALUES.UNFLAGGED]: 0
+	};
+
+	allDocumentStatuses.forEach((doc) => {
+		const userState = doc.UserDocuments[0];
+		const isRead = userState ? userState.readStatus : defaultIsRead;
+		const isFlagged = userState ? userState.flaggedStatus : defaultIsFlagged;
+		counts[isRead ? DOCUMENT_FILTER_VALUES.READ : DOCUMENT_FILTER_VALUES.UNREAD]++;
+		counts[isFlagged ? DOCUMENT_FILTER_VALUES.FLAGGED : DOCUMENT_FILTER_VALUES.UNFLAGGED]++;
+	});
+
+	return counts;
 }

@@ -9,6 +9,7 @@ $font-family: arial, helvetica, sans-serif;
 @forward 'node_modules/@ministryofjustice/frontend/moj/all';
 @use 'node_modules/@pins/peas-row-commons-lib/ui/header/pins-header';
 @use 'node_modules/@pins/peas-row-commons-lib/ui/footer/pins-footer';
+@use 'node_modules/govuk-frontend/dist/govuk/index' as govuk;
 
 // set font-family for any autocomplete menu items
 .autocomplete__menu {
@@ -131,4 +132,55 @@ $font-family: arial, helvetica, sans-serif;
 		outline: none;
 		text-decoration: none;
 	}
+}
+
+// Table header for documents table need to be centred for checkbox alignment
+.govuk-table.documents-table {
+	.govuk-table__header {
+		vertical-align: middle;
+	}
+}
+
+// Specific class to make minor changes to the filter spacing
+// and sizing. MOJ filter does not allow custom classes.
+.pins-clean-filter {
+	.moj-filter {
+		.moj-filter__header {
+			> .moj-filter__header-title {
+				> h2 {
+					@include govuk.govuk-font($size: 19, $weight: bold);
+				}
+			}
+		}
+		.moj-filter__content {
+			.moj-filter__selected {
+				.moj-filter__selected-heading {
+					.moj-filter__heading-title {
+						> h2 {
+							@include govuk.govuk-font($size: 19, $weight: bold);
+						}
+					}
+					.moj-filter__heading-action {
+						> p {
+							margin: 0 0 20px 0;
+						}
+					}
+				}
+			}
+			.moj-filter__options {
+				> button {
+					width: 100%;
+				}
+			}
+		}
+	}
+}
+
+// Widths need to be slightly adjusted for the folder page
+.case-folder-filter-column {
+	width: 30%;
+}
+
+.case-folder-table-column {
+	width: 70%;
 }

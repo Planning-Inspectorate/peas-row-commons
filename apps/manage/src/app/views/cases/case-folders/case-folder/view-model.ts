@@ -31,6 +31,17 @@ export type DocumentWithFolder = Prisma.DocumentGetPayload<{
 	};
 }>;
 
+export type DocumentWithUserDocuments = Prisma.DocumentGetPayload<{
+	select: {
+		UserDocuments: {
+			select: {
+				readStatus: true;
+				flaggedStatus: true;
+			};
+		};
+	};
+}>;
+
 export function createDocumentsViewModel(
 	documents: DocumentWithFolder[],
 	caseRow: Prisma.CaseGetPayload<{ select: { reference: true; name: true; legacyCaseId: true; statusId: true } }>,

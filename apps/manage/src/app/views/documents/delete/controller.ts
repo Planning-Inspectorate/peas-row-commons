@@ -4,7 +4,6 @@ import type { Request, Response } from 'express';
 import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { Document } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { UrlBuilder } from '@pins/peas-row-commons-lib/util/url-builder.ts';
 
 /**
  * Extracts document IDs from the request body.
@@ -47,17 +46,25 @@ async function getDocumentsContext(db: any, documentIds: string[], req: Request)
  * Renders the page that asks for confirmation, used on load and if an
  * error occurs during POST-ing
  */
-function renderConfirmationView(req: Request, res: Response, context: any, errorSummary?: any[]) {
+function renderConfirmationView(
+	req: Request,
+	res: Response,
+	context: any,
+	safeReturnUrl: string,
+	errorSummary?: any[]
+) {
 	if (errorSummary) {
 		res.locals.errorSummary = errorSummary;
 	}
 
+	const basePath = req.originalUrl.split('/documents/')[0];
+
 	return res.render('views/cases/case-folders/case-folder/delete-file/confirmation.njk', {
 		pageHeading: 'Delete file(s)',
-		backLinkUrl: preserveQueryParams(context.previousUrl, req),
+		backLinkUrl: safeReturnUrl,
+		returnUrl: safeReturnUrl,
 		documents: context.documents || [],
-		previousUrl: context.previousUrl,
-		deleteUrl: preserveQueryParams(`${context.previousUrl}/documents/delete`, req)
+		deleteUrl: `${basePath}/documents/delete`
 	});
 }
 
@@ -66,32 +73,19 @@ export function buildDeleteFileView(service: ManageService) {
 
 	return async (req: Request, res: Response) => {
 		const { id } = req.params;
-
 		const documentIds = extractDocumentIds(req);
 
-		// If no files, just refresh and show the error.
-		if (!documentIds?.length) {
-			addSessionData(
-				req,
-				id,
-				{
-					filesErrors: [
-						{
-							text: 'Select file(s) to delete',
-							href: '#'
-						}
-					]
-				},
-				'folder'
-			);
+		const safeReturnUrl = getSafeReturnUrl(req);
 
-			return res.redirect(req.baseUrl);
+		if (!documentIds?.length) {
+			addSessionData(req, id, { filesErrors: [{ text: 'Select file(s) to delete', href: '#' }] }, 'folder');
+			return res.redirect(safeReturnUrl);
 		}
 
 		try {
 			const context = await getDocumentsContext(db, documentIds, req);
 
-			return renderConfirmationView(req, res, context);
+			return renderConfirmationView(req, res, context, safeReturnUrl);
 		} catch (error: any) {
 			wrapPrismaError({
 				error,
@@ -119,8 +113,9 @@ export function buildDeleteFileController(service: ManageService) {
 		if (!id) {
 			throw new Error('id param required');
 		}
-
 		const documentIds = extractDocumentIds(req);
+
+		const safeReturnUrl = getSafeReturnUrl(req);
 
 		if (!documentIds.length) throw new Error('documentIds body param required');
 
@@ -149,27 +144,30 @@ export function buildDeleteFileController(service: ManageService) {
 
 			addSessionData(req, id, { filesDeleted: true }, 'folder');
 
-			const basePath = req.originalUrl.split('/documents/delete')[0];
-			return res.redirect(preserveQueryParams(basePath, req));
+			return res.redirect(safeReturnUrl);
 		} catch (error) {
 			logger.error({ error, documentIds }, 'Failed to delete documents');
 
 			const errorMessage = [{ text: 'Failed to delete documents, please try again.' }];
-			return renderConfirmationView(req, res, context || { documents: [], previousUrl: '/' }, errorMessage);
+			return renderConfirmationView(
+				req,
+				res,
+				context || { documents: [], previousUrl: '/' },
+				safeReturnUrl,
+				errorMessage
+			);
 		}
 	};
 }
 
 /**
- * Persists relevant query parameters (like searchCriteria) to a new base path.
+ * Checks that the URL is redirecting to somewhere relative and not a new URL
  */
-function preserveQueryParams(basePath: string, req: Request): string {
-	const builder = new UrlBuilder(basePath);
-
-	const searchCriteria = req.query.searchCriteria as string;
-	if (searchCriteria) {
-		builder.addQueryParam('searchCriteria', searchCriteria);
+function getSafeReturnUrl(req: Request): string {
+	const returnUrl = req.body.returnUrl as string;
+	if (returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//')) {
+		return returnUrl;
 	}
 
-	return builder.toString();
+	return req.originalUrl.split('/documents/')[0];
 }
