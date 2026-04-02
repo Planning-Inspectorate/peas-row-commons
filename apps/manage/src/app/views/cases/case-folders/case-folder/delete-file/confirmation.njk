@@ -14,6 +14,8 @@
         <div class="govuk-grid-column-two-thirds">
 
             <form action="{{ deleteUrl }}" method="post" novalidate>
+
+                <input type="hidden" name="returnUrl" value="{{ returnUrl }}">
                 
                 {% for doc in documents %}
                     <input type="hidden" name="selectedFiles" value="{{ doc.id }}">

@@ -1,5 +1,6 @@
 {% extends "views/layouts/main.njk" %}
 
+{% from "views/layouts/components/filter.njk" import filterComponent %}
 {% from "views/layouts/components/documents-table.njk" import documentsTable %}
 {% from "govuk/components/pagination/macro.njk" import govukPagination %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
@@ -128,91 +129,119 @@
         </div>
     </div>
 
-    <div id="pagination" class="govuk-body">
-        <div class="govuk-grid-row">
-            <div class="govuk-grid-column-full">
-                <p class="govuk-body govuk-!-font-weight-bold">Files</p>
-                
-                <form action="{{ currentPath }}/move-files" method="POST">
-                    {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
+    <div class="govuk-grid-row">
+        <div class="case-folder-filter-column govuk-grid-column-two-thirds">
+            <form method="GET" action="{{ currentPath }}">
+                {{ filterComponent(
+                    filterData.checkboxGroups,
+                    filterData.selectedCategories
+                ) }}
+            </form>
+        </div>
+        
+        <div class="case-folder-table-column govuk-grid-column-two-thirds">
+            <div id="pagination" class="govuk-body">
+                <div class="govuk-grid-row">
+                    <div class="govuk-grid-column-full">
+                        
+                        <form action="{{ currentPath }}/move-files" method="POST">
+                            {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
 
-                    <input type="hidden" name="returnUrl" value="{{ currentPath }}">
-                    <input type="hidden" name="caseId" value="{{ caseId }}">
+                            <input type="hidden" name="returnUrl" value="{{ currentUrl }}">
+                            <input type="hidden" name="caseId" value="{{ caseId }}">
 
-                    <div class="govuk-button-group">
-                        {{ govukButton({
-                            text: "Upload files",
-                            href: currentPath + "/upload",
-                            classes: "govuk-button--secondary",
-                            attributes: { "data-cy": "upload-files-btn" }
-                        }) }}
+                            <p class="govuk-body govuk-!-font-weight-bold">File actions</p>
 
-                        {% if documents|length !== 0 %}
-                            {{ govukButton({
-                                text: "Move selected",
-                                classes: "govuk-button--secondary",
-                                attributes: { 
-                                    "data-module": "govuk-button",
-                                    "data-cy": "move-selected-btn" 
-                                }
-                            }) }}
-
-                            {{ govukButton({
-                                text: "Download selected",
-                                classes: "govuk-button--secondary",
-                                attributes: { 
-                                    "data-module": "govuk-button",
-                                    "data-cy": "download-selected-btn",
-                                    "formaction": "/documents/download"
-                                }
-                            }) }}
-
-                            {{ govukButton({
-                                text: "Delete selected",
-                                classes: "govuk-button--secondary",
-                                attributes: { 
-                                    "data-module": "govuk-button",
-                                    "data-cy": "delete-selected-btn",
-                                    "formaction": currentPath + "/documents/delete-confirmation"
-                                }
-                            }) }}
-                        {% endif %}
-                    </div>
-
-                    <hr class="govuk-section-break govuk-section-break--m govuk-section-break--visible">
-                    {% if documents|length !== 0 %}
-                        <p class="govuk-body govuk-clearfix">
-                            <p class="govuk-body" data-cy="pagination-results-text">
-                                Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalDocuments > paginationParams.resultsEndNumber else paginationParams.totalDocuments }}</strong>
-                                of <strong>{{ paginationParams.totalDocuments }}</strong> results
-                            </p>
-                            <p class="pins-pagination-options">
-                                {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalDocuments, paginationParams.pageNumber, paginationParams.searchValue) }}
-                            </p>
-                        </p>
-                        <!-- Polite aria so that screen readers will gently let the user know when this number changes -->
-                        <p id="selection-count-container" class="govuk-body govuk-!-display-none" aria-live="polite">
-                            <span id="selection-count-number">0</span> file(s) selected
-                        </p>
-                        <div class="govuk-grid-row">
-                            <div class="govuk-grid-column-full">
-                                {{ documentsTable(documents, currentPath, true, false) }}
+                            <div class="govuk-!-margin-bottom-4">
+                                    <span class="govuk-body govuk-!-margin-bottom-0">
+                                        This folder contains {{ paginationParams.totalDocuments | default(0) }} file(s).
+                                    </span>
+                                
+                                {% if documents|length !== 0 %}
+                                    <span class="govuk-body govuk-!-margin-bottom-0" data-cy="pagination-results-text">
+                                        Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalFilteredDocuments > paginationParams.resultsEndNumber else paginationParams.totalFilteredDocuments }}</strong>
+                                        of <strong>{{ paginationParams.totalFilteredDocuments }}</strong> files.
+                                    </span>
+                                {% endif %}
                             </div>
-                        </div>
-                        {# if uiItems.items is <=1 then pagination options not shown #} 
-                        {% if paginationParams.uiItems.items.length > 1 %}
-                            {{ govukPagination(paginationParams.uiItems) }}
-                        {% endif %}
-                    {% else %}
-                        <p class="govuk-body" data-cy="no-documents-message">This folder contains 0 documents</p>
-                    {% endif %}
-                </form>
-                {# This is the target form for inline status changes, which is needed independent of the main form to avoid it picking up the checkboxes #}
-                <form id="inline-action-form" action="/documents/toggle-action" method="POST" style="display: none;">
-                    <input type="hidden" name="caseId" value="{{ caseId }}">
-                    <input type="hidden" name="returnUrl" value="{{ currentUrl }}">
-                    {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
-                </form>
+
+                            {% if documents|length !== 0 %}
+                                <div class="pins-pagination-options govuk-!-margin-bottom-4">
+                                    {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalFilteredDocuments, paginationParams.pageNumber, paginationParams.searchValue, paginationParams.filtersValue) }}
+                                </div>
+                            {% endif %}
+                            <div class="govuk-button-group govuk-!-margin-bottom-4">
+                                {{ govukButton({
+                                    text: "Upload files",
+                                    href: currentPath + "/upload",
+                                    classes: "govuk-button--secondary",
+                                    attributes: { "data-cy": "upload-files-btn" }
+                                }) }}
+
+                                {% if documents|length !== 0 %}
+                                    {{ govukButton({
+                                        text: "Move selected",
+                                        classes: "govuk-button--secondary",
+                                        attributes: { 
+                                            "data-module": "govuk-button",
+                                            "data-cy": "move-selected-btn" 
+                                        }
+                                    }) }}
+
+                                    {{ govukButton({
+                                        text: "Download selected",
+                                        classes: "govuk-button--secondary",
+                                        attributes: { 
+                                            "data-module": "govuk-button",
+                                            "data-cy": "download-selected-btn",
+                                            "formaction": "/documents/download"
+                                        }
+                                    }) }}
+
+                                    {{ govukButton({
+                                        text: "Delete selected",
+                                        classes: "govuk-button--secondary",
+                                        attributes: { 
+                                            "data-module": "govuk-button",
+                                            "data-cy": "delete-selected-btn",
+                                            "formaction": currentPath + "/documents/delete-confirmation"
+                                        }
+                                    }) }}
+                                {% endif %}
+                            </div>
+
+                            {% if documents|length !== 0 %}
+                                <!-- Polite aria so that screen readers will gently let the user know when this number changes -->
+                                <p id="selection-count-container" class="govuk-body govuk-!-display-none" aria-live="polite">
+                                    <span id="selection-count-number">0</span> file(s) selected
+                                </p>
+                                <p class="govuk-body">Select 'All' checkbox to select all the files.</p>
+                                <div class="govuk-grid-row">
+                                    <div class="govuk-grid-column-full">
+                                        {{ documentsTable(documents, currentPath, true, false) }}
+                                    </div>
+                                </div>
+                                {# if uiItems.items is <=1 then pagination options not shown #} 
+                                {% if paginationParams.uiItems.items.length > 1 %}
+                                    {{ govukPagination(paginationParams.uiItems) }}
+                                {% endif %}
+                           {% else %}
+                                {% if filterData.selectedCategories.categories | length > 0 %}
+                                    <p class="govuk-body govuk-!-margin-top-4">No results were found.</p>
+                                    <p class="govuk-body"><a href="{{ currentPath }}" class="govuk-link govuk-link--no-visited-state">Clear filters</a> to view all files.</p>
+                                {% else %}
+                                    <p class="govuk-body govuk-!-margin-top-4" data-cy="no-documents-message">This folder contains 0 documents.</p>
+                                {% endif %}
+                            {% endif %}
+                        </form>
+                        {# This is the target form for inline status changes, which is needed independent of the main form to avoid it picking up the checkboxes #}
+                        <form id="inline-action-form" action="/documents/toggle-action" method="POST" style="display: none;">
+                            <input type="hidden" name="caseId" value="{{ caseId }}">
+                            <input type="hidden" name="returnUrl" value="{{ currentUrl }}">
+                            {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

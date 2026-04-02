@@ -28,27 +28,29 @@
     {% endfor %}
     {% endset -%}
 
-    {{ mojFilter({
-    heading: {
-        text: "Filter"
-    },
+    <div class="pins-clean-filter">
+        {{ mojFilter({
+            heading: {
+                text: "Filter"
+            },
 
-    submit: {
-        attributes: {
-            "data-test-id": "submit-button"
-        }
-    },
+            submit: {
+                attributes: {
+                    "data-test-id": "submit-button"
+                }
+            },
 
-    selectedFilters: {
-        heading: {
-            text: "Selected filters"
-        },
-        clearLink: {
-            text: "Clear filters",
-            href: selectedCategories.clearLinkHref or "#"
-        },
-        categories: selectedCategories.categories or []
-    },
-    optionsHtml: filterOptionsHtml
-    }) }}
+            selectedFilters: {
+                heading: {
+                    text: "Selected filters"
+                },
+                clearLink: {
+                    text: "Clear filters",
+                    href: selectedCategories.clearLinkHref or "#"
+                },
+                categories: selectedCategories.categories or []
+            },
+            optionsHtml: filterOptionsHtml
+        }) }}
+    </div>
 {% endmacro %}
