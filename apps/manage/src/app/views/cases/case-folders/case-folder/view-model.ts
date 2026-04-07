@@ -4,7 +4,7 @@ import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import { determineDefaultStatuses } from '@pins/peas-row-commons-lib/util/user-document-status.ts';
-import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
+import { CLOSED_STATUSES } from '@pins/peas-row-commons-lib/constants/statuses.ts';
 
 export interface DocumentViewModel {
 	id: string;
@@ -46,14 +46,7 @@ export function createDocumentsViewModel(
 		const { defaultIsRead, defaultIsFlagged } = determineDefaultStatuses({
 			legacyCaseId: caseRow.legacyCaseId,
 			statusId: caseRow.statusId,
-			closedStatuses: [
-				CASE_STATUS_ID.CLOSED_OPENED_IN_ERROR,
-				CASE_STATUS_ID.INVALID,
-				CASE_STATUS_ID.WITHDRAWN,
-				CASE_STATUS_ID.REJECTED,
-				CASE_STATUS_ID.CANCELLED,
-				CASE_STATUS_ID.CLOSED
-			]
+			closedStatuses: CLOSED_STATUSES
 		});
 
 		return {
