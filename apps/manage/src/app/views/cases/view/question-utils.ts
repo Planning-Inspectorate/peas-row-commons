@@ -519,7 +519,17 @@ export const CASE_DETAILS_QUESTIONS = {
 		hint: 'Enter the Local Planning Authority or Common Registration Authority (optional)',
 		fieldName: 'authorityId',
 		url: 'authority',
-		options: getAuthorityOptions()
+		options: getAuthorityOptions(),
+		validators: [new RequiredValidator('Select an authority')],
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'authority/remove'
+				}
+			]
+		}
 	},
 	priority: {
 		type: COMPONENT_TYPES.RADIO,
