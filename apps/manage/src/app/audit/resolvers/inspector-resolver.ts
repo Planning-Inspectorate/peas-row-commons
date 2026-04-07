@@ -14,10 +14,8 @@ export type InspectorWithUser = Prisma.InspectorGetPayload<{ include: { Inspecto
  * inspector as `{ inspectorId, inspectorAllocatedDate }` where `inspectorId`
  * is the Entra `idpUserId`.
  *
- * Because `handleInspectors` uses `deleteMany` + `create` (no stable IDs
- * on the join table), we diff positionally — same index in old and new
- * arrays is treated as the same logical entry. This relies on the form
- * preserving the order of inspectors between load and save.
+ * We diff by Entra user ID (`idpUserId`) as the stable identity key. This
+ * correctly handles deletions from the middle of the list
  */
 export function resolveInspectorAudits(
 	caseId: string,

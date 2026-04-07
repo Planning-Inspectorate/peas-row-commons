@@ -16,10 +16,180 @@ function getContactDisplayName(
 	orgName: string | null | undefined
 ): string {
 	const parts = [firstName, lastName].filter(Boolean);
-	if (parts.length > 0) return parts.join(' ');
-	if (orgName) return orgName;
+
+	if (parts.length > 0) {
+		return parts.join(' ');
+	}
+
+	if (orgName) {
+		return orgName;
+	}
+
 	return '-';
 }
+
+// ─── Sub-field checkers ──────────────────────────────────────────────────────
+// Each function checks one sub-field for changes and returns an audit entry
+// if a change is detected, or null if no change occurred.
+
+function checkNameChange(
+	oldContact: ContactWithAddress,
+	newContact: Record<string, unknown>,
+	prefix: string,
+	caseId: string,
+	userId: string | undefined,
+	action: AuditAction,
+	entityName: string
+): AuditEntry | null {
+	const oldName = getContactDisplayName(oldContact.firstName, oldContact.lastName, oldContact.orgName);
+	const newName = getContactDisplayName(
+		newContact[`${prefix}FirstName`] as string,
+		newContact[`${prefix}LastName`] as string,
+		newContact[`${prefix}OrgName`] as string
+	);
+
+	if (oldName === newName) {
+		return null;
+	}
+
+	return {
+		caseId,
+		action,
+		userId,
+		metadata: { entityName, fieldName: 'name', oldValue: oldName, newValue: newName }
+	};
+}
+
+function checkAddressChange(
+	oldContact: ContactWithAddress,
+	newContact: Record<string, unknown>,
+	prefix: string,
+	caseId: string,
+	userId: string | undefined,
+	action: AuditAction,
+	entityName: string
+): AuditEntry | null {
+	const oldAddress = formatAddress(oldContact.Address as Record<string, unknown> | null);
+	const newAddress = formatAddress(newContact[`${prefix}Address`] as Record<string, unknown> | null);
+
+	if (oldAddress === newAddress) return null;
+
+	return {
+		caseId,
+		action,
+		userId,
+		metadata: { entityName, fieldName: 'address', oldValue: oldAddress, newValue: newAddress }
+	};
+}
+
+function checkEmailChange(
+	oldContact: ContactWithAddress,
+	newContact: Record<string, unknown>,
+	prefix: string,
+	caseId: string,
+	userId: string | undefined,
+	action: AuditAction,
+	entityName: string
+): AuditEntry | null {
+	const oldEmail = oldContact.email || '-';
+	const newEmail = (newContact[`${prefix}Email`] as string) || '-';
+
+	if (oldEmail === newEmail) return null;
+
+	return {
+		caseId,
+		action,
+		userId,
+		metadata: { entityName, fieldName: 'email', oldValue: oldEmail, newValue: newEmail }
+	};
+}
+
+function checkPhoneChange(
+	oldContact: ContactWithAddress,
+	newContact: Record<string, unknown>,
+	prefix: string,
+	caseId: string,
+	userId: string | undefined,
+	action: AuditAction,
+	entityName: string
+): AuditEntry | null {
+	const oldPhone = oldContact.telephoneNumber || '-';
+	const newPhone = (newContact[`${prefix}TelephoneNumber`] as string) || '-';
+
+	if (oldPhone === newPhone) return null;
+
+	return {
+		caseId,
+		action,
+		userId,
+		metadata: { entityName, fieldName: 'phone number', oldValue: oldPhone, newValue: newPhone }
+	};
+}
+
+/**
+ * Checks for objector status changes. Only produces an entry for objectors,
+ * since applicants and contacts will have null on both sides.
+ * Resolves the raw status ID to a display name from OBJECTOR_STATUSES.
+ */
+function checkObjectorStatusChange(
+	oldContact: ContactWithAddress,
+	newContact: Record<string, unknown>,
+	prefix: string,
+	caseId: string,
+	userId: string | undefined,
+	action: AuditAction,
+	entityName: string
+): AuditEntry | null {
+	if (!oldContact.objectorStatusId && !newContact[`${prefix}StatusId`]) return null;
+
+	const oldStatusId = oldContact.objectorStatusId || null;
+	const newStatusId = (newContact[`${prefix}StatusId`] as string) || null;
+
+	if (oldStatusId === newStatusId) return null;
+
+	const oldStatus = OBJECTOR_STATUSES.find((s) => s.id === oldStatusId)?.displayName ?? '-';
+	const newStatus = OBJECTOR_STATUSES.find((s) => s.id === newStatusId)?.displayName ?? '-';
+
+	return {
+		caseId,
+		action,
+		userId,
+		metadata: { entityName, fieldName: 'status', oldValue: oldStatus, newValue: newStatus }
+	};
+}
+
+/**
+ * Checks for contact type changes. Only produces an entry for contacts,
+ * since applicants and objectors have fixed contact types.
+ * Resolves the raw type ID to a display name from CONTACT_TYPES.
+ */
+function checkContactTypeChange(
+	oldContact: ContactWithAddress,
+	newContact: Record<string, unknown>,
+	caseId: string,
+	userId: string | undefined,
+	action: AuditAction,
+	entityName: string
+): AuditEntry | null {
+	if (!oldContact.contactTypeId && !newContact['contactTypeId']) return null;
+
+	const oldTypeId = oldContact.contactTypeId || null;
+	const newTypeId = (newContact['contactTypeId'] as string) || null;
+
+	if (oldTypeId === newTypeId) return null;
+
+	const oldType = CONTACT_TYPES.find((t) => t.id === oldTypeId)?.displayName ?? '-';
+	const newType = CONTACT_TYPES.find((t) => t.id === newTypeId)?.displayName ?? '-';
+
+	return {
+		caseId,
+		action,
+		userId,
+		metadata: { entityName, fieldName: 'contact type', oldValue: oldType, newValue: newType }
+	};
+}
+
+// ─── Main resolver ───────────────────────────────────────────────────────────
 
 /**
  * Compares old and new contact lists and returns audit entries for
@@ -33,14 +203,10 @@ function getContactDisplayName(
  *   - IDs in the old list but not the new → deleted
  *   - IDs in both → compare each sub-field for changes → updated
  *
- * Sub-fields compared (matching the scenarios doc):
- *   - name (firstName + lastName combined, falling back to orgName)
- *   - address (formatted as comma-separated string)
- *   - email
- *   - phone number
- *   - objector status (objectors only — resolved from OBJECTOR_STATUSES)
- *   - contact type (contacts only — resolved from CONTACT_TYPES)
- *
+ * The `prefix` parameter controls which keys to read from the form data
+ * (e.g. 'applicant' → applicantFirstName, applicantEmail, etc.). This
+ * allows the same resolver to be reused for applicants, objectors, and
+ * contacts by passing a different prefix and action set.
  */
 export function resolveContactAudits(
 	caseId: string,
@@ -68,12 +234,7 @@ export function resolveContactAudits(
 				newContact[`${prefix}OrgName`] as string
 			);
 
-			entries.push({
-				caseId,
-				action: actions.added,
-				userId,
-				metadata: { name }
-			});
+			entries.push({ caseId, action: actions.added, userId, metadata: { name } });
 		}
 	}
 
@@ -81,13 +242,7 @@ export function resolveContactAudits(
 	for (const [id, oldContact] of oldById) {
 		if (!newById.has(id)) {
 			const name = getContactDisplayName(oldContact.firstName, oldContact.lastName, oldContact.orgName);
-
-			entries.push({
-				caseId,
-				action: actions.deleted,
-				userId,
-				metadata: { name }
-			});
+			entries.push({ caseId, action: actions.deleted, userId, metadata: { name } });
 		}
 	}
 
@@ -98,132 +253,17 @@ export function resolveContactAudits(
 
 		const entityName = getContactDisplayName(oldContact.firstName, oldContact.lastName, oldContact.orgName);
 
-		// Name change (first + last combined)
-		const oldName = getContactDisplayName(oldContact.firstName, oldContact.lastName, oldContact.orgName);
-		const newName = getContactDisplayName(
-			newContact[`${prefix}FirstName`] as string,
-			newContact[`${prefix}LastName`] as string,
-			newContact[`${prefix}OrgName`] as string
-		);
+		const checks = [
+			checkNameChange(oldContact, newContact, prefix, caseId, userId, actions.updated, entityName),
+			checkAddressChange(oldContact, newContact, prefix, caseId, userId, actions.updated, entityName),
+			checkEmailChange(oldContact, newContact, prefix, caseId, userId, actions.updated, entityName),
+			checkPhoneChange(oldContact, newContact, prefix, caseId, userId, actions.updated, entityName),
+			checkObjectorStatusChange(oldContact, newContact, prefix, caseId, userId, actions.updated, entityName),
+			checkContactTypeChange(oldContact, newContact, caseId, userId, actions.updated, entityName)
+		];
 
-		if (oldName !== newName) {
-			entries.push({
-				caseId,
-				action: actions.updated,
-				userId,
-				metadata: {
-					entityName,
-					fieldName: 'name',
-					oldValue: oldName,
-					newValue: newName
-				}
-			});
-		}
-
-		// Address change
-		const oldAddress = formatAddress(oldContact.Address as Record<string, unknown> | null);
-		const newAddress = formatAddress(newContact[`${prefix}Address`] as Record<string, unknown> | null);
-
-		if (oldAddress !== newAddress) {
-			entries.push({
-				caseId,
-				action: actions.updated,
-				userId,
-				metadata: {
-					entityName,
-					fieldName: 'address',
-					oldValue: oldAddress,
-					newValue: newAddress
-				}
-			});
-		}
-
-		// Email change
-		const oldEmail = oldContact.email || '-';
-		const newEmail = (newContact[`${prefix}Email`] as string) || '-';
-
-		if (oldEmail !== newEmail) {
-			entries.push({
-				caseId,
-				action: actions.updated,
-				userId,
-				metadata: {
-					entityName,
-					fieldName: 'email',
-					oldValue: oldEmail,
-					newValue: newEmail
-				}
-			});
-		}
-
-		// Phone number change
-		const oldPhone = oldContact.telephoneNumber || '-';
-		const newPhone = (newContact[`${prefix}TelephoneNumber`] as string) || '-';
-
-		if (oldPhone !== newPhone) {
-			entries.push({
-				caseId,
-				action: actions.updated,
-				userId,
-				metadata: {
-					entityName,
-					fieldName: 'phone number',
-					oldValue: oldPhone,
-					newValue: newPhone
-				}
-			});
-		}
-
-		// Objector status change — only produces an entry for objectors,
-		// since applicants and contacts will have null on both sides.
-		// Resolves the raw status ID to a human-readable display name
-		// from OBJECTOR_STATUSES (e.g. 'Admissable', 'Upheld').
-		if (oldContact.objectorStatusId || newContact[`${prefix}StatusId`]) {
-			const oldStatusId = oldContact.objectorStatusId || null;
-			const newStatusId = (newContact[`${prefix}StatusId`] as string) || null;
-
-			if (oldStatusId !== newStatusId) {
-				const oldStatus = OBJECTOR_STATUSES.find((s) => s.id === oldStatusId)?.displayName ?? '-';
-				const newStatus = OBJECTOR_STATUSES.find((s) => s.id === newStatusId)?.displayName ?? '-';
-
-				entries.push({
-					caseId,
-					action: actions.updated,
-					userId,
-					metadata: {
-						entityName,
-						fieldName: 'status',
-						oldValue: oldStatus,
-						newValue: newStatus
-					}
-				});
-			}
-		}
-
-		// Contact type change — only produces an entry for contacts,
-		// since applicants and objectors have fixed contact types.
-		// Resolves the raw type ID to a human-readable display name
-		// from CONTACT_TYPES (e.g. 'acquiring authority', 'interested owner').
-		if (oldContact.contactTypeId || newContact['contactTypeId']) {
-			const oldTypeId = oldContact.contactTypeId || null;
-			const newTypeId = (newContact['contactTypeId'] as string) || null;
-
-			if (oldTypeId !== newTypeId) {
-				const oldType = CONTACT_TYPES.find((t) => t.id === oldTypeId)?.displayName ?? '-';
-				const newType = CONTACT_TYPES.find((t) => t.id === newTypeId)?.displayName ?? '-';
-
-				entries.push({
-					caseId,
-					action: actions.updated,
-					userId,
-					metadata: {
-						entityName,
-						fieldName: 'contact type',
-						oldValue: oldType,
-						newValue: newType
-					}
-				});
-			}
+		for (const entry of checks) {
+			if (entry) entries.push(entry);
 		}
 	}
 
