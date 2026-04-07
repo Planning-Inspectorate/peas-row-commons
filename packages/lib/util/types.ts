@@ -1,3 +1,5 @@
+import { CLOSED_STATUSES } from '../constants/statuses.ts';
+
 export type ContactMappingConfig = {
 	sourceKey: string;
 	prefix: string;
@@ -19,5 +21,5 @@ export type AddressItem = {
 export type DefaultStatusParams = {
 	legacyCaseId: string | null;
 	statusId: string | null;
-	closedStatuses: string[];
+	closedStatuses: typeof CLOSED_STATUSES;
 };

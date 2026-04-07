@@ -4,7 +4,7 @@ import type { ToggleDocumentBody, ToggleDocumentPayload, ToggleType } from './ty
 import { DOCUMENT_STATUS_ACTIONS } from '@pins/peas-row-commons-lib/constants/documents.ts';
 import type { Logger } from 'pino';
 import { determineDefaultStatuses } from '@pins/peas-row-commons-lib/util/user-document-status.ts';
-import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
+import { CLOSED_STATUSES } from '@pins/peas-row-commons-lib/constants/statuses.ts';
 
 /**
  * Handles the database operations for toggling a user's document state
@@ -41,14 +41,7 @@ async function toggleDocumentStatusInDb(
 	const { defaultIsRead, defaultIsFlagged } = determineDefaultStatuses({
 		legacyCaseId: caseRow.legacyCaseId,
 		statusId: caseRow.statusId,
-		closedStatuses: [
-			CASE_STATUS_ID.CLOSED_OPENED_IN_ERROR,
-			CASE_STATUS_ID.INVALID,
-			CASE_STATUS_ID.WITHDRAWN,
-			CASE_STATUS_ID.REJECTED,
-			CASE_STATUS_ID.CANCELLED,
-			CASE_STATUS_ID.CLOSED
-		]
+		closedStatuses: CLOSED_STATUSES
 	});
 
 	const currentRead = currentState?.readStatus ?? defaultIsRead;
