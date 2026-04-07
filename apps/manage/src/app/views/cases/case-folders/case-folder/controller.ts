@@ -15,12 +15,12 @@ import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { FolderBreadcrumb } from '../types.ts';
 import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 import { JOURNEY_ID } from '../../move-file/journey/journey.ts';
-import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
 import {
 	DocumentFilterGenerator,
 	DOCUMENT_FILTER_VALUES
 } from '@pins/peas-row-commons-lib/util/user-document-filter-generator.ts';
 import { determineDefaultStatuses } from '@pins/peas-row-commons-lib/util/user-document-status.ts';
+import { CLOSED_STATUSES } from '@pins/peas-row-commons-lib/constants/statuses.ts';
 
 export function buildViewCaseFolder(
 	service: ManageService,
@@ -64,14 +64,7 @@ export function buildViewCaseFolder(
 			const { defaultIsRead, defaultIsFlagged } = determineDefaultStatuses({
 				legacyCaseId: caseData.legacyCaseId,
 				statusId: caseData.statusId,
-				closedStatuses: [
-					CASE_STATUS_ID.CLOSED_OPENED_IN_ERROR,
-					CASE_STATUS_ID.INVALID,
-					CASE_STATUS_ID.WITHDRAWN,
-					CASE_STATUS_ID.REJECTED,
-					CASE_STATUS_ID.CANCELLED,
-					CASE_STATUS_ID.CLOSED
-				]
+				closedStatuses: CLOSED_STATUSES
 			});
 
 			const dynamicDocumentWhere = filterGenerator.createPrismaDocumentWhere(
