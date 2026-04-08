@@ -81,10 +81,10 @@ export function createJourney(questions: Record<string, any>, response: JourneyR
 				.addQuestion(questions.receivedDate)
 				.addQuestion(questions.targetDecisionDate)
 				.addQuestion(questions.startDate)
+				.addQuestion(questions.proposedModificationsDate)
 				.addQuestion(questions.objectionPeriodEndsDate)
 				.addQuestion(questions.partiesDecisionNotificationDeadlineDate)
-				.addQuestion(questions.expiryDate)
-				.addQuestion(questions.proposedModificationsDate),
+				.addQuestion(questions.expiryDate),
 			new Section('Key contacts', 'key-contacts')
 				.addQuestion(
 					questions.objectorDetails,
