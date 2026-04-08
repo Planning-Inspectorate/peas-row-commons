@@ -43,7 +43,7 @@
                 {{ govukButton({
                     text: addMoreButtonText,
                     href: util.trimTrailingSlash(originalUrl) + "/" + question.addAnotherLink,
-                    classes: "govuk-button--secondary"
+                    classes: "" if hideCancel and not hasData else "govuk-button--secondary"
                 }) }}
 
                 {# Show the buttons always, unless we are told to hide them when empty, in which case only show if the page has data  #}
