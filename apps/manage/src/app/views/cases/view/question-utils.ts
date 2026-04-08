@@ -557,7 +557,8 @@ export const CASE_DETAILS_QUESTIONS = {
 		url: 'applicant-details',
 		viewData: {
 			emptyName: 'applicant or appellant',
-			emptyNamePlural: 'applicants or appellants'
+			emptyNamePlural: 'applicants or appellants',
+			hideBackLink: true
 		},
 		titleSingular: 'applicant or appellant',
 		showAnswersInSummary: true,
@@ -656,7 +657,10 @@ export const OVERVIEW_QUESTIONS = {
 		fieldName: 'relatedCaseDetails',
 		url: 'check-related-cases',
 		showAnswersInSummary: true,
-		viewData: { emptyName: 'related case' },
+		viewData: {
+			emptyName: 'related case',
+			hideBackLink: true
+		},
 		titleSingular: 'related case'
 	},
 	addRelatedCase: {
@@ -690,7 +694,10 @@ export const OVERVIEW_QUESTIONS = {
 		fieldName: 'linkedCaseDetails',
 		url: 'check-linked-cases',
 		showAnswersInSummary: true,
-		viewData: { emptyName: 'linked case' },
+		viewData: {
+			emptyName: 'linked case',
+			hideBackLink: true
+		},
 		titleSingular: 'linked case',
 		validators: [
 			new ManageListItemsCompleteValidator({
@@ -762,7 +769,10 @@ export const TEAM_QUESTIONS = {
 		fieldName: 'inspectorDetails',
 		url: 'inspector-details',
 		showAnswersInSummary: true,
-		viewData: { emptyName: 'inspector' },
+		viewData: {
+			emptyName: 'inspector',
+			hideBackLink: true
+		},
 		titleSingular: 'inspector',
 		validators: [
 			new ManageListItemsCompleteValidator({
@@ -832,7 +842,10 @@ export const OUTCOME_QUESTIONS = {
 		question: 'Check outcome details',
 		fieldName: 'outcomeDetails',
 		url: 'check-outcome-details',
-		viewData: { emptyName: 'outcome' },
+		viewData: {
+			emptyName: 'outcome',
+			hideBackLink: true
+		},
 		titleSingular: 'outcome',
 		columns: [
 			{ header: 'Type', fieldName: 'decisionTypeId' },
@@ -1082,7 +1095,10 @@ export const KEY_CONTACTS_QUESTIONS = {
 		question: 'Check objector details',
 		fieldName: 'objectorDetails',
 		url: 'objector-details',
-		viewData: { emptyName: 'objector' },
+		viewData: {
+			emptyName: 'objector',
+			hideBackLink: true
+		},
 		titleSingular: 'objector',
 		validators: [
 			new ManageListItemsCompleteValidator({
@@ -1121,7 +1137,10 @@ export const KEY_CONTACTS_QUESTIONS = {
 		question: 'Check contact details',
 		fieldName: 'contactDetails',
 		url: 'contact-details',
-		viewData: { emptyName: 'contact' },
+		viewData: {
+			emptyName: 'contact',
+			hideBackLink: true
+		},
 		titleSingular: 'contact',
 		validators: [
 			new ManageListItemsCompleteValidator({
@@ -1187,7 +1206,8 @@ export const PROCEDURE_MANAGE_LIST_QUESTION = {
 			emptyNamePlural: 'procedures',
 			warningText:
 				'Changing the procedure type will delete the information ' +
-				'you have already entered for an existing procedure.'
+				'you have already entered for an existing procedure.',
+			hideBackLink: true
 		},
 		titleSingular: 'procedure',
 		columns: [

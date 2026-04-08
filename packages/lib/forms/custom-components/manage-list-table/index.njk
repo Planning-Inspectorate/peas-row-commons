@@ -4,6 +4,12 @@
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
 
+{% block backLink %}
+    {% if not hideBackLink %}
+        {{ super() }}
+    {% endif %}
+{% endblock %}
+
 {% block dynQuestionContent %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full">
