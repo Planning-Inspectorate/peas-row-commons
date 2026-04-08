@@ -102,10 +102,10 @@ describe('case details journey', () => {
 					'receivedDate',
 					'targetDecisionDate',
 					'startDate',
+					'proposedModificationsDate',
 					'objectionPeriodEndsDate',
 					'partiesDecisionNotificationDeadlineDate',
-					'expiryDate',
-					'proposedModificationsDate'
+					'expiryDate'
 				]
 			},
 			{
