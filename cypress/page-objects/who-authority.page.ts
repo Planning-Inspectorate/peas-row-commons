@@ -13,48 +13,47 @@ class WhoAuthorityPage {
 		cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible');
 	}
 
-	private readonly defaultApplicants = [
-		'Applicant',
-		'Server',
-		'Utility company',
-		'Local Authority',
-		'County Council',
-		'District Council',
-		'Parish Council',
-		'Town Council',
-		'Highways Authority',
-		'National Grid',
-		'Network Rail',
-		'Environment Agency',
-		'Natural England',
-		'Transport for London',
-		'Highways England',
-		'Water Utility Company',
-		'Energy Provider',
-		'Telecommunications Provider',
-		'Landowner',
-		'Property Developer',
-		'Planning Consultant',
-		'Solicitors on behalf of applicant',
-		'Private Individual'
-	] as const;
-
 	/**
-	 * Enters the supplied authority name, or selects a default test value
-	 * when none is provided, and returns the value used.
+	 * Opens the authority autocomplete, selects a random option,
+	 * and returns the selected value.
 	 */
-	enterAuthority(applicant?: string): string {
-		const valueToUse = applicant !== undefined ? applicant : Cypress._.sample(this.defaultApplicants)!;
+	selectRandomAuthority(): Cypress.Chainable<string> {
+		return cy
+			.get('input#authorityId[role="combobox"]')
+			.should('exist')
+			.and('be.visible')
+			.click()
+			.type(' ')
+			.then(() => {
+				return cy
+					.get('#authorityId__listbox', { timeout: 60000 })
+					.should('exist')
+					.and('be.visible')
+					.then(() => {
+						return cy.get('[id^="authorityId__option--"]').then(($options) => {
+							const count = $options.length;
 
-		const input = cy.get('#authority').should('exist').and('be.visible').clear();
+							if (count === 0) {
+								throw new Error('Test Failed: No authority options were found');
+							}
 
-		if (valueToUse !== '') {
-			input.type(valueToUse).should('have.value', valueToUse);
-		} else {
-			input.should('have.value', '');
-		}
+							cy.log(`Authority options found: ${count}`);
 
-		return valueToUse;
+							const randomIndex = Cypress._.random(0, count - 1);
+							const option = $options[randomIndex];
+
+							const selectedValue = option.innerText.trim();
+
+							return cy
+								.wrap(option)
+								.click()
+								.then(() => {
+									cy.get('#authorityId').should('have.value', selectedValue);
+									return selectedValue;
+								});
+						});
+					});
+			});
 	}
 }
 

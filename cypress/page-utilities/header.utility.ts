@@ -23,8 +23,9 @@ class HeaderUtility {
 			});
 	}
 
-	clickHeaderLink(option: 'allCases' | 'createCase' | 'signOut'): void {
+	clickHeaderLink(option: 'assignedToMe' | 'allCases' | 'createCase' | 'signOut'): void {
 		const linkTextMap = {
+			assignedToMe: 'Assigned to me',
 			allCases: 'All cases',
 			createCase: 'Create a case',
 			signOut: 'Sign out'
@@ -33,7 +34,7 @@ class HeaderUtility {
 		cy.get(this.header)
 			.should('be.visible')
 			.within(() => {
-				cy.contains(this.navLinks, linkTextMap[option]).should('exist').and('be.visible').click();
+				cy.contains('a.govuk-service-navigation__link', linkTextMap[option]).should('exist').and('be.visible').click();
 			});
 	}
 }

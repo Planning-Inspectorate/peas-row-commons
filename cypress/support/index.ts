@@ -8,7 +8,7 @@ declare global {
 			verifyPageLoaded(pageName: string): Chainable<void>;
 			verifyPageURL(pageURL: string | string[]): Chainable<void>;
 			verifyPageTitle(expectedTitle: string, options?: { timeout?: number }): Chainable<void>;
-			verifyErrorSummary(errorText: string, href?: string): Chainable<void>;
+			verifyErrorSummary(errorText: string, options?: { href?: string; inlineId?: string }): Chainable<void>;
 		}
 	}
 }

@@ -48,6 +48,17 @@ class RightsOfWaySubtypePage {
 			cy.get(selector).check().should('be.checked');
 		});
 	}
+
+	/**
+	 * Verifies the required error for selecting a Rights of Way subtype
+	 * in both the error summary and inline message.
+	 */
+	verifyErrorBanner(): void {
+		cy.verifyErrorSummary('Select the case subtype', {
+			href: '#rightsOfWay',
+			inlineId: 'rightsOfWay-error'
+		});
+	}
 }
 
 export default new RightsOfWaySubtypePage();

@@ -1,6 +1,11 @@
 /// <reference types="cypress" />
 
+import { createAnswers, CaseAnswers } from 'cypress/types/answers.ts';
+
 import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';
+import DateUtility from 'cypress/page-utilities/date.utility.ts';
+import AddressUtility from 'cypress/page-utilities/address.utility.ts';
+import AddressPage from 'cypress/page-objects/address-details.page.ts';
 import CasesListPage from 'cypress/page-objects/case-list.page.ts';
 import HeaderUtility from 'cypress/page-utilities/header.utility.ts';
 import CaseWorkAreaPage from 'cypress/page-objects/case-work-area.page.ts';
@@ -16,10 +21,9 @@ import CoastalAccessSubtypePage from 'cypress/page-objects/sub-types/coastal-acc
 import CommonLandSubtypePage from 'cypress/page-objects/sub-types/common-land-subtype.page.ts';
 import RightsOfWaySubtypePage from 'cypress/page-objects/sub-types/rights-of-way-subtype.page.ts';
 
-import ApplicantOrAppellantPage from 'cypress/page-objects/applicant-or-appellant/applicant-or-appellant.page.ts';
-import WhoIsAOrAPage from 'cypress/page-objects/applicant-or-appellant/who-is-a-or-a.page.ts';
-import AOrAAddressPage from 'cypress/page-objects/applicant-or-appellant/a-or-a-address.page.ts';
-import AOrAContactDetailsPage from 'cypress/page-objects/applicant-or-appellant/a-or-a-contact-details.page.ts';
+import ApplicantOrAppellantPage from 'cypress/page-objects/applicant-or-appellant.page.ts';
+import ContactDetailsPage from 'cypress/page-objects/contact-details.page.ts';
+import WhoIsNameCompanyPage from 'cypress/page-objects/who-is-name-company.page.ts';
 import CaseNamePage from 'cypress/page-objects/case-name.page.ts';
 import SiteAddressPage from 'cypress/page-objects/site-address.page.ts';
 import SiteLocationPage from 'cypress/page-objects/site-location.page.ts';
@@ -52,63 +56,90 @@ describe('Planning Inspectorate > Case creation', () => {
 	 */
 	allJourneys.forEach((journey: Journeys) => {
 		it(`Create Case: ${journey.name}`, () => {
+			const answers: CaseAnswers = createAnswers();
+
 			HeaderUtility.clickHeaderLink('createCase');
 
+			// Casework area
 			CaseWorkAreaPage.isPageDisplayed();
 			CaseWorkAreaPage.selectCaseworkArea(journey.caseworkArea);
 			CommonActionsUtility.clickActionButton('continue');
 
+			// Case type
 			CaseTypePage.isPageDisplayed();
 			CaseTypePage.selectCaseType(journey.caseType);
 			CommonActionsUtility.clickActionButton('continue');
 
+			// Subtype
 			runJourney(journey);
 
+			// Case name
 			CaseNamePage.isPageDisplayed();
-			CaseNamePage.enterCaseName(journey);
+			answers.caseName = CaseNamePage.enterCaseName(journey);
 			CommonActionsUtility.clickActionButton('continue');
 
+			// External reference
 			ExternalReferencePage.isPageDisplayed();
-			ExternalReferencePage.enterExternalReference(journey);
+			answers.externalReference = ExternalReferencePage.enterExternalReference(journey);
 			CommonActionsUtility.clickActionButton('continue');
 
+			// Case recieved date
 			CaseReceivedDatePage.isPageDisplayed();
-			CaseReceivedDatePage.enterDate();
+			DateUtility.enterDate();
 			CommonActionsUtility.clickActionButton('continue');
 
+			// Applicant or Appellant
 			ApplicantOrAppellantPage.isPageDisplayed('createCase', 'noDetails');
 			CommonActionsUtility.clickActionButton('addDetails');
-			WhoIsAOrAPage.isPageDisplayed();
-			WhoIsAOrAPage.enterFirstLastAndCompany();
+			WhoIsNameCompanyPage.isPageDisplayed('applicantAppellant');
+			const applicant = WhoIsNameCompanyPage.enterFirstLastAndCompany();
 			CommonActionsUtility.clickActionButton('continue');
-			AOrAAddressPage.isPageDisplayed();
-			CommonActionsUtility.enterAddress();
+			AddressPage.isPageDisplayed('applicantAppellant');
+			const applicantAddress = AddressUtility.enterAddress();
 			CommonActionsUtility.clickActionButton('continue');
-			AOrAContactDetailsPage.isPageDisplayed();
-			AOrAContactDetailsPage.enterContactDetails();
+			ContactDetailsPage.isPageDisplayed('applicantAppellant');
+			const applicantContact = ContactDetailsPage.enterContactDetails();
 			CommonActionsUtility.clickActionButton('continue');
+
+			answers.applicants?.push({
+				...applicant,
+				address: applicantAddress,
+				contact: applicantContact
+			});
+
 			ApplicantOrAppellantPage.isPageDisplayed('createCase', 'withDetails');
 
+			// Site Address
 			SiteAddressPage.isPageDisplayed();
-			CommonActionsUtility.enterAddress();
+			answers.siteAddress = AddressUtility.enterAddress();
 			CommonActionsUtility.clickActionButton('continue');
 
+			// Site location
 			SiteLocationPage.isPageDisplayed();
-			SiteLocationPage.enterSiteLocation();
+			answers.siteLocation = SiteLocationPage.enterSiteLocation();
 			CommonActionsUtility.clickActionButton('continue');
 
+			// Authority
 			WhoAuthorityPage.isPageDisplayed();
-			WhoAuthorityPage.enterAuthority();
+			WhoAuthorityPage.selectRandomAuthority().then((selectedAuthority) => {
+				answers.authority = selectedAuthority;
+			});
 			CommonActionsUtility.clickActionButton('continue');
 
+			// Assigned case officer
 			CaseOfficerPage.isPageDisplayed();
-			CaseOfficerPage.selectRandomCaseOfficer();
+			CaseOfficerPage.selectRandomCaseOfficer().then((selectedOfficer) => {
+				answers.caseOfficer = selectedOfficer;
+			});
 			CommonActionsUtility.clickActionButton('continue');
 
+			// Check answers
 			CheckAnswersPage.isPageDisplayed();
 			CheckAnswersPage.validateCheckYourAnswersRows();
-			CheckAnswersPage.clickAcceptAndSubmitButton();
+			CheckAnswersPage.verifyCheckYourAnswers(journey);
+			CommonActionsUtility.clickActionButton('saveAndContinue');
 
+			// Create case
 			CaseCreatedPage.isPageDisplayed(journey);
 			CaseCreatedPage.clickContinueToCaseDetails();
 

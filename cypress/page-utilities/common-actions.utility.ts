@@ -1,6 +1,3 @@
-import { UkAddress } from 'cypress/types/standard.ts';
-import { generateUkAddress } from './generate.utility.ts';
-
 class CommonActionsUtility {
 	/**
 	 * Clears cookies, local/session storage, and Cypress sessions
@@ -58,54 +55,27 @@ class CommonActionsUtility {
 	clickActionButton(
 		option: 'back' | 'addDetails' | 'saveAndContinue' | 'continue' | 'cancel' | 'save' | 'removeAndSave'
 	): void {
-		const selectorMap: Record<typeof option, string> = {
-			back: 'a.govuk-back-link',
-			addDetails: 'a.govuk-button:contains("Add details")',
-			saveAndContinue: '[data-cy="button-save-and-continue"]',
-			continue: '[data-cy="button-save-and-continue"]',
-			cancel: 'a.govuk-button:contains("Cancel")',
-			save: 'button.govuk-button:contains("Save")',
-			removeAndSave: '[data-cy="button-remove-and-save"]'
+		const selectorMap: Record<typeof option, string[]> = {
+			back: ['a.govuk-back-link'],
+			addDetails: ['a.govuk-button:contains("Add details")'],
+			saveAndContinue: ['[data-cy="button-save-and-continue"]', 'button.govuk-button:contains("Save and continue")'],
+			continue: ['[data-cy="button-save-and-continue"]', 'button.govuk-button:contains("Continue")'],
+			cancel: ['a.govuk-button:contains("Cancel")'],
+			save: ['button.govuk-button:contains("Save")'],
+			removeAndSave: ['[data-cy="button-remove-and-save"]']
 		};
 
-		const selector = selectorMap[option];
+		const selectors = selectorMap[option];
 
 		cy.get('body').then(($body) => {
-			if ($body.find(selector).length === 0) {
-				throw new Error("Test Failed: Action button specified isn't displayed");
+			const foundSelector = selectors.find((sel) => $body.find(sel).length > 0);
+
+			if (!foundSelector) {
+				throw new Error(`Test Failed: Action button "${option}" was not found`);
 			}
 
-			cy.get(selector).should('be.visible').click();
+			cy.get(foundSelector).should('be.visible').click();
 		});
-	}
-
-	/**
-	 * Fills address fields using generated defaults merged with optional overrides,
-	 * and returns the final address used.
-	 */
-	enterAddress(overrides?: UkAddress): UkAddress {
-		const address = {
-			...generateUkAddress(),
-			...overrides
-		};
-
-		const fillField = (selector: string, value: string) => {
-			const input = cy.get(selector).should('exist').and('be.visible').clear();
-
-			if (value !== '') {
-				input.type(value).should('have.value', value);
-			} else {
-				input.should('have.value', '');
-			}
-		};
-
-		fillField('#address-line-1', address.line1);
-		fillField('#address-line-2', address.line2);
-		fillField('#address-town', address.town);
-		fillField('#address-county', address.county);
-		fillField('#address-postcode', address.postcode);
-
-		return address;
 	}
 }
 

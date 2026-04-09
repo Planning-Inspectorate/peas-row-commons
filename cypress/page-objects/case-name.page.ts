@@ -34,17 +34,11 @@ class CaseNamePage {
 		return valueToUse;
 	}
 
-	isErrorDisplayed(): void {
-		cy.get('.govuk-error-summary').should('exist').and('be.visible');
-		cy.contains('.govuk-error-summary__title', 'There is a problem').should('exist').and('be.visible');
-
-		cy.contains('.govuk-error-summary__list a', 'Enter the case name')
-			.should('exist')
-			.and('be.visible')
-			.and('have.attr', 'href', '#name');
-
-		cy.get('#name-error').should('exist').and('be.visible').and('contain.text', 'Enter the case name');
-		cy.get('#name').should('exist').and('have.class', 'govuk-input--error');
+	verifyErrorBanner(): void {
+		cy.verifyErrorSummary('Enter the case name', {
+			href: '#name',
+			inlineId: 'name-error'
+		});
 	}
 }
 
