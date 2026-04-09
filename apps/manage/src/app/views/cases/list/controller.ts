@@ -155,7 +155,7 @@ function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerato
 	const typeFilterWhereClause = filterGenerator.createFilterWhereClause(req.query);
 
 	const searchCriteria = createWhereClause(splitStringQueries(searchString), [
-		{ fields: ['reference', 'name', 'historicalReference'], searchType: 'contains' },
+		{ fields: ['reference', 'name', 'historicalReference'], searchType: 'startsWith' },
 		{
 			parent: 'Contacts',
 			isList: true,
@@ -168,12 +168,12 @@ function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerato
 		{
 			parent: 'Status',
 			fields: ['displayName'],
-			searchType: 'contains'
+			searchType: 'startsWith'
 		},
 		{
 			parent: 'Authority',
 			fields: ['name'],
-			searchType: 'contains'
+			searchType: 'startsWith'
 		}
 	]);
 
