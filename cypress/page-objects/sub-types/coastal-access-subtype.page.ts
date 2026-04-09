@@ -33,6 +33,17 @@ class CommonLandSubtypePage {
 			cy.get(selector).check().should('be.checked');
 		});
 	}
+
+	/**
+	 * Verifies the required error for selecting a Coastal Access subtype
+	 * in both the error summary and inline message.
+	 */
+	verifyErrorBanner(): void {
+		cy.verifyErrorSummary('Select the case subtype', {
+			href: '#coastalAccess',
+			inlineId: 'coastalAccess-error'
+		});
+	}
 }
 
 export default new CommonLandSubtypePage();

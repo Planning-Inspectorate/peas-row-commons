@@ -51,6 +51,30 @@ class CaseTypePage {
 			cy.get(selector).check().should('be.checked');
 		});
 	}
+
+	/**
+	 * Verifies the required error for selecting a case type
+	 * based on the provided casework area.
+	 */
+	verifyErrorBanner(type: 'planning' | 'rightsOfWay'): void {
+		const config = {
+			planning: {
+				message: 'Select Planning, Environmental and Applications case type',
+				fieldId: 'planningEnvironmentApplications'
+			},
+			rightsOfWay: {
+				message: 'Select the Right of Way and Common Land case type',
+				fieldId: 'rightsOfWayCommonLand'
+			}
+		} as const;
+
+		const { message, fieldId } = config[type];
+
+		cy.verifyErrorSummary(message, {
+			href: `#${fieldId}`,
+			inlineId: `${fieldId}-error`
+		});
+	}
 }
 
 export default new CaseTypePage();

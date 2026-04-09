@@ -25,23 +25,49 @@ class CaseOfficerPage {
 	 * then selects a random officer from the list.
 	 * Throws an error if no options are available.
 	 */
-	selectRandomCaseOfficer(): void {
-		cy.get('input#caseOfficerId[role="combobox"]').should('exist').and('be.visible').click().type(' ');
-		cy.get('#caseOfficerId__listbox', { timeout: 60000 }).should('exist').and('be.visible');
-		cy.get('body').then(($body) => {
-			const count = $body.find('[id^="caseOfficerId__option--"]').length;
+	selectRandomCaseOfficer(): Cypress.Chainable<string> {
+		return cy
+			.get('input#caseOfficerId[role="combobox"]')
+			.should('exist')
+			.and('be.visible')
+			.click()
+			.type(' ')
+			.then(() => {
+				return cy
+					.get('#caseOfficerId__listbox', { timeout: 60000 })
+					.should('exist')
+					.and('be.visible')
+					.then(() => {
+						return cy.get('[id^="caseOfficerId__option--"]').then(($options) => {
+							const count = $options.length;
 
-			if (count === 0) {
-				throw new Error('Test Failed: No case officer options were found');
-			}
+							if (count === 0) {
+								throw new Error('Test Failed: No case officer options were found');
+							}
 
-			cy.log(`Case officer options found: ${count}`);
+							cy.log(`Case officer options found: ${count}`);
 
-			const optionIdPrefix = 'caseOfficerId__option--';
-			const randomIndex = Cypress._.random(0, count - 1);
-			const optionToClick = `#${optionIdPrefix}${randomIndex}`;
+							const randomIndex = Cypress._.random(0, count - 1);
+							const option = $options[randomIndex];
 
-			cy.get(optionToClick).should('exist').and('be.visible').click();
+							const selectedValue = option.innerText.trim();
+
+							return cy
+								.wrap(option)
+								.click()
+								.then(() => {
+									cy.get('#caseOfficerId').should('have.value', selectedValue);
+									return selectedValue;
+								});
+						});
+					});
+			});
+	}
+
+	verifyErrorBanner(): void {
+		cy.verifyErrorSummary('Select a case officer', {
+			href: '#caseOfficerId',
+			inlineId: 'caseOfficerId-error'
 		});
 	}
 }

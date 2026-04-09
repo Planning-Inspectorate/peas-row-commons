@@ -31,6 +31,17 @@ class WayleavesSubtypePage {
 			cy.get(selector).check().should('be.checked');
 		});
 	}
+
+	/**
+	 * Verifies the required error for selecting a Wayleaves subtype
+	 * in the error summary.
+	 */
+	verifyErrorBanner(): void {
+		cy.verifyErrorSummary('Select the case subtype', {
+			href: '#wayleaves',
+			inlineId: 'wayleaves-error'
+		});
+	}
 }
 
 export default new WayleavesSubtypePage();

@@ -1,4 +1,57 @@
-class WhoIsAOrAPage {
+class WhoIsNameCompanyPage {
+	/**
+	 * Verifies the name details page for either the applicant/appellant
+	 * or objector flow, including page-specific title, hint text and field ids.
+	 */
+	isPageDisplayed(type: 'applicantAppellant' | 'objector'): void {
+		const config = {
+			applicantAppellant: {
+				pageName: 'Applicant or appellant details',
+				title: 'Who is the applicant or appellant?',
+				urlPart: '/cases/create-a-case/questions/applicant-details',
+				hintText: 'Enter the name of the main party. This could be an applicant, appellant or server.',
+				fieldPrefix: 'applicant'
+			},
+			objector: {
+				pageName: 'Objector details',
+				title: 'Who is the objector?',
+				urlPart: '/objector-name',
+				hintText: 'Enter the name of individual, company name, or both.',
+				fieldPrefix: 'objector'
+			}
+		} as const;
+
+		const page = config[type];
+
+		cy.verifyPageLoaded(page.pageName);
+		cy.verifyPageTitle(page.title);
+		cy.verifyPageURL(page.urlPart);
+
+		cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible');
+		cy.contains('h1', page.title).should('exist').and('be.visible');
+		cy.contains('.govuk-hint', page.hintText).should('exist').and('be.visible');
+
+		cy.get(`#${page.fieldPrefix}FirstName`)
+			.should('exist')
+			.and('be.visible')
+			.and('have.attr', 'name', `${page.fieldPrefix}FirstName`);
+
+		cy.get(`#${page.fieldPrefix}LastName`)
+			.should('exist')
+			.and('be.visible')
+			.and('have.attr', 'name', `${page.fieldPrefix}LastName`);
+
+		cy.get(`#${page.fieldPrefix}OrgName`)
+			.should('exist')
+			.and('be.visible')
+			.and('have.attr', 'name', `${page.fieldPrefix}OrgName`);
+
+		cy.get('[data-cy="button-save-and-continue"]')
+			.should('exist')
+			.and('be.visible')
+			.and('have.attr', 'type', 'submit')
+			.and('contain.text', 'Continue');
+	}
 	private readonly defaultFirstNames = [
 		'',
 		'Sarah',
@@ -72,36 +125,6 @@ class WhoIsAOrAPage {
 		'Utility Partners UK'
 	] as const;
 
-	isPageDisplayed(): void {
-		cy.verifyPageLoaded('Applicant or appellant details');
-		cy.verifyPageTitle('Who is the applicant or appellant?');
-		cy.verifyPageURL('/cases/create-a-case/questions/applicant-details');
-
-		cy.contains('a.govuk-back-link', 'Back')
-			.should('exist')
-			.and('be.visible')
-			.and('have.attr', 'href', '/cases/create-a-case/questions/applicant-details');
-
-		cy.contains('h1', 'Who is the applicant or appellant?').should('exist').and('be.visible');
-
-		cy.contains(
-			'#multi-field-hint',
-			'Enter the name of the main party. This could be an applicant, appellant or server.'
-		)
-			.should('exist')
-			.and('be.visible');
-
-		cy.get('#applicantFirstName').should('exist').and('be.visible');
-		cy.get('#applicantLastName').should('exist').and('be.visible');
-		cy.get('#applicantOrgName').should('exist').and('be.visible');
-
-		cy.get('[data-cy="button-save-and-continue"]')
-			.should('exist')
-			.and('be.visible')
-			.and('have.attr', 'type', 'submit')
-			.and('contain.text', 'Continue');
-	}
-
 	enterFirstName(firstName?: string): string {
 		const valueToUse = firstName !== undefined ? firstName : Cypress._.sample(this.defaultFirstNames)!;
 
@@ -163,6 +186,41 @@ class WhoIsAOrAPage {
 
 		return { firstName, lastName, companyName };
 	}
+
+	/**
+	 * Verifies validation errors for the applicant/appellant name fields.
+	 */
+	verifyErrorBanner(type: 'required' | 'firstNameTooLong' | 'lastNameTooLong' | 'orgNameTooLong' = 'required'): void {
+		const errorMap = {
+			required: {
+				message: 'Add at least one of First name, Last name or Company or organisation name',
+				href: '#applicantName',
+				inlineId: undefined
+			},
+			firstNameTooLong: {
+				message: 'Applicant or appellant first name must be less than 250 characters',
+				href: '#applicantFirstName',
+				inlineId: 'applicantFirstName-error'
+			},
+			lastNameTooLong: {
+				message: 'Applicant or appellant last name must be less than 250 characters',
+				href: '#applicantLastName',
+				inlineId: 'applicantLastName-error'
+			},
+			orgNameTooLong: {
+				message: 'Company or organisation name must be less than 250 characters',
+				href: '#applicantOrgName',
+				inlineId: 'applicantOrgName-error'
+			}
+		} as const;
+
+		const { message, href, inlineId } = errorMap[type];
+
+		cy.verifyErrorSummary(message, {
+			href,
+			inlineId
+		});
+	}
 }
 
-export default new WhoIsAOrAPage();
+export default new WhoIsNameCompanyPage();

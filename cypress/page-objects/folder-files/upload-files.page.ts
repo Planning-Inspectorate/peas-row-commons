@@ -108,7 +108,9 @@ class UploadFilesPage {
 	}
 
 	isUploadInProgressErrorDisplayed(): void {
-		cy.verifyErrorSummary('Wait for all files to finish uploading', '#upload-form');
+		cy.verifyErrorSummary('Wait for all files to finish uploading', {
+			href: '#upload-form'
+		});
 
 		cy.get('.govuk-error-summary')
 			.should('have.attr', 'role', 'alert')

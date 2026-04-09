@@ -101,14 +101,19 @@ Cypress.Commands.add('verifyPageTitle', (expectedTitle: string, options?: { time
  * Verifies the GOV.UK error summary is shown with the expected message.
  * Optionally checks that the error link points to a specific field anchor.
  */
-Cypress.Commands.add('verifyErrorSummary', (errorText: string, href?: string) => {
-	cy.get('.govuk-error-summary').should('exist').and('be.visible');
+Cypress.Commands.add('verifyErrorSummary', (errorText: string, options?: { href?: string; inlineId?: string }) => {
+	const { href, inlineId } = options || {};
 
+	cy.get('.govuk-error-summary').should('exist').and('be.visible');
 	cy.get('.govuk-error-summary__title').should('exist').and('be.visible').and('have.text', 'There is a problem');
 
 	const errorLink = cy.contains('.govuk-error-summary__list a', errorText).should('exist').and('be.visible');
 
-	if (href !== undefined) {
+	if (href) {
 		errorLink.should('have.attr', 'href', href);
+	}
+
+	if (inlineId) {
+		cy.get(`#${inlineId}`).should('exist').and('be.visible').and('contain.text', errorText);
 	}
 });

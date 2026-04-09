@@ -10,13 +10,13 @@ class CommonLandSubtypePage {
 			'Commons for Ecclesiastical Purposes',
 			'Commons in Greater London',
 			'Compulsory Purchase of Common Land',
-			'Correction of the Common Land or Village Green Registers',
 			'Deregistration & Exchange',
 			'Inclosure',
 			'Inclosure : obsolescent functions',
 			'Land Exchange',
 			'Local Acts and Provisional Order Confirmation Acts',
 			'Public Access to Commons - limitations and restrictions',
+			'Referred applications from Commons Registration Authorities',
 			'Scheme of Management',
 			'Stint Rates',
 			'Works on Common Land',
@@ -24,8 +24,10 @@ class CommonLandSubtypePage {
 		];
 
 		labels.forEach((text) => {
-			cy.contains('label', text).should('exist').and('be.visible');
+			cy.contains('label.govuk-radios__label', text).should('exist').and('be.visible');
 		});
+
+		cy.get('input[type="radio"][name="commonLand"]').should('have.length', labels.length);
 
 		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
 	}
@@ -35,13 +37,13 @@ class CommonLandSubtypePage {
 			ecclesiastical: '[data-cy="answer-commons-ecclesiastical"]',
 			greaterLondon: '[data-cy="answer-commons-greater-london"]',
 			compulsoryPurchase: '[data-cy="answer-compulsory-purchase-cl"]',
-			correctionRegister: '[data-cy="answer-correction-cl-register"]',
 			deregistrationExchange: '[data-cy="answer-deregistration-exchange"]',
 			inclosure: '[data-cy="answer-inclosure"]',
 			inclosureObsolescent: '[data-cy="answer-inclosure-obsolescent"]',
 			landExchange: '[data-cy="answer-land-exchange"]',
 			localActs: '[data-cy="answer-local-acts"]',
 			publicAccessLimitations: '[data-cy="answer-public-access-limitations"]',
+			referredApplications: '[data-cy="answer-referred-applications"]',
 			schemeOfManagement: '[data-cy="answer-scheme-of-management"]',
 			stintRates: '[data-cy="answer-stint-rates"]',
 			worksCommonLand: '[data-cy="answer-works-common-land"]',
@@ -55,7 +57,18 @@ class CommonLandSubtypePage {
 				throw new Error("Test Failed: Option specified isn't displayed");
 			}
 
-			cy.get(selector).check().should('be.checked');
+			cy.get(selector).should('exist').and('be.visible').check().should('be.checked');
+		});
+	}
+
+	/**
+	 * Verifies the required error for selecting a Common Land subtype
+	 * in both the error summary and inline message.
+	 */
+	verifyErrorBanner(): void {
+		cy.verifyErrorSummary('Select the case subtype', {
+			href: '#commonLand',
+			inlineId: 'commonLand-error'
 		});
 	}
 }

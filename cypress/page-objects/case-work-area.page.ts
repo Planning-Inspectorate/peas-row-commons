@@ -26,6 +26,13 @@ class CaseworkAreaPage {
 			cy.get(selector).check().should('be.checked');
 		});
 	}
+
+	verifyErrorBanner(): void {
+		cy.verifyErrorSummary('Select the casework area', {
+			href: '#caseworkArea',
+			inlineId: 'caseworkArea-error'
+		});
+	}
 }
 
 export default new CaseworkAreaPage();

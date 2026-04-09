@@ -28,6 +28,17 @@ class DroughtSubtypePage {
 			cy.get(selector).check().should('be.checked');
 		});
 	}
+
+	/**
+	 * Verifies the required error for selecting a case subtype
+	 * in both the error summary and inline message.
+	 */
+	verifyErrorBanner(): void {
+		cy.verifyErrorSummary('Select the case subtype', {
+			href: '#drought',
+			inlineId: 'drought-error'
+		});
+	}
 }
 
 export default new DroughtSubtypePage();

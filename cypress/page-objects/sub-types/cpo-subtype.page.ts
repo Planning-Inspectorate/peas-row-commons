@@ -33,6 +33,17 @@ class CpoSubtypePage {
 			cy.get(selector).check().should('be.checked');
 		});
 	}
+
+	/**
+	 * Verifies the required error for selecting a Housing and Planning CPO subtype
+	 * in both the error summary and inline message.
+	 */
+	verifyErrorBanner(): void {
+		cy.verifyErrorSummary('Select the case subtype', {
+			href: '#housingPlanningCpos',
+			inlineId: 'housingPlanningCpos-error'
+		});
+	}
 }
 
 export default new CpoSubtypePage();

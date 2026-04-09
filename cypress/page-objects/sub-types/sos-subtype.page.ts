@@ -81,6 +81,28 @@ class SosSubtypePage {
 
 		return valueToUse;
 	}
+
+	verifyErrorBanner(type: 'required' | 'otherTextValidation'): void {
+		const config = {
+			required: {
+				message: 'Select the case subtype',
+				href: '#otherSosCasework',
+				inlineId: 'otherSosCasework-error'
+			},
+			otherTextValidation: {
+				message: 'Other SoS Subtype must be between 1 and 150 characters',
+				href: '#otherSosCasework_text',
+				inlineId: 'otherSosCasework_text-error'
+			}
+		} as const;
+
+		const selected = config[type];
+
+		cy.verifyErrorSummary(selected.message, {
+			href: selected.href,
+			inlineId: selected.inlineId
+		});
+	}
 }
 
 export default new SosSubtypePage();

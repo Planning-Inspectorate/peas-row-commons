@@ -59,13 +59,6 @@ export const rightsOfWayJourneys: Journeys[] = [
 		referencePrefix: 'COM/PCL/'
 	},
 	{
-		name: 'Rights of Way > Common Land > Correction of the Common Land or Village Green Registers',
-		caseworkArea: 'rightsOfWay',
-		caseType: 'commonLand',
-		commonLandSubtype: 'correctionRegister',
-		referencePrefix: 'COM/COR/'
-	},
-	{
 		name: 'Rights of Way > Common Land > Deregistration & Exchange',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
@@ -101,11 +94,18 @@ export const rightsOfWayJourneys: Journeys[] = [
 		referencePrefix: 'COM/LCA/'
 	},
 	{
-		name: 'Rights of Way > Common Land > Public Access to Commons',
+		name: 'Rights of Way > Common Land > Public Access to Commons - limitations and restrictions',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'publicAccessLimitations',
 		referencePrefix: 'COM/PAC/'
+	},
+	{
+		name: 'Rights of Way > Common Land > Referred applications from Commons Registration Authorities',
+		caseworkArea: 'rightsOfWay',
+		caseType: 'commonLand',
+		commonLandSubtype: 'referredApplications',
+		referencePrefix: 'COM/REF/'
 	},
 	{
 		name: 'Rights of Way > Common Land > Scheme of Management',
