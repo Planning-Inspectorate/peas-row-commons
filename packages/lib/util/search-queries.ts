@@ -41,7 +41,6 @@ export function createWhereClause(queries: string[] | number[] | undefined, opti
 			OR: options.flatMap((option) => {
 				const { parent, fields, searchType = 'contains', constraints = [], relationConstraints = [], isList } = option;
 
-				// 1. Group ALL fields for this option into a single OR array
 				const fieldsOrCondition = {
 					OR: fields.map((field) => ({ [field]: { [searchType]: query } }))
 				};

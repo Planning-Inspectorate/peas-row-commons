@@ -154,13 +154,9 @@ export function formatCountData(typeCountsGrouped: TypeGroup[], subTypeCountsGro
 function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerator, searchString: string) {
 	const typeFilterWhereClause = filterGenerator.createFilterWhereClause(req.query);
 
-	const params = [];
-
-	if (searchString.includes('linus'))
-		params.push({ fields: ['reference', 'name', 'historicalReference'], searchType: 'contains' });
-
-	if (searchString.includes('wardrobe'))
-		params.push({
+	const searchCriteria = createWhereClause(splitStringQueries(searchString), [
+		{ fields: ['reference', 'name', 'historicalReference'], searchType: 'contains' },
+		{
 			parent: 'Contacts',
 			isList: true,
 			fields: ['firstName', 'lastName', 'orgName'],
@@ -168,23 +164,18 @@ function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerato
 			relationConstraints: [
 				{ contactTypeId: CONTACT_TYPE_ID.APPLICANT_APPELLANT } // Only check applicants
 			]
-		});
-
-	if (searchString.includes('camera'))
-		params.push({
+		},
+		{
 			parent: 'Status',
 			fields: ['displayName'],
 			searchType: 'contains'
-		});
-
-	if (searchString.includes('pancakes'))
-		params.push({
+		},
+		{
 			parent: 'Authority',
 			fields: ['name'],
 			searchType: 'contains'
-		});
-
-	const searchCriteria = createWhereClause(splitStringQueries(searchString), params);
+		}
+	]);
 
 	return {
 		...searchCriteria,
