@@ -18,5 +18,6 @@ export const OUTCOME_ID = {
 	ORDER_MADE_WITH_MODIFICATIONS: 'order-made-with-modifications',
 	PROPOSE_TO_CONFIRM: 'propose-to-confirm',
 	PROPOSE_NOT_TO_CONFIRM: 'propose-not-to-confirm',
-	OTHER: 'other'
+	OTHER: 'other',
+	NA: 'na'
 };
