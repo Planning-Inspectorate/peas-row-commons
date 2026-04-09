@@ -39,36 +39,31 @@ export function createWhereClause(queries: string[] | number[] | undefined, opti
 	return {
 		AND: queries.map((query) => ({
 			OR: options.flatMap((option) => {
-				const {
-					parent,
-					fields,
-					searchType = 'contains',
-					constraints = [],
-					relationConstraints = [],
-					// Is a 1-many join
-					isList
-				} = option;
+				const { parent, fields, searchType = 'contains', constraints = [], relationConstraints = [], isList } = option;
 
-				return fields.map((field) => {
-					const condition = { [searchType]: query };
-					let fieldCondition: Record<string, unknown> = { [field]: condition };
+				// 1. Group ALL fields for this option into a single OR array
+				const fieldsOrCondition = {
+					OR: fields.map((field) => ({ [field]: { [searchType]: query } }))
+				};
 
-					if (parent) {
-						const innerCondition =
-							relationConstraints.length > 0 ? { AND: [fieldCondition, ...relationConstraints] } : fieldCondition;
+				let condition: Record<string, unknown> = fieldsOrCondition;
 
-						if (isList) {
-							fieldCondition = { [parent]: { some: innerCondition } };
-						} else {
-							fieldCondition = { [parent]: innerCondition };
-						}
+				if (parent) {
+					const innerCondition =
+						relationConstraints.length > 0 ? { AND: [fieldsOrCondition, ...relationConstraints] } : fieldsOrCondition;
+
+					if (isList) {
+						condition = { [parent]: { some: innerCondition } };
+					} else {
+						condition = { [parent]: innerCondition };
 					}
+				}
 
-					if (constraints.length) {
-						return { AND: [fieldCondition, ...constraints] };
-					}
-					return fieldCondition;
-				});
+				if (constraints.length) {
+					return [{ AND: [condition, ...constraints] }];
+				}
+
+				return [condition];
 			})
 		}))
 	};

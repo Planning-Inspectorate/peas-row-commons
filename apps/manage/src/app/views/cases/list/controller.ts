@@ -164,7 +164,7 @@ function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerato
 			parent: 'Contacts',
 			isList: true,
 			fields: ['firstName', 'lastName', 'orgName'],
-			searchType: 'contains',
+			searchType: 'startsWith',
 			relationConstraints: [
 				{ contactTypeId: CONTACT_TYPE_ID.APPLICANT_APPELLANT } // Only check applicants
 			]
