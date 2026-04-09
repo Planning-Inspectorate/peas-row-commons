@@ -593,6 +593,9 @@ model Contact {
   Case          Case         @relation(fields: [caseId], references: [id])
 
   @@index([caseId, contactTypeId])
+  @@index([contactTypeId, firstName])
+  @@index([contactTypeId, lastName])
+  @@index([contactTypeId, orgName])
 }
 
 model ContactType {
