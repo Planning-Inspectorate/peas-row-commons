@@ -4,10 +4,9 @@
  */
 export function splitStringQueries(query: string | undefined) {
 	if (!query) return undefined;
-	return query
-		.split(/[\s,]+/) // Split by whitespace or commas
-		.map((s) => s.trim())
-		.filter(Boolean);
+	const trimmed = query.trim();
+	if (!trimmed) return undefined;
+	return [trimmed];
 }
 
 interface Constraint {
