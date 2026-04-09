@@ -95,6 +95,8 @@ model Case {
   LinkedCases              LinkedCase[]
   /// User read statuses for this case's files
   UserDocuments            UserDocument[]
+
+  @@index([subTypeId, typeId, id, receivedDate])
 }
 
 model Act {
