@@ -3,9 +3,6 @@ BEGIN TRY
 BEGIN TRAN;
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [Contact_caseId_contactTypeId_idx] ON [dbo].[Contact]([caseId], [contactTypeId]);
-
--- CreateIndex
 CREATE NONCLUSTERED INDEX [Contact_contactTypeId_firstName_idx] ON [dbo].[Contact]([contactTypeId], [firstName]);
 
 -- CreateIndex
