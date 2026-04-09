@@ -26,7 +26,6 @@ export function newDatabaseClient(connectionString: string, logger?: Logger): Pr
 	const prisma = new PrismaClient({
 		adapter,
 		log: [
-			'query',
 			{
 				emit: 'event',
 				level: 'query'

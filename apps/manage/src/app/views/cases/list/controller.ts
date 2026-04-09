@@ -161,7 +161,9 @@ function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerato
 			isList: true,
 			fields: ['firstName', 'lastName', 'orgName'],
 			searchType: 'startsWith',
-			relationConstraints: [{ contactTypeId: CONTACT_TYPE_ID.APPLICANT_APPELLANT }]
+			relationConstraints: [
+				{ contactTypeId: CONTACT_TYPE_ID.APPLICANT_APPELLANT } // Only check applicants
+			]
 		},
 		{
 			parent: 'Status',
