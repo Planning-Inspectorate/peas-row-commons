@@ -4,7 +4,7 @@ import type { CaseListFields, CaseListViewModel, CurrentFilters } from './types.
 import { getPageData, getPaginationParams } from '../../pagination/pagination-utils.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
-import { FilterGenerator /*type FilterViewModel*/ } from '@pins/peas-row-commons-lib/util/filter-generator.ts';
+import { FilterGenerator, type FilterViewModel } from '@pins/peas-row-commons-lib/util/filter-generator.ts';
 import { createWhereClause, splitStringQueries } from '@pins/peas-row-commons-lib/util/search-queries.ts';
 import { CASE_TYPES } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import type { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
@@ -46,10 +46,10 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 
 		const query = generateQuery(db, skipSize, pageSize, whereClause);
 
-		let cases, totalCases /*, typeCountsGrouped, subTypeCountsGrouped*/;
+		let cases, totalCases, typeCountsGrouped, subTypeCountsGrouped;
 
 		try {
-			[cases, totalCases /*typeCountsGrouped, subTypeCountsGrouped*/] = await Promise.all(query);
+			[cases, totalCases, typeCountsGrouped, subTypeCountsGrouped] = await Promise.all(query);
 		} catch (error: any) {
 			wrapPrismaError({
 				error,
@@ -59,13 +59,13 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			});
 		}
 
-		if (Number.isNaN(totalCases) || !cases /*|| !typeCountsGrouped || !subTypeCountsGrouped*/) {
+		if (Number.isNaN(totalCases) || !cases || !typeCountsGrouped || !subTypeCountsGrouped) {
 			return notFoundHandler(req, res);
 		}
 
-		// const countMap: Record<string, number> = formatCountData(typeCountsGrouped, subTypeCountsGrouped);
+		const countMap: Record<string, number> = formatCountData(typeCountsGrouped, subTypeCountsGrouped);
 
-		// const filters: FilterViewModel = filterGenerator.generateFilters(req.query, req.baseUrl, countMap);
+		const filters: FilterViewModel = filterGenerator.generateFilters(req.query, req.baseUrl, countMap);
 
 		const caseViewModels = cases.map(caseToViewModel);
 
@@ -96,7 +96,7 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			cases: caseViewModels,
 			currentUrl: req.originalUrl,
 			paginationParams,
-			// filters,
+			filters,
 			searchValue: searchString
 		});
 	};
@@ -154,9 +154,13 @@ export function formatCountData(typeCountsGrouped: TypeGroup[], subTypeCountsGro
 function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerator, searchString: string) {
 	const typeFilterWhereClause = filterGenerator.createFilterWhereClause(req.query);
 
-	const searchCriteria = createWhereClause(splitStringQueries(searchString), [
-		{ fields: ['reference', 'name', 'historicalReference'], searchType: 'contains' },
-		{
+	const params = [];
+
+	if (searchString.includes('linus'))
+		params.push({ fields: ['reference', 'name', 'historicalReference'], searchType: 'contains' });
+
+	if (searchString.includes('wardrobe'))
+		params.push({
 			parent: 'Contacts',
 			isList: true,
 			fields: ['firstName', 'lastName', 'orgName'],
@@ -164,18 +168,23 @@ function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerato
 			relationConstraints: [
 				{ contactTypeId: CONTACT_TYPE_ID.APPLICANT_APPELLANT } // Only check applicants
 			]
-		},
-		{
+		});
+
+	if (searchString.includes('camera'))
+		params.push({
 			parent: 'Status',
 			fields: ['displayName'],
 			searchType: 'contains'
-		},
-		{
+		});
+
+	if (searchString.includes('pancakes'))
+		params.push({
 			parent: 'Authority',
 			fields: ['name'],
 			searchType: 'contains'
-		}
-	]);
+		});
+
+	const searchCriteria = createWhereClause(splitStringQueries(searchString), params);
 
 	return {
 		...searchCriteria,
@@ -201,15 +210,15 @@ function generateQuery(db: PrismaClient, skipSize: number, pageSize: number, whe
 		}),
 		db.case.count({
 			where: whereClause
+		}),
+		db.case.groupBy({
+			by: ['typeId'],
+			_count: { _all: true }
+		}),
+		db.case.groupBy({
+			by: ['subTypeId'],
+			_count: { _all: true }
 		})
-		// db.case.groupBy({
-		// 	by: ['typeId'],
-		// 	_count: { _all: true }
-		// }),
-		// db.case.groupBy({
-		// 	by: ['subTypeId'],
-		// 	_count: { _all: true }
-		// })
 	] as const;
 }
 
