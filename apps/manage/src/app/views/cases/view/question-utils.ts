@@ -974,7 +974,7 @@ export const OUTCOME_QUESTIONS = {
 			}
 
 			return option;
-		}),
+		}).toSpliced(-1, 0, { divider: 'or' }),
 		viewData: {
 			continueButtonText: 'Continue'
 		}

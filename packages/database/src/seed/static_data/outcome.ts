@@ -80,5 +80,9 @@ export const OUTCOMES = [
 	{
 		id: OUTCOME_ID.OTHER,
 		displayName: 'Other'
+	},
+	{
+		id: OUTCOME_ID.NA,
+		displayName: 'Not applicable'
 	}
 ];
