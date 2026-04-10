@@ -82,10 +82,13 @@
                 }
             },
             {
-                text: case.SubType.displayName if case.SubType else case.Type.displayName
+                text: case.name
             },
             {
-                text: case.name
+                text: case.receivedDate,
+                attributes: {
+                    "data-sort-value": case.receivedDateSortable
+                }
             },
             {
                 text: case.Status.displayName
@@ -102,17 +105,17 @@
             }
         },
         {
-            text: 'Subtype',
+            text: 'Case name',
             classes: "govuk-!-width-one-quarter",
             attributes: {
                 "aria-sort": "none"
             }
         },
         {
-            text: 'Case name',
+            text: 'Received',
             classes: "govuk-!-width-one-quarter",
             attributes: {
-                "aria-sort": "none"
+                "aria-sort": "descending"
             }
         },
         {
