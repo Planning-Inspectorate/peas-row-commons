@@ -17,7 +17,7 @@ import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static
 const FILTER_KEYS = {
 	AREA: 'area',
 	TYPE: 'type',
-	SUBTYPE: 'subtype'
+	SUBTYPE: 'subType'
 };
 
 const FILTER_LABELS = {
