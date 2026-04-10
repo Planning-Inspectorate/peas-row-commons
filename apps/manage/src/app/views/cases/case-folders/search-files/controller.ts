@@ -1,5 +1,5 @@
 import type { ManageService } from '#service';
-import { createWhereClause, splitStringQueries } from '@pins/peas-row-commons-lib/util/search-queries.ts';
+import { createWhereClause, sanitiseSearchQuery } from '@pins/peas-row-commons-lib/util/search-queries.ts';
 import type { RequestHandler } from 'express';
 import { createDocumentsViewModel } from '../case-folder/view-model.ts';
 import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
@@ -30,7 +30,7 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 		let documents: any[] = [];
 
 		if (searchString) {
-			const searchCriteria = createWhereClause(splitStringQueries(searchString), [
+			const searchCriteria = createWhereClause(sanitiseSearchQuery(searchString), [
 				{ fields: ['fileName'], searchType: 'contains' }
 			]);
 
