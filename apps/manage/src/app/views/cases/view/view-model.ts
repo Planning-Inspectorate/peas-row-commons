@@ -298,6 +298,14 @@ export const mapAndSortDecisions = (decisions?: CaseDecisionFields[]) => {
 		if (isADecision && !isBDecision) return 1;
 		if (!isADecision && isBDecision) return -1;
 
+		// 3. Decisions at the end are ordered by Outcome Date
+		if (isADecision && isBDecision) {
+			const aOutcome = a.outcomeDate ? new Date(a.outcomeDate).getTime() : 0;
+			const bOutcome = b.outcomeDate ? new Date(b.outcomeDate).getTime() : 0;
+
+			return aOutcome - bOutcome;
+		}
+
 		return 0;
 	});
 };
