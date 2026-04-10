@@ -4,6 +4,7 @@ export const ACT_ID = Object.freeze({
 	ELECTRICITY_1989: 'electricity-1989',
 	GAS_1986: 'gas-1986',
 	GREATER_LONDON_PARKS_1967: 'greater-london-parks-1967',
+	HIGH_SPEED_RAIL_2017: 'high-speed-rail-2017',
 	HIGHWAYS_1980: 'highways-1980',
 	INCLOSURE_1845: 'inclosure-1845',
 	LAW_OF_PROPERTY_1925: 'law-of-property-1925',

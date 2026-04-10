@@ -26,5 +26,7 @@ export const SECTION_ID = Object.freeze({
 	ARTICLE_17: 'article-17',
 	PART_1_SCH_6: 'part-1-schedule-6',
 	SCH_14_A: 'schedule-14-a',
-	SCH_14_D: 'schedule-14-d'
+	SCH_14_D: 'schedule-14-d',
+	SCH_16: 'schedule-16',
+	SCH_17: 'schedule-17'
 });

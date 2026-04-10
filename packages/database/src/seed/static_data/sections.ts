@@ -28,5 +28,7 @@ export const SECTIONS = [
 	{ id: SECTION_ID.ARTICLE_17, displayName: 'Article 17' },
 	{ id: SECTION_ID.PART_1_SCH_6, displayName: 'Part 1 Schedule 6' },
 	{ id: SECTION_ID.SCH_14_A, displayName: 'Schedule 14 A' },
-	{ id: SECTION_ID.SCH_14_D, displayName: 'Schedule 14 D' }
+	{ id: SECTION_ID.SCH_14_D, displayName: 'Schedule 14 D' },
+	{ id: SECTION_ID.SCH_16, displayName: 'Schedule 16' },
+	{ id: SECTION_ID.SCH_17, displayName: 'Schedule 17' }
 ];
