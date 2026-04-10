@@ -1,13 +1,19 @@
 /**
- * Converts a query string into an array of strings.
- * The query can be a comma-separated or whitespace-separated string.
+ * Converts a query string into a single-element array.
+ * The query is trimmed but kept as a single search phrase.
  */
-export function splitStringQueries(query: string | undefined) {
-	if (!query) return undefined;
-	return query
-		.split(/[\s,]+/) // Split by whitespace or commas
-		.map((s) => s.trim())
-		.filter(Boolean);
+export function sanitiseSearchQuery(query: string | undefined) {
+	if (!query) {
+		return undefined;
+	}
+
+	const trimmed = query.trim();
+
+	if (!trimmed) {
+		return undefined;
+	}
+
+	return [trimmed];
 }
 
 interface Constraint {
@@ -33,9 +39,11 @@ export function createWhereClause(queries: string[] | number[] | undefined, opti
 	if (!queries || queries.length === 0) {
 		return undefined;
 	}
+
 	if (!options || options.length === 0 || !options.some((option) => option.fields && option.fields.length > 0)) {
 		throw new Error('Missing options for creating the query.');
 	}
+
 	return {
 		AND: queries.map((query) => ({
 			OR: options.flatMap((option) => {
@@ -49,26 +57,30 @@ export function createWhereClause(queries: string[] | number[] | undefined, opti
 					isList
 				} = option;
 
-				return fields.map((field) => {
-					const condition = { [searchType]: query };
-					let fieldCondition: Record<string, unknown> = { [field]: condition };
+				// Group all fields into a single OR condition
+				const fieldsOrCondition =
+					fields.length === 1
+						? { [fields[0]]: { [searchType]: query } }
+						: { OR: fields.map((field) => ({ [field]: { [searchType]: query } })) };
 
-					if (parent) {
-						const innerCondition =
-							relationConstraints.length > 0 ? { AND: [fieldCondition, ...relationConstraints] } : fieldCondition;
+				let condition: Record<string, unknown> = fieldsOrCondition;
 
-						if (isList) {
-							fieldCondition = { [parent]: { some: innerCondition } };
-						} else {
-							fieldCondition = { [parent]: innerCondition };
-						}
+				if (parent) {
+					const innerCondition =
+						relationConstraints.length > 0 ? { AND: [fieldsOrCondition, ...relationConstraints] } : fieldsOrCondition;
+
+					if (isList) {
+						condition = { [parent]: { some: innerCondition } };
+					} else {
+						condition = { [parent]: innerCondition };
 					}
+				}
 
-					if (constraints.length) {
-						return { AND: [fieldCondition, ...constraints] };
-					}
-					return fieldCondition;
-				});
+				if (constraints.length) {
+					return [{ AND: [condition, ...constraints] }];
+				}
+
+				return [condition];
 			})
 		}))
 	};
