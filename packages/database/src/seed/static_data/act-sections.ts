@@ -54,6 +54,18 @@ export const ACT_SECTIONS = [
 		displayName: 'Greater London Parks & Open Spaces Order 1967, Article 17'
 	},
 	{
+		id: `${ACT_ID.HIGH_SPEED_RAIL_2017}-${SECTION_ID.SCH_16}`,
+		actId: ACT_ID.HIGH_SPEED_RAIL_2017,
+		sectionId: SECTION_ID.SCH_16,
+		displayName: 'High Speed Rail (London - West Midlands) Act 2017, Schedule 16'
+	},
+	{
+		id: `${ACT_ID.HIGH_SPEED_RAIL_2017}-${SECTION_ID.SCH_17}`,
+		actId: ACT_ID.HIGH_SPEED_RAIL_2017,
+		sectionId: SECTION_ID.SCH_17,
+		displayName: 'High Speed Rail (London - West Midlands) Act 2017, Schedule 17'
+	},
+	{
 		id: ACT_ID.HIGHWAYS_1980,
 		actId: ACT_ID.HIGHWAYS_1980,
 		displayName: 'Highways Act 1980'

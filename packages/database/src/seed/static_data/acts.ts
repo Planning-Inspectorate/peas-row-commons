@@ -6,6 +6,7 @@ export const ACTS = [
 	{ id: ACT_ID.ELECTRICITY_1989, displayName: 'Electricity Act 1989' },
 	{ id: ACT_ID.GAS_1986, displayName: 'Gas Act 1986' },
 	{ id: ACT_ID.GREATER_LONDON_PARKS_1967, displayName: 'Greater London Parks & Open Spaces Order 1967' },
+	{ id: ACT_ID.HIGH_SPEED_RAIL_2017, displayName: 'High Speed Rail (London - West Midlands) Act 2017' },
 	{ id: ACT_ID.HIGHWAYS_1980, displayName: 'Highways Act 1980' },
 	{ id: ACT_ID.INCLOSURE_1845, displayName: 'Inclosure Act 1845' },
 	{ id: ACT_ID.LAW_OF_PROPERTY_1925, displayName: 'Law of Property Act 1925' },
