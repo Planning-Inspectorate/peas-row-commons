@@ -5,7 +5,7 @@ import { getPageData, getPaginationParams } from '../../pagination/pagination-ut
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import { FilterGenerator, type FilterViewModel } from '@pins/peas-row-commons-lib/util/filter-generator.ts';
-import { createWhereClause, splitStringQueries } from '@pins/peas-row-commons-lib/util/search-queries.ts';
+import { createWhereClause, sanitiseSearchQuery } from '@pins/peas-row-commons-lib/util/search-queries.ts';
 import { CASE_TYPES } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import type { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 
@@ -154,13 +154,13 @@ export function formatCountData(typeCountsGrouped: TypeGroup[], subTypeCountsGro
 function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerator, searchString: string) {
 	const typeFilterWhereClause = filterGenerator.createFilterWhereClause(req.query);
 
-	const searchCriteria = createWhereClause(splitStringQueries(searchString), [
+	const searchCriteria = createWhereClause(sanitiseSearchQuery(searchString), [
 		{ fields: ['reference', 'name', 'historicalReference'], searchType: 'contains' },
 		{
 			parent: 'Contacts',
 			isList: true,
 			fields: ['firstName', 'lastName', 'orgName'],
-			searchType: 'contains',
+			searchType: 'startsWith',
 			relationConstraints: [
 				{ contactTypeId: CONTACT_TYPE_ID.APPLICANT_APPELLANT } // Only check applicants
 			]
