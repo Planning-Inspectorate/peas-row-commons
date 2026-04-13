@@ -1,4 +1,5 @@
 import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
+import { formatInTimeZone } from 'date-fns-tz';
 import type { CaseListFields } from './types.ts';
 
 /**
@@ -28,7 +29,9 @@ export function casesToViewModel(cases: CaseListFields[], groupMembers: EntraGro
 		return {
 			...caseRow,
 			caseOfficerName: mappedCaseOfficer?.displayName || caseOfficerId,
-			mappedInspectors: mappedInspectors
+			mappedInspectors: mappedInspectors,
+			receivedDate: formatInTimeZone(caseRow.receivedDate, 'Europe/London', 'dd MMM yyyy'),
+			receivedDateSortable: new Date(caseRow.receivedDate)?.getTime()
 		};
 	});
 }

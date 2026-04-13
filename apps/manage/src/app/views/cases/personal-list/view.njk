@@ -129,6 +129,9 @@
                                 attributes: { "data-cy": "case-reference-" + loop.index0, "data-sort-value": case.reference }
                             },
                             {
+                                text: case.name
+                            },
+                            {
                                 text: case.caseOfficerName or "Unassigned",
                                 attributes: { "data-cy": "case-officer-" + loop.index0 },
                                 classes: "govuk-hint" if not case.caseOfficerName
@@ -136,6 +139,12 @@
                             {
                                 html: inspectorsHtml,
                                 attributes: { "data-cy": "case-inspectors-" + loop.index0 }
+                            },
+                            {
+                                text: case.receivedDate,
+                                attributes: {
+                                    "data-sort-value": case.receivedDateSortable
+                                }
                             },
                             {
                                 text: case.Status.displayName | default("Unknown"),
@@ -150,10 +159,12 @@
                             "data-module": "moj-sortable-table"
                         },
                         head: [
-                            { text: "Reference", classes: "govuk-!-width-one-quarter", attributes: { "aria-sort": "ascending" } },
-                            { text: "Case officer", classes: "govuk-!-width-one-quarter", attributes: { "aria-sort": "none" } },
-                            { text: "Inspector", classes: "govuk-!-width-one-quarter", attributes: { "aria-sort": "none" } },
-                            { text: "Case status", classes: "govuk-!-width-one-quarter", attributes: { "aria-sort": "none" } }
+                            { text: "Reference", classes: "mpesc-width-one-sixth", attributes: { "aria-sort": "none" } },
+                            { text: "Case name", classes: "mpesc-width-one-sixth", attributes: { "aria-sort": "none" } },
+                            { text: "Case officer", classes: "mpesc-width-one-sixth", attributes: { "aria-sort": "none" } },
+                            { text: "Inspector", classes: "mpesc-width-one-sixth", attributes: { "aria-sort": "none" } },
+                            { text: "Received", classes: "mpesc-width-one-sixth", attributes: { "aria-sort": "descending" } },
+                            { text: "Status", classes: "mpesc-width-one-sixth", attributes: { "aria-sort": "none" } }
                         ],
                         rows: caseRows
                     }) }}

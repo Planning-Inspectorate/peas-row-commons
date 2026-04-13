@@ -7,6 +7,7 @@ export const caseListSelect = {
 			Inspector: true
 		}
 	},
+	receivedDate: true,
 	reference: true
 } satisfies Prisma.CaseSelect;
 

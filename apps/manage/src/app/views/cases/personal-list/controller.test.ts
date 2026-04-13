@@ -109,7 +109,13 @@ describe('Personal List Controllers', () => {
 
 				const findManyMock = mock.fn((query: unknown) =>
 					Promise.resolve([
-						{ id: 'case-1', reference: 'REF-001', CaseOfficer: { idpUserId: 'user-123' }, Inspectors: [] }
+						{
+							id: 'case-1',
+							reference: 'REF-001',
+							CaseOfficer: { idpUserId: 'user-123' },
+							Inspectors: [],
+							receivedDate: new Date('2025-01-15T14:30:00Z')
+						}
 					])
 				);
 
