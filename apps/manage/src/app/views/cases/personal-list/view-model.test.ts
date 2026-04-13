@@ -20,7 +20,8 @@ describe('casesToViewModel', () => {
 				id: 'case-1',
 				reference: 'APP/123',
 				CaseOfficer: { idpUserId: 'user-1' },
-				Inspectors: [{ Inspector: { idpUserId: 'user-2' } }]
+				Inspectors: [{ Inspector: { idpUserId: 'user-2' } }],
+				receivedDate: new Date('2025-01-15T14:30:00Z')
 			}
 		] as unknown as CaseListFields[];
 
@@ -36,7 +37,8 @@ describe('casesToViewModel', () => {
 			{
 				id: 'case-2',
 				CaseOfficer: { idpUserId: 'ghost-user' },
-				Inspectors: [{ Inspector: { idpUserId: 'another-ghost' } }]
+				Inspectors: [{ Inspector: { idpUserId: 'another-ghost' } }],
+				receivedDate: new Date('2025-01-15T14:30:00Z')
 			}
 		] as unknown as CaseListFields[];
 
@@ -51,7 +53,8 @@ describe('casesToViewModel', () => {
 			{
 				id: 'case-3',
 				CaseOfficer: null,
-				Inspectors: []
+				Inspectors: [],
+				receivedDate: new Date('2025-01-15T14:30:00Z')
 			}
 		] as unknown as CaseListFields[];
 
