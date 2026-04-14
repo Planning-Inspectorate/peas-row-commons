@@ -1,9 +1,11 @@
 $font-family: arial, helvetica, sans-serif;
 
 //Main gov styles
-@use 'node_modules/govuk-frontend/dist/govuk/index' with ( // don't use the GDS Transport font, this service is not on GOV.UK
+@use 'node_modules/govuk-frontend/dist/govuk/index' with (
+	// don't use the GDS Transport font, this service is not on GOV.UK
 	// https://www.gov.uk/service-manual/design/making-your-service-look-like-govuk#if-your-service-isnt-on-govuk
-	$govuk-font-family: $font-family);
+	$govuk-font-family: $font-family
+);
 @forward 'node_modules/@ministryofjustice/frontend/moj/all';
 @use 'node_modules/@pins/peas-row-commons-lib/ui/header/pins-header';
 @use 'node_modules/@pins/peas-row-commons-lib/ui/footer/pins-footer';
@@ -146,8 +148,8 @@ $font-family: arial, helvetica, sans-serif;
 .pins-clean-filter {
 	.moj-filter {
 		.moj-filter__header {
-			>.moj-filter__header-title {
-				>h2 {
+			> .moj-filter__header-title {
+				> h2 {
 					@include govuk.govuk-font($size: 19, $weight: bold);
 				}
 			}
@@ -157,13 +159,13 @@ $font-family: arial, helvetica, sans-serif;
 			.moj-filter__selected {
 				.moj-filter__selected-heading {
 					.moj-filter__heading-title {
-						>h2 {
+						> h2 {
 							@include govuk.govuk-font($size: 19, $weight: bold);
 						}
 					}
 
 					.moj-filter__heading-action {
-						>p {
+						> p {
 							margin: 0 0 20px 0;
 						}
 					}
@@ -171,7 +173,7 @@ $font-family: arial, helvetica, sans-serif;
 			}
 
 			.moj-filter__options {
-				>button {
+				> button {
 					width: 100%;
 				}
 			}
