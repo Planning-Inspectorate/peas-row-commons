@@ -861,7 +861,7 @@ export const OUTCOME_QUESTIONS = {
 		validators: [
 			new ManageListItemsCompleteValidator({
 				decisionTypeId: 'Decision type',
-				decisionMakerTypeId: 'Decision maker type',
+				decisionMakerTypeId: 'Originator',
 				decisionMakerInspectorId: 'Inspector',
 				decisionMakerOfficerId: 'Officer',
 				outcomeId: 'Outcome',
