@@ -21,6 +21,7 @@ import {
 	trackRemovedItemId
 } from '@pins/peas-row-commons-lib/middleware/manage-list/track-removes.ts';
 import { guardEmptyRemove } from '@pins/peas-row-commons-lib/middleware/guard-empty-remove.ts';
+import { loadQuestionSpecificErrors, loadQuestionSpecificValidation } from './middleware.ts';
 
 export function createRoutes(service: ManageService) {
 	const router = createRouter({ mergeParams: true });
@@ -55,6 +56,7 @@ export function createRoutes(service: ManageService) {
 		validateIdFormat,
 		getJourneyResponse,
 		getJourney,
+		loadQuestionSpecificErrors,
 		asyncHandler(question)
 	);
 
@@ -77,6 +79,7 @@ export function createRoutes(service: ManageService) {
 		validate,
 		validationErrorHandler,
 		asyncHandler(bounceRemoveCancellation),
+		loadQuestionSpecificValidation,
 		asyncHandler(trackRemovedItemId),
 		buildSave(saveDataToSession)
 	);

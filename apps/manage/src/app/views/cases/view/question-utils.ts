@@ -50,6 +50,7 @@ import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/st
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
 import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
 import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
+import { INSPECTOR_CONSTANTS } from '@pins/peas-row-commons-lib/constants/inspectors.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
 
@@ -767,7 +768,7 @@ export const TEAM_QUESTIONS = {
 		title: 'Inspector(s)',
 		question: 'Check inspector details',
 		fieldName: 'inspectorDetails',
-		url: 'inspector-details',
+		url: INSPECTOR_CONSTANTS.INSPECTOR_URL,
 		showAnswersInSummary: true,
 		viewData: {
 			emptyName: 'inspector',
