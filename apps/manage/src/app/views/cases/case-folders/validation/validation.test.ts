@@ -50,7 +50,7 @@ describe('Folder Validation Utils', () => {
 		});
 
 		it('should return error for invalid special characters', () => {
-			const invalidNames = ['Folder@', 'Folder!', 'Folder/Sub', 'Folder?'];
+			const invalidNames = ['Folder@', 'Folder!', 'Folder/Sub', 'Folder?', "Folder''"];
 
 			invalidNames.forEach((name) => {
 				const result = getSyntaxError(name);
