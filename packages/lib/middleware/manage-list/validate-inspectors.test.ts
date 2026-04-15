@@ -149,7 +149,8 @@ describe('Inspector Removal Logic', () => {
 				manageListAction: MANAGE_LIST_ACTIONS.REMOVE,
 				manageListItemId: 'list-id-1',
 				question: INSPECTOR_CONSTANTS.INSPECTOR_URL,
-				id: 'case-123'
+				id: 'case-123',
+				section: 'team'
 			};
 			mockReq.originalUrl = '/cases/case-123/team/inspector-details/remove/list-id-1';
 
