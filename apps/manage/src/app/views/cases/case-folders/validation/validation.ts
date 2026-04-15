@@ -91,10 +91,10 @@ export function getSyntaxError(folderName: string) {
 		};
 	}
 
-	const validCharsRegex = /^[a-zA-Z0-9 \-_']+$/;
+	const validCharsRegex = /^(?!.*'')[a-zA-Z0-9 \-_']+$/;
 	if (!validCharsRegex.test(folderName)) {
 		return {
-			text: 'Folder name must only include letters a to z, numbers and special characters such as spaces, underscores, hyphens and apostrophes',
+			text: 'Folder name must only include letters a to z, numbers and special characters such as spaces, underscores, hyphens and single apostrophes',
 			href: '#folderName'
 		};
 	}
