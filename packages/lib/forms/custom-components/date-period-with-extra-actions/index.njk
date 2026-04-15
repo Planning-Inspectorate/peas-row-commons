@@ -1,0 +1,143 @@
+{% extends layoutTemplate %}
+
+{% from "govuk/components/date-input/macro.njk" import govukDateInput %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/fieldset/macro.njk" import govukFieldset %}
+
+{% set startFieldName = question.fieldName + "_start" %}
+{% set startDayFieldName = question.fieldName + "_start_day" %}
+{% set startMonthFieldName = question.fieldName + "_start_month" %}
+{% set startYearFieldName = question.fieldName + "_start_year" %}
+{% set endFieldName = question.fieldName + "_end" %}
+{% set endDayFieldName = question.fieldName + "_end_day" %}
+{% set endMonthFieldName = question.fieldName + "_end_month" %}
+{% set endYearFieldName = question.fieldName + "_end_year" %}
+
+{% if question.html %}
+    {% set htmlHint %}
+        {% include question.html ignore missing %}
+    {% endset %}
+{% endif %}
+
+{% block dynQuestionContent %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <form action="" method="post" novalidate>
+                {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
+
+                {{ govukFieldset({
+                    legend: {
+                        text: question.question,
+                        classes: "govuk-fieldset__legend--l",
+                        isPageHeading: true
+                    }
+                }) }}
+
+                    {% if question.hint %}
+                        <div class="govuk-hint">{{ question.hint }}</div>
+                    {% endif %}
+
+                    {% if question.html %}
+                        {% include question.html ignore missing %}
+                    {% endif %}
+
+                {{ govukDateInput({
+                    id: startFieldName,
+                    fieldset: {
+                        legend: {
+                            text: labels.start
+                        }
+                    },
+                    hint: hintStart and {
+                        text: hintStart
+                    },
+                    errorMessage: errorSummary and {
+                        text: errors[question.fieldName].msg or errors[startFieldName].msg or errors[startDayFieldName].msg or errors[startMonthFieldName].msg or errors[startYearFieldName].msg
+                    },
+                    items: [
+                        {
+                            classes: "govuk-input--width-2 govuk-input--error" if errors[startFieldName] or errors[startDayFieldName] else "govuk-input--width-2",
+                            name: startDayFieldName,
+                            label: "Day",
+                            id: startDayFieldName,
+                            value: question.value[startDayFieldName]
+                        },
+                        {
+                            classes: "govuk-input--width-2 govuk-input--error" if errors[startFieldName] or errors[startMonthFieldName] else "govuk-input--width-2",
+                            name: startMonthFieldName,
+                            label: "Month",
+                            id: startMonthFieldName,
+                            value: question.value[startMonthFieldName]
+                        },
+                        {
+                            classes: "govuk-input--width-4 govuk-input--error" if errors[startFieldName] or errors[startYearFieldName] else "govuk-input--width-4",
+                            name: startYearFieldName,
+                            label: "Year",
+                            id: startYearFieldName,
+                            value: question.value[startYearFieldName]
+                        }
+                    ]
+                }) }}
+
+                {{ govukDateInput({
+                    id: endFieldName,
+                    fieldset: {
+                        legend: {
+                            text: labels.end
+                        }
+                    },
+                    hint: hintEnd and {
+                       text: hintEnd
+                    },
+                    errorMessage: errorSummary and {
+                        text: errors[question.fieldName].msg or errors[endFieldName].msg or errors[endDayFieldName].msg or errors[endMonthFieldName].msg or errors[endYearFieldName].msg
+                    },
+                    items: [
+                        {
+                            classes: "govuk-input--width-2 govuk-input--error" if errors[endFieldName] or errors[endDayFieldName] else "govuk-input--width-2",
+                            name: endDayFieldName,
+                            label: "Day",
+                            id: endDayFieldName,
+                            value: question.value[endDayFieldName]
+                        },
+                        {
+                            classes: "govuk-input--width-2 govuk-input--error" if errors[endFieldName] or errors[endMonthFieldName] else "govuk-input--width-2",
+                            name: endMonthFieldName,
+                            label: "Month",
+                            id: endMonthFieldName,
+                            value: question.value[endMonthFieldName]
+                        },
+                        {
+                            classes: "govuk-input--width-4 govuk-input--error" if errors[endFieldName] or errors[endYearFieldName] else "govuk-input--width-4",
+                            name: endYearFieldName,
+                            label: "Year",
+                            id: endYearFieldName,
+                            value: question.value[endYearFieldName]
+                        }
+                    ]
+                }) }}
+
+                {{ govukButton({
+                    text: continueButtonText,
+                    type: "submit",
+                    attributes: { "data-cy":"button-save-and-continue"}
+                }) }}
+                {% if extraActionButtons|length %}
+                    {% for extraActionButton in extraActionButtons %}
+                        {{ govukButton({
+                            text: extraActionButton.text,
+                            type: extraActionButton.type,
+                            href: extraActionButton.href,
+                            attributes: {
+                                "formaction": extraActionButton.formaction or "",
+                                "data-cy": "button-" + extraActionButton.text|lower|replace(" ", "-"),
+                                "name": extraActionButton.text|lower|replace(" ", "-")
+                            },
+                            classes: extraActionButton.classes or "govuk-button--secondary"
+                        }) }}
+                    {% endfor %}
+                {% endif %}
+            </form>
+        </div>
+    </div>
+{% endblock %}

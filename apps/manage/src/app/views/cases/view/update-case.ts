@@ -43,6 +43,7 @@ import {
 import { LIST_FIELDS } from '@pins/peas-row-commons-lib/constants/audit.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
+import { toFloat } from '@pins/peas-row-commons-lib/util/numbers.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -253,7 +254,11 @@ function parseDataToCorrectTable(flatData: Record<string, any>) {
 
 	Object.keys(flatData).forEach((key) => {
 		const relation = getRelationForField(key);
-		const value = flatData[key];
+		let value = flatData[key];
+
+		if (key === 'finalCost') {
+			value = toFloat(value);
+		}
 
 		if (relation) {
 			// Creates a nested key for the sub-table

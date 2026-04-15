@@ -18,7 +18,17 @@ export const guardEmptyRemove: RequestHandler = (req, res, next) => {
 
 	const value = req.body?.[question.fieldName];
 
-	const hasDateSubFields = ['_day', '_month', '_year'].some((suffix) => question.fieldName + suffix in req.body);
+	const hasDateSubFields = [
+		'_day',
+		'_month',
+		'_year',
+		'_start_day',
+		'_start_month',
+		'_start_year',
+		'_end_day',
+		'_end_month',
+		'_end_year'
+	].some((suffix) => question.fieldName + suffix in req.body);
 
 	const isEmpty =
 		(!hasDateSubFields && value === undefined) ||
