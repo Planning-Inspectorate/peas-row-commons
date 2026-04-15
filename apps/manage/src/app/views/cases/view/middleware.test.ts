@@ -84,6 +84,7 @@ describe('Question Specific Loaders (Middleware Routing)', () => {
 				question: INSPECTOR_CONSTANTS.INSPECTOR_URL,
 				manageListAction: MANAGE_LIST_ACTIONS.REMOVE,
 				manageListItemId: 'list-id-1',
+				section: 'team',
 				id: 'case-123'
 			};
 			mockReq.originalUrl = '/cases/case-123/team/inspector-details/remove/list-id-1';
