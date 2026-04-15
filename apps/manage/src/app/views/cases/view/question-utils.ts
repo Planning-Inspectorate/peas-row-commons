@@ -326,12 +326,21 @@ export const DOCUMENTS_QUESTIONS = {
 
 export const COSTS_QUESTIONS = {
 	rechargeable: {
-		type: COMPONENT_TYPES.BOOLEAN,
+		type: CUSTOM_COMPONENTS.BOOLEAN_WITH_EXTRA_ACTIONS, // TODO: move into dynamic forms
 		title: 'Rechargeable',
 		question: 'Is this a rechargeable case?',
 		fieldName: 'rechargeable',
 		url: 'rechargeable',
-		validators: [new RequiredValidator('Select yes if this is a rechargeable case')]
+		validators: [new RequiredValidator('Select yes if this is a rechargeable case')],
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'rechargeable/remove'
+				}
+			]
+		}
 	},
 	finalCost: {
 		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // TODO: update to single line input once that has been updated to have prefixes in dynamic forms
@@ -347,7 +356,6 @@ export const COSTS_QUESTIONS = {
 			}
 		],
 		validators: [
-			new RequiredValidator('Input must be numbers'),
 			new NumericValidator({
 				regex: /^$|^\d+(\.\d+)?$/,
 				regexMessage: 'Input must be numbers'
@@ -368,7 +376,16 @@ export const COSTS_QUESTIONS = {
 		question: 'Has the fee been received?',
 		fieldName: 'feeReceived',
 		url: 'fee-received',
-		validators: [new RequiredValidator('Select yes if the fee has been received')]
+		validators: [new RequiredValidator('Select yes if the fee has been received')],
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'fee-received/remove'
+				}
+			]
+		}
 	},
 	invoiceSent: {
 		type: COMPONENT_TYPES.RADIO, // Radio because it's Yes, No, Interim - so cannot be Bool
@@ -377,7 +394,16 @@ export const COSTS_QUESTIONS = {
 		fieldName: 'invoiceSent',
 		url: 'invoice-sent',
 		validators: [new RequiredValidator('Select yes if the invoice has been sent')],
-		options: INVOICE_STATUSES.map((status) => ({ text: status.displayName, value: status.id }))
+		options: INVOICE_STATUSES.map((status) => ({ text: status.displayName, value: status.id })),
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'invoice-sent/remove'
+				}
+			]
+		}
 	}
 };
 
@@ -437,19 +463,10 @@ export const CASE_DETAILS_QUESTIONS = {
 		fieldName: 'statusId',
 		url: 'case-status',
 		validators: [new RequiredValidator('Select a case status')],
-		options: CASE_STATUSES.map((status) => ({ text: status.displayName, value: status.id })),
-		viewData: {
-			extraActionButtons: [
-				{
-					text: 'Remove and save',
-					type: 'submit',
-					formaction: 'case-status/remove'
-				}
-			]
-		}
+		options: CASE_STATUSES.map((status) => ({ text: status.displayName, value: status.id }))
 	},
 	abeyancePeriod: {
-		type: COMPONENT_TYPES.DATE_PERIOD,
+		type: CUSTOM_COMPONENTS.DATE_PERIOD_WITH_EXTRA_ACTIONS, // TODO: move into dynamic forms
 		title: 'Abeyance period',
 		question: 'What is the abeyance period?',
 		fieldName: 'abeyancePeriod',
@@ -467,7 +484,16 @@ export const CASE_DETAILS_QUESTIONS = {
 		],
 		labels: { start: 'Start', end: 'End' },
 		hintStart: 'For example, 27 3 2007',
-		hintEnd: 'For example, 27 3 2007'
+		hintEnd: 'For example, 27 3 2007',
+		viewData: {
+			extraActionButtons: [
+				{
+					text: 'Remove and save',
+					type: 'submit',
+					formaction: 'abeyance-period/remove'
+				}
+			]
+		}
 	},
 	advertisedModificationStatus: {
 		type: COMPONENT_TYPES.RADIO,

@@ -101,6 +101,11 @@ declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/
 	}
 }
 
+declare module '@planning-inspectorate/dynamic-forms/src/components/date-period/question.js' {
+	import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+	export default class DatePeriodQuestion extends Question {}
+}
+
 declare module '@planning-inspectorate/dynamic-forms/src/components/date/question.js' {
 	export default class DateQuestion {
 		constructor(params: any);
@@ -419,6 +424,8 @@ declare module '@planning-inspectorate/dynamic-forms/src/journey/journey-respons
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js' {
+	import RadioQuestion from '@planning-inspectorate/dynamic-forms/src/components/radio/question.js';
+	export default class BooleanQuestion extends RadioQuestion {}
 	export function booleanToYesNoValue(value: any): any;
 }
 

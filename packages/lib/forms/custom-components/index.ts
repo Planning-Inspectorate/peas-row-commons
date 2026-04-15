@@ -9,6 +9,8 @@ import OutcomesTableQuestion from './manage-list-table/defined-columns-list-tabl
 import LegacyRadioQuestion from './radio-with-legacy-options/question.ts';
 import LegacySelectQuestion from './select-with-legacy-options/question.ts';
 import AddressWithIdQuestion from './address-with-id/question.ts';
+import BooleanWithExtraActions from './boolean-with-extra-actions/question.ts';
+import DatePeriodWithExtraActions from './date-period-with-extra-actions/question.ts';
 
 export const CUSTOM_COMPONENTS = Object.freeze({
 	CONDITIONAL_TEXT_OPTIONS: 'conditional-text-options',
@@ -21,7 +23,9 @@ export const CUSTOM_COMPONENTS = Object.freeze({
 	OUTCOMES_LIST: 'outcomes-list',
 	LEGACY_RADIO: 'legacy-radio',
 	LEGACY_SELECT: 'legacy-select',
-	ADDRESS_WITH_ID: 'address-with-id'
+	ADDRESS_WITH_ID: 'address-with-id',
+	BOOLEAN_WITH_EXTRA_ACTIONS: 'boolean-with-extra-actions',
+	DATE_PERIOD_WITH_EXTRA_ACTIONS: 'date-period-with-extra-actions'
 });
 
 export const CUSTOM_COMPONENT_CLASSES = Object.freeze({
@@ -35,5 +39,7 @@ export const CUSTOM_COMPONENT_CLASSES = Object.freeze({
 	[CUSTOM_COMPONENTS.OUTCOMES_LIST]: OutcomesTableQuestion,
 	[CUSTOM_COMPONENTS.LEGACY_RADIO]: LegacyRadioQuestion,
 	[CUSTOM_COMPONENTS.LEGACY_SELECT]: LegacySelectQuestion,
-	[CUSTOM_COMPONENTS.ADDRESS_WITH_ID]: AddressWithIdQuestion
+	[CUSTOM_COMPONENTS.ADDRESS_WITH_ID]: AddressWithIdQuestion,
+	[CUSTOM_COMPONENTS.BOOLEAN_WITH_EXTRA_ACTIONS]: BooleanWithExtraActions,
+	[CUSTOM_COMPONENTS.DATE_PERIOD_WITH_EXTRA_ACTIONS]: DatePeriodWithExtraActions
 });

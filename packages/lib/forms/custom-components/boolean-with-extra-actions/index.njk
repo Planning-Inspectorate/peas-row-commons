@@ -1,0 +1,81 @@
+{% extends layoutTemplate %}
+
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% if question.html %}
+    {% set htmlHint %}
+        {% include question.html ignore missing %}
+    {% endset %}
+{% endif %}
+
+{% block dynQuestionContent %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <form action="" method="post" novalidate>
+                {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
+                {% if question.interfaceType === 'radio' %}
+                    {{ govukRadios({
+                        classes: "govuk-radios",
+                        idPrefix: question.fieldName,
+                        name: question.fieldName,
+                        errorMessage: errors[question.fieldName] and {
+                            text: errors[question.fieldName].msg
+                        },
+                        fieldset: {
+                            legend: {
+                                text: question.question,
+                                isPageHeading: true,
+                                classes: "govuk-fieldset__legend--l"
+                            }
+                        },
+                        hint: question.hint and { text: question.hint },
+                        items: question.options
+                    }) }}
+
+                    {% elif question.interfaceType === 'checkbox' %}
+                    {{ govukCheckboxes({
+                        classes: "govuk-checkboxes",
+                        idPrefix: question.fieldName,
+                        name: question.fieldName,
+                        errorMessage: errors[question.fieldName] and {
+                            text: errors[question.fieldName].msg
+                        },
+                        hint: htmlHint and {
+                            html: htmlHint
+                        },
+                        fieldset: {
+                            legend: {
+                                text: question.question,
+                                isPageHeading: true,
+                                classes: "govuk-fieldset__legend--l"
+                            }
+                        },
+                        items: question.options
+                    }) }}
+                {% endif %}
+                {{ govukButton({
+                    text: continueButtonText,
+                    type: "submit",
+                    attributes: { "data-cy":"button-save-and-continue"}
+                }) }}
+                {% if extraActionButtons|length %}
+                    {% for extraActionButton in extraActionButtons %}
+                        {{ govukButton({
+                            text: extraActionButton.text,
+                            type: extraActionButton.type,
+                            href: extraActionButton.href,
+                            attributes: {
+                                "formaction": extraActionButton.formaction or "",
+                                "data-cy": "button-" + extraActionButton.text|lower|replace(" ", "-"),
+                                "name": extraActionButton.text|lower|replace(" ", "-")
+                            },
+                            classes: extraActionButton.classes or "govuk-button--secondary"
+                        }) }}
+                    {% endfor %}
+                {% endif %}
+            </form>
+        </div>
+    </div>
+{% endblock %}
