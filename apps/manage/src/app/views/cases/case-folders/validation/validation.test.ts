@@ -33,7 +33,10 @@ describe('Folder Validation Utils', () => {
 		it('should return null for valid folder names', () => {
 			assert.strictEqual(getSyntaxError('Valid Name'), null);
 			assert.strictEqual(getSyntaxError('Folder-123_Test'), null);
-			assert.strictEqual(getSyntaxError("O'Connor Project"), null);
+			assert.strictEqual(getSyntaxError("O'Connor Project's"), null);
+			assert.strictEqual(getSyntaxError('Test & Folder'), null);
+			assert.strictEqual(getSyntaxError('Test.Folder'), null);
+			assert.strictEqual(getSyntaxError('Test(Folder new)'), null);
 		});
 
 		it('should return error if name is too short (< 3)', () => {

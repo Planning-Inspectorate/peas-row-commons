@@ -81,3 +81,17 @@ export function nl2br(value: string) {
 
 	return value.replace(/\r\n|\n/g, '<br>');
 }
+
+/**
+ * Replaces various strings that are unsafe for HTML,
+ * e.g. &copy will become a copyright symbol if we
+ * do not escape it.
+ */
+export function escapeHtml(unsafe: string): string {
+	return unsafe
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#039;');
+}

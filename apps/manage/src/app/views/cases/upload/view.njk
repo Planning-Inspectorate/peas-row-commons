@@ -23,10 +23,14 @@
         <div class="govuk-grid-column-two-thirds">
             <p class="govuk-body">Each file must be:</p>
             <ul class="govuk-list govuk-list--bullet">
-                <li>DBF, DOC, DOCX, HTML, JPEG, JPG, MOV, MP3, MP4, MPEG, MSG, PDF, PNG, PPT, PPTX, PRJ, SHP, SHX, TIF, TIFF, XLS, XLSM, or XLSX</li>
+                <li>BMP, DBF, DOC, DOCX, DOTX, GIF, HTML, JPEG, JPG, M4V, MOV, MP3, MP4, MPEG, MSG, ODS, ODT, PDF, PNG, PPT, PPTX, PRJ, PUB, RTF, SHP, SHX, TIF, TIFF, TXT, XLS, XLSM, XLSX</li>
                 <li>smaller than 250MB</li>
             </ul>
             <p class="govuk-body">The total combined size of your uploaded files must be smaller than 1GB.</p>
+            <p class="govuk-body">The file name can only include:</p>
+            <ul class="govuk-list govuk-list--bullet">
+                <li>Letters, numbers, hyphens, underscores, brackets, ampersand and single apostrophes</li>
+            </ul>
 
             {% set uploadForm = "upload-form" %}
 

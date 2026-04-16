@@ -80,6 +80,21 @@ describe('validateUploadedFile', () => {
 			assert.strictEqual(errors.length, 1);
 			assert.match(errors[0].text, /special characters/);
 		});
+
+		it('should return error if filename contains two consecutive apostrophes', async () => {
+			const file = createMockFile({ originalname: "file''name.pdf" });
+			const errors = await validateUploadedFile(file, logger, allowedExtensions, allowedMimeTypes, maxFileSize);
+
+			assert.strictEqual(errors.length, 1);
+			assert.match(errors[0].text, /special characters/);
+		});
+
+		it('should not return error if filename contains other special characters (brackets, ampersand, one apostrophe, hyphen, underscroe', async () => {
+			const file = createMockFile({ originalname: "file'_-&().name.pdf" });
+			const errors = await validateUploadedFile(file, logger, allowedExtensions, allowedMimeTypes, maxFileSize);
+
+			assert.strictEqual(errors.length, 0);
+		});
 	});
 
 	describe('MIME and Extension Checks', () => {
