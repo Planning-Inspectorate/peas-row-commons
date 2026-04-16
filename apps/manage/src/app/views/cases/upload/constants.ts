@@ -25,7 +25,16 @@ export const ALLOWED_EXTENSIONS = [
 	'prj',
 	'shp',
 	'shx',
-	'gis'
+	'gis',
+	'bmp',
+	'dotx',
+	'gif',
+	'm4v',
+	'ods',
+	'odt',
+	'pub',
+	'rtf',
+	'txt'
 ];
 
 export const ALLOWED_EXTENSIONS_TEXT = formatExtensions(ALLOWED_EXTENSIONS);
@@ -55,14 +64,23 @@ export const ALLOWED_MIME_TYPES = [
 	'application/x-shapefile',
 	'application/x-shx',
 	'application/octet-stream',
-	'application/x-gis'
+	'application/x-gis',
+	'image/bmp',
+	'application/vnd.openxmlformats-officedocument.wordprocessingml.template',
+	'image/gif',
+	'video/x-m4v',
+	'application/vnd.oasis.opendocument.spreadsheet',
+	'application/vnd.oasis.opendocument.text',
+	'application/x-mspublisher',
+	'application/rtf',
+	'text/plain'
 ];
 
 /**
  * These are mime types that can be "previewed",
  * i.e. viewed in browser
  */
-export const PREVIEW_MIME_TYPES = ['image/png', 'image/jpeg', 'application/pdf'];
+export const PREVIEW_MIME_TYPES = ['image/png', 'image/jpeg', 'application/pdf', 'image/gif', 'image/bmp'];
 
 export const MAX_FILE_SIZE = 250 * 1024 * 1024; // 250MB
 export const TOTAL_UPLOAD_LIMIT = 1073741824; // 1GB

@@ -88,8 +88,11 @@ function validateBasicAttributes(file: Express.Multer.File, maxFileSize: number)
 		});
 	}
 
-	// Only allow standard characters and hyphens, underscores and spaces
-	if (/[^a-zA-Z0-9.\-_ ()]/.test(originalname)) {
+	// Ensure the filename only contains allowed characters and no consecutive apostrophes
+	// Allowed: a-z, A-Z, 0-9, dot, hyphen, underscore, space, (), &, '
+	const validCharsRegex = /^(?!.*'')[a-zA-Z0-9.\-_ ()&']+$/;
+
+	if (!validCharsRegex.test(originalname)) {
 		errors.push({
 			text: `${originalname}: Filename contains special characters. Please remove these and try again.`,
 			href: '#upload-form'

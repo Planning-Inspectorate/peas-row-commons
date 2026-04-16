@@ -6,6 +6,7 @@ import type { Logger } from 'pino';
 import type { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
 import { randomUUID } from 'crypto';
 import type { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { escapeHtml } from '@pins/peas-row-commons-lib/util/strings.ts';
 
 /**
  * Controller for uploading a new document to Azure Blob,
@@ -45,7 +46,7 @@ export function uploadDocumentsController(service: ManageService) {
 				size: originalFile.size
 			},
 			success: {
-				messageHtml: `<span class="moj-multi-file-upload__filename">${fileName} (${formatBytes(originalFile.size)})</span>`
+				messageHtml: `<span class="moj-multi-file-upload__filename">${escapeHtml(fileName)} (${formatBytes(originalFile.size)})</span>`
 			}
 		});
 	};
