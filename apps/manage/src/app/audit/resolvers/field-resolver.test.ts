@@ -177,11 +177,11 @@ describe('resolveFieldValues', () => {
 		});
 	});
 
-	describe('authorityName resolver', () => {
+	describe('authorityId resolver', () => {
 		it('should resolve authority ID to authority name', () => {
 			// Uses dev authorities as fallback — pick an ID from AUTHORITIES_DEV
 			const previousCase = { authorityId: null };
-			const result = resolveFieldValues('authorityName', previousCase, 'some-unknown-id');
+			const result = resolveFieldValues('authorityId', previousCase, 'some-unknown-id');
 
 			assert.strictEqual(result.oldValue, '-');
 			// newValue depends on whether the ID exists in the dev data
@@ -189,7 +189,7 @@ describe('resolveFieldValues', () => {
 
 		it('should return "-" when authority is not found', () => {
 			const previousCase = { authorityId: 'non-existent' };
-			const result = resolveFieldValues('authorityName', previousCase, 'also-non-existent');
+			const result = resolveFieldValues('authorityId', previousCase, 'also-non-existent');
 
 			assert.strictEqual(result.oldValue, '-');
 			assert.strictEqual(result.newValue, '-');
