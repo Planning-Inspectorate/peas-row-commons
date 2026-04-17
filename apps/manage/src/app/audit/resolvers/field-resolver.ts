@@ -8,7 +8,7 @@ import {
 import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../config.ts';
 import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
 import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
-import { formatAddress, formatValue } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import { formatAddress, formatDate, formatValue } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
 
 interface ResolverContext {
 	userDisplayNameMap?: Map<string, string>;
@@ -127,7 +127,7 @@ const FIELD_RESOLVERS: Record<string, FieldResolver> = {
 	 * Authority — the form field is `authorityName` but the DB column is `authorityId`.
 	 * Resolves to the authority's name from the environment-specific authority list.
 	 */
-	authorityName: {
+	authorityId: {
 		resolve(previousCase, newAnswer) {
 			const authorities = getAuthorities();
 			const oldAuthority = authorities.find((a) => a.id === previousCase.authorityId);
@@ -153,6 +153,29 @@ const FIELD_RESOLVERS: Record<string, FieldResolver> = {
 				oldValue: formatAddress(oldAddress),
 				newValue: formatAddress(newAddress)
 			};
+		}
+	},
+
+	/**
+	 * Abeyance period — the form submits a composite object { start, end }
+	 * and the DB stores it as a relation with { abeyanceStartDate, abeyanceEndDate }.
+	 * Formats both as "10 January 2026 to 10 February 2026" for the audit trail.
+	 */
+	abeyancePeriod: {
+		resolve(previousCase, newAnswer) {
+			const oldPeriod = previousCase.Abeyance as {
+				abeyanceStartDate: Date | null;
+				abeyanceEndDate: Date | null;
+			} | null;
+			const newPeriod = newAnswer as { start: string | null; end: string | null } | null;
+
+			const oldDisplay = oldPeriod
+				? `${formatDate(oldPeriod.abeyanceStartDate)} - ${formatDate(oldPeriod.abeyanceEndDate)}`
+				: '-';
+
+			const newDisplay = newPeriod ? `${formatDate(newPeriod.start)} - ${formatDate(newPeriod.end)}` : '-';
+
+			return { oldValue: oldDisplay, newValue: newDisplay };
 		}
 	},
 

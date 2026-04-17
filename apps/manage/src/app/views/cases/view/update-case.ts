@@ -129,6 +129,13 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 				groupIds
 			});
 
+			// Flatten the Dates relation so the default resolver can find
+			// timetable date fields by their field name directly
+			const dates = previousValues.Dates as Record<string, unknown> | null;
+			if (dates) {
+				Object.assign(previousValues, dates);
+			}
+
 			const userDisplayNameMap = new Map(groupMembers.allUsers.map((member) => [member.id, member.displayName]));
 
 			await recordAuditEntries(
@@ -167,7 +174,9 @@ async function updateCaseData(
 			const caseRow = await $tx.case.findUnique({
 				where: { id },
 				include: {
+					Dates: true,
 					SiteAddress: true,
+					Abeyance: true,
 					RelatedCases: true,
 					LinkedCases: true,
 					Contacts: { include: { Address: true } },

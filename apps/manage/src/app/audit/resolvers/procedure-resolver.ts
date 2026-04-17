@@ -252,6 +252,11 @@ function checkDetailFieldChanges(
 	const entries: AuditEntry[] = [];
 
 	for (const field of PROCEDURE_DETAIL_FIELDS) {
+		// Skip detail fields that weren't submitted in the form — the procedure
+		// array is rebuilt from all existing data, so fields not part of the
+		// current edit will be undefined and would falsely diff against stored values.
+		if (!Object.hasOwn(newProc, field.key)) continue;
+
 		const oldRawVal = oldProc[field.key as keyof typeof oldProc];
 		const newRawVal = newProc[field.key];
 
@@ -290,6 +295,11 @@ function checkRelationFieldChanges(
 	const entries: AuditEntry[] = [];
 
 	for (const rel of PROCEDURE_RELATION_LOOKUPS) {
+		// Skip relation fields that weren't submitted in the form — an absent
+		// field would resolve to '-' and falsely diff against the stored
+		// display name, producing a spurious "updated" entry.
+		if (!Object.hasOwn(newProc, rel.newKey)) continue;
+
 		const oldRelObj = oldProc[rel.oldRelation as keyof typeof oldProc] as { id: string; displayName: string } | null;
 		const oldDisplay = oldRelObj?.displayName ?? '-';
 
@@ -328,6 +338,11 @@ function checkVenueFieldChanges(
 	const entries: AuditEntry[] = [];
 
 	for (const venue of PROCEDURE_VENUE_FIELDS) {
+		// Skip venue fields that weren't submitted in the form — comparing
+		// an unsubmitted field (undefined) against the stored value would
+		// produce a false "updated" entry even though the user didn't touch it.
+		if (!Object.hasOwn(newProc, venue.newKey)) continue;
+
 		const oldAddress = formatAddress(
 			oldProc[venue.oldRelation as keyof typeof oldProc] as Record<string, unknown> | null
 		);
