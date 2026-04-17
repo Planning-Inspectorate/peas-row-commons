@@ -42,12 +42,14 @@ export function buildRenameFolderView(service: ManageService): AsyncRequestHandl
 		if (!folder) return notFoundHandler(req, res);
 
 		const errorSummary = getSessionErrors(req, id);
+		const erroredFolderName = getErroredFolderName(req, id);
+
 		const returnUrl = req.baseUrl.replace(/\/rename-folder\/?$/, '');
 
 		return res.render('views/cases/case-folders/rename-folder/view.njk', {
 			backLinkUrl: returnUrl,
 			errorSummary,
-			currentFolderName: folder.displayName
+			currentFolderName: erroredFolderName ?? folder.displayName
 		});
 	};
 }
@@ -112,6 +114,15 @@ export function getSessionErrors(req: Request, id: string) {
 	const renamingErrors = readSessionData(req, id, 'createFolderErrors', [], 'folders');
 	clearSessionData(req, id, 'createFolderErrors', 'folders');
 	return typeof renamingErrors !== 'boolean' && renamingErrors.length ? renamingErrors : null;
+}
+
+/**
+ * Finds the attempted new folder name that errored, for retaining in the input.
+ */
+export function getErroredFolderName(req: Request, id: string) {
+	const folderNameAttempt = readSessionData(req, id, 'erroredFolderName', null, 'folders');
+	clearSessionData(req, id, 'erroredFolderName', 'folders');
+	return folderNameAttempt;
 }
 
 /**
