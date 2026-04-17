@@ -11,7 +11,7 @@ export function addLocalsConfiguration(): Handler {
 			footerLinks: [
 				{
 					text: 'Report a problem',
-					link: 'https://forms.cloud.microsoft/e/MnyPPC4e1V'
+					link: 'https://mhclg.service-now.com/sp/?id=landing'
 				}
 			]
 		};
