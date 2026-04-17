@@ -58,7 +58,8 @@ export function buildValidateFolder(
 				req,
 				id,
 				{
-					createFolderErrors: Object.values(errors)
+					createFolderErrors: Object.values(errors),
+					erroredFolderName: folderName
 				},
 				'folders'
 			);
