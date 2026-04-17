@@ -197,3 +197,8 @@ $font-family: arial, helvetica, sans-serif;
 .mpesc-width-one-sixth {
 	width: 16.66%;
 }
+
+// We want less than default (40px) padding for case details items.
+.manage-list-summary {
+	padding-left: 1rem;
+}

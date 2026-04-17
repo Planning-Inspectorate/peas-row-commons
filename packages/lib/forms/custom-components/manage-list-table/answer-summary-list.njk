@@ -1,4 +1,4 @@
-<ul id="{{ uniqueId }}" data-cy="answer-list">
+<ul id="{{ uniqueId }}" class="manage-list-summary" data-cy="answer-list">
     {% for question in answers %}
         <li class="{% if loop.index0 >= limit %}govuk-!-display-none js-hidden-item{% endif %}" data-cy="answer-item">
             {# Joiner because we dont want it to appear on first item #}
