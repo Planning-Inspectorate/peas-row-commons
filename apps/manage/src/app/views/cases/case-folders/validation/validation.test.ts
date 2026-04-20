@@ -37,6 +37,7 @@ describe('Folder Validation Utils', () => {
 			assert.strictEqual(getSyntaxError('Test & Folder'), null);
 			assert.strictEqual(getSyntaxError('Test.Folder'), null);
 			assert.strictEqual(getSyntaxError('Test(Folder new)'), null);
+			assert.strictEqual(getSyntaxError('We / Allow / Slashes'), null);
 		});
 
 		it('should return error if name is too short (< 3)', () => {
@@ -53,7 +54,7 @@ describe('Folder Validation Utils', () => {
 		});
 
 		it('should return error for invalid special characters', () => {
-			const invalidNames = ['Folder@', 'Folder!', 'Folder/Sub', 'Folder?', "Folder''"];
+			const invalidNames = ['Folder@', 'Folder!', 'Folder?', "Folder''"];
 
 			invalidNames.forEach((name) => {
 				const result = getSyntaxError(name);
