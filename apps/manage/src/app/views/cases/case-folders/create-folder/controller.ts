@@ -21,11 +21,13 @@ export function buildViewCreateFolders(): AsyncRequestHandler {
 			}
 
 			const errorSummary = getSessionErrors(req, id);
+			const erroredFolderName = getErroredFolderName(req, id);
 			const returnUrl = req.baseUrl.replace(/\/create-folder\/?$/, '');
 
 			return res.render('views/cases/case-folders/create-folder/view.njk', {
 				backLinkUrl: returnUrl,
-				errorSummary
+				errorSummary,
+				currentFolderName: erroredFolderName
 			});
 		} catch (error) {
 			if (next) next(error);
@@ -95,6 +97,15 @@ export function getSessionErrors(req: Request, id: string) {
 	const uploadErrors = readSessionData(req, id, 'createFolderErrors', [], 'folders');
 	clearSessionData(req, id, 'createFolderErrors', 'folders');
 	return typeof uploadErrors !== 'boolean' && uploadErrors.length ? uploadErrors : null;
+}
+
+/**
+ * Finds the attempted new folder name that errored, for retaining in the input.
+ */
+export function getErroredFolderName(req: Request, id: string) {
+	const folderNameAttempt = readSessionData(req, id, 'erroredFolderName', null, 'folders');
+	clearSessionData(req, id, 'erroredFolderName', 'folders');
+	return folderNameAttempt;
 }
 
 /**
