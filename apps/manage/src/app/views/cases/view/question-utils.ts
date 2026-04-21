@@ -372,7 +372,7 @@ export const COSTS_QUESTIONS = {
 		]
 	},
 	feeReceived: {
-		type: COMPONENT_TYPES.BOOLEAN,
+		type: CUSTOM_COMPONENTS.BOOLEAN_WITH_EXTRA_ACTIONS,
 		title: 'Fee received',
 		question: 'Has the fee been received?',
 		fieldName: 'feeReceived',

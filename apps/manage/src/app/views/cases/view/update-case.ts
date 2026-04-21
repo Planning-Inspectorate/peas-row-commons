@@ -129,12 +129,7 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 				groupIds
 			});
 
-			// Flatten the Dates relation so the default resolver can find
-			// timetable date fields by their field name directly
-			const dates = previousValues.Dates as Record<string, unknown> | null;
-			if (dates) {
-				Object.assign(previousValues, dates);
-			}
+			flattenReferenceTables(previousValues, ['Dates', 'Costs']);
 
 			const userDisplayNameMap = new Map(groupMembers.allUsers.map((member) => [member.id, member.displayName]));
 
@@ -160,6 +155,20 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 }
 
 /**
+ * Reference tables are connected in a 1-1 join to case tables, we need to take the data in those tables
+ * and flatten them into the same object for recording in audit history.
+ */
+function flattenReferenceTables(previousValues: Record<string, unknown>, itemsToFlatten: string[]) {
+	for (const itemToFlatten of itemsToFlatten) {
+		const item = previousValues[itemToFlatten];
+
+		if (item) {
+			Object.assign(previousValues, item);
+		}
+	}
+}
+
+/**
  * Queries DB and upserts (or removes) data for specified data fields.
  * Also returns the current (unchanged) case for auditing purposes.
  */
@@ -182,6 +191,7 @@ async function updateCaseData(
 					Contacts: { include: { Address: true } },
 					CaseOfficer: true,
 					Inspectors: { include: { Inspector: true } },
+					Costs: true,
 					Procedures: {
 						include: {
 							ProcedureType: true,
