@@ -31,6 +31,7 @@ export interface Config extends BaseConfig {
 			inspectors: string;
 		};
 	};
+	chromiumPath: string;
 }
 
 export type ENVIRONMENT_NAMES = Readonly<{ PROD: string; DEV: string; TEST: string; TRAINING: string }>;
@@ -82,7 +83,8 @@ export function loadConfig(): Config {
 		BLOB_STORE_HOST,
 		BLOB_STORE_CONTAINER,
 		BLOB_STORE_CONNECTION_STRING,
-		AUTHORITIES_CHANGE_REQUEST_EMAIL
+		AUTHORITIES_CHANGE_REQUEST_EMAIL,
+		CHROMIUM_LOCAL_PATH
 	} = process.env;
 
 	const buildConfig = loadBuildConfig();
@@ -140,6 +142,14 @@ export function loadConfig(): Config {
 		}
 	}
 
+	/**
+	 * This defaults to /usr/bin/chromium on server, but for local development you need to overwrite
+	 * it with a local path. Do not let this be overwritten on production servers.
+	 */
+	if (NODE_ENV === 'production' && CHROMIUM_LOCAL_PATH) {
+		throw new Error(CHROMIUM_LOCAL_PATH + ' must only be used for local development');
+	}
+
 	config = {
 		blobStore: {
 			disabled: BLOB_STORE_DISABLED === 'true',
@@ -191,7 +201,9 @@ export function loadConfig(): Config {
 				caseOfficers: ENTRA_GROUP_ID_CASE_OFFICERS || '',
 				inspectors: ENTRA_GROUP_ID_INSPECTORS || ''
 			}
-		}
+		},
+		// the path to chromium, needed for puppeteer-core
+		chromiumPath: CHROMIUM_LOCAL_PATH || '/usr/bin/chromium'
 	};
 
 	return config;

@@ -1,4 +1,4 @@
-import puppeteer, { type Browser } from 'puppeteer';
+import puppeteer, { type Browser } from 'puppeteer-core';
 import type { Logger } from 'pino';
 
 /**
@@ -32,15 +32,17 @@ let browserInstance: Browser | null = null;
  */
 export async function getOrLaunchBrowser(
 	logger: Logger,
+	chromiumPath = '/usr/bin/chromium',
 	launchFn: (options: Parameters<typeof puppeteer.launch>[0]) => Promise<Browser> = puppeteer.launch.bind(puppeteer)
 ): Promise<Browser> {
 	if (browserInstance) {
 		return browserInstance;
 	}
 
-	logger.info('Launching Puppeteer browser instance on first use');
+	logger.info(`Launching Puppeteer browser instance on first use from: ${chromiumPath}`);
 
 	const browser = await launchFn({
+		executablePath: chromiumPath,
 		headless: true,
 		args: [...CHROMIUM_LAUNCH_ARGS]
 	});

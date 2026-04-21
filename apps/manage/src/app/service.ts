@@ -56,4 +56,8 @@ export class ManageService extends BaseService {
 	get authDisabled(): boolean {
 		return this.#config.auth.disabled;
 	}
+
+	get chromiumPath(): string {
+		return this.#config.chromiumPath;
+	}
 }
