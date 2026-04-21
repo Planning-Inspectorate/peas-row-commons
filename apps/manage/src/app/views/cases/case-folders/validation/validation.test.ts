@@ -102,13 +102,13 @@ describe('Folder Validation Utils', () => {
 			assert.strictEqual(result.text, 'Folder name already exists');
 		});
 
-		it('should handle undefined parentId correctly', async () => {
+		it('should handle undefined by converting null to only get base level folders', async () => {
 			mockFindFirst.mock.mockImplementationOnce(() => Promise.resolve(null) as any);
 
 			await getDuplicateErrorsCreate(mockDb, 'case-1', undefined, 'New Folder');
 
 			const callArgs = mockFindFirst.mock.calls[0].arguments[0];
-			assert.strictEqual(callArgs.where.parentFolderId, undefined);
+			assert.strictEqual(callArgs.where.parentFolderId, null);
 		});
 	});
 

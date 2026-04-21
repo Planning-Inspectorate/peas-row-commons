@@ -116,7 +116,7 @@ export async function getDuplicateErrorsCreate(
 	const existingFolder = await db.folder.findFirst({
 		where: {
 			caseId: caseId,
-			parentFolderId: parentId,
+			parentFolderId: parentId ?? null,
 			displayName: folderName,
 			deletedAt: null
 		}
