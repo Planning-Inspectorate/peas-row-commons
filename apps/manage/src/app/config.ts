@@ -20,6 +20,9 @@ export interface Config extends BaseConfig {
 		redirectUri: string;
 		signoutUrl: string;
 	};
+	contactEmails: {
+		authorityChangeRequestEmail: string;
+	};
 	entra: {
 		cacheTtl: number;
 		groupIds: {
@@ -78,7 +81,8 @@ export function loadConfig(): Config {
 		BLOB_STORE_DISABLED,
 		BLOB_STORE_HOST,
 		BLOB_STORE_CONTAINER,
-		BLOB_STORE_CONNECTION_STRING
+		BLOB_STORE_CONNECTION_STRING,
+		AUTHORITIES_CHANGE_REQUEST_EMAIL
 	} = process.env;
 
 	const buildConfig = loadBuildConfig();
@@ -160,6 +164,9 @@ export function loadConfig(): Config {
 		},
 		database: {
 			connectionString: SQL_CONNECTION_STRING
+		},
+		contactEmails: {
+			authorityChangeRequestEmail: AUTHORITIES_CHANGE_REQUEST_EMAIL || ''
 		},
 		gitSha: GIT_SHA,
 		// the log level to use

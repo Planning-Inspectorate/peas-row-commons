@@ -1,0 +1,88 @@
+{% extends layoutTemplate %}
+
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block head %}
+    {% if not question.disableAccessibleAutocomplete %}
+        <link rel="stylesheet" href="/assets/css/accessible-autocomplete.min.css"/>
+    {% endif %}
+
+    {{ super() }}
+{% endblock %}
+
+{% block dynQuestionContent %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <form action="" method="POST" novalidate>
+                <input type="hidden" name="_csrf" value="{{_csrf}}">
+
+                {% if question.html %}
+                    {% include question.html ignore missing %}
+                {% endif %}
+
+                {{ govukSelect({
+                    id: question.fieldName,
+                    name: question.fieldName,
+                    label: {
+                        text: question.question,
+                        classes: "govuk-label--l",
+                        isPageHeading: true
+                    },
+                    hint: question.hint and {
+                        text: question.hint
+                    },
+                    errorMessage: errors[question.fieldName] and {
+                        text: errors[question.fieldName].msg
+                    },
+                    items: question.options
+                }) }}
+                <p class="govuk-body">
+                    To add a new authority to the list or to add multiple authorities to your case contact <a class="govuk-link" href="mailto:{{ changeAuthorityEmail }}" target="_blank">{{ changeAuthorityEmail }}</a>
+                </p>
+                {{ govukButton({
+                    text: continueButtonText,
+                    type: "submit",
+                    attributes: { "data-cy":"button-save-and-continue"}
+                }) }}
+
+                {% if extraActionButtons|length %}
+                    {% for extraActionButton in extraActionButtons %}
+                        {{ govukButton({
+                            text: extraActionButton.text,
+                            type: extraActionButton.type,
+                            href: extraActionButton.href,
+                            attributes: {
+                                "formaction": extraActionButton.formaction or "",
+                                "data-cy": "button-" + extraActionButton.text|lower|replace(" ", "-"),
+                                "name": extraActionButton.text|lower|replace(" ", "-")
+                            },
+                            classes: extraActionButton.classes or "govuk-button--secondary"
+                        }) }}
+                    {% endfor %}
+                {% endif %}
+
+            </form>
+        </div>
+    </div>
+    {% if not question.disableAccessibleAutocomplete %}
+        <script src="/assets/js/accessible-autocomplete.min.js"></script>
+        <script {% if cspNonce %}nonce={{ cspNonce }}{% endif %}>
+					if (window.accessibleAutocomplete) {
+						accessibleAutocomplete.enhanceSelectElement({
+							selectElement: document.querySelector('#{{ question.fieldName }}'),
+							onConfirm: () => {
+								let input = document.querySelector('#{{ question.fieldName }}');
+								let select = document.querySelector('#{{ question.fieldName }}-select');
+								let options = Array.from(select.options);
+								if (!input.value || !options.some(option => option.innerText === input.value)) {
+									select.options.selectedIndex = -1;
+								} else {
+									select.options.selectedIndex = options.findIndex(option => option.innerText === input.value);
+								}
+							}
+						})
+					}
+        </script>
+    {% endif %}
+{% endblock %}
