@@ -52,6 +52,7 @@ export function createBaseApp({
 		// Set the express view engine to nunjucks
 		// calls to res.render will use nunjucks
 		nunjucksEnvironment.addGlobal('govukRebrand', true);
+		nunjucksEnvironment.addGlobal('changeAuthorityEmail', process.env.AUTHORITIES_CHANGE_REQUEST_EMAIL);
 		nunjucksEnvironment.express(app);
 		app.set('view engine', 'njk');
 	}

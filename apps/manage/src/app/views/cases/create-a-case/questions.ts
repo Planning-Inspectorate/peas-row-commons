@@ -244,7 +244,8 @@ export function getQuestions(groupMembers: EntraGroupMembers) {
 			hint: 'Enter the Local Planning Authority or Common Registration Authority',
 			fieldName: 'authorityId',
 			url: 'authority',
-			options: lpaOptions
+			options: lpaOptions,
+			viewFolder: 'custom-components/select-authority'
 		},
 		caseOfficer: {
 			type: COMPONENT_TYPES.SELECT,

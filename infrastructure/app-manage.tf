@@ -81,6 +81,10 @@ module "app_manage" {
     BLOB_STORE_DISABLED  = var.apps_config.blob_store.disabled
     BLOB_STORE_HOST      = azurerm_storage_account.documents.primary_blob_endpoint
     BLOB_STORE_CONTAINER = azurerm_storage_container.documents.name
+
+    # email addresses
+    AUTHORITIES_CHANGE_REQUEST_EMAIL = local.key_vault_refs["authorities_change_request_email"]
+
   }
 
   providers = {

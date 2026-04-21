@@ -548,6 +548,7 @@ export const CASE_DETAILS_QUESTIONS = {
 		url: 'authority',
 		options: getAuthorityOptions(),
 		validators: [new RequiredValidator('Select an authority')],
+		viewFolder: 'custom-components/select-authority',
 		viewData: {
 			extraActionButtons: [
 				{
