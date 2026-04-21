@@ -47,7 +47,7 @@ const PDF_TEMPLATES = [
  * Builds the download case controller.
  */
 export function buildDownloadCase(service: ManageService): AsyncRequestHandler {
-	const { db, logger, blobStore, audit, archiverFactory } = service;
+	const { db, logger, blobStore, audit, archiverFactory, chromiumPath } = service;
 	const groupIds = service.entraGroupIds;
 
 	return async (req: Request, res: Response) => {
@@ -72,7 +72,7 @@ export function buildDownloadCase(service: ManageService): AsyncRequestHandler {
 
 		const templateDataMap = mapDataToTemplates(caseData, caseOfficerName, inspectorNames);
 
-		const generatedPdfs = await generateAllPdfs(templateDataMap, id, logger);
+		const generatedPdfs = await generateAllPdfs(templateDataMap, id, logger, chromiumPath);
 
 		const documents = mapDownloadableDocuments(caseData);
 		logger.info({ caseId: id, documentCount: documents.length }, 'Documents mapped for download');
@@ -153,9 +153,10 @@ function mapDataToTemplates(
 async function generateAllPdfs(
 	templateDataMap: Record<string, object>,
 	caseId: string,
-	logger: Logger
+	logger: Logger,
+	chromiumPath: string
 ): Promise<Array<{ fileName: string; buffer: Buffer }>> {
-	const browser = await getOrLaunchBrowser(logger);
+	const browser = await getOrLaunchBrowser(logger, chromiumPath);
 	const generatedPdfs: Array<{ fileName: string; buffer: Buffer }> = [];
 
 	for (const { template, fileName } of PDF_TEMPLATES) {

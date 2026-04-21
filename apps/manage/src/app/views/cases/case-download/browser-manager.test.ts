@@ -43,20 +43,20 @@ describe('browser-manager', () => {
 
 	describe('getOrLaunchBrowser', () => {
 		it('should launch a new browser on first call', async () => {
-			const browser = await getOrLaunchBrowser(mockLogger as any, mockLaunch as any);
+			const browser = await getOrLaunchBrowser(mockLogger as any, undefined, mockLaunch as any);
 			assert.strictEqual(mockLaunch.mock.callCount(), 1);
 			assert.strictEqual(browser, mockBrowser);
 		});
 
 		it('should reuse existing browser on subsequent calls', async () => {
-			const first = await getOrLaunchBrowser(mockLogger as any, mockLaunch as any);
-			const second = await getOrLaunchBrowser(mockLogger as any, mockLaunch as any);
+			const first = await getOrLaunchBrowser(mockLogger as any, undefined, mockLaunch as any);
+			const second = await getOrLaunchBrowser(mockLogger as any, undefined, mockLaunch as any);
 			assert.strictEqual(first, second);
 			assert.strictEqual(mockLaunch.mock.callCount(), 1);
 		});
 
 		it('should launch with headless true and chromium args', async () => {
-			await getOrLaunchBrowser(mockLogger as any, mockLaunch as any);
+			await getOrLaunchBrowser(mockLogger as any, undefined, mockLaunch as any);
 			const args = mockLaunch.mock.calls[0].arguments[0] as unknown as { headless: boolean; args: string[] };
 			assert.strictEqual(args.headless, true);
 			assert.ok(args.args.includes('--no-sandbox'));
@@ -64,19 +64,19 @@ describe('browser-manager', () => {
 		});
 
 		it('should register a disconnected listener', async () => {
-			await getOrLaunchBrowser(mockLogger as any, mockLaunch as any);
+			await getOrLaunchBrowser(mockLogger as any, undefined, mockLaunch as any);
 			assert.strictEqual(mockBrowser.on.mock.callCount(), 1);
 			assert.strictEqual(mockBrowser.on.mock.calls[0].arguments[0], 'disconnected');
 		});
 
 		it('should relaunch after unexpected disconnect', async () => {
-			await getOrLaunchBrowser(mockLogger as any, mockLaunch as any);
+			await getOrLaunchBrowser(mockLogger as any, undefined, mockLaunch as any);
 			mockBrowser._triggerDisconnect();
 
 			const freshBrowser = createMockBrowser();
 			mockLaunch.mock.mockImplementation(async () => freshBrowser);
 
-			const browser = await getOrLaunchBrowser(mockLogger as any, mockLaunch as any);
+			const browser = await getOrLaunchBrowser(mockLogger as any, undefined, mockLaunch as any);
 			assert.strictEqual(mockLaunch.mock.callCount(), 2);
 			assert.strictEqual(browser, freshBrowser);
 		});
@@ -85,7 +85,7 @@ describe('browser-manager', () => {
 			mockLaunch.mock.mockImplementation(async () => {
 				throw new Error('Chromium not found');
 			});
-			await assert.rejects(() => getOrLaunchBrowser(mockLogger as any, mockLaunch as any), {
+			await assert.rejects(() => getOrLaunchBrowser(mockLogger as any, undefined, mockLaunch as any), {
 				message: 'Chromium not found'
 			});
 		});
@@ -98,17 +98,17 @@ describe('browser-manager', () => {
 		});
 
 		it('should close the browser if one is running', async () => {
-			await getOrLaunchBrowser(mockLogger as any, mockLaunch as any);
+			await getOrLaunchBrowser(mockLogger as any, undefined, mockLaunch as any);
 			await closeBrowser(mockLogger as any);
 			assert.strictEqual(mockBrowser.close.mock.callCount(), 1);
 		});
 
 		it('should allow a new browser to launch after closing', async () => {
-			await getOrLaunchBrowser(mockLogger as any, mockLaunch as any);
+			await getOrLaunchBrowser(mockLogger as any, undefined, mockLaunch as any);
 			await closeBrowser(mockLogger as any);
 			const freshBrowser = createMockBrowser();
 			mockLaunch.mock.mockImplementation(async () => freshBrowser);
-			const browser = await getOrLaunchBrowser(mockLogger as any, mockLaunch as any);
+			const browser = await getOrLaunchBrowser(mockLogger as any, undefined, mockLaunch as any);
 			assert.strictEqual(mockLaunch.mock.callCount(), 2);
 			assert.strictEqual(browser, freshBrowser);
 		});
@@ -117,7 +117,7 @@ describe('browser-manager', () => {
 			mockBrowser.close.mock.mockImplementation(async () => {
 				throw new Error('close failed');
 			});
-			await getOrLaunchBrowser(mockLogger as any, mockLaunch as any);
+			await getOrLaunchBrowser(mockLogger as any, undefined, mockLaunch as any);
 			await closeBrowser(mockLogger as any);
 			assert.ok(
 				mockLogger.error.mock.calls.some(
