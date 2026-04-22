@@ -73,6 +73,9 @@ export const ALLOWED_MIME_TYPES = [
 	'application/vnd.oasis.opendocument.text',
 	'application/x-mspublisher',
 	'application/rtf',
+	'application/x-rtf',
+	'text/richtext',
+	'text/rtf',
 	'text/plain'
 ];
 

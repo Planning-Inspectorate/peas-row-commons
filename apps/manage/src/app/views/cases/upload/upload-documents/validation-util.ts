@@ -43,6 +43,12 @@ export async function validateUploadedFile(
 
 	const fileTypeResult = await fileTypeFromBuffer(buffer);
 	if (!fileTypeResult) {
+		// .txt files are special cases that don't have a buffer here.
+		// So if we get this far it has passed validation.
+		if (declaredExt === 'txt' && file.mimetype === 'text/plain') {
+			return [];
+		}
+
 		return [
 			{
 				text: `${originalname}: Could not determine file type from signature`,
