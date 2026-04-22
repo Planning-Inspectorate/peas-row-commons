@@ -1,7 +1,12 @@
 # Stage 1/2 - Builder
 FROM node:22-alpine AS base
 
-#RUN apk update
+RUN apk add --no-cache \
+    chromium \
+    freetype \
+    harfbuzz \
+    ttf-freefont \
+    nss
 
 ARG GIT_SHA
 
