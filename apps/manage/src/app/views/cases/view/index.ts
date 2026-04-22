@@ -46,6 +46,12 @@ export function createRoutes(service: ManageService) {
 	// View case history page, /:id/case-history
 	router.use('/case-history', caseHistoryRoutes);
 
+	// Download case or contact details
+	router.use('/download', validateIdFormat, createDownloadRoutes(service));
+
+	// Load case note routes
+	router.use('/case-notes', caseNoteRoutes);
+
 	// View case
 	router.get('/', validateIdFormat, resetRemovedListItems, getJourney, asyncHandler(viewCaseDetails));
 
@@ -93,12 +99,6 @@ export function createRoutes(service: ManageService) {
 		guardEmptyRemove,
 		asyncHandler(clearAndUpdateCase)
 	);
-
-	// Load case note routes
-	router.use('/case-notes', caseNoteRoutes);
-
-	// Download case or contact details
-	router.use('/download', validateIdFormat, createDownloadRoutes(service));
 
 	return router;
 }
