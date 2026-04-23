@@ -1,3 +1,5 @@
+import { dateISOStringToDisplayDateAndTime } from './dates.ts';
+
 /**
  * Formats an address object into a comma-separated string for audit display.
  */
@@ -13,6 +15,19 @@ export function formatAddress(address: Record<string, unknown> | null | undefine
 	].filter(Boolean);
 
 	return parts.length > 0 ? parts.join(', ') : '-';
+}
+
+/**
+ * Formats a date + time value for audit display.
+ */
+export function formatDateTime(value: Date | string | null | undefined): string {
+	if (!value) return '-';
+
+	const date = value instanceof Date ? value : new Date(value);
+
+	if (isNaN(date.getTime())) return '-';
+
+	return dateISOStringToDisplayDateAndTime(value as Date);
 }
 
 /**
