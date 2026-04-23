@@ -78,3 +78,26 @@ export function formatYesNo(value: string | null | undefined): string {
 	if (!value) return '-';
 	return value.toLowerCase() === 'yes' ? 'Yes' : 'No';
 }
+
+/**
+ * Takes a value and formats it strictly as a GBP monetary unit.
+ * Handles leading zeros, forces 2 decimal places, and adds comma separators.
+ * A lot of this is blocked by validation already, but its worth doing here
+ * as not all of it is blocked
+ * e.g. 1234.5 -> £1,234.50
+ * e.g. "00012.345" -> £12.35
+ */
+export function formatMonetaryValue(value: unknown): string {
+	if (value === null || value === undefined || value === '') return '-';
+
+	const numericValue = Number(value);
+
+	if (Number.isNaN(numericValue)) return '-';
+
+	return new Intl.NumberFormat('en-GB', {
+		style: 'currency',
+		currency: 'GBP',
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2
+	}).format(numericValue);
+}
