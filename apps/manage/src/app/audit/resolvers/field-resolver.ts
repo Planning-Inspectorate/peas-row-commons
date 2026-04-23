@@ -8,7 +8,12 @@ import {
 import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../config.ts';
 import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
 import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
-import { formatAddress, formatDate, formatValue } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import {
+	formatAddress,
+	formatDate,
+	formatMonetaryValue,
+	formatValue
+} from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
 
 interface ResolverContext {
 	userDisplayNameMap?: Map<string, string>;
@@ -190,6 +195,19 @@ const FIELD_RESOLVERS: Record<string, FieldResolver> = {
 			return {
 				oldValue: (oldId && nameMap?.get(oldId)) ?? '-',
 				newValue: (newId && nameMap?.get(newId)) ?? '-'
+			};
+		}
+	},
+
+	/**
+	 * Final cost is a monetary value so needs to be formatted with
+	 * a pound sign (£)
+	 */
+	finalCost: {
+		resolve(previousCase, newAnswer) {
+			return {
+				oldValue: formatMonetaryValue(previousCase.finalCost),
+				newValue: formatMonetaryValue(newAnswer)
 			};
 		}
 	}

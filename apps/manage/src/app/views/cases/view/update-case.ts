@@ -89,7 +89,10 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 						orderBy: {
 							createdDate: 'asc'
 						},
-						include: { ProcedureType: true }
+						include: {
+							Inspector: true,
+							ProcedureType: true
+						}
 					}
 				}
 			});

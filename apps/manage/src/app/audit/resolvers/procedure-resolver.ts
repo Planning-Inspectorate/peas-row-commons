@@ -11,6 +11,7 @@ import {
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
 import { formatAddress, formatDate, formatNumber } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import { dateISOStringToDisplayDateAndTime } from '@pins/peas-row-commons-lib/util/dates.ts';
 
 export type ProcedureWithRelations = Prisma.ProcedureGetPayload<{
 	include: {
@@ -37,7 +38,7 @@ export type ProcedureWithRelations = Prisma.ProcedureGetPayload<{
  * Maps the field key (as it appears in the form data and on the DB model)
  * to the human-readable display name for the audit trail.
  */
-const PROCEDURE_DETAIL_FIELDS: { key: string; displayName: string; type: 'date' | 'number' }[] = [
+const PROCEDURE_DETAIL_FIELDS: { key: string; displayName: string; type: 'date' | 'number' | 'datetime' }[] = [
 	// Common
 	{ key: 'siteVisitDate', displayName: 'site visit date', type: 'date' },
 	{ key: 'caseOfficerVerificationDate', displayName: 'case officer verification date', type: 'date' },
@@ -69,7 +70,7 @@ const PROCEDURE_DETAIL_FIELDS: { key: string; displayName: string; type: 'date' 
 	{ key: 'inquiryReportingTimeDays', displayName: 'inquiry reporting time (days)', type: 'number' },
 
 	// Conference / pre-inquiry
-	{ key: 'conferenceDate', displayName: 'case management conference date', type: 'date' },
+	{ key: 'conferenceDate', displayName: 'case management conference date', type: 'datetime' },
 	{ key: 'conferenceNoteSentDate', displayName: 'case management conference note sent', type: 'date' },
 	{ key: 'preInquiryMeetingDate', displayName: 'pre inquiry meeting date', type: 'date' },
 	{ key: 'preInquiryNoteSentDate', displayName: 'pre inquiry meeting note sent', type: 'date' },
@@ -234,8 +235,12 @@ function checkInspectorChange(
 			procedureName: ctx.procedureName,
 			procedureStatus: ctx.procedureStatus,
 			fieldName: 'inspector',
-			oldValue: oldInspectorId ? (userDisplayNameMap.get(oldInspectorId) ?? oldInspectorId) : '-',
-			newValue: newInspectorId ? (userDisplayNameMap.get(newInspectorId) ?? newInspectorId) : '-'
+			oldValue: oldInspectorId
+				? (userDisplayNameMap.get(oldInspectorId) ?? oldInspectorId)
+				: PROCEDURE_CONSTANTS.NOT_ALLOCATED_DISPLAY,
+			newValue: newInspectorId
+				? (userDisplayNameMap.get(newInspectorId) ?? newInspectorId)
+				: PROCEDURE_CONSTANTS.NOT_ALLOCATED_DISPLAY
 		}
 	};
 }
@@ -260,8 +265,27 @@ function checkDetailFieldChanges(
 		const oldRawVal = oldProc[field.key as keyof typeof oldProc];
 		const newRawVal = newProc[field.key];
 
-		const oldVal = field.type === 'date' ? formatDate(oldRawVal as Date | null) : formatNumber(oldRawVal);
-		const newVal = field.type === 'date' ? formatDate(newRawVal as string | null) : formatNumber(newRawVal);
+		let oldVal;
+		let newVal;
+
+		switch (field.type) {
+			case 'date':
+				oldVal = formatDate(oldRawVal as Date | null);
+				newVal = formatDate(newRawVal as string | null);
+				break;
+			case 'datetime':
+				oldVal = dateISOStringToDisplayDateAndTime(oldRawVal as Date);
+				newVal = dateISOStringToDisplayDateAndTime(newRawVal as Date);
+				break;
+			default:
+				oldVal = formatNumber(oldRawVal);
+				newVal = formatNumber(newRawVal);
+				break;
+		}
+
+		if (field.type === 'datetime') {
+			console.log(oldRawVal, newRawVal, 'quackers');
+		}
 
 		if (oldVal !== newVal) {
 			entries.push({

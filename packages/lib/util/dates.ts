@@ -17,6 +17,10 @@ function formatLondonDate(date: Date, formatPattern: string, fallback = '') {
 	}
 }
 
+export function dateISOStringToDisplayDateAndTime(dateISOString: Date) {
+	return formatLondonDate(dateISOString, 'd MMMM yyyy h:mmaaa');
+}
+
 /**
  * Turns date string into 12 hour display
  */
