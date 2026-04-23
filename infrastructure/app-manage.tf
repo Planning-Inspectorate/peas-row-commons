@@ -83,7 +83,7 @@ module "app_manage" {
     BLOB_STORE_CONTAINER = azurerm_storage_container.documents.name
 
     # email addresses
-    AUTHORITIES_CHANGE_REQUEST_EMAIL = local.key_vault_refs["authorities_change_request_email"]
+    AUTHORITIES_CHANGE_REQUEST_EMAIL = local.key_vault_refs["authorities-change-request-email"]
 
   }
 
