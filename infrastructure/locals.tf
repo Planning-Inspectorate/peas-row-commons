@@ -10,7 +10,8 @@ locals {
   secrets = [
     "peas-client-secret",
     "peas-gov-notify-api-key",
-    "microsoft-provider-authentication-secret"
+    "microsoft-provider-authentication-secret",
+    "authorities-change-request-email"
   ]
 
   key_vault_refs = merge(
