@@ -10,8 +10,12 @@ import {
 	SITE_VISITS
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
-import { formatAddress, formatDate, formatNumber } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
-import { dateISOStringToDisplayDateAndTime } from '@pins/peas-row-commons-lib/util/dates.ts';
+import {
+	formatAddress,
+	formatDate,
+	formatDateTime,
+	formatNumber
+} from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
 
 export type ProcedureWithRelations = Prisma.ProcedureGetPayload<{
 	include: {
@@ -46,7 +50,7 @@ const PROCEDURE_DETAIL_FIELDS: { key: string; displayName: string; type: 'date' 
 	// Hearing
 	{ key: 'hearingTargetDate', displayName: 'target hearing date', type: 'date' },
 	{ key: 'earliestHearingDate', displayName: 'earliest potential hearing date', type: 'date' },
-	{ key: 'confirmedHearingDate', displayName: 'confirmed hearing date', type: 'date' },
+	{ key: 'confirmedHearingDate', displayName: 'confirmed hearing date', type: 'datetime' },
 	{ key: 'hearingClosedDate', displayName: 'date hearing closed', type: 'date' },
 	{ key: 'hearingDateNotificationDate', displayName: 'date parties notified of hearing date', type: 'date' },
 	{ key: 'hearingVenueNotificationDate', displayName: 'date parties notified of hearing venue', type: 'date' },
@@ -72,7 +76,7 @@ const PROCEDURE_DETAIL_FIELDS: { key: string; displayName: string; type: 'date' 
 	// Conference / pre-inquiry
 	{ key: 'conferenceDate', displayName: 'case management conference date', type: 'datetime' },
 	{ key: 'conferenceNoteSentDate', displayName: 'case management conference note sent', type: 'date' },
-	{ key: 'preInquiryMeetingDate', displayName: 'pre inquiry meeting date', type: 'date' },
+	{ key: 'preInquiryMeetingDate', displayName: 'pre inquiry meeting date', type: 'datetime' },
 	{ key: 'preInquiryNoteSentDate', displayName: 'pre inquiry meeting note sent', type: 'date' },
 
 	// Document dates
@@ -274,8 +278,8 @@ function checkDetailFieldChanges(
 				newVal = formatDate(newRawVal as string | null);
 				break;
 			case 'datetime':
-				oldVal = dateISOStringToDisplayDateAndTime(oldRawVal as Date);
-				newVal = dateISOStringToDisplayDateAndTime(newRawVal as Date);
+				oldVal = formatDateTime(oldRawVal as Date | null);
+				newVal = formatDateTime(newRawVal as Date | null);
 				break;
 			default:
 				oldVal = formatNumber(oldRawVal);
