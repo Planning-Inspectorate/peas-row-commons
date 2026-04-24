@@ -1,3 +1,8 @@
+import {
+  id = "https://pins-kv-peas-prod.vault.azure.net/secrets/authorities-change-request-email/fa76e0368c6b464abf95a70753e11ea4"
+  to = azurerm_key_vault_secret.manual_secrets["authorities-change-request-email"]
+}
+
 resource "azurerm_resource_group" "primary" {
   name     = "${local.org}-rg-${local.resource_suffix}"
   location = module.primary_region.location
