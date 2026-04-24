@@ -1,6 +1,5 @@
 import * as CFB from 'cfb';
 import { fileTypeFromBuffer } from 'file-type';
-import { PDFDocument } from 'pdf-lib';
 import type { Logger } from 'pino';
 import { ALLOWED_EXTENSIONS_TEXT } from '../constants.ts';
 import path from 'path';
@@ -200,13 +199,6 @@ async function validateEncryption(
 	const { ext, mime } = fileTypeResult;
 	const errors: ValidationError[] = [];
 
-	// Check PDF Password
-	if (ext === 'pdf' || mime === 'application/pdf') {
-		if (await isPdfPasswordProtected(buffer, logger)) {
-			errors.push({ text: `${originalname}: File must not be password protected`, href: '#upload-form' });
-		}
-	}
-
 	// Check CFB (Office) Password
 	// .cfb covers legacy Office formats like .doc and .xls
 	if ((ext === 'cfb' || mime === 'application/x-cfb') && isDocOrXlsEncrypted(buffer, logger)) {
@@ -214,19 +206,6 @@ async function validateEncryption(
 	}
 
 	return errors;
-}
-
-/**
- * Checks if a PDF is password protected
- */
-async function isPdfPasswordProtected(buffer: Buffer, logger: Logger): Promise<boolean> {
-	try {
-		await PDFDocument.load(buffer);
-		return false;
-	} catch (err) {
-		logger.warn({ err }, `PDF document is password protected`);
-		return true;
-	}
 }
 
 /**
