@@ -95,3 +95,23 @@ resource "azurerm_private_dns_zone_virtual_network_link" "doc_storage" {
 
   provider = azurerm.tooling
 }
+
+resource "azurerm_virtual_network_peering" "peas_to_odw" {
+  count = var.odw_config.enabled_peering ? 1 : 0
+
+  name                      = "${local.org}-peer-${local.service_name}-to-odw-${var.environment}"
+  resource_group_name       = azurerm_resource_group.primary.name
+  virtual_network_name      = azurerm_virtual_network.main.name
+  remote_virtual_network_id = data.azurerm_virtual_network.odw[0].id
+}
+
+resource "azurerm_virtual_network_peering" "odw_to_peas" {
+  count = var.odw_config.enabled_peering ? 1 : 0
+
+  name                      = "${local.org}-peer-odw-to-${local.service_name}-${var.environment}"
+  resource_group_name       = var.odw_config.resource_group_name
+  virtual_network_name      = var.odw_config.vnet_name
+  remote_virtual_network_id = azurerm_virtual_network.main.id
+
+  provider = azurerm.odw_config
+}

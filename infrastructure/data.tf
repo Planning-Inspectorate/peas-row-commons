@@ -54,3 +54,12 @@ data "azurerm_virtual_network" "tooling" {
 
   provider = azurerm.tooling
 }
+
+data "azurerm_virtual_network" "odw" {
+  count = var.odw_config.enabled_peering ? 1 : 0
+
+  name                = var.odw_config.vnet_name
+  resource_group_name = var.odw_config.resource_group_name
+
+  provider = azurerm.odw_config
+}
