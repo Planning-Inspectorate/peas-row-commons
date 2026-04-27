@@ -21,16 +21,36 @@ resource "azurerm_storage_account" "sql_server" {
   https_traffic_only_enabled       = true
   allow_nested_items_to_be_public  = false
   cross_tenant_replication_enabled = false
+  public_network_access_enabled    = false
 
-  # network_rules {
-  #   default_action             = "Deny"
-  #   ip_rules                   = ["127.0.0.1"]
-  #   virtual_network_subnet_ids = [azurerm_subnet.back_office_ingress.id]
-  #   bypass                     = ["AzureServices"]
-  # }
+  network_rules {
+    default_action = "Deny"
+    bypass         = ["AzureServices"]
+  }
 
   identity {
     type = "SystemAssigned"
+  }
+
+  tags = local.tags
+}
+
+resource "azurerm_private_endpoint" "sql_storage" {
+  name                = "${local.org}-pe-st-sql-${local.resource_suffix}"
+  location            = module.primary_region.location
+  resource_group_name = azurerm_resource_group.primary.name
+  subnet_id           = azurerm_subnet.main.id
+
+  private_dns_zone_group {
+    name                 = "${local.org}-pdns-${local.service_name}-storage-${var.environment}"
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.storage.id]
+  }
+
+  private_service_connection {
+    name                           = "${local.org}-psc-storage-${local.resource_suffix}"
+    private_connection_resource_id = azurerm_storage_account.sql_server.id
+    subresource_names              = ["blob"]
+    is_manual_connection           = false
   }
 
   tags = local.tags
@@ -52,12 +72,11 @@ resource "azurerm_role_assignment" "sql_server_storage" {
 
 # auditing policy
 resource "azurerm_mssql_server_extended_auditing_policy" "sql_server" {
-  enabled                    = true
-  storage_endpoint           = azurerm_storage_account.sql_server.primary_blob_endpoint
-  storage_account_access_key = azurerm_storage_account.sql_server.primary_access_key
-  server_id                  = azurerm_mssql_server.primary.id
-  retention_in_days          = var.sql_config.retention.audit_days
-  log_monitoring_enabled     = false
+  enabled                = true
+  storage_endpoint       = azurerm_storage_account.sql_server.primary_blob_endpoint
+  server_id              = azurerm_mssql_server.primary.id
+  retention_in_days      = var.sql_config.retention.audit_days
+  log_monitoring_enabled = false
 
   depends_on = [
     azurerm_role_assignment.sql_server_storage,
@@ -86,7 +105,6 @@ resource "azurerm_mssql_server_vulnerability_assessment" "peas_sql_server" {
   #checkov:skip=CKV2_AZURE_5: false positive?
   server_security_alert_policy_id = azurerm_mssql_server_security_alert_policy.sql_server.id
   storage_container_path          = "${azurerm_storage_account.sql_server.primary_blob_endpoint}${azurerm_storage_container.sql_server.name}/"
-  storage_account_access_key      = azurerm_storage_account.sql_server.primary_access_key
 
   recurring_scans {
     enabled                   = var.alerts_enabled
