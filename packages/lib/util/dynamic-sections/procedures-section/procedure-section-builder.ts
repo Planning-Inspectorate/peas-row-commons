@@ -75,10 +75,14 @@ const PROCEDURE_TYPE_FIELD_MAP: Record<string, string[]> = {
 	],
 
 	/** Admin-only fields */
-	[PROCEDURES_ID.ADMIN_IN_HOUSE]: ['inHouseDate'],
+	[PROCEDURES_ID.ADMIN_IN_HOUSE]: ['caseOfficerVerificationDate', 'inHouseDate'],
 
 	/** Written reps-only fields */
-	[PROCEDURES_ID.WRITTEN_REPS]: ['offerForWrittenRepresentationsDate', 'deadlineForConsentDate'],
+	[PROCEDURES_ID.WRITTEN_REPS]: [
+		'caseOfficerVerificationDate',
+		'offerForWrittenRepresentationsDate',
+		'deadlineForConsentDate'
+	],
 
 	/** Site visit has no extra fields beyond the common ones */
 	[PROCEDURES_ID.SITE_VISIT]: []
