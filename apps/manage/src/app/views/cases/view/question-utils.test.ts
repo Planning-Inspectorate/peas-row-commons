@@ -158,14 +158,14 @@ describe('questions utils', () => {
 			assert.strictEqual(result, 'Secretary of State');
 		});
 
-		it('should return an em-dash "—" for unknown types', () => {
+		it('should return an hyphen-minus "-" for unknown types', () => {
 			process.env.ENVIRONMENT = 'dev'; // Used to get Authorities
 			const row = {};
 			const context = createMockContext();
 
 			const result = handleOriginatorFormattingFn('unknown-type', row, context as any);
 
-			assert.strictEqual(result, '—');
+			assert.strictEqual(result, '-');
 		});
 
 		it('should return just the role if formatting returns empty value', () => {

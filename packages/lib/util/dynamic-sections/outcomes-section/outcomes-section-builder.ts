@@ -120,7 +120,7 @@ export class OutcomeSectionBuilder extends DynamicSectionBuilder {
 				return 'Secretary of State';
 
 			default:
-				return '—';
+				return '-';
 		}
 	}
 }

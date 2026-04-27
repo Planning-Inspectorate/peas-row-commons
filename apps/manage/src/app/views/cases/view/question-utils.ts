@@ -115,7 +115,7 @@ export const handleOriginatorFormattingFn = (
 			return 'Secretary of State';
 
 		default:
-			return '—';
+			return '-';
 	}
 };
 

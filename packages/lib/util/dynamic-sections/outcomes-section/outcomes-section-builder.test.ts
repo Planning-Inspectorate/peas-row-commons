@@ -217,7 +217,7 @@ describe('OutcomeSectionBuilder', () => {
 			assert.deepStrictEqual(summaryOutput, [
 				{
 					key: 'Originator',
-					value: '—'
+					value: '-'
 				}
 			]);
 		});
