@@ -14,6 +14,17 @@ to install all dependencies (the repo is setup with workspaces, this will instal
 
 The applications require configuation to run, and these are set via environment variables. These can be set using run configurations, or using a `.env` file. There is a `.env.example` file to get started with in each app directory.
 
+#### Environment variables
+- `AUTH_GROUP_APPLICATION_ACCESS`:
+    - This is the entra group for just accessing the app
+- `ENTRA_GROUP_ID_ALL_USERS`, `ENTRA_GROUP_ID_CASE_OFFICERS`, `ENTRA_GROUP_ID_INSPECTORS`:
+    - These are the 3 groups for MPESC, for localy development you should use the application access group for all 3 for ease.
+- `SQL_CONNECTION_STRING`
+    - This is the string used for local development to point to the SQL database
+- `BLOB_STORE_CONNECTION_STRING`
+    - This is the generic connection string provided by azure for local blob store development
+- `CHROMIUM_LOCAL_PATH`
+    - This should be a path to your local version of Chrome or Firefox or whatever you use, it is needed for the running of the download case feature.
 
 ### Database Setup
 
