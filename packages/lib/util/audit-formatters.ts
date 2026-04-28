@@ -1,4 +1,5 @@
-import { dateISOStringToDisplayDateAndTime } from './dates.ts';
+import { formatInTimeZone } from 'date-fns-tz';
+import { dateISOStringToDisplayDate, dateISOStringToDisplayDateAndTime } from './dates.ts';
 
 /**
  * Formats an address object into a comma-separated string for audit display.
@@ -26,6 +27,12 @@ export function formatDateTime(value: Date | string | null | undefined): string 
 	const date = value instanceof Date ? value : new Date(value);
 
 	if (isNaN(date.getTime())) return '-';
+
+	// If midnight, do not save time.
+	const timeInUK = formatInTimeZone(date, 'Europe/London', 'HH:mm');
+	if (timeInUK === '00:00') {
+		return dateISOStringToDisplayDate(value as Date);
+	}
 
 	return dateISOStringToDisplayDateAndTime(value as Date);
 }
