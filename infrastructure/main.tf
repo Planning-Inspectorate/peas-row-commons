@@ -36,6 +36,11 @@ resource "azurerm_key_vault" "main" {
 }
 
 # secrets to be manually populated
+# Import existing Key Vault secrets that were created outside of Terraform
+import {
+  to = azurerm_key_vault_secret.manual_secrets["authorities-change-request-email"]
+  id = "https://pins-kv-peas-training.vault.azure.net/secrets/authorities-change-request-email"
+}
 resource "azurerm_key_vault_secret" "manual_secrets" {
   #checkov:skip=CKV_AZURE_41: expiration not valid
   for_each = toset(local.secrets)
