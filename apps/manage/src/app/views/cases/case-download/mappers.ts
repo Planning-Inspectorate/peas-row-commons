@@ -22,6 +22,9 @@ import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed
 import type { CaseDownloadQueryResult } from './query.ts';
 import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
 import { DECISION_MAKER_TYPES } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+import { getUniqueProcedureFields } from '@pins/peas-row-commons-lib/util/dynamic-sections/procedures-section/procedure-section-builder.ts';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
+import { formatAddress, formatDate, formatDateTime } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
 
 /**
  * Maps a Prisma Address record to the simplified PDF address format.
@@ -67,26 +70,165 @@ function mapContact(contact: CaseDownloadQueryResult['Contacts'][number]): PdfCo
 
 /**
  * Maps a Prisma Procedure record to the PDF procedure format.
+ *
+ * Uses the getUniqueProcedureFields function to determine whether
+ * or not to show a procedure field.
  */
 function mapProcedure(
 	procedure: CaseDownloadQueryResult['Procedures'][number],
 	inspectorNames: Map<string, string>
 ): PdfProcedure {
-	const inspectorIdpId = procedure.Inspector?.idpUserId;
-	const inspectorName = inspectorIdpId ? (inspectorNames.get(inspectorIdpId) ?? inspectorIdpId) : 'Not allocated';
+	const MAX_LINE_LENGTH = 100; // Standard max line logic
+	const typeId = procedure.ProcedureType?.id ?? '';
+	const uniqueFields = getUniqueProcedureFields(typeId);
+
+	/**
+	 * Standard logic to ensure strings don't break PDF layout
+	 */
+	const formatString = (val: string | null | undefined): string | null => {
+		if (!val) return null;
+		return val.length > MAX_LINE_LENGTH ? `${val.substring(0, MAX_LINE_LENGTH)}...` : val;
+	};
+
+	/**
+	 * Helper: If field belongs to type, return value/null.
+	 * If not, return undefined (to hide row in Nunjucks).
+	 */
+	const mapField = <T>(fieldName: string, value: T): T | null | undefined => {
+		const isIncluded = uniqueFields.includes(fieldName);
+
+		if (!isIncluded) {
+			return undefined;
+		}
+
+		return value ?? null;
+	};
+
+	// Inspector logic: Hide for Admin In-House
+	let resolvedInspector: string | null | undefined = undefined;
+	if (typeId !== PROCEDURES_ID.ADMIN_IN_HOUSE) {
+		const idpId = procedure.Inspector?.idpUserId;
+		resolvedInspector = idpId ? formatString(inspectorNames.get(idpId) ?? idpId) : 'Not allocated yet';
+	}
 
 	return {
-		type: procedure.ProcedureType?.displayName ?? undefined,
-		status: procedure.ProcedureStatus?.displayName ?? undefined,
-		inspector: inspectorName,
-		siteVisitType: procedure.SiteVisitType?.displayName ?? undefined,
-		adminType: procedure.AdminProcedureType?.displayName ?? undefined,
-		siteVisitDate: procedure.siteVisitDate ?? undefined,
-		hearingFormat: procedure.HearingFormat?.displayName ?? undefined,
-		inquiryFormat: procedure.InquiryFormat?.displayName ?? undefined,
-		conferenceFormat: procedure.ConferenceFormat?.displayName ?? undefined,
-		preInquiryMeetingFormat: procedure.PreInquiryMeetingFormat?.displayName ?? undefined,
-		inquiryOrConference: procedure.InquiryOrConference?.displayName ?? undefined
+		// --- Common Fields ---
+		id: typeId,
+		type: formatString(procedure.ProcedureType?.displayName) ?? '-',
+		status: formatString(procedure.ProcedureStatus?.displayName) ?? '-',
+		inspector: resolvedInspector,
+		adminType: formatString(procedure.AdminProcedureType?.displayName),
+		siteVisitType: formatString(procedure.SiteVisitType?.displayName),
+		siteVisitDate: formatDate(procedure.siteVisitDate),
+
+		// --- Conditional Formats ---
+		hearingFormat: mapField('hearingFormatId', formatString(procedure.HearingFormat?.displayName)),
+		inquiryFormat: mapField('inquiryFormatId', formatString(procedure.InquiryFormat?.displayName)),
+		conferenceFormat: mapField('conferenceFormatId', formatString(procedure.ConferenceFormat?.displayName)),
+		preInquiryMeetingFormat: mapField(
+			'preInquiryMeetingFormatId',
+			formatString(procedure.PreInquiryMeetingFormat?.displayName)
+		),
+		inquiryOrConference: mapField('inquiryOrConferenceId', formatString(procedure.InquiryOrConference?.displayName)),
+
+		// --- Venues ---
+		inquiryVenue: mapField('inquiryVenue', formatAddress(procedure.InquiryVenue)),
+		hearingVenue: mapField('hearingVenue', formatAddress(procedure.HearingVenue)),
+		conferenceVenue: mapField('conferenceVenue', formatAddress(procedure.ConferenceVenue)),
+
+		// --- Conditional Dates ---
+		caseOfficerVerificationDate: mapField(
+			'caseOfficerVerificationDate',
+			formatDate(procedure.caseOfficerVerificationDate)
+		),
+
+		hearingTargetDate: mapField('hearingTargetDate', formatDate(procedure.hearingTargetDate)),
+		earliestHearingDate: mapField('earliestHearingDate', formatDate(procedure.earliestHearingDate)),
+		confirmedHearingDate: mapField('confirmedHearingDate', formatDate(procedure.confirmedHearingDate)),
+		hearingClosedDate: mapField('hearingClosedDate', formatDate(procedure.hearingClosedDate)),
+		hearingDateNotificationDate: mapField(
+			'hearingDateNotificationDate',
+			formatDate(procedure.hearingDateNotificationDate)
+		),
+		hearingVenueNotificationDate: mapField(
+			'hearingVenueNotificationDate',
+			formatDate(procedure.hearingVenueNotificationDate)
+		),
+		partiesNotifiedOfHearingDate: mapField(
+			'partiesNotifiedOfHearingDate',
+			formatDate(procedure.partiesNotifiedOfHearingDate)
+		),
+
+		hearingPreparationTimeDays: mapField(
+			'hearingPreparationTimeDays',
+			procedure.hearingPreparationTimeDays != null ? procedure.hearingPreparationTimeDays.toString() : null
+		),
+		hearingTravelTimeDays: mapField(
+			'hearingTravelTimeDays',
+			procedure.hearingTravelTimeDays != null ? procedure.hearingTravelTimeDays.toString() : null
+		),
+		hearingSittingTimeDays: mapField(
+			'hearingSittingTimeDays',
+			procedure.hearingSittingTimeDays != null ? procedure.hearingSittingTimeDays.toString() : null
+		),
+		hearingReportingTimeDays: mapField(
+			'hearingReportingTimeDays',
+			procedure.hearingReportingTimeDays != null ? procedure.hearingReportingTimeDays.toString() : null
+		),
+
+		inquiryTargetDate: mapField('inquiryTargetDate', formatDate(procedure.inquiryTargetDate)),
+		earliestInquiryDate: mapField('earliestInquiryDate', formatDate(procedure.earliestInquiryDate)),
+		confirmedInquiryDate: mapField('confirmedInquiryDate', formatDate(procedure.confirmedInquiryDate)),
+		inquiryClosedDate: mapField('inquiryClosedDate', formatDate(procedure.inquiryClosedDate)),
+		inquiryDateNotificationDate: mapField(
+			'inquiryDateNotificationDate',
+			formatDate(procedure.inquiryDateNotificationDate)
+		),
+		inquiryVenueNotificationDate: mapField(
+			'inquiryVenueNotificationDate',
+			formatDate(procedure.inquiryVenueNotificationDate)
+		),
+		partiesNotifiedOfInquiryDate: mapField(
+			'partiesNotifiedOfInquiryDate',
+			formatDate(procedure.partiesNotifiedOfInquiryDate)
+		),
+
+		inquiryPreparationTimeDays: mapField(
+			'inquiryPreparationTimeDays',
+			procedure.inquiryPreparationTimeDays != null ? procedure.inquiryPreparationTimeDays.toString() : null
+		),
+		inquiryTravelTimeDays: mapField(
+			'inquiryTravelTimeDays',
+			procedure.inquiryTravelTimeDays != null ? procedure.inquiryTravelTimeDays.toString() : null
+		),
+		inquirySittingTimeDays: mapField(
+			'inquirySittingTimeDays',
+			procedure.inquirySittingTimeDays != null ? procedure.inquirySittingTimeDays.toString() : null
+		),
+		inquiryReportingTimeDays: mapField(
+			'inquiryReportingTimeDays',
+			procedure.inquiryReportingTimeDays != null ? procedure.inquiryReportingTimeDays.toString() : null
+		),
+
+		conferenceDate: mapField('conferenceDate', formatDateTime(procedure.conferenceDate)),
+		conferenceNoteSentDate: mapField('conferenceNoteSentDate', formatDate(procedure.conferenceNoteSentDate)),
+		preInquiryMeetingDate: mapField('preInquiryMeetingDate', formatDateTime(procedure.preInquiryMeetingDate)),
+		preInquiryNoteSentDate: mapField('preInquiryNoteSentDate', formatDate(procedure.preInquiryNoteSentDate)),
+
+		proofsOfEvidenceReceivedDate: mapField(
+			'proofsOfEvidenceReceivedDate',
+			formatDate(procedure.proofsOfEvidenceReceivedDate)
+		),
+		statementsOfCaseReceivedDate: mapField(
+			'statementsOfCaseReceivedDate',
+			formatDate(procedure.statementsOfCaseReceivedDate)
+		),
+		inHouseDate: mapField('inHouseDate', formatDate(procedure.inHouseDate)),
+		offerForWrittenRepresentationsDate: mapField(
+			'offerForWrittenRepresentationsDate',
+			formatDate(procedure.offerForWrittenRepresentationsDate)
+		),
+		deadlineForConsentDate: mapField('deadlineForConsentDate', formatDate(procedure.deadlineForConsentDate))
 	};
 }
 
@@ -117,8 +259,8 @@ function mapOutcome(
 		decisionMakerType: decision.DecisionMakerType?.displayName ?? undefined,
 		decisionMaker,
 		outcome: decision.Outcome?.displayName ?? undefined,
-		outcomeDate: decision.outcomeDate ?? undefined,
-		decisionReceivedDate: decision.decisionReceivedDate ?? undefined
+		outcomeDate: formatDate(decision.outcomeDate),
+		decisionReceivedDate: formatDate(decision.decisionReceivedDate)
 	};
 }
 
@@ -146,7 +288,7 @@ export function mapCaseDetailsData(
 
 		return {
 			name: resolvedName ?? idpUserId ?? 'Unknown',
-			allocatedDate: inspector.inspectorAllocatedDate
+			allocatedDate: formatDate(inspector.inspectorAllocatedDate)
 		};
 	});
 
@@ -156,12 +298,18 @@ export function mapCaseDetailsData(
 		? caseData.Outcome.CaseDecisions.map((d) => mapOutcome(d, inspectorNames))
 		: [];
 
+	const outcomesDecisionType = outcomes
+		.map((o) => o.decisionType)
+		.filter(Boolean)
+		.join(', ');
+
 	const outcomeDates: PdfOutcomeDates | undefined = caseData.Outcome
 		? {
-				partiesNotifiedDate: caseData.Outcome.partiesNotifiedDate ?? undefined,
-				orderDecisionDispatchDate: caseData.Outcome.orderDecisionDispatchDate ?? undefined,
-				sealedOrderReturnedDate: caseData.Outcome.sealedOrderReturnedDate ?? undefined,
-				decisionPublishedDate: caseData.Outcome.decisionPublishedDate ?? undefined
+				decisionType: outcomesDecisionType,
+				partiesNotifiedDate: formatDate(caseData.Outcome.partiesNotifiedDate),
+				orderDecisionDispatchDate: formatDate(caseData.Outcome.orderDecisionDispatchDate),
+				sealedOrderReturnedDate: formatDate(caseData.Outcome.sealedOrderReturnedDate),
+				decisionPublishedDate: formatDate(caseData.Outcome.decisionPublishedDate)
 			}
 		: undefined;
 
@@ -199,22 +347,22 @@ export function mapCaseDetailsData(
 		advertisedModification: caseData.AdvertisedModification?.displayName ?? undefined,
 		abeyance: caseData.Abeyance
 			? {
-					start: caseData.Abeyance.abeyanceStartDate ?? undefined,
-					end: caseData.Abeyance.abeyanceEndDate ?? undefined
+					start: formatDate(caseData.Abeyance.abeyanceStartDate),
+					end: formatDate(caseData.Abeyance.abeyanceEndDate)
 				}
 			: undefined,
 		siteAddress: mapAddress(caseData.SiteAddress),
 		location: caseData.location ?? undefined,
 		applicants,
 		dates: {
-			received: caseData.receivedDate,
-			start: caseData.Dates?.startDate ?? undefined,
-			expectedSubmission: caseData.Dates?.expectedSubmissionDate ?? undefined,
-			expiry: caseData.Dates?.expiryDate ?? undefined,
-			targetDecision: caseData.Dates?.targetDecisionDate ?? undefined,
-			objectionPeriodEnds: caseData.Dates?.objectionPeriodEndsDate ?? undefined,
-			proposedModifications: caseData.Dates?.proposedModificationsDate ?? undefined,
-			partiesDecisionNotificationDeadline: caseData.Dates?.partiesDecisionNotificationDeadlineDate ?? undefined
+			received: formatDate(caseData.receivedDate),
+			start: formatDate(caseData.Dates?.startDate),
+			expectedSubmission: formatDate(caseData.Dates?.expectedSubmissionDate),
+			expiry: formatDate(caseData.Dates?.expiryDate),
+			targetDecision: formatDate(caseData.Dates?.targetDecisionDate),
+			objectionPeriodEnds: formatDate(caseData.Dates?.objectionPeriodEndsDate),
+			proposedModifications: formatDate(caseData.Dates?.proposedModificationsDate),
+			partiesDecisionNotificationDeadline: formatDate(caseData.Dates?.partiesDecisionNotificationDeadlineDate)
 		},
 		caseOfficer: caseOfficerName,
 		inspectors,

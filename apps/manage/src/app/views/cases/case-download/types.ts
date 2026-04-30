@@ -23,17 +23,62 @@ export interface PdfContact {
 
 /** A single procedure record for the case details PDF */
 export interface PdfProcedure {
-	type?: string;
-	status?: string;
-	inspector?: string;
-	siteVisitType?: string;
-	adminType?: string;
-	siteVisitDate?: Date | string;
-	hearingFormat?: string;
-	inquiryFormat?: string;
-	conferenceFormat?: string;
-	preInquiryMeetingFormat?: string;
-	inquiryOrConference?: string;
+	id?: string | null;
+	type?: string | null;
+	status?: string | null;
+	inspector?: string | null;
+	adminType?: string | null;
+	siteVisitType?: string | null;
+	siteVisitDate?: Date | string | null;
+
+	// Formats
+	hearingFormat?: string | null;
+	inquiryFormat?: string | null;
+	conferenceFormat?: string | null;
+	preInquiryMeetingFormat?: string | null;
+	inquiryOrConference?: string | null;
+
+	// Dates
+	caseOfficerVerificationDate?: Date | string | null;
+	hearingTargetDate?: Date | string | null;
+	earliestHearingDate?: Date | string | null;
+	confirmedHearingDate?: Date | string | null;
+	hearingClosedDate?: Date | string | null;
+	hearingDateNotificationDate?: Date | string | null;
+	hearingVenueNotificationDate?: Date | string | null;
+	partiesNotifiedOfHearingDate?: Date | string | null;
+
+	// Decimals/Numbers
+	hearingPreparationTimeDays?: string | null;
+	hearingTravelTimeDays?: string | null;
+	hearingSittingTimeDays?: string | null;
+	hearingReportingTimeDays?: string | null;
+
+	inquiryTargetDate?: Date | string | null;
+	earliestInquiryDate?: Date | string | null;
+	confirmedInquiryDate?: Date | string | null;
+	inquiryClosedDate?: Date | string | null;
+	inquiryDateNotificationDate?: Date | string | null;
+	inquiryVenueNotificationDate?: Date | string | null;
+	partiesNotifiedOfInquiryDate?: Date | string | null;
+	inquiryPreparationTimeDays?: string | null;
+	inquiryTravelTimeDays?: string | null;
+	inquirySittingTimeDays?: string | null;
+	inquiryReportingTimeDays?: string | null;
+	inquiryVenue?: string | null;
+	hearingVenue?: string | null;
+	conferenceVenue?: string | null;
+
+	conferenceDate?: Date | string | null;
+	conferenceNoteSentDate?: Date | string | null;
+	preInquiryMeetingDate?: Date | string | null;
+	preInquiryNoteSentDate?: Date | string | null;
+
+	proofsOfEvidenceReceivedDate?: Date | string | null;
+	statementsOfCaseReceivedDate?: Date | string | null;
+	inHouseDate?: Date | string | null;
+	offerForWrittenRepresentationsDate?: Date | string | null;
+	deadlineForConsentDate?: Date | string | null;
 }
 
 /** A single outcome/decision record for the case details PDF */
@@ -56,6 +101,7 @@ export interface PdfCosts {
 
 /** Outcome-level dates (separate from individual decision dates) */
 export interface PdfOutcomeDates {
+	decisionType?: string;
 	partiesNotifiedDate?: Date | string;
 	orderDecisionDispatchDate?: Date | string;
 	sealedOrderReturnedDate?: Date | string;

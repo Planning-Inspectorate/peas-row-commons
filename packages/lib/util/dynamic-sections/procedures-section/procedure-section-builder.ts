@@ -89,6 +89,13 @@ const PROCEDURE_TYPE_FIELD_MAP: Record<string, string[]> = {
 };
 
 /**
+ * Helper function that returns the list of unique fields for each procedure
+ */
+export function getUniqueProcedureFields(procedureTypeId: string): string[] {
+	return PROCEDURE_TYPE_FIELD_MAP[procedureTypeId] || [];
+}
+
+/**
  * Dynamically generates sections for each Procedure on a case.
  
  * This extends DynamicSectionBuilder to customise how sections are

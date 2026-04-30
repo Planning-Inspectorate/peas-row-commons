@@ -71,7 +71,10 @@ export async function fetchCaseForDownload(db: PrismaClient, caseId: string) {
 					InquiryFormat: true,
 					ConferenceFormat: true,
 					PreInquiryMeetingFormat: true,
-					InquiryOrConference: true
+					InquiryOrConference: true,
+					HearingVenue: true,
+					InquiryVenue: true,
+					ConferenceVenue: true
 				}
 			},
 			Outcome: {
