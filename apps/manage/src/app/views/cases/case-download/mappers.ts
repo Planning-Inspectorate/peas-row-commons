@@ -144,7 +144,7 @@ function mapProcedure(
 
 		hearingTargetDate: mapField('hearingTargetDate', formatDate(procedure.hearingTargetDate)),
 		earliestHearingDate: mapField('earliestHearingDate', formatDate(procedure.earliestHearingDate)),
-		confirmedHearingDate: mapField('confirmedHearingDate', formatDate(procedure.confirmedHearingDate)),
+		confirmedHearingDate: mapField('confirmedHearingDate', formatDateTime(procedure.confirmedHearingDate)),
 		hearingClosedDate: mapField('hearingClosedDate', formatDate(procedure.hearingClosedDate)),
 		hearingDateNotificationDate: mapField(
 			'hearingDateNotificationDate',
