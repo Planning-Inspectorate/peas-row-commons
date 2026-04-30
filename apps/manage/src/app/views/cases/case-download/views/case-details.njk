@@ -62,7 +62,11 @@
             <th>Related case(s)</th>
             <td>
                 {% if relatedCases.length > 0 %}
-                    {% for ref in relatedCases %}{{ ref }}{% if not loop.last %}, {% endif %}{% endfor %}
+                    <ul>
+                        {% for ref in relatedCases %}
+                            <li>{{ ref }}</li>
+                        {% endfor %}
+                    </ul>
                 {% else %}
                     -
                 {% endif %}
@@ -72,7 +76,14 @@
             <th>Linked case(s)</th>
             <td>
                 {% if linkedCases.length > 0 %}
-                    {% for linked in linkedCases %}{{ linked.reference }}{% if linked.isLead %} (Lead){% endif %}{% if not loop.last %}, {% endif %}{% endfor %}
+                    <ul>
+                        {% for linked in linkedCases %}
+                            <li>
+                                {{ linked.reference }}
+                                {% if linked.isLead %} (Lead case){% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
                 {% else %}
                     -
                 {% endif %}
@@ -133,7 +144,7 @@
                         <td>{{ applicant.firstName | fallback('') }} {{ applicant.lastName | fallback('') }}</td>
                     </tr>
                     <tr>
-                        <th>Organisation</th>
+                        <th>Joint applicants/appellants or company name</th>
                         <td>{{ applicant.orgName | fallback('-') }}</td>
                     </tr>
                     <tr>
@@ -166,9 +177,12 @@
         <p>-</p>
     {% endif %}
 
+    <hr class="section-break">
+
     {# Site address — stays under Case details, but Site location and Authority
        are now rendered as their own clearly-labelled rows (not bundled with
        the address block) to mirror the case details page. #}
+    <h3>Site</h3>
     <table class="details-grid">
         <tr>
             <th>Site address</th>

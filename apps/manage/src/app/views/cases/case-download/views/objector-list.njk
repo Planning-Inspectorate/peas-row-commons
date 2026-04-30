@@ -28,28 +28,48 @@
     </table>
 
     {% if objectors.length > 0 %}
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Organisation</th>
-                    <th>Email</th>
-                    <th>Telephone</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for objector in objectors %}
-                <tr class="avoid-break">
-                    <td>{{ objector.firstName | fallback('') }} {{ objector.lastName | fallback('') }}</td>
-                    <td>{{ objector.orgName | fallback('-') }}</td>
-                    <td>{{ objector.email | fallback('-') }}</td>
-                    <td>{{ objector.telephoneNumber | fallback('-') }}</td>
-                    <td>{{ objector.status | fallback('-') }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        {% for objector in objectors %}
+            <hr class="section-break">
+            <div class="avoid-break" style="margin-bottom: 16px;">
+                <h3>Objector {{ loop.index }}</h3>
+                <table class="details-grid">
+                    <tr>
+                        <th>Name</th>
+                        <td>{{ objector.firstName | fallback('') }} {{ objector.lastName | fallback('') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Joint objectors or company name</th>
+                        <td>{{ objector.orgName | fallback('-') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email</th>
+                        <td>{{ objector.email | fallback('-') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Telephone</th>
+                        <td>{{ objector.telephoneNumber | fallback('-') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td>{{ objector.status | fallback('-') }}</td>
+                    </tr>
+                    <tr>
+                        <th>Address</th>
+                        <td class="address-block">
+                            {% if objector.address %}
+                                {% if objector.address.addressLine1 %}{{ objector.address.addressLine1 }}<br>{% endif %}
+                                {% if objector.address.addressLine2 %}{{ objector.address.addressLine2 }}<br>{% endif %}
+                                {% if objector.address.townCity %}{{ objector.address.townCity }}<br>{% endif %}
+                                {% if objector.address.county %}{{ objector.address.county }}<br>{% endif %}
+                                {% if objector.address.postcode %}{{ objector.address.postcode }}{% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        {% endfor %}
     {% else %}
         <p class="empty-state">No objectors recorded for this case.</p>
     {% endif %}
