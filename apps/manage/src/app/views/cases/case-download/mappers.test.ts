@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { mapCaseDetailsData, mapObjectorListData, mapContactListData, mapDownloadableDocuments } from './mappers.ts';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
 
 /** IDs matching the seed data constants */
 const OBJECTOR_TYPE_ID = 'objector';
@@ -98,8 +99,9 @@ describe('mappers', () => {
 			assert.strictEqual(result.authority, 'Test Council');
 			assert.strictEqual(result.priority, 'High');
 			assert.strictEqual(result.advertisedModification, 'Advertised modification 1');
-			assert.deepStrictEqual(result.abeyance?.start, new Date('2025-01-01'));
-			assert.deepStrictEqual(result.abeyance?.end, new Date('2025-02-02'));
+			// Dates are now formatted to UK display strings by formatDate
+			assert.strictEqual(result.abeyance?.start, '1 January 2025');
+			assert.strictEqual(result.abeyance?.end, '2 February 2025');
 		});
 
 		it('should map site address', () => {
@@ -150,14 +152,15 @@ describe('mappers', () => {
 
 			const result = mapCaseDetailsData(caseData as any, undefined, new Map());
 
-			assert.deepStrictEqual(result.dates.received, new Date('2025-03-14'));
-			assert.deepStrictEqual(result.dates.start, new Date('2025-01-01'));
-			assert.deepStrictEqual(result.dates.expectedSubmission, new Date('2025-02-01'));
-			assert.deepStrictEqual(result.dates.expiry, new Date('2025-03-01'));
-			assert.deepStrictEqual(result.dates.targetDecision, new Date('2025-04-01'));
-			assert.deepStrictEqual(result.dates.objectionPeriodEnds, new Date('2025-05-01'));
-			assert.deepStrictEqual(result.dates.proposedModifications, new Date('2025-06-01'));
-			assert.deepStrictEqual(result.dates.partiesDecisionNotificationDeadline, new Date('2025-07-01'));
+			// Dates are now formatted to UK display strings by formatDate
+			assert.strictEqual(result.dates.received, '14 March 2025');
+			assert.strictEqual(result.dates.start, '1 January 2025');
+			assert.strictEqual(result.dates.expectedSubmission, '1 February 2025');
+			assert.strictEqual(result.dates.expiry, '1 March 2025');
+			assert.strictEqual(result.dates.targetDecision, '1 April 2025');
+			assert.strictEqual(result.dates.objectionPeriodEnds, '1 May 2025');
+			assert.strictEqual(result.dates.proposedModifications, '1 June 2025');
+			assert.strictEqual(result.dates.partiesDecisionNotificationDeadline, '1 July 2025');
 		});
 
 		it('should map case officer name from parameter', () => {
@@ -252,7 +255,11 @@ describe('mappers', () => {
 			const caseData = createBaseCaseData({
 				Procedures: [
 					{
-						ProcedureType: { displayName: 'Hearing' },
+						// ProcedureType.id is required so getUniqueProcedureFields
+						// can return the correct fields for this procedure type;
+						// without it the conditional fields (e.g. hearingFormat)
+						// are stripped to undefined.
+						ProcedureType: { id: PROCEDURES_ID.HEARING, displayName: 'Hearing' },
 						ProcedureStatus: { displayName: 'Active' },
 						Inspector: { idpUserId: 'entra-1' },
 						SiteVisitType: null,
@@ -262,7 +269,10 @@ describe('mappers', () => {
 						InquiryFormat: null,
 						ConferenceFormat: null,
 						PreInquiryMeetingFormat: null,
-						InquiryOrConference: null
+						InquiryOrConference: null,
+						HearingVenue: null,
+						InquiryVenue: null,
+						ConferenceVenue: null
 					}
 				]
 			});
@@ -277,11 +287,13 @@ describe('mappers', () => {
 			assert.strictEqual(result.procedures[0].hearingFormat, 'Virtual');
 		});
 
-		it('should show Not allocated for procedures with no inspector', () => {
+		it('should show Not allocated yet for procedures with no inspector', () => {
 			const caseData = createBaseCaseData({
 				Procedures: [
 					{
-						ProcedureType: { displayName: 'Admin' },
+						// Use a non-admin procedure type so the inspector field
+						// is rendered (admin in-house hides the inspector).
+						ProcedureType: { id: PROCEDURES_ID.HEARING, displayName: 'Hearing' },
 						ProcedureStatus: { displayName: 'Active' },
 						Inspector: null,
 						SiteVisitType: null,
@@ -291,14 +303,47 @@ describe('mappers', () => {
 						InquiryFormat: null,
 						ConferenceFormat: null,
 						PreInquiryMeetingFormat: null,
-						InquiryOrConference: null
+						InquiryOrConference: null,
+						HearingVenue: null,
+						InquiryVenue: null,
+						ConferenceVenue: null
 					}
 				]
 			});
 
 			const result = mapCaseDetailsData(caseData as any, undefined, new Map());
 
-			assert.strictEqual(result.procedures[0].inspector, 'Not allocated');
+			// Mapper now uses the website's wording: "Not allocated yet"
+			assert.strictEqual(result.procedures[0].inspector, 'Not allocated yet');
+			assert.strictEqual(result.procedures[0].adminType, 'Case officer');
+		});
+
+		it('should hide inspector field for Admin In House procedures', () => {
+			const caseData = createBaseCaseData({
+				Procedures: [
+					{
+						ProcedureType: { id: PROCEDURES_ID.ADMIN_IN_HOUSE, displayName: 'Admin (In house)' },
+						ProcedureStatus: { displayName: 'Active' },
+						Inspector: null,
+						SiteVisitType: null,
+						AdminProcedureType: { displayName: 'Case officer' },
+						siteVisitDate: null,
+						HearingFormat: null,
+						InquiryFormat: null,
+						ConferenceFormat: null,
+						PreInquiryMeetingFormat: null,
+						InquiryOrConference: null,
+						HearingVenue: null,
+						InquiryVenue: null,
+						ConferenceVenue: null
+					}
+				]
+			});
+
+			const result = mapCaseDetailsData(caseData as any, undefined, new Map());
+
+			// Admin in-house has no inspector row at all
+			assert.strictEqual(result.procedures[0].inspector, undefined);
 			assert.strictEqual(result.procedures[0].adminType, 'Case officer');
 		});
 
@@ -330,10 +375,8 @@ describe('mappers', () => {
 			assert.strictEqual(result.outcomes[0].decisionType, 'Interim');
 			assert.strictEqual(result.outcomes[0].decisionMaker, 'Decision Inspector');
 			assert.strictEqual(result.outcomes[0].outcome, 'Allow');
-			assert.strictEqual(
-				(result.outcomeDates?.partiesNotifiedDate as Date)?.toISOString(),
-				new Date('2025-06-01').toISOString()
-			);
+			// outcome-level dates are now formatted to UK display strings
+			assert.strictEqual(result.outcomeDates?.partiesNotifiedDate, '1 June 2025');
 		});
 
 		it('should resolve Secretary of State as decision maker', () => {
