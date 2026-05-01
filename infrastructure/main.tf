@@ -24,12 +24,12 @@ resource "azurerm_key_vault" "main" {
   soft_delete_retention_days    = 7
   purge_protection_enabled      = true
   rbac_authorization_enabled    = true
-  public_network_access_enabled = false
+  public_network_access_enabled = true
   sku_name                      = "standard"
 
   network_acls {
     bypass         = "AzureServices"
-    default_action = "Deny"
+    default_action = "Allow"
   }
 
   tags = local.tags
