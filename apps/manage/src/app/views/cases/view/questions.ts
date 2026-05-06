@@ -38,7 +38,8 @@ export function getQuestions(
 	const generatedProcedureQuestions = createProcedureDetailQuestions(
 		PROCEDURE_QUESTIONS,
 		groupMembers,
-		answers.inspectorDetails as Record<string, unknown>[]
+		answers.inspectorDetails as Record<string, unknown>[],
+		allUsers
 	);
 
 	const questions = {

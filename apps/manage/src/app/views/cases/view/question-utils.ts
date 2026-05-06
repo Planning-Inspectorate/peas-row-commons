@@ -1386,7 +1386,7 @@ export const PROCEDURE_QUESTIONS = {
 		options: SITE_VISITS.map((status) => ({ text: status.displayName, value: status.id }))
 	},
 	procedureInspector: {
-		type: COMPONENT_TYPES.RADIO,
+		type: CUSTOM_COMPONENTS.LEGACY_RADIO,
 		title: 'Inspector',
 		hint: 'If no inspectors are available, add them on the inspector page.',
 		question: 'Who is the inspector?',
@@ -1924,12 +1924,13 @@ export const PROCEDURE_QUESTIONS = {
 export function createProcedureDetailQuestions(
 	procedureQuestions: typeof PROCEDURE_QUESTIONS,
 	groupMembers: { caseOfficers: CaseOfficer[] },
-	inspectors: Record<string, unknown>[]
+	inspectors: Record<string, unknown>[],
+	allUsers: Prisma.UserGetPayload<{ select: { id: true; idpUserId: true; legacyId: true } }>[]
 ) {
 	const inspectorIds = inspectors?.map((inspector) => inspector.inspectorId);
 	const relevantInspectors = [...groupMembers.caseOfficers].filter((member) => inspectorIds.includes(member.id));
 	const inspectorOptions: RadioOption[] = relevantInspectors.map(referenceDataToRadioOptions);
-
+	const legacyOptions = allUsers.map((user) => ({ text: user.idpUserId, value: user.idpUserId }));
 	/**
 	 * Add "Not allocated yet" as a fallback option, separated by a divider.
 	 */
@@ -1946,7 +1947,8 @@ export function createProcedureDetailQuestions(
 		...procedureQuestions,
 		procedureInspector: {
 			...procedureQuestions.procedureInspector,
-			options: inspectorOptions
+			options: inspectorOptions,
+			legacyOptions
 		}
 	};
 }
