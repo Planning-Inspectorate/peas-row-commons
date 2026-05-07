@@ -8,62 +8,70 @@ import type { Journeys } from '../types/journeys.ts';
  *
  * The `name` field uses ">" to reflect the UI selection flow.
  */
-export const rightsOfWayJourneys: Journeys[] = [
+export const rightsOfWayJourneys = [
 	{
 		name: 'Rights of Way > Coastal Access > Coastal access appeal',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'coastalAccess',
 		coastalAccessSubtype: 'coastalAccessAppeal',
-		referencePrefix: 'MCA/CAA/'
+		referencePrefix: 'MCA/CAA/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Coastal Access > Notice appeal',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'coastalAccess',
 		coastalAccessSubtype: 'noticeAppeal',
-		referencePrefix: 'MCA/NOT/'
+		referencePrefix: 'MCA/NOT/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Coastal Access > Objection',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'coastalAccess',
 		coastalAccessSubtype: 'objection',
-		referencePrefix: 'MCA/OBJ/'
+		referencePrefix: 'MCA/OBJ/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Coastal Access > Restriction appeal (access land)',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'coastalAccess',
 		coastalAccessSubtype: 'restrictionAppeal',
-		referencePrefix: 'MCA/RES/'
+		referencePrefix: 'MCA/RES/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Common Land > Commons for Ecclesiastical Purposes',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'ecclesiastical',
-		referencePrefix: 'COM/ECC/'
+		referencePrefix: 'COM/ECC/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Common Land > Commons in Greater London',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'greaterLondon',
-		referencePrefix: 'COM/LDN/'
+		referencePrefix: 'COM/LDN/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Common Land > Compulsory Purchase of Common Land',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'compulsoryPurchase',
-		referencePrefix: 'COM/PCL/'
+		referencePrefix: 'COM/PCL/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Common Land > Deregistration & Exchange',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'deregistrationExchange',
-		referencePrefix: 'COM/DRE/'
+		referencePrefix: 'COM/DRE/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Common Land > Inclosure',
@@ -77,7 +85,8 @@ export const rightsOfWayJourneys: Journeys[] = [
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'inclosureObsolescent',
-		referencePrefix: 'COM/OBS/'
+		referencePrefix: 'COM/OBS/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Common Land > Land Exchange',
@@ -98,14 +107,16 @@ export const rightsOfWayJourneys: Journeys[] = [
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'publicAccessLimitations',
-		referencePrefix: 'COM/PAC/'
+		referencePrefix: 'COM/PAC/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Common Land > Referred applications from Commons Registration Authorities',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'referredApplications',
-		referencePrefix: 'COM/REF/'
+		referencePrefix: 'COM/REF/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Common Land > Scheme of Management',
@@ -119,14 +130,16 @@ export const rightsOfWayJourneys: Journeys[] = [
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'stintRates',
-		referencePrefix: 'COM/STI/'
+		referencePrefix: 'COM/STI/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Common Land > Works on Common Land',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'worksCommonLand',
-		referencePrefix: 'COM/WCL/'
+		referencePrefix: 'COM/WCL/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Common Land > Works on Common Land (National Trust)',
@@ -147,55 +160,63 @@ export const rightsOfWayJourneys: Journeys[] = [
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'dispensationTcpa90',
-		referencePrefix: 'ROW/SNT/'
+		referencePrefix: 'ROW/SNT/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Rights of Way > Dispensation for Serving Notice WCA81',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'dispensationWca81',
-		referencePrefix: 'ROW/SNW/'
+		referencePrefix: 'ROW/SNW/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Rights of Way > Opposed Definitive Map Modification Order (DMMO)',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'opposedDmmo',
-		referencePrefix: 'ROW/DMM/'
+		referencePrefix: 'ROW/DMM/',
+		tags: ['smoke', 'regression']
 	},
 	{
 		name: 'Rights of Way > Rights of Way > Opposed Public Path Order (PPO) HA80',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'opposedPpoHa80',
-		referencePrefix: 'ROW/PPH/'
+		referencePrefix: 'ROW/PPH/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Rights of Way > Opposed Public Path Order (PPO) TCPA90',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'opposedPpoTcpa90',
-		referencePrefix: 'ROW/PPT/'
+		referencePrefix: 'ROW/PPT/',
+		tags: ['smoke', 'regression']
 	},
 	{
 		name: 'Rights of Way > Rights of Way > Schedule 14 Appeal',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'schedule14Appeal',
-		referencePrefix: 'ROW/S14A/'
+		referencePrefix: 'ROW/S14A/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Rights of Way > Schedule 14 Direction',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'schedule14Direction',
-		referencePrefix: 'ROW/S14D/'
+		referencePrefix: 'ROW/S14D/',
+		tags: ['smoke', 'regression']
 	},
 	{
 		name: 'Rights of Way > Rights of Way > Schedule 13A Appeal',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'schedule13aAppeal',
-		referencePrefix: 'ROW/S13A/'
+		referencePrefix: 'ROW/S13A/',
+		tags: ['regression']
 	}
-];
+] as const satisfies readonly Journeys[];

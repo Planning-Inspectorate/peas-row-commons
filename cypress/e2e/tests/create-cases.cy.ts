@@ -23,7 +23,7 @@ import RightsOfWaySubtypePage from 'cypress/page-objects/sub-types/rights-of-way
 
 import ApplicantOrAppellantPage from 'cypress/page-objects/applicant-or-appellant.page.ts';
 import ContactDetailsPage from 'cypress/page-objects/contact-details.page.ts';
-import WhoIsNameCompanyPage from 'cypress/page-objects/who-is-name-company.page.ts';
+import WhoAppellantObjectorPage from 'cypress/page-objects/who-appellant-objector.page.ts';
 import CaseNamePage from 'cypress/page-objects/case-name.page.ts';
 import SiteAddressPage from 'cypress/page-objects/site-address.page.ts';
 import SiteLocationPage from 'cypress/page-objects/site-location.page.ts';
@@ -33,15 +33,56 @@ import CheckAnswersPage from 'cypress/page-objects/check-answers.page.ts';
 import CaseCreatedPage from 'cypress/page-objects/case-created.page.ts';
 import CaseDetailsPage from 'cypress/page-objects/case-details.page.ts';
 
-import type { Journeys } from '../../types/journeys.ts';
+import type { Journeys, JourneyTag } from '../../types/journeys.ts';
 import { planningJourneys } from 'cypress/fixtures/planning-case-journeys.ts';
 import { rightsOfWayJourneys } from 'cypress/fixtures/right-of-way-case-journeys.ts';
+
+type JourneyName = (typeof planningJourneys)[number]['name'] | (typeof rightsOfWayJourneys)[number]['name'];
 
 /**
  * Combined journey fixture used to run the same case creation flow
  * across all supported Planning and Rights of Way journey types.
  */
 const allJourneys: Journeys[] = [...planningJourneys, ...rightsOfWayJourneys];
+
+/**
+ * Leave RUN_JOURNEYS and RUN_TAGS empty to run every test normally.
+ *
+ * Run 1 test:
+ * - Add the exact journey name to RUN_JOURNEYS. Typing '' will provide a list of tests.
+ * - Leave RUN_TAGS empty.
+ *
+ * Run multiple tests:
+ * - Add multiple journey names to RUN_JOURNEYS.
+ * - Leave RUN_TAGS empty.
+ *
+ * Run smoke tests:
+ * - Leave RUN_JOURNEYS empty.
+ * - Add 'smoke' to RUN_TAGS.
+ *
+ * Run regression tests:
+ * - Leave RUN_JOURNEYS empty.
+ * - Add 'regression' to RUN_TAGS.
+ */
+const RUN_JOURNEYS: JourneyName[] = [
+	// 'Planning > Drought > Drought Permits',
+	// 'Planning > Purchase Notices'
+];
+
+const RUN_TAGS: JourneyTag[] = [
+	// 'smoke',
+	// 'regression'
+];
+
+function shouldRunJourney(journey: Journeys): boolean {
+	const matchesJourneyName = RUN_JOURNEYS.length === 0 || RUN_JOURNEYS.includes(journey.name as JourneyName);
+
+	const matchesTag = RUN_TAGS.length === 0 || Boolean(journey.tags?.some((tag) => RUN_TAGS.includes(tag)));
+
+	return matchesJourneyName && matchesTag;
+}
+
+const journeysToRun: Journeys[] = allJourneys.filter(shouldRunJourney);
 
 describe('Planning Inspectorate > Case creation', () => {
 	beforeEach(() => {
@@ -54,7 +95,7 @@ describe('Planning Inspectorate > Case creation', () => {
 	 * Generates one end-to-end case creation test per supported journey.
 	 * Shared steps stay the same; subtype-specific steps are delegated to runJourney().
 	 */
-	allJourneys.forEach((journey: Journeys) => {
+	journeysToRun.forEach((journey: Journeys) => {
 		it(`Create Case: ${journey.name}`, () => {
 			const answers: CaseAnswers = createAnswers();
 
@@ -83,7 +124,7 @@ describe('Planning Inspectorate > Case creation', () => {
 			answers.externalReference = ExternalReferencePage.enterExternalReference(journey);
 			CommonActionsUtility.clickActionButton('continue');
 
-			// Case recieved date
+			// Case received date
 			CaseReceivedDatePage.isPageDisplayed();
 			DateUtility.enterDate();
 			CommonActionsUtility.clickActionButton('continue');
@@ -91,12 +132,15 @@ describe('Planning Inspectorate > Case creation', () => {
 			// Applicant or Appellant
 			ApplicantOrAppellantPage.isPageDisplayed('createCase', 'noDetails');
 			CommonActionsUtility.clickActionButton('addDetails');
-			WhoIsNameCompanyPage.isPageDisplayed('applicantAppellant');
-			const applicant = WhoIsNameCompanyPage.enterFirstLastAndCompany();
+
+			WhoAppellantObjectorPage.isPageDisplayed('applicantAppellant');
+			const applicant = WhoAppellantObjectorPage.enterFirstLastAndCompany();
 			CommonActionsUtility.clickActionButton('continue');
+
 			AddressPage.isPageDisplayed('applicantAppellant');
 			const applicantAddress = AddressUtility.enterAddress();
 			CommonActionsUtility.clickActionButton('continue');
+
 			ContactDetailsPage.isPageDisplayed('applicantAppellant');
 			const applicantContact = ContactDetailsPage.enterContactDetails();
 			CommonActionsUtility.clickActionButton('continue');
@@ -109,7 +153,7 @@ describe('Planning Inspectorate > Case creation', () => {
 
 			ApplicantOrAppellantPage.isPageDisplayed('createCase', 'withDetails');
 
-			// Site Address
+			// Site address
 			SiteAddressPage.isPageDisplayed();
 			answers.siteAddress = AddressUtility.enterAddress();
 			CommonActionsUtility.clickActionButton('continue');
@@ -159,6 +203,7 @@ type JourneyHandler = (j: Journeys) => void;
 const handlers: Partial<Record<Journeys['caseType'], JourneyHandler>> = {
 	drought: (j) => {
 		if (!('droughtSubtype' in j) || !j.droughtSubtype) throw new Error('droughtSubtype missing');
+
 		DroughtSubtypePage.isPageDisplayed();
 		DroughtSubtypePage.selectDroughtSubtype(j.droughtSubtype);
 		CommonActionsUtility.clickActionButton('continue');
@@ -166,15 +211,14 @@ const handlers: Partial<Record<Journeys['caseType'], JourneyHandler>> = {
 
 	housingAndPlanningCPOs: (j) => {
 		if (!('cpoSubtype' in j) || !j.cpoSubtype) throw new Error('cpoSubtype missing');
+
 		CpoSubtypePage.isPageDisplayed();
 		CpoSubtypePage.selectCpoSubtype(j.cpoSubtype);
 		CommonActionsUtility.clickActionButton('continue');
 	},
 
 	otherSosCasework: (j) => {
-		if (!('sosSubtype' in j) || !j.sosSubtype) {
-			throw new Error('sosSubtype missing');
-		}
+		if (!('sosSubtype' in j) || !j.sosSubtype) throw new Error('sosSubtype missing');
 
 		SosSubtypePage.isPageDisplayed();
 		SosSubtypePage.selectOtherSosSubtype(j.sosSubtype);
@@ -186,15 +230,23 @@ const handlers: Partial<Record<Journeys['caseType'], JourneyHandler>> = {
 		CommonActionsUtility.clickActionButton('continue');
 	},
 
+	purchaseNotices: () => {
+		// No subtype page for this case type.
+	},
+
 	wayleaves: (j) => {
 		if (!('wayleavesSubtype' in j) || !j.wayleavesSubtype) throw new Error('wayleavesSubtype missing');
+
 		WayleavesSubtypePage.isPageDisplayed();
 		WayleavesSubtypePage.selectWayleavesSubtype(j.wayleavesSubtype);
 		CommonActionsUtility.clickActionButton('continue');
 	},
 
 	coastalAccess: (j) => {
-		if (!('coastalAccessSubtype' in j) || !j.coastalAccessSubtype) throw new Error('coastalAccessSubtype missing');
+		if (!('coastalAccessSubtype' in j) || !j.coastalAccessSubtype) {
+			throw new Error('coastalAccessSubtype missing');
+		}
+
 		CoastalAccessSubtypePage.isPageDisplayed();
 		CoastalAccessSubtypePage.selectCoastalAccessSubtype(j.coastalAccessSubtype);
 		CommonActionsUtility.clickActionButton('continue');
@@ -202,6 +254,7 @@ const handlers: Partial<Record<Journeys['caseType'], JourneyHandler>> = {
 
 	commonLand: (j) => {
 		if (!('commonLandSubtype' in j) || !j.commonLandSubtype) throw new Error('commonLandSubtype missing');
+
 		CommonLandSubtypePage.isPageDisplayed();
 		CommonLandSubtypePage.selectCommonLandSubtype(j.commonLandSubtype);
 		CommonActionsUtility.clickActionButton('continue');
@@ -209,6 +262,7 @@ const handlers: Partial<Record<Journeys['caseType'], JourneyHandler>> = {
 
 	rightsOfWay: (j) => {
 		if (!('rightsOfWaySubtype' in j) || !j.rightsOfWaySubtype) throw new Error('rightsOfWaySubtype missing');
+
 		RightsOfWaySubtypePage.isPageDisplayed();
 		RightsOfWaySubtypePage.selectRightsOfWaySubtype(j.rightsOfWaySubtype);
 		CommonActionsUtility.clickActionButton('continue');
@@ -220,6 +274,10 @@ const handlers: Partial<Record<Journeys['caseType'], JourneyHandler>> = {
  */
 function runJourney(journey: Journeys) {
 	const handler = handlers[journey.caseType];
-	if (!handler) throw new Error(`No handler registered for caseType: ${journey.caseType}`);
+
+	if (!handler) {
+		throw new Error(`No handler registered for caseType: ${journey.caseType}`);
+	}
+
 	handler(journey);
 }

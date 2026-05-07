@@ -1,4 +1,4 @@
-class WhoIsNameCompanyPage {
+class WhoAppellantObjectorPage {
 	/**
 	 * Verifies the name details page for either the applicant/appellant
 	 * or objector flow, including page-specific title, hint text and field ids.
@@ -223,4 +223,4 @@ class WhoIsNameCompanyPage {
 	}
 }
 
-export default new WhoIsNameCompanyPage();
+export default new WhoAppellantObjectorPage();

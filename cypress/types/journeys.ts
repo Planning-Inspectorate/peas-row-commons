@@ -1,62 +1,41 @@
 import type { WorkArea, CaseType } from './work-area-case-types.ts';
 import type { Drought, CPOs, SoS, Wayleaves, CoastalAccess, CommonLand, RightOfWay } from './journey-subtypes.ts';
 
+export type JourneyTag = 'smoke' | 'regression';
+
+type BaseJourney = {
+	name: string;
+	caseworkArea: WorkArea;
+	caseType: CaseType;
+	referencePrefix: string;
+	tags?: JourneyTag[];
+};
+
 export type Journeys =
-	| {
-			name: string;
-			caseworkArea: WorkArea;
-			caseType: CaseType;
+	| (BaseJourney & {
 			droughtSubtype: Drought;
-			referencePrefix: string;
-	  }
-	| {
-			name: string;
-			caseworkArea: WorkArea;
-			caseType: CaseType;
+	  })
+	| (BaseJourney & {
 			cpoSubtype: CPOs;
-			referencePrefix: string;
-	  }
-	| {
-			name: string;
-			caseworkArea: WorkArea;
-			caseType: CaseType;
+	  })
+	| (BaseJourney & {
 			sosSubtype: SoS;
-			referencePrefix: string;
-	  }
-	| {
-			name: string;
-			caseworkArea: WorkArea;
-			caseType: CaseType;
-			referencePrefix: string;
-	  }
-	| {
-			name: string;
-			caseworkArea: WorkArea;
-			caseType: CaseType;
+	  })
+	| BaseJourney
+	| (BaseJourney & {
 			wayleavesSubtype: Wayleaves;
-			referencePrefix: string;
-	  }
-	| {
-			name: string;
-			caseworkArea: WorkArea;
-			caseType: CaseType;
+	  })
+	| (BaseJourney & {
 			coastalAccessSubtype: CoastalAccess;
-			referencePrefix: string;
-	  }
-	| {
-			name: string;
-			caseworkArea: WorkArea;
-			caseType: CaseType;
+	  })
+	| (BaseJourney & {
 			commonLandSubtype: CommonLand;
-			referencePrefix: string;
-	  }
-	| {
-			name: string;
-			caseworkArea: WorkArea;
-			caseType: CaseType;
+	  })
+	| (BaseJourney & {
 			rightsOfWaySubtype: RightOfWay;
-			referencePrefix: string;
-	  };
+	  });
+
+export type JourneyName = Journeys['name'];
 
 export type JourneyAnswers = Partial<{
 	caseworkAreaLabel: string;
