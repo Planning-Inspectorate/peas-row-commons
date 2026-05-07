@@ -21,7 +21,7 @@ import RightsOfWaySubtypePage from 'cypress/page-objects/sub-types/rights-of-way
 
 import ApplicantOrAppellantPage from 'cypress/page-objects/applicant-or-appellant.page.ts';
 import ContactDetailsPage from 'cypress/page-objects/contact-details.page.ts';
-import WhoIsNameCompanyPage from 'cypress/page-objects/who-is-name-company.page.ts';
+import WhoAppellantObjectorPage from 'cypress/page-objects/who-appellant-objector.page.ts';
 import CaseNamePage from 'cypress/page-objects/case-name.page.ts';
 import SiteAddressPage from 'cypress/page-objects/site-address.page.ts';
 import SiteLocationPage from 'cypress/page-objects/site-location.page.ts';
@@ -38,8 +38,10 @@ import { generateRandomString } from 'cypress/page-utilities/generate.utility.ts
 
 const allJourneys: Journeys[] = [...planningJourneys, ...rightsOfWayJourneys];
 
+const regressionJourneys: Journeys[] = allJourneys.filter((journey) => journey.tags?.includes('regression'));
+
 describe('Planning Inspectorate > Case creation validation', () => {
-	const journey = Cypress._.sample(allJourneys)!;
+	const journey = Cypress._.sample(regressionJourneys)!;
 
 	beforeEach(() => {
 		cy.authVisit('');
@@ -79,7 +81,7 @@ describe('Planning Inspectorate > Case creation validation', () => {
 		ExternalReferencePage.isPageDisplayed();
 		CommonActionsUtility.clickActionButton('continue');
 
-		// Case recieved date
+		// Case received date
 		CaseReceivedDatePage.isPageDisplayed();
 		CommonActionsUtility.clickActionButton('continue');
 		CaseReceivedDatePage.verifyErrorBanner();
@@ -89,45 +91,47 @@ describe('Planning Inspectorate > Case creation validation', () => {
 		// Applicant or Appellant
 		ApplicantOrAppellantPage.isPageDisplayed('createCase', 'noDetails');
 		CommonActionsUtility.clickActionButton('addDetails');
-		WhoIsNameCompanyPage.isPageDisplayed('applicantAppellant');
+		WhoAppellantObjectorPage.isPageDisplayed('applicantAppellant');
 		CommonActionsUtility.clickActionButton('continue');
-		WhoIsNameCompanyPage.verifyErrorBanner();
+		WhoAppellantObjectorPage.verifyErrorBanner();
 
-		// This is each of the three error scenarios in Who is the applicant or appellant?
 		const applicantErrorScenarios = [
 			{
 				name: 'firstNameTooLong',
-				action: () => WhoIsNameCompanyPage.enterFirstName(generateRandomString(260)),
-				reset: () => WhoIsNameCompanyPage.enterFirstName('')
+				action: () => WhoAppellantObjectorPage.enterFirstName(generateRandomString(260)),
+				reset: () => WhoAppellantObjectorPage.enterFirstName('')
 			},
 			{
 				name: 'lastNameTooLong',
-				action: () => WhoIsNameCompanyPage.enterLastName(generateRandomString(260)),
-				reset: () => WhoIsNameCompanyPage.enterLastName('')
+				action: () => WhoAppellantObjectorPage.enterLastName(generateRandomString(260)),
+				reset: () => WhoAppellantObjectorPage.enterLastName('')
 			},
 			{
 				name: 'orgNameTooLong',
-				action: () => WhoIsNameCompanyPage.enterCompanyName(generateRandomString(260)),
-				reset: () => WhoIsNameCompanyPage.enterCompanyName('')
+				action: () => WhoAppellantObjectorPage.enterCompanyName(generateRandomString(260)),
+				reset: () => WhoAppellantObjectorPage.enterCompanyName('')
 			}
 		] as const;
 
-		// This will randomly pick one of the scenarios each time the test is run.
 		const scenario = Cypress._.sample(applicantErrorScenarios)!;
 		cy.log(`Testing error scenario: ${scenario.name}`);
+
 		scenario.action();
 		CommonActionsUtility.clickActionButton('continue');
-		WhoIsNameCompanyPage.verifyErrorBanner(scenario.name);
+		WhoAppellantObjectorPage.verifyErrorBanner(scenario.name);
 		scenario.reset();
 
-		WhoIsNameCompanyPage.enterFirstLastAndCompany();
+		WhoAppellantObjectorPage.enterFirstLastAndCompany();
 		CommonActionsUtility.clickActionButton('continue');
+
 		AddressPage.isPageDisplayed('applicantAppellant');
 		AddressUtility.enterAddress();
 		CommonActionsUtility.clickActionButton('continue');
+
 		ContactDetailsPage.isPageDisplayed('applicantAppellant');
 		ContactDetailsPage.enterContactDetails();
 		CommonActionsUtility.clickActionButton('continue');
+
 		ApplicantOrAppellantPage.isPageDisplayed('createCase', 'withDetails');
 
 		// Site Address - Optional no error
@@ -206,6 +210,10 @@ function runJourneyWithErrors(journey: Journeys) {
 			}
 
 			CommonActionsUtility.clickActionButton('continue');
+			break;
+
+		case 'purchaseNotices':
+			// No subtype page for this case type.
 			break;
 
 		case 'wayleaves':

@@ -25,7 +25,12 @@
     "lint": "npx eslint .",
     "prepare": "node .husky/install.mjs",
     "test": "node --test",
-    "test-coverage": "node --test --experimental-test-coverage"
+    "test-coverage": "node --test --experimental-test-coverage",
+    "cypress": "node cypress/scripts/cypress-runner.ts",
+    "cypress:open": "cypress open",
+    "cypress:create-cases": "cypress run --spec \"cypress/e2e/create-cases.cy.ts\"",
+    "cypress:test-suite": "cypress run --spec \"cypress/e2e/**/*.cy.ts,!cypress/e2e/create-cases.cy.ts\"",
+    "cypress:full": "npm run cypress:create-cases && npm run cypress:test-suite"
   },
   "dependencies": {
     "@azure/functions": "^4.12.0",
@@ -69,6 +74,7 @@
     "@types/multer": "^2.1.0",
     "@types/node": "^25.6.0",
     "@types/nunjucks": "^3.2.6",
+    "@types/prompts": "^2.4.9",
     "cookie-parser": "^1.4.7",
     "cypress": "^15.12.0",
     "eslint": "^9.39.2",
@@ -80,7 +86,9 @@
     "prettier": "^3.8.3",
     "prettier-plugin-prisma": "^5.0.0",
     "prisma": "^7.7.0",
+    "prompts": "^2.4.2",
     "sass": "^1.93.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.59.0"
   },
