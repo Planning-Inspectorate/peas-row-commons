@@ -1,11 +1,13 @@
 import { URL } from 'node:url';
 import { Client } from '@microsoft/microsoft-graph-client';
+import { isValidUuidFormat } from '../util/uuid.ts';
+import type { UserDetails } from './cached-entra-client.ts';
 const PER_PAGE = 500; // max 999 per page
 const MAX_PAGES = 10; // max 5000 entries
 
 // odata reference properties and values
 export const ODATA = Object.freeze({
-	NEXT_LINK: '@odate.nextLink',
+	NEXT_LINK: '@odata.nextLink',
 	TYPE: '@odata.type',
 	GROUP_TYPE: '#microsoft.graph.group',
 	USER_TYPE: '#microsoft.graph.user'
@@ -41,6 +43,43 @@ export class EntraClient {
 			listMembers.skipToken(token);
 		}
 		return members;
+	}
+
+	/**
+	 * Batch query graph for entra ids
+	 */
+	async listUsersByIds(ids: string[]): Promise<UserDetails[]> {
+		// Batching graph query to get user details for a list of IDs.
+
+		const uniqueIds = [...new Set(ids.filter(isValidUuidFormat))];
+		// Cannot batch more than 20: https://learn.microsoft.com/en-gb/graph/json-batching
+		if (uniqueIds.length === 0) return [];
+
+		const chunks: string[][] = [];
+		for (let i = 0; i < uniqueIds.length; i += 20) {
+			chunks.push(uniqueIds.slice(i, i + 20));
+		}
+
+		const users: Array<{ id: string; displayName: string }> = [];
+
+		for (const chunk of chunks) {
+			const requests = chunk.map((userId, index) => ({
+				id: String(index + 1),
+				method: 'GET',
+				url: `/users/${encodeURIComponent(userId)}?$select=id,displayName`
+			}));
+
+			const response = await this.#client.api('/$batch').post({ requests });
+			for (const item of response.responses ?? []) {
+				if (item.status === 200 && item.body?.id) {
+					// Users fetched are not part of the Entra groups (otherwise they would have been fetched in listAllGroupMembers),
+					// so we can assume they are inactive users. Appending (Inactive) to their display name to indicate this in the UI.
+					const inactiveUserDisplayName = `${item.body.displayName || item.body.id} (Inactive)`;
+					users.push({ id: item.body.id, displayName: inactiveUserDisplayName });
+				}
+			}
+		}
+		return users;
 	}
 
 	/**

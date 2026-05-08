@@ -7,7 +7,7 @@ import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
 import { NOTE_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/note-type.ts';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import { mapNotes } from '../view/view-model.ts';
-import { getEntraGroupMembers } from '#util/entra-groups.ts';
+import { buildUserDisplayNameMap, getEntraGroupMembers } from '#util/entra-groups.ts';
 
 export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler {
 	const { db, logger, audit } = service;
@@ -135,7 +135,17 @@ export function buildViewCaseNotes(service: ManageService): AsyncRequestHandler 
 			groupIds
 		});
 
-		const notes = mapNotes(caseRow.Notes, groupMembers, caseRow.id);
+		const userIds = caseRow.Notes.map((caseNote) => caseNote.Author.idpUserId).filter(
+			(id): id is string => id !== null && id !== undefined
+		);
+
+		const userMap = await buildUserDisplayNameMap(groupMembers, userIds, {
+			logger,
+			initClient: getEntraClient,
+			session: req.session
+		});
+
+		const notes = mapNotes(caseRow.Notes, userMap, caseRow.id);
 
 		return res.render('views/cases/case-notes/view.njk', {
 			pageHeading: 'Case notes',

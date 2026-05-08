@@ -25,6 +25,7 @@ import { DECISION_MAKER_TYPES } from '@pins/peas-row-commons-database/src/seed/s
 import { getUniqueProcedureFields } from '@pins/peas-row-commons-lib/util/dynamic-sections/procedures-section/procedure-section-builder.ts';
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
 import { formatAddress, formatDate, formatDateTime } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import { getUserDisplayName } from '#util/entra-groups.ts';
 
 /**
  * Maps a Prisma Address record to the simplified PDF address format.
@@ -283,11 +284,10 @@ export function mapCaseDetailsData(
 		.map(mapContact);
 
 	const inspectors = (caseData.Inspectors ?? []).map((inspector) => {
-		const idpUserId = inspector.Inspector?.idpUserId;
-		const resolvedName = idpUserId ? inspectorNames.get(idpUserId) : undefined;
+		const resolvedName = getUserDisplayName(inspectorNames, inspector.Inspector?.idpUserId);
 
 		return {
-			name: resolvedName ?? idpUserId ?? 'Unknown',
+			name: resolvedName,
 			allocatedDate: formatDate(inspector.inspectorAllocatedDate)
 		};
 	});

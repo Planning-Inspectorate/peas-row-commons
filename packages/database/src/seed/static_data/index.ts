@@ -20,3 +20,4 @@ export { DECISION_MAKER_TYPES } from './decision-maker-types.ts';
 export { NOTE_TYPES } from './note-type.ts';
 export { ACTS } from './acts.ts';
 export { SECTIONS } from './sections.ts';
+export { UNKNOWN_USER } from './users.ts';

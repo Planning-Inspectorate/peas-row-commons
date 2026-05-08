@@ -19,16 +19,12 @@ import {
 } from './question-utils.ts';
 
 import { CUSTOM_COMPONENT_CLASSES } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
-import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
+import type { UserMap } from './types.ts';
 
-export function getQuestions(
-	groupMembers: EntraGroupMembers,
-	allUsers: Prisma.UserGetPayload<{ select: { id: true; idpUserId: true; legacyId: true } }>[],
-	answers: Record<string, unknown>
-) {
+export function getQuestions(groupMembers: EntraGroupMembers, answers: Record<string, unknown>, userMap: UserMap) {
 	// We must generate team questions due to the varying nature of groupMembers
-	const generatedTeamQuestions = createTeamQuestions(TEAM_QUESTIONS, groupMembers, allUsers);
+	const generatedTeamQuestions = createTeamQuestions(TEAM_QUESTIONS, groupMembers, userMap);
 	const generateOutcomeQuestions = createOutcomeQuestions(
 		OUTCOME_QUESTIONS,
 		groupMembers,

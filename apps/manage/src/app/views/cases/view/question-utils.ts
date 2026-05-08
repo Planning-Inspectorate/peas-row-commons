@@ -29,7 +29,7 @@ import {
 	DECISION_MAKER_TYPES
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
-import type { CaseOfficer } from './types.ts';
+import type { CaseOfficer, UserMap } from './types.ts';
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/outcome.ts';
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
@@ -840,7 +840,7 @@ export const TEAM_QUESTIONS = {
 export function createTeamQuestions(
 	teamQuestions: typeof TEAM_QUESTIONS,
 	groupMembers: EntraGroupMembers,
-	allUsers: Prisma.UserGetPayload<{ select: { id: true; idpUserId: true; legacyId: true } }>[]
+	userMap: UserMap
 ) {
 	const caseOfficers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
 	caseOfficers.unshift({ text: '', value: '' });
@@ -848,17 +848,27 @@ export function createTeamQuestions(
 	const inspectors = groupMembers.inspectors.map(referenceDataToRadioOptions);
 	inspectors.unshift({ text: '', value: '' });
 
+	const legacyOptions = [
+		{ text: '', value: '' },
+		...[...userMap.entries()]
+			.sort((a, b) => a[1].localeCompare(b[1]))
+			.map(([idpUserId, displayName]) => ({
+				text: displayName || idpUserId,
+				value: idpUserId
+			}))
+	];
+
 	return {
 		...teamQuestions,
 		caseOfficer: {
 			...teamQuestions.caseOfficer,
 			options: caseOfficers,
-			legacyOptions: allUsers.map((user) => ({ text: user.idpUserId, value: user.idpUserId }))
+			legacyOptions
 		},
 		inspector: {
 			...teamQuestions.inspector,
 			options: inspectors,
-			legacyOptions: allUsers.map((user) => ({ text: user.idpUserId, value: user.idpUserId }))
+			legacyOptions
 		}
 	};
 }
