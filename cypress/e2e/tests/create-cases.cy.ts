@@ -46,33 +46,58 @@ type JourneyName = (typeof planningJourneys)[number]['name'] | (typeof rightsOfW
 const allJourneys: Journeys[] = [...planningJourneys, ...rightsOfWayJourneys];
 
 /**
- * Leave RUN_JOURNEYS and RUN_TAGS empty to run every test normally.
+ * Local development filters for quickly rerunning specific journeys/tags.
  *
- * Run 1 test:
- * - Add the exact journey name to RUN_JOURNEYS. Typing '' will provide a list of tests.
- * - Leave RUN_TAGS empty.
+ * Leave both arrays empty to run the full suite.
  *
- * Run multiple tests:
- * - Add multiple journey names to RUN_JOURNEYS.
- * - Leave RUN_TAGS empty.
+ * Examples:
  *
- * Run smoke tests:
- * - Leave RUN_JOURNEYS empty.
- * - Add 'smoke' to RUN_TAGS.
+ * Run one journey:
+ * - Add a single journey name to LOCAL_RUN_JOURNEYS.
  *
- * Run regression tests:
- * - Leave RUN_JOURNEYS empty.
- * - Add 'regression' to RUN_TAGS.
+ * Run multiple journeys:
+ * - Add multiple journey names to LOCAL_RUN_JOURNEYS.
+ *
+ * Run smoke journeys:
+ * - Leave LOCAL_RUN_JOURNEYS empty.
+ * - Add 'smoke' to LOCAL_RUN_TAGS.
+ *
+ * Run regression journeys:
+ * - Leave LOCAL_RUN_JOURNEYS empty.
+ * - Add 'regression' to LOCAL_RUN_TAGS.
+ *
+ * Notes:
+ * - Typing '' in LOCAL_RUN_JOURNEYS provides autocomplete.
+ * - These filters are intended for local interactive 'Open' mode use only.
+ * - e.g. npx cypress open
+ * - Cypress run/CI execution will fail if these arrays are populated.
+ * - Environment variables override local filters:
+ *   --env journeyNames=...
+ *   --env journeyTags=...
  */
-const RUN_JOURNEYS: JourneyName[] = [
-	// 'Planning > Drought > Drought Permits',
-	// 'Planning > Purchase Notices'
-];
+const RUN_JOURNEYS: JourneyName[] = Cypress.env('journeyNames')
+	? [Cypress.env('journeyNames') as JourneyName]
+	: [
+			// 'Planning > Drought > Drought Permits',
+			// 'Planning > Purchase Notices'
+		];
 
-const RUN_TAGS: JourneyTag[] = [
-	// 'smoke',
-	// 'regression'
-];
+const RUN_TAGS: JourneyTag[] = Cypress.env('journeyTags')
+	? [Cypress.env('journeyTags') as JourneyTag]
+	: [
+			// 'smoke',
+			// 'regression'
+		];
+
+/**
+ * Prevent accidental commits of local filters.
+ * Allows local filtering in Cypress open mode only.
+ */
+const isRunMode = Cypress.config('isInteractive') === false;
+
+if (isRunMode && (RUN_JOURNEYS.length > 0 || RUN_TAGS.length > 0)) {
+	throw new Error('RUN_JOURNEYS or RUN_TAGS contains values. Clear local filters before running in CI/cypress run.');
+}
 
 function shouldRunJourney(journey: Journeys): boolean {
 	const matchesJourneyName = RUN_JOURNEYS.length === 0 || RUN_JOURNEYS.includes(journey.name as JourneyName);
@@ -202,7 +227,9 @@ type JourneyHandler = (j: Journeys) => void;
  */
 const handlers: Partial<Record<Journeys['caseType'], JourneyHandler>> = {
 	drought: (j) => {
-		if (!('droughtSubtype' in j) || !j.droughtSubtype) throw new Error('droughtSubtype missing');
+		if (!('droughtSubtype' in j) || !j.droughtSubtype) {
+			throw new Error('droughtSubtype missing');
+		}
 
 		DroughtSubtypePage.isPageDisplayed();
 		DroughtSubtypePage.selectDroughtSubtype(j.droughtSubtype);
@@ -210,7 +237,9 @@ const handlers: Partial<Record<Journeys['caseType'], JourneyHandler>> = {
 	},
 
 	housingAndPlanningCPOs: (j) => {
-		if (!('cpoSubtype' in j) || !j.cpoSubtype) throw new Error('cpoSubtype missing');
+		if (!('cpoSubtype' in j) || !j.cpoSubtype) {
+			throw new Error('cpoSubtype missing');
+		}
 
 		CpoSubtypePage.isPageDisplayed();
 		CpoSubtypePage.selectCpoSubtype(j.cpoSubtype);
@@ -218,7 +247,9 @@ const handlers: Partial<Record<Journeys['caseType'], JourneyHandler>> = {
 	},
 
 	otherSosCasework: (j) => {
-		if (!('sosSubtype' in j) || !j.sosSubtype) throw new Error('sosSubtype missing');
+		if (!('sosSubtype' in j) || !j.sosSubtype) {
+			throw new Error('sosSubtype missing');
+		}
 
 		SosSubtypePage.isPageDisplayed();
 		SosSubtypePage.selectOtherSosSubtype(j.sosSubtype);
@@ -235,7 +266,9 @@ const handlers: Partial<Record<Journeys['caseType'], JourneyHandler>> = {
 	},
 
 	wayleaves: (j) => {
-		if (!('wayleavesSubtype' in j) || !j.wayleavesSubtype) throw new Error('wayleavesSubtype missing');
+		if (!('wayleavesSubtype' in j) || !j.wayleavesSubtype) {
+			throw new Error('wayleavesSubtype missing');
+		}
 
 		WayleavesSubtypePage.isPageDisplayed();
 		WayleavesSubtypePage.selectWayleavesSubtype(j.wayleavesSubtype);
@@ -253,7 +286,9 @@ const handlers: Partial<Record<Journeys['caseType'], JourneyHandler>> = {
 	},
 
 	commonLand: (j) => {
-		if (!('commonLandSubtype' in j) || !j.commonLandSubtype) throw new Error('commonLandSubtype missing');
+		if (!('commonLandSubtype' in j) || !j.commonLandSubtype) {
+			throw new Error('commonLandSubtype missing');
+		}
 
 		CommonLandSubtypePage.isPageDisplayed();
 		CommonLandSubtypePage.selectCommonLandSubtype(j.commonLandSubtype);
@@ -261,7 +296,9 @@ const handlers: Partial<Record<Journeys['caseType'], JourneyHandler>> = {
 	},
 
 	rightsOfWay: (j) => {
-		if (!('rightsOfWaySubtype' in j) || !j.rightsOfWaySubtype) throw new Error('rightsOfWaySubtype missing');
+		if (!('rightsOfWaySubtype' in j) || !j.rightsOfWaySubtype) {
+			throw new Error('rightsOfWaySubtype missing');
+		}
 
 		RightsOfWaySubtypePage.isPageDisplayed();
 		RightsOfWaySubtypePage.selectRightsOfWaySubtype(j.rightsOfWaySubtype);
