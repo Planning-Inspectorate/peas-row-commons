@@ -158,12 +158,37 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
         action  = "AnomalyScoring"
         rule_id = "942390"
       }
+
       rule {
         # SQL Injection Attack: SQL Operator Detected
-        action  = "Log"
+        action  = "AnomalyScoring"
         enabled = true
         rule_id = "942120"
+
+        exclusion {
+          # 942120 false positive observed as:
+          # QueryParamValue:clientdata = "e|||microsoftonline.com|none"
+          match_variable = "QueryStringArgNames"
+          operator       = "Equals"
+          selector       = "clientdata"
+        }
       }
+
+      rule {
+        # SQL Injection Attack: Detects MySQL comments, conditions and ch(a)r injections
+        action  = "AnomalyScoring"
+        rule_id = "942300"
+        enabled = true
+
+        exclusion {
+          # 942300 false positive observed as:
+          # PostParamValue:name = "Appeal(s) ..."
+          match_variable = "RequestBodyPostArgNames"
+          operator       = "Equals"
+          selector       = "name"
+        }
+      }
+
       exclusion {
         match_variable = "RequestBodyPostArgNames"
         operator       = "Equals"
