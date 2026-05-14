@@ -1,7 +1,7 @@
 import { generateEmail, generatePhoneNumber } from 'cypress/page-utilities/generate.utility.ts';
 
 class ContactDetailsPage {
-	isPageDisplayed(type: 'applicantAppellant' | 'objector'): void {
+	isPageDisplayed(type: 'applicantAppellant' | 'objector', fullValidation = true): void {
 		const config = {
 			applicantAppellant: {
 				pageName: 'Applicant or appellant contact details',
@@ -20,15 +20,16 @@ class ContactDetailsPage {
 		} as const;
 
 		const { pageName, title, urlPart, emailId, phoneId } = config[type];
-
 		cy.verifyPageLoaded(pageName);
 		cy.verifyPageTitle(title);
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL(urlPart);
 
 		cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible').and('have.attr', 'href');
 
 		cy.get(`#${emailId}`).should('exist').and('be.visible').and('have.attr', 'name', emailId);
-
 		cy.get(`#${phoneId}`).should('exist').and('be.visible').and('have.attr', 'name', phoneId);
 
 		cy.get('[data-cy="button-save-and-continue"]')

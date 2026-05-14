@@ -3,7 +3,7 @@ class WhoAppellantObjectorPage {
 	 * Verifies the name details page for either the applicant/appellant
 	 * or objector flow, including page-specific title, hint text and field ids.
 	 */
-	isPageDisplayed(type: 'applicantAppellant' | 'objector'): void {
+	isPageDisplayed(type: 'applicantAppellant' | 'objector', fullValidation = true): void {
 		const config = {
 			applicantAppellant: {
 				pageName: 'Applicant or appellant details',
@@ -25,6 +25,9 @@ class WhoAppellantObjectorPage {
 
 		cy.verifyPageLoaded(page.pageName);
 		cy.verifyPageTitle(page.title);
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL(page.urlPart);
 
 		cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible');

@@ -1,7 +1,10 @@
 class CaseOfficerPage {
-	isPageDisplayed(): void {
+	isPageDisplayed(fullValidation = true): void {
 		cy.verifyPageLoaded('Who is the assigned case officer?');
 		cy.verifyPageTitle('Who is the assigned case officer?');
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL('/cases/create-a-case/questions/case-officer');
 
 		cy.get('input[role="combobox"][aria-controls="caseOfficerId__listbox"]')

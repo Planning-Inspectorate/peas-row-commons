@@ -26,11 +26,10 @@
     "prepare": "node .husky/install.mjs",
     "test": "node --test",
     "test-coverage": "node --test --experimental-test-coverage",
-    "cypress": "node cypress/scripts/cypress-runner.ts",
+    "cypress": "tsx cypress/scripts/cypress-runner.ts",
     "cypress:open": "cypress open",
-    "cypress:create-cases": "cypress run --spec \"cypress/e2e/create-cases.cy.ts\"",
-    "cypress:test-suite": "cypress run --spec \"cypress/e2e/**/*.cy.ts,!cypress/e2e/create-cases.cy.ts\"",
-    "cypress:full": "npm run cypress:create-cases && npm run cypress:test-suite"
+    "cypress:smoke": "cypress run --env journeyTags=smoke",
+    "cypress:regression": "cypress run --env journeyTags=regression"
   },
   "dependencies": {
     "@azure/functions": "^4.14.0",
@@ -68,6 +67,7 @@
     "@commitlint/config-conventional": "^20.5.0",
     "@faker-js/faker": "^10.3.0",
     "@microsoft/microsoft-graph-types": "^2.43.1",
+    "@types/adm-zip": "^0.5.8",
     "@types/archiver": "^7.0.0",
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.19.0",
@@ -75,6 +75,7 @@
     "@types/node": "^25.6.0",
     "@types/nunjucks": "^3.2.6",
     "@types/prompts": "^2.4.9",
+    "adm-zip": "^0.5.17",
     "cookie-parser": "^1.4.7",
     "cypress": "^15.12.0",
     "eslint": "^9.39.2",

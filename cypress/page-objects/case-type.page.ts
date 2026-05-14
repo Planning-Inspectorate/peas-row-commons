@@ -1,9 +1,12 @@
 import type { CaseType } from '../types/work-area-case-types.ts';
 
 class CaseTypePage {
-	isPageDisplayed(): void {
+	isPageDisplayed(fullValidation = true): void {
 		cy.verifyPageLoaded('Which case type is it?');
 		cy.verifyPageTitle('Which case type is it?');
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL('/cases/create-a-case/questions/peas-type-of-case');
 
 		const planningOptions = [

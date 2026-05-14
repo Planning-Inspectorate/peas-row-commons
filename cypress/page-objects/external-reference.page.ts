@@ -2,9 +2,12 @@ import type { Journeys } from '../types/journeys.ts';
 import { buildNameWithRandomSuffix } from '../page-utilities/generate.utility.ts';
 
 class ExternalReferencePage {
-	isPageDisplayed(): void {
+	isPageDisplayed(fullValidation = true): void {
 		cy.verifyPageLoaded('External reference');
 		cy.verifyPageTitle('What is the external reference? (optional)');
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL('/cases/create-a-case/questions/external-reference');
 
 		cy.get('#externalReference').should('exist').and('be.visible');

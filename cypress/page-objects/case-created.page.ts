@@ -3,10 +3,13 @@ import HeaderUtility from 'cypress/page-utilities/header.utility.ts';
 import FooterUtility from 'cypress/page-utilities/footer.utility.ts';
 
 class CaseCreatedPage {
-	isPageDisplayed(journey: Journeys): void {
+	isPageDisplayed(journey: Journeys, fullValidation = true): void {
 		HeaderUtility.isHeaderDisplayed();
 		cy.verifyPageLoaded('New case has been created');
 		cy.verifyPageTitle('New case has been created');
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL('/success');
 
 		cy.contains('.govuk-panel__body', 'The case reference number').should('exist').and('be.visible');

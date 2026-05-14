@@ -4,26 +4,84 @@ import FooterUtility from 'cypress/page-utilities/footer.utility.ts';
 class CaseDetailsPage {
 	visitPage() {}
 
-	isPageDisplayed() {
+	isPageDisplayed(fullValidation = true, caseName?: string): void {
 		HeaderUtility.isHeaderDisplayed();
 		cy.verifyPageLoaded('Case Details');
-		cy.verifyPageURL('/cases/');
-		cy.verifyPageTitle('Case list');
+		if (caseName) {
+			cy.verifyPageTitle(caseName);
 
+			cy.get('h1.govuk-heading-l').should('exist').and('be.visible').and('contain.text', caseName);
+		}
+		if (!fullValidation) {
+			return;
+		}
+		cy.verifyPageURL('/cases/');
 		FooterUtility.isFooterDisplayed();
 	}
 
 	/**
-	 * Clicks the Manage case files action and checks
-	 * the link targets the current case folders route.
+	 * Verifies the displayed case reference matches
+	 * the created case reference stored in answers.
 	 */
-	clickManageCaseFiles(): void {
-		cy.contains('a.govuk-button--secondary', 'Manage case files')
+	validateCaseReference(caseReference: string): void {
+		cy.get('h2.govuk-hint')
 			.should('exist')
 			.and('be.visible')
-			.and('have.attr', 'href')
-			.and('match', /\/cases\/[0-9a-f-]+\/case-folders$/)
-			.click();
+			.invoke('text')
+			.then((text) => {
+				expect(text.trim()).to.equal(caseReference);
+			});
+	}
+
+	/**
+	 * Clicks one of the case action buttons and verifies
+	 * the target route matches the expected case URL pattern.
+	 */
+	clickCaseAction(action: 'manageCaseFiles' | 'downloadCase' | 'downloadContacts'): void {
+		const actionMap: Record<
+			typeof action,
+			{
+				text: string;
+				hrefPattern: RegExp;
+				selector?: string;
+			}
+		> = {
+			manageCaseFiles: {
+				text: 'Manage case files',
+				hrefPattern: /\/cases\/[0-9a-f-]+\/case-folders$/
+			},
+
+			downloadCase: {
+				text: 'Download this case',
+				selector: '[data-cy="download-case-button"]',
+				hrefPattern: /\/cases\/[0-9a-f-]+\/download$/
+			},
+
+			downloadContacts: {
+				text: 'Download all contacts',
+				selector: '[data-cy="download-contacts-button"]',
+				hrefPattern: /\/cases\/[0-9a-f-]+\/download\/contacts$/
+			}
+		};
+
+		const { text, hrefPattern, selector } = actionMap[action];
+		const button = selector ? cy.get(selector) : cy.contains('a.govuk-button--secondary', text);
+
+		button.should('exist').and('be.visible').and('have.attr', 'href').and('match', hrefPattern).click();
+	}
+
+	/**
+	 * Captures and returns the current case URL.
+	 */
+	getCaseURL(): Cypress.Chainable<string> {
+		return cy.url().then((url) => {
+			const parsed = new URL(url);
+			const cleanPath = parsed.pathname;
+
+			cy.log(`Captured case URL: ${cleanPath}`);
+
+			return cleanPath;
+		});
 	}
 
 	/**

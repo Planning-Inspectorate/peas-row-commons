@@ -1,7 +1,10 @@
 class CaseReceivedDatePage {
-	isPageDisplayed(): void {
+	isPageDisplayed(fullValidation = true): void {
 		cy.verifyPageLoaded('Case received date');
 		cy.verifyPageTitle('When was the case received?');
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL('/cases/create-a-case/questions/case-received-date');
 
 		cy.contains('#receivedDate-hint', 'For example, 27 3 2007').should('exist').and('be.visible');

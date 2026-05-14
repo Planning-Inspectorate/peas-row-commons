@@ -1,9 +1,12 @@
 import type { RightOfWay } from '../../types/journey-subtypes.ts';
 
 class RightsOfWaySubtypePage {
-	isPageDisplayed(): void {
+	isPageDisplayed(fullValidation = true): void {
 		cy.verifyPageLoaded('Rights of Way subtype');
 		cy.verifyPageTitle('Which Rights of Way subtype is it?');
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL('/cases/create-a-case/questions/row-subtype');
 
 		const labels = [

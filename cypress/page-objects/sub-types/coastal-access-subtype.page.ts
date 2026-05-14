@@ -1,9 +1,12 @@
 import type { CoastalAccess } from '../../types/journey-subtypes.ts';
 
 class CommonLandSubtypePage {
-	isPageDisplayed(): void {
+	isPageDisplayed(fullValidation = true): void {
 		cy.verifyPageLoaded('Coastal Access subtype');
 		cy.verifyPageTitle('Which Coastal Access subtype is it?');
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL('/cases/create-a-case/questions/coastal-subtype');
 
 		const labels = ['Coastal access appeal', 'Notice appeal', 'Objection', 'Restriction appeal (access land)'];
