@@ -1,9 +1,12 @@
 import type { SoS } from '../../types/journey-subtypes.ts';
 
 class SosSubtypePage {
-	isPageDisplayed(): void {
+	isPageDisplayed(fullValidation = true): void {
 		cy.verifyPageLoaded('Secretary of State subtype');
 		cy.verifyPageTitle('Which Other Secretary of State casework subtype is it?');
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL('/cases/create-a-case/questions/other-sos-casework-subtype');
 
 		const labels = [

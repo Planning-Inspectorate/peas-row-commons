@@ -1,9 +1,12 @@
 import type { CPOs } from '../../types/journey-subtypes.ts';
 
 class CpoSubtypePage {
-	isPageDisplayed(): void {
+	isPageDisplayed(fullValidation = true): void {
 		cy.verifyPageLoaded('Compulsory Purchase Order subtype');
 		cy.verifyPageTitle('Select the subtype that covers this Compulsory Purchase Order (CPO)');
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL('/cases/create-a-case/questions/housing-planning-cpos-subtype');
 
 		cy.contains('h1', 'Select the subtype that covers this Compulsory Purchase Order (CPO)')

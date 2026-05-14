@@ -1,7 +1,10 @@
 class WhoAuthorityPage {
-	isPageDisplayed(): void {
+	isPageDisplayed(fullValidation = true): void {
 		cy.verifyPageLoaded('Who is the authority?');
 		cy.verifyPageTitle('Who is the authority? (optional)');
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL('authority');
 
 		cy.contains('#authorityId-hint', 'Enter the Local Planning Authority or Common Registration Authority')

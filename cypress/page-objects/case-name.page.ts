@@ -2,9 +2,12 @@ import type { Journeys } from '../types/journeys.ts';
 import { buildCaseName } from '../page-utilities/generate.utility.ts';
 
 class CaseNamePage {
-	isPageDisplayed(): void {
+	isPageDisplayed(fullValidation = true): void {
 		cy.verifyPageLoaded('Case name');
 		cy.verifyPageTitle('What is the case name?');
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL('/cases/create-a-case/questions/case-name');
 
 		cy.get('#name').should('exist').and('be.visible');

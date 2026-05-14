@@ -4,11 +4,14 @@ import FooterUtility from 'cypress/page-utilities/footer.utility.ts';
 class CasesListPage {
 	visitPage() {}
 
-	isPageDisplayed() {
+	isPageDisplayed(fullValidation = true) {
 		HeaderUtility.isHeaderDisplayed();
 		cy.verifyPageLoaded('Case list');
-		cy.verifyPageURL('/cases');
 		cy.verifyPageTitle('Case list');
+		if (!fullValidation) {
+			return;
+		}
+		cy.verifyPageURL('/cases');
 
 		const timeout = 20_000;
 		const visible = (selector: string, text?: string) => {

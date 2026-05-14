@@ -1,9 +1,12 @@
 import type { Drought } from '../../types/journey-subtypes.ts';
 
 class DroughtSubtypePage {
-	isPageDisplayed(): void {
+	isPageDisplayed(fullValidation = true): void {
 		cy.verifyPageLoaded('Drought subtype');
 		cy.verifyPageTitle('Which Drought subtype is it?');
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL('/cases/create-a-case/questions/drought-subtype');
 
 		cy.contains('label', 'Drought Permits').should('exist').and('be.visible');

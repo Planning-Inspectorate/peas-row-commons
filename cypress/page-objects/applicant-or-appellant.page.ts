@@ -6,9 +6,12 @@ class ApplicantOrAppellantPage {
 	 * Verifies the applicant/appellant details page for the given mode and state.
 	 * Checks the correct route, heading, empty or populated content, and available actions.
 	 */
-	isPageDisplayed(mode: ApplicantDetailsPageMode, state: ApplicantDetailsState): void {
+	isPageDisplayed(mode: ApplicantDetailsPageMode, state: ApplicantDetailsState, fullValidation = true): void {
 		cy.verifyPageLoaded('Applicant or appellant details');
 		cy.verifyPageTitle('Check applicant or appellant details');
+		if (!fullValidation) {
+			return;
+		}
 
 		if (mode === 'createCase') {
 			cy.verifyPageURL('/cases/create-a-case/questions/applicant-details');

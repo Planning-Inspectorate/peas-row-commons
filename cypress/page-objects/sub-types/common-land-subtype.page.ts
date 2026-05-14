@@ -1,9 +1,12 @@
 import type { CommonLand } from '../../types/journey-subtypes.ts';
 
 class CommonLandSubtypePage {
-	isPageDisplayed(): void {
+	isPageDisplayed(fullValidation = true): void {
 		cy.verifyPageLoaded('Common Land subtype');
 		cy.verifyPageTitle('Which Common Land subtype is it?');
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL('/cases/create-a-case/questions/common-land-subtype');
 
 		const labels = [

@@ -28,6 +28,8 @@ export type CaseAnswers = {
 	siteLocation?: string;
 	authority?: string;
 	caseOfficer?: string;
+	caseReference?: string;
+	caseURL?: string;
 };
 
 export const createAnswers = (): CaseAnswers => ({

@@ -22,9 +22,12 @@ export const expectedKeys = [
 export type CheckYourAnswersKey = (typeof expectedKeys)[number];
 
 class CheckAnswersPage {
-	isPageDisplayed(): void {
-		cy.contains('h1.govuk-heading-l', 'Check your answers').should('exist').and('be.visible');
-
+	isPageDisplayed(fullValidation = true): void {
+		cy.verifyPageLoaded('Check your answers');
+		cy.verifyPageTitle('Check your answers');
+		if (!fullValidation) {
+			return;
+		}
 		cy.get('dl.govuk-summary-list').should('exist').and('be.visible');
 
 		expectedKeys.forEach((keyText) => {

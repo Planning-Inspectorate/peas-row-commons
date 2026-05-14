@@ -1,4 +1,5 @@
 /// <reference types="cypress" />
+import { createAnswers, CaseAnswers } from 'cypress/types/answers.ts';
 
 import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';
 import DateUtility from 'cypress/page-utilities/date.utility.ts';
@@ -51,6 +52,7 @@ describe('Planning Inspectorate > Case creation validation', () => {
 	});
 
 	it(`shows required validation errors before continuing: ${journey.name}`, () => {
+		const answers: CaseAnswers = createAnswers();
 		HeaderUtility.clickHeaderLink('createCase');
 
 		// Casework area
@@ -74,7 +76,7 @@ describe('Planning Inspectorate > Case creation validation', () => {
 		CaseNamePage.isPageDisplayed();
 		CommonActionsUtility.clickActionButton('continue');
 		CaseNamePage.verifyErrorBanner();
-		CaseNamePage.enterCaseName(journey);
+		answers.caseName = CaseNamePage.enterCaseName(journey);
 		CommonActionsUtility.clickActionButton('continue');
 
 		// External reference - Optional no error
@@ -163,7 +165,7 @@ describe('Planning Inspectorate > Case creation validation', () => {
 		CaseCreatedPage.isPageDisplayed(journey);
 		CaseCreatedPage.clickContinueToCaseDetails();
 
-		CaseDetailsPage.isPageDisplayed();
+		CaseDetailsPage.isPageDisplayed(true, answers.caseName);
 	});
 });
 

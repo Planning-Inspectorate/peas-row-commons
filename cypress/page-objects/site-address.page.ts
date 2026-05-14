@@ -1,7 +1,10 @@
 class SiteAddressPage {
-	isPageDisplayed(): void {
+	isPageDisplayed(fullValidation = true): void {
 		cy.verifyPageLoaded('What is the site address?');
 		cy.verifyPageTitle('What is the site address?');
+		if (!fullValidation) {
+			return;
+		}
 		cy.verifyPageURL('/cases/create-a-case/questions/site-address');
 
 		cy.contains('.govuk-hint', '(optional)').should('exist').and('be.visible');

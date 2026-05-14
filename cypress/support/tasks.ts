@@ -1,5 +1,9 @@
+import fs from 'fs';
+import AdmZip from 'adm-zip';
+
 import { chromium, type Browser, type Cookie } from 'playwright-core';
 import { config as dotenvConfig } from 'dotenv';
+
 import { LoginMicrosoftPage } from '../page-objects/login-microsoft.page.ts';
 
 dotenvConfig();
@@ -10,6 +14,7 @@ dotenvConfig();
  */
 class AuthError extends Error {
 	public cause?: unknown;
+
 	constructor(message: string, cause?: unknown) {
 		super(message);
 		this.name = 'AuthError';
@@ -23,18 +28,29 @@ class AuthError extends Error {
  */
 function requireConfigEnv(config: Cypress.PluginConfigOptions, name: string): string {
 	const v = config.env?.[name];
+
 	if (!v || typeof v !== 'string') {
 		throw new AuthError(`Missing Cypress env "${name}" (config.env.${name}). Check cypress.config.ts / CI secrets.`);
 	}
+
 	return v;
 }
 
 /**
  * Registers Cypress node tasks used during test execution.
- * The authenticate task logs in via Playwright and returns session cookies.
+ * - authenticate:
+ *   Logs in via Playwright and returns session cookies.
+ *
+ * - getZipContents:
+ *   Reads a downloaded ZIP file and returns entry metadata
+ *   for validating downloaded case archives.
  */
 export function setupNodeEvents(on: Cypress.PluginEvents, config: Cypress.PluginConfigOptions) {
 	on('task', {
+		/**
+		 * Authenticates against Microsoft login flow
+		 * and returns browser session cookies.
+		 */
 		async authenticate(): Promise<Cookie[]> {
 			let browser: Browser | undefined;
 
@@ -45,21 +61,48 @@ export function setupNodeEvents(on: Cypress.PluginEvents, config: Cypress.Plugin
 				const password = requireConfigEnv(config, 'adminPassword');
 
 				browser = await chromium.launch({ headless: true });
+
 				const context = await browser.newContext();
 				const page = await context.newPage();
+
 				const msLogin = new LoginMicrosoftPage(page);
 
-				await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 30_000 });
+				await page.goto(baseUrl, {
+					waitUntil: 'domcontentloaded',
+					timeout: 30_000
+				});
+
 				await msLogin.login(email, password);
-				await page.locator('[href="/auth/signout"]').waitFor({ state: 'visible', timeout: 30_000 });
+
+				await page.locator('[href="/auth/signout"]').waitFor({
+					state: 'visible',
+					timeout: 30_000
+				});
 
 				return await context.cookies();
 			} catch (err) {
 				const details = err instanceof Error ? err.message : typeof err === 'string' ? err : JSON.stringify(err);
+
 				throw new AuthError(`Microsoft authentication login failed. ${details}`, err);
 			} finally {
 				await browser?.close();
 			}
+		},
+
+		/**
+		 * Reads ZIP file contents for download validation tests.
+		 */
+		getZipContents(zipPath: string): Array<{ name: string; isDirectory: boolean }> {
+			if (!fs.existsSync(zipPath)) {
+				throw new Error(`ZIP not found: ${zipPath}`);
+			}
+
+			const zip = new AdmZip(zipPath);
+
+			return zip.getEntries().map((entry) => ({
+				name: entry.entryName,
+				isDirectory: entry.isDirectory
+			}));
 		}
 	});
 
