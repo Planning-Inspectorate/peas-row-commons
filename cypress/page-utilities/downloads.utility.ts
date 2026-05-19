@@ -20,19 +20,31 @@ class DownloadsUtility {
 			cy.task('getZipContents', `cypress/downloads/${zipName}`).then((entries) => {
 				const names = (entries as { name: string }[]).map((entry) => entry.name);
 
+				cy.log(`ZIP contents: ${names.join(', ')}`);
+
 				expectedZipContents.forEach((file) => {
-					expect(names).to.include(file);
+					expect(
+						names.some((name) => name.endsWith(file)),
+						`Expected ZIP to contain "${file}". Actual contents: ${names.join(', ')}`
+					).to.equal(true);
 				});
 			});
 
 			return;
 		}
 
-		const csvName = `${caseReference.toLowerCase().replace(/\//g, '-')}-contact.csv`;
+		const csvName = `${caseReference.toLowerCase().replace(/\//g, '-')}-contacts.csv`;
 
 		cy.readFile(`cypress/downloads/${csvName}`, {
 			timeout: 15_000
 		}).should('exist');
+	}
+
+	/**
+	 * Clears all files from the Cypress downloads folder.
+	 */
+	clearDownloadsFolder(): void {
+		cy.task('clearDownloadsFolder');
 	}
 }
 

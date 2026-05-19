@@ -1,35 +1,39 @@
 import type { CaseType } from '../types/work-area-case-types.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class CaseTypePage {
 	isPageDisplayed(fullValidation = true): void {
-		cy.verifyPageLoaded('Which case type is it?');
-		cy.verifyPageTitle('Which case type is it?');
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL('/cases/create-a-case/questions/peas-type-of-case');
+		runPageValidation(
+			fullValidation,
+			() => {
+				cy.verifyPageLoaded('Which case type is it?');
+				cy.verifyPageTitle('Which case type is it?');
+			},
+			() => {
+				cy.verifyPageURL('type-of-case');
 
-		const planningOptions = [
-			'Drought',
-			'Housing and Planning CPOs',
-			'Other Secretary of State casework',
-			'Purchase Notices',
-			'Wayleaves'
-		];
+				const planningOptions = [
+					'Drought',
+					'Housing and Planning CPOs',
+					'Other Secretary of State casework',
+					'Purchase Notices',
+					'Wayleaves'
+				];
 
-		const rightsOfWayOptions = ['Coastal Access', 'Common Land', 'Rights of Way'];
+				const rightsOfWayOptions = ['Coastal Access', 'Common Land', 'Rights of Way'];
 
-		cy.get('body').then(($body) => {
-			const hasPlanningVariation = $body.find('label:contains("Drought")').length > 0;
+				cy.get('body').then(($body) => {
+					const hasPlanningVariation = $body.find('label:contains("Drought")').length > 0;
+					const expectedOptions = hasPlanningVariation ? planningOptions : rightsOfWayOptions;
 
-			const expectedOptions = hasPlanningVariation ? planningOptions : rightsOfWayOptions;
+					expectedOptions.forEach((text) => {
+						cy.contains('label', text).should('exist').and('be.visible');
+					});
+				});
 
-			expectedOptions.forEach((text) => {
-				cy.contains('label', text).should('exist').and('be.visible');
-			});
-		});
-
-		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+				cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+			}
+		);
 	}
 
 	selectCaseType(option: CaseType): void {

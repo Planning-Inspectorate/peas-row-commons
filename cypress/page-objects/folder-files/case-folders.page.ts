@@ -1,4 +1,5 @@
 import HeaderUtility from 'cypress/page-utilities/header.utility.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 const defaultFolders = [
 	'Initial documentation',
@@ -17,57 +18,55 @@ const defaultFolders = [
 type DefaultFolder = (typeof defaultFolders)[number];
 
 class CaseFoldersPage {
-	isPageDisplayed(caseReference?: string, caseName?: string): void {
-		HeaderUtility.isHeaderDisplayed();
-		cy.verifyPageLoaded('Case name');
-		cy.verifyPageTitle('What is the case name?');
-		cy.verifyPageURL('/cases/create-a-case/questions/case-name');
+	isPageDisplayed(caseReference?: string, caseName?: string, fullValidation = true): void {
+		runPageValidation(
+			fullValidation,
+			() => {
+				HeaderUtility.isHeaderDisplayed();
+				cy.verifyPageLoaded('Case name');
+				cy.verifyPageTitle('What is the case name?');
+			},
+			() => {
+				cy.verifyPageURL('/cases/create-a-case/questions/case-name');
+				cy.contains('a.govuk-back-link', 'Back to case details')
+					.should('exist')
+					.and('be.visible')
+					.and('have.attr', 'href')
+					.and('match', /^\/cases\/[0-9a-f-]+$/);
+				cy.get('[data-cy="page-caption"]')
+					.should('exist')
+					.and('be.visible')
+					.then(($el) => {
+						if (caseReference) {
+							cy.wrap($el).should('contain.text', caseReference);
+						}
+					});
+				cy.get('[data-cy="page-heading"]')
+					.should('exist')
+					.and('be.visible')
+					.then(($el) => {
+						if (caseName) {
+							cy.wrap($el).should('contain.text', caseName);
+						}
+					});
+				cy.get('[data-cy="search-form"]').should('exist').and('be.visible');
+				cy.get('#search-hint')
+					.should('exist')
+					.and('be.visible')
+					.and('contain.text', 'To find a document, search by file name');
+				cy.get('[data-cy="search-input"]').should('exist').and('be.visible').and('have.attr', 'name', 'searchCriteria');
+				cy.get('#search-button').should('exist').and('be.visible').and('contain.text', 'Search');
+				cy.get('[data-cy="create-folder-button"]')
+					.should('exist')
+					.and('be.visible')
+					.and('contain.text', 'Create folder')
+					.and('have.attr', 'href')
+					.and('match', /\/cases\/[0-9a-f-]+\/case-folders\/create-folder/);
+				cy.get('.govuk-section-break').should('exist').and('be.visible');
 
-		cy.contains('a.govuk-back-link', 'Back to case details')
-			.should('exist')
-			.and('be.visible')
-			.and('have.attr', 'href')
-			.and('match', /^\/cases\/[0-9a-f-]+$/);
-
-		cy.get('[data-cy="page-caption"]')
-			.should('exist')
-			.and('be.visible')
-			.then(($el) => {
-				if (caseReference) {
-					cy.wrap($el).should('contain.text', caseReference);
-				}
-			});
-
-		cy.get('[data-cy="page-heading"]')
-			.should('exist')
-			.and('be.visible')
-			.then(($el) => {
-				if (caseName) {
-					cy.wrap($el).should('contain.text', caseName);
-				}
-			});
-
-		cy.get('[data-cy="search-form"]').should('exist').and('be.visible');
-
-		cy.get('#search-hint')
-			.should('exist')
-			.and('be.visible')
-			.and('contain.text', 'To find a document, search by file name');
-
-		cy.get('[data-cy="search-input"]').should('exist').and('be.visible').and('have.attr', 'name', 'searchCriteria');
-
-		cy.get('#search-button').should('exist').and('be.visible').and('contain.text', 'Search');
-
-		cy.get('[data-cy="create-folder-button"]')
-			.should('exist')
-			.and('be.visible')
-			.and('contain.text', 'Create folder')
-			.and('have.attr', 'href')
-			.and('match', /\/cases\/[0-9a-f-]+\/case-folders\/create-folder/);
-
-		cy.get('.govuk-section-break').should('exist').and('be.visible');
-
-		this.validateDefaultFolders();
+				this.validateDefaultFolders();
+			}
+		);
 	}
 
 	private validateDefaultFolders(): void {

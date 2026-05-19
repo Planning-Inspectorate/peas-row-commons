@@ -1,6 +1,8 @@
 /// <reference types="cypress" />
+
 import { createAnswers, CaseAnswers } from 'cypress/types/answers.ts';
 
+import AnswersUtility from 'cypress/page-utilities/answers.utility.ts';
 import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';
 import DateUtility from 'cypress/page-utilities/date.utility.ts';
 import AddressUtility from 'cypress/page-utilities/address.utility.ts';
@@ -47,12 +49,17 @@ describe('Planning Inspectorate > Case creation validation', () => {
 	beforeEach(() => {
 		cy.authVisit('');
 		cy.visit('/cases');
+
 		CasesListPage.isPageDisplayed();
+
 		cy.log(`Negative validation journey: ${journey.name}`);
 	});
 
 	it(`shows required validation errors before continuing: ${journey.name}`, () => {
 		const answers: CaseAnswers = createAnswers();
+
+		AnswersUtility.init(answers);
+
 		HeaderUtility.clickHeaderLink('createCase');
 
 		// Casework area
@@ -81,18 +88,20 @@ describe('Planning Inspectorate > Case creation validation', () => {
 
 		// External reference - Optional no error
 		ExternalReferencePage.isPageDisplayed();
+		answers.externalReference = ExternalReferencePage.enterExternalReference(journey);
 		CommonActionsUtility.clickActionButton('continue');
 
 		// Case received date
 		CaseReceivedDatePage.isPageDisplayed();
 		CommonActionsUtility.clickActionButton('continue');
 		CaseReceivedDatePage.verifyErrorBanner();
-		DateUtility.enterDate();
+		answers.receivedDate = DateUtility.enterDate();
 		CommonActionsUtility.clickActionButton('continue');
 
 		// Applicant or Appellant
 		ApplicantOrAppellantPage.isPageDisplayed('createCase', 'noDetails');
 		CommonActionsUtility.clickActionButton('addDetails');
+
 		WhoAppellantObjectorPage.isPageDisplayed('applicantAppellant');
 		CommonActionsUtility.clickActionButton('continue');
 		WhoAppellantObjectorPage.verifyErrorBanner();
@@ -116,6 +125,7 @@ describe('Planning Inspectorate > Case creation validation', () => {
 		] as const;
 
 		const scenario = Cypress._.sample(applicantErrorScenarios)!;
+
 		cy.log(`Testing error scenario: ${scenario.name}`);
 
 		scenario.action();
@@ -123,25 +133,35 @@ describe('Planning Inspectorate > Case creation validation', () => {
 		WhoAppellantObjectorPage.verifyErrorBanner(scenario.name);
 		scenario.reset();
 
-		WhoAppellantObjectorPage.enterFirstLastAndCompany();
+		const applicant = WhoAppellantObjectorPage.enterFirstLastAndCompany();
+
 		CommonActionsUtility.clickActionButton('continue');
 
 		AddressPage.isPageDisplayed('applicantAppellant');
-		AddressUtility.enterAddress();
+		const applicantAddress = AddressUtility.enterAddress();
 		CommonActionsUtility.clickActionButton('continue');
 
 		ContactDetailsPage.isPageDisplayed('applicantAppellant');
-		ContactDetailsPage.enterContactDetails();
+		const applicantContact = ContactDetailsPage.enterContactDetails();
 		CommonActionsUtility.clickActionButton('continue');
 
+		answers.applicants?.push({
+			...applicant,
+			address: applicantAddress,
+			contact: applicantContact
+		});
+
 		ApplicantOrAppellantPage.isPageDisplayed('createCase', 'withDetails');
+		CommonActionsUtility.clickActionButton('continue');
 
 		// Site Address - Optional no error
 		SiteAddressPage.isPageDisplayed();
+		answers.siteAddress = AddressUtility.enterAddress();
 		CommonActionsUtility.clickActionButton('continue');
 
 		// Site location - Optional no error
 		SiteLocationPage.isPageDisplayed();
+		answers.siteLocation = SiteLocationPage.enterSiteLocation();
 		CommonActionsUtility.clickActionButton('continue');
 
 		// Authority - Optional no error
@@ -152,20 +172,36 @@ describe('Planning Inspectorate > Case creation validation', () => {
 		CaseOfficerPage.isPageDisplayed();
 		CommonActionsUtility.clickActionButton('continue');
 		CaseOfficerPage.verifyErrorBanner();
-		CaseOfficerPage.selectRandomCaseOfficer();
+
+		CaseOfficerPage.selectRandomCaseOfficer().then((selectedOfficer) => {
+			answers.caseOfficer = selectedOfficer;
+		});
+
 		CommonActionsUtility.clickActionButton('continue');
 
 		// Check answers
-		CheckAnswersPage.isPageDisplayed();
-		CheckAnswersPage.validateCheckYourAnswersRows();
+		AnswersUtility.replace(answers);
+
+		CheckAnswersPage.isPageDisplayed(true, journey);
+		CheckAnswersPage.validateCheckYourAnswersRows(journey);
 		CheckAnswersPage.verifyCheckYourAnswers(journey);
+
 		CommonActionsUtility.clickActionButton('saveAndContinue');
 
 		// Create case
 		CaseCreatedPage.isPageDisplayed(journey);
-		CaseCreatedPage.clickContinueToCaseDetails();
+		CaseCreatedPage.getCaseReference().then((caseReference) => {
+			answers.caseReference = caseReference;
+			AnswersUtility.set('caseReference', caseReference);
+			CaseCreatedPage.clickContinueToCaseDetails();
+			CaseDetailsPage.isPageDisplayed(true, answers.caseName);
+			CaseDetailsPage.validateCaseReference(caseReference);
 
-		CaseDetailsPage.isPageDisplayed(true, answers.caseName);
+			CaseDetailsPage.getCaseURL().then((caseURL) => {
+				answers.caseURL = caseURL;
+				AnswersUtility.set('caseURL', caseURL);
+			});
+		});
 	});
 });
 
@@ -215,7 +251,6 @@ function runJourneyWithErrors(journey: Journeys) {
 			break;
 
 		case 'purchaseNotices':
-			// No subtype page for this case type.
 			break;
 
 		case 'wayleaves':

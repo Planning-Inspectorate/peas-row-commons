@@ -1,17 +1,21 @@
 import type { Journeys } from '../types/journeys.ts';
 import { buildNameWithRandomSuffix } from '../page-utilities/generate.utility.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class ExternalReferencePage {
 	isPageDisplayed(fullValidation = true): void {
-		cy.verifyPageLoaded('External reference');
-		cy.verifyPageTitle('What is the external reference? (optional)');
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL('/cases/create-a-case/questions/external-reference');
-
-		cy.get('#externalReference').should('exist').and('be.visible');
-		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+		runPageValidation(
+			fullValidation,
+			() => {
+				cy.verifyPageLoaded('External reference');
+				cy.verifyPageTitle('What is the external reference? (optional)');
+			},
+			() => {
+				cy.verifyPageURL('/cases/create-a-case/questions/external-reference');
+				cy.get('#externalReference').should('exist').and('be.visible');
+				cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+			}
+		);
 	}
 
 	/**

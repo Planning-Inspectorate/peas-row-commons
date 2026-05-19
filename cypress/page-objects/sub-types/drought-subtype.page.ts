@@ -1,18 +1,22 @@
 import type { Drought } from '../../types/journey-subtypes.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class DroughtSubtypePage {
 	isPageDisplayed(fullValidation = true): void {
-		cy.verifyPageLoaded('Drought subtype');
-		cy.verifyPageTitle('Which Drought subtype is it?');
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL('/cases/create-a-case/questions/drought-subtype');
-
-		cy.contains('label', 'Drought Permits').should('exist').and('be.visible');
-		cy.contains('label', 'Drought Orders').should('exist').and('be.visible');
-		cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible');
-		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+		runPageValidation(
+			fullValidation,
+			() => {
+				cy.verifyPageLoaded('Drought subtype');
+				cy.verifyPageTitle('Which Drought subtype is it?');
+			},
+			() => {
+				cy.verifyPageURL('/cases/create-a-case/questions/drought-subtype');
+				cy.contains('label', 'Drought Permits').should('exist').and('be.visible');
+				cy.contains('label', 'Drought Orders').should('exist').and('be.visible');
+				cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible');
+				cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+			}
+		);
 	}
 
 	selectDroughtSubtype(option: Drought): void {

@@ -1,22 +1,25 @@
 import type { CPOs } from '../../types/journey-subtypes.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class CpoSubtypePage {
 	isPageDisplayed(fullValidation = true): void {
-		cy.verifyPageLoaded('Compulsory Purchase Order subtype');
-		cy.verifyPageTitle('Select the subtype that covers this Compulsory Purchase Order (CPO)');
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL('/cases/create-a-case/questions/housing-planning-cpos-subtype');
-
-		cy.contains('h1', 'Select the subtype that covers this Compulsory Purchase Order (CPO)')
-			.should('exist')
-			.and('be.visible');
-
-		cy.contains('label', 'Housing').should('exist').and('be.visible');
-		cy.contains('label', 'Planning').should('exist').and('be.visible');
-		cy.contains('label', 'Ad hoc').should('exist').and('be.visible');
-		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+		runPageValidation(
+			fullValidation,
+			() => {
+				cy.verifyPageLoaded('Compulsory Purchase Order subtype');
+				cy.verifyPageTitle('Select the subtype that covers this Compulsory Purchase Order (CPO)');
+			},
+			() => {
+				cy.verifyPageURL('/cases/create-a-case/questions/housing-planning-cpos-subtype');
+				cy.contains('h1', 'Select the subtype that covers this Compulsory Purchase Order (CPO)')
+					.should('exist')
+					.and('be.visible');
+				cy.contains('label', 'Housing').should('exist').and('be.visible');
+				cy.contains('label', 'Planning').should('exist').and('be.visible');
+				cy.contains('label', 'Ad hoc').should('exist').and('be.visible');
+				cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+			}
+		);
 	}
 
 	selectCpoSubtype(option: CPOs): void {

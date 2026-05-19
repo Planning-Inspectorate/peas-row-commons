@@ -1,60 +1,59 @@
 import HeaderUtility from 'cypress/page-utilities/header.utility.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class UploadFilesPage {
-	isUploadPageDisplayed(folderName?: string): void {
-		HeaderUtility.isHeaderDisplayed();
-		cy.verifyPageLoaded('Upload files');
-		cy.verifyPageTitle('Upload files');
-		cy.verifyPageURL('/upload');
+	isPageDisplayed(folderName?: string, fullValidation = true): void {
+		runPageValidation(
+			fullValidation,
+			() => {
+				HeaderUtility.isHeaderDisplayed();
+				cy.verifyPageLoaded('Upload files');
+				cy.verifyPageTitle('Upload files');
+			},
+			() => {
+				cy.verifyPageURL('/upload');
 
-		cy.contains('h1.govuk-heading-l', folderName ? `Upload files in ${folderName} folder` : 'Upload files in')
-			.should('exist')
-			.and('be.visible');
+				cy.contains('h1.govuk-heading-l', folderName ? `Upload files in ${folderName} folder` : 'Upload files in')
+					.should('exist')
+					.and('be.visible');
 
-		cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible').and('have.attr', 'href');
-
-		cy.get('#upload-form-container').should('exist').and('be.visible');
-
-		cy.contains('p.govuk-body', 'Each file must be:').should('exist').and('be.visible');
-
-		cy.get('ul.govuk-list--bullet')
-			.should('exist')
-			.and('be.visible')
-			.within(() => {
-				cy.contains('li', 'smaller than 250MB').should('exist').and('be.visible');
-			});
-
-		cy.contains('p.govuk-body', 'The total combined size of your uploaded files must be smaller than 1GB.')
-			.should('exist')
-			.and('be.visible');
-
-		cy.get('.moj-multi-file-upload').should('exist').and('be.visible');
-
-		cy.get('#upload-form')
-			.should('exist')
-			.and('be.visible')
-			.and('have.attr', 'type', 'file')
-			.and('have.attr', 'multiple');
-
-		cy.contains('label.govuk-button', 'Choose files')
-			.should('exist')
-			.and('be.visible')
-			.and('have.attr', 'for', 'upload-form');
-
-		cy.contains('button.govuk-button--secondary', 'Upload file')
-			.should('exist')
-			.and('be.visible')
-			.and('have.attr', 'type', 'submit');
-
-		cy.get('#main-submit-form')
-			.should('exist')
-			.and('be.visible')
-			.within(() => {
-				cy.contains('button.govuk-button', 'Upload')
+				cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible').and('have.attr', 'href');
+				cy.get('#upload-form-container').should('exist').and('be.visible');
+				cy.contains('p.govuk-body', 'Each file must be:').should('exist').and('be.visible');
+				cy.get('ul.govuk-list--bullet')
+					.should('exist')
+					.and('be.visible')
+					.within(() => {
+						cy.contains('li', 'smaller than 250MB').should('exist').and('be.visible');
+					});
+				cy.contains('p.govuk-body', 'The total combined size of your uploaded files must be smaller than 1GB.')
+					.should('exist')
+					.and('be.visible');
+				cy.get('.moj-multi-file-upload').should('exist').and('be.visible');
+				cy.get('#upload-form')
+					.should('exist')
+					.and('be.visible')
+					.and('have.attr', 'type', 'file')
+					.and('have.attr', 'multiple');
+				cy.contains('label.govuk-button', 'Choose files')
+					.should('exist')
+					.and('be.visible')
+					.and('have.attr', 'for', 'upload-form');
+				cy.contains('button.govuk-button--secondary', 'Upload file')
 					.should('exist')
 					.and('be.visible')
 					.and('have.attr', 'type', 'submit');
-			});
+				cy.get('#main-submit-form')
+					.should('exist')
+					.and('be.visible')
+					.within(() => {
+						cy.contains('button.govuk-button', 'Upload')
+							.should('exist')
+							.and('be.visible')
+							.and('have.attr', 'type', 'submit');
+					});
+			}
+		);
 	}
 
 	clickUploadAction(action: 'uploadFiles' | 'chooseFiles' | 'upload'): void {

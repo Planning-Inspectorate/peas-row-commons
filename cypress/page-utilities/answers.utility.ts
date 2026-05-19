@@ -8,6 +8,10 @@ class AnswersUtility {
 		cy.wrap(initial, { log: false }).as(this.alias);
 	}
 
+	replace(answers: CaseAnswers): void {
+		cy.wrap(answers, { log: false }).as(this.alias);
+	}
+
 	set<K extends keyof CaseAnswers>(key: K, value: CaseAnswers[K]): void {
 		cy.get<CaseAnswers>(`@${this.alias}`, { log: false }).then((answers) => {
 			const updated: CaseAnswers = { ...answers, [key]: value };

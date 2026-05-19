@@ -1,39 +1,42 @@
 import type { Journeys } from '../types/journeys.ts';
 import HeaderUtility from 'cypress/page-utilities/header.utility.ts';
 import FooterUtility from 'cypress/page-utilities/footer.utility.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class CaseCreatedPage {
 	isPageDisplayed(journey: Journeys, fullValidation = true): void {
-		HeaderUtility.isHeaderDisplayed();
-		cy.verifyPageLoaded('New case has been created');
-		cy.verifyPageTitle('New case has been created');
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL('/success');
+		runPageValidation(
+			fullValidation,
+			() => {
+				HeaderUtility.isHeaderDisplayed();
+				cy.verifyPageLoaded('New case has been created');
+				cy.verifyPageTitle('New case has been created');
+			},
+			() => {
+				cy.verifyPageURL('/success');
+				cy.contains('.govuk-panel__body', 'The case reference number').should('exist').and('be.visible');
+				cy.get('.govuk-panel__body strong')
+					.should('exist')
+					.and('be.visible')
+					.invoke('text')
+					.then((text) => {
+						const ref = text.trim();
 
-		cy.contains('.govuk-panel__body', 'The case reference number').should('exist').and('be.visible');
+						if (!ref) {
+							throw new Error('Test Failed: Case reference number is empty');
+						}
+					});
 
-		cy.get('.govuk-panel__body strong')
-			.should('exist')
-			.and('be.visible')
-			.invoke('text')
-			.then((text) => {
-				const ref = text.trim();
-				if (!ref) throw new Error('Test Failed: Case reference number is empty');
-			});
-
-		this.validateRefNumberAgainstJourney(journey);
-
-		cy.contains('a.govuk-link', 'Continue to case details page')
-			.should('exist')
-			.and('be.visible')
-			.and('have.attr', 'href')
-			.and('match', /^\/cases\/[0-9a-f-]+$/i);
-
-		FooterUtility.isFooterDisplayed();
+				this.validateRefNumberAgainstJourney(journey);
+				cy.contains('a.govuk-link', 'Continue to case details page')
+					.should('exist')
+					.and('be.visible')
+					.and('have.attr', 'href')
+					.and('match', /^\/cases\/[0-9a-f-]+(\?firstVisit=true)?$/);
+				FooterUtility.isFooterDisplayed();
+			}
+		);
 	}
-
 	private validateRefNumberAgainstJourney(journey: Journeys): void {
 		const escapedPrefix = Cypress._.escapeRegExp(journey.referencePrefix);
 

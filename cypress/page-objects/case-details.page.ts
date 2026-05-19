@@ -1,22 +1,27 @@
 import HeaderUtility from 'cypress/page-utilities/header.utility.ts';
 import FooterUtility from 'cypress/page-utilities/footer.utility.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class CaseDetailsPage {
 	visitPage() {}
 
 	isPageDisplayed(fullValidation = true, caseName?: string): void {
-		HeaderUtility.isHeaderDisplayed();
-		cy.verifyPageLoaded('Case Details');
-		if (caseName) {
-			cy.verifyPageTitle(caseName);
+		runPageValidation(
+			fullValidation,
+			() => {
+				HeaderUtility.isHeaderDisplayed();
+				cy.verifyPageLoaded('Case Details');
 
-			cy.get('h1.govuk-heading-l').should('exist').and('be.visible').and('contain.text', caseName);
-		}
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL('/cases/');
-		FooterUtility.isFooterDisplayed();
+				if (caseName) {
+					cy.verifyPageTitle(caseName);
+					cy.get('h1.govuk-heading-l').should('exist').and('be.visible').and('contain.text', caseName);
+				}
+			},
+			() => {
+				cy.verifyPageURL('/cases/');
+				FooterUtility.isFooterDisplayed();
+			}
+		);
 	}
 
 	/**
@@ -65,22 +70,32 @@ class CaseDetailsPage {
 		};
 
 		const { text, hrefPattern, selector } = actionMap[action];
+
 		const button = selector ? cy.get(selector) : cy.contains('a.govuk-button--secondary', text);
 
-		button.should('exist').and('be.visible').and('have.attr', 'href').and('match', hrefPattern).click();
+		button
+			.should('exist')
+			.and('be.visible')
+			.then(($button) => {
+				const href = $button.attr('href');
+
+				expect(href, `${text} href`).to.match(hrefPattern);
+
+				cy.wrap($button).click();
+			});
 	}
 
 	/**
-	 * Captures and returns the current case URL.
+	 * Gets the current case details URL without the firstVisit query string.
 	 */
 	getCaseURL(): Cypress.Chainable<string> {
 		return cy.url().then((url) => {
-			const parsed = new URL(url);
-			const cleanPath = parsed.pathname;
+			const caseURL = new URL(url);
+			const cleanPath = caseURL.pathname;
 
-			cy.log(`Captured case URL: ${cleanPath}`);
+			cy.log(`Case URL: ${cleanPath}`);
 
-			return cleanPath;
+			return cy.wrap(cleanPath, { log: false });
 		});
 	}
 

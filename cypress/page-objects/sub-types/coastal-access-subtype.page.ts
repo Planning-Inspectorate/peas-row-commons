@@ -1,21 +1,26 @@
 import type { CoastalAccess } from '../../types/journey-subtypes.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class CommonLandSubtypePage {
 	isPageDisplayed(fullValidation = true): void {
-		cy.verifyPageLoaded('Coastal Access subtype');
-		cy.verifyPageTitle('Which Coastal Access subtype is it?');
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL('/cases/create-a-case/questions/coastal-subtype');
+		runPageValidation(
+			fullValidation,
+			() => {
+				cy.verifyPageLoaded('Coastal Access subtype');
+				cy.verifyPageTitle('Which Coastal Access subtype is it?');
+			},
+			() => {
+				cy.verifyPageURL('/cases/create-a-case/questions/coastal-subtype');
 
-		const labels = ['Coastal access appeal', 'Notice appeal', 'Objection', 'Restriction appeal (access land)'];
+				const labels = ['Coastal access appeal', 'Notice appeal', 'Objection', 'Restriction appeal (access land)'];
 
-		labels.forEach((text) => {
-			cy.contains('label', text).should('exist').and('be.visible');
-		});
+				labels.forEach((text) => {
+					cy.contains('label', text).should('exist').and('be.visible');
+				});
 
-		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+				cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+			}
+		);
 	}
 
 	selectCoastalAccessSubtype(option: CoastalAccess): void {

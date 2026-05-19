@@ -78,7 +78,8 @@ export const rightsOfWayJourneys = [
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'inclosure',
-		referencePrefix: 'COM/INC/'
+		referencePrefix: 'COM/INC/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Common Land > Inclosure : obsolescent functions',
@@ -93,17 +94,19 @@ export const rightsOfWayJourneys = [
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'landExchange',
-		referencePrefix: 'COM/LEX/'
+		referencePrefix: 'COM/LEX/',
+		tags: ['regression']
 	},
 	{
-		name: 'Rights of Way > Common Land > Local Acts and Provisional Order Confirmation Acts',
+		name: 'Rights of Way > Common Land > Local Acts and Provisional Order',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'localActs',
-		referencePrefix: 'COM/LCA/'
+		referencePrefix: 'COM/LCA/',
+		tags: ['regression']
 	},
 	{
-		name: 'Rights of Way > Common Land > Public Access to Commons - limitations and restrictions',
+		name: 'Rights of Way > Common Land > Public Access to Commons',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'publicAccessLimitations',
@@ -111,7 +114,7 @@ export const rightsOfWayJourneys = [
 		tags: ['regression']
 	},
 	{
-		name: 'Rights of Way > Common Land > Referred applications from Commons Registration Authorities',
+		name: 'Rights of Way > Common Land > Referred applications',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'referredApplications',
@@ -123,7 +126,8 @@ export const rightsOfWayJourneys = [
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'schemeOfManagement',
-		referencePrefix: 'COM/SOM/'
+		referencePrefix: 'COM/SOM/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Common Land > Stint Rates',
@@ -146,14 +150,16 @@ export const rightsOfWayJourneys = [
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'worksCommonLandNt',
-		referencePrefix: 'COM/WNT/'
+		referencePrefix: 'COM/WNT/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Rights of Way > Dispensation for Serving Notice HA80',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'dispensationHa80',
-		referencePrefix: 'ROW/SNH/'
+		referencePrefix: 'ROW/SNH/',
+		tags: ['regression']
 	},
 	{
 		name: 'Rights of Way > Rights of Way > Dispensation for Serving Notice TCPA90',

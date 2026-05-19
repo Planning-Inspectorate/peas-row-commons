@@ -1,16 +1,20 @@
 import type { WorkArea } from '../types/work-area-case-types.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class CaseworkAreaPage {
 	isPageDisplayed(fullValidation = true): void {
-		cy.verifyPageLoaded('Case list');
-		cy.verifyPageTitle('What area does this new case relate to?');
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL('create-a-case/questions/casework-area');
-
-		cy.contains('label', 'Planning, Environmental and Applications').should('be.visible');
-		cy.contains('label', 'Rights of Way and Common Land').should('be.visible');
+		runPageValidation(
+			fullValidation,
+			() => {
+				cy.verifyPageLoaded('Case list');
+				cy.verifyPageTitle('What area does this new case relate to?');
+			},
+			() => {
+				cy.verifyPageURL('create-a-case/questions/casework-area');
+				cy.contains('label', 'Planning, Environmental and Applications').should('be.visible');
+				cy.contains('label', 'Rights of Way and Common Land').should('be.visible');
+			}
+		);
 	}
 
 	selectCaseworkArea(option: WorkArea): void {

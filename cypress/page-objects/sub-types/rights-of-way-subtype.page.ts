@@ -1,31 +1,36 @@
 import type { RightOfWay } from '../../types/journey-subtypes.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class RightsOfWaySubtypePage {
 	isPageDisplayed(fullValidation = true): void {
-		cy.verifyPageLoaded('Rights of Way subtype');
-		cy.verifyPageTitle('Which Rights of Way subtype is it?');
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL('/cases/create-a-case/questions/row-subtype');
+		runPageValidation(
+			fullValidation,
+			() => {
+				cy.verifyPageLoaded('Rights of Way subtype');
+				cy.verifyPageTitle('Which Rights of Way subtype is it?');
+			},
+			() => {
+				cy.verifyPageURL('/cases/create-a-case/questions/row-subtype');
 
-		const labels = [
-			'Dispensation for Serving Notice HA80',
-			'Dispensation for Serving Notice TCPA90',
-			'Dispensation for Serving Notice WCA81',
-			'Opposed Definitive Map Modification Order (DMMO)',
-			'Opposed Public Path Order (PPO) HA80',
-			'Opposed Public Path Order (PPO) TCPA90',
-			'Schedule 14 Appeal',
-			'Schedule 14 Direction',
-			'Schedule 13A Appeal'
-		];
+				const labels = [
+					'Dispensation for Serving Notice HA80',
+					'Dispensation for Serving Notice TCPA90',
+					'Dispensation for Serving Notice WCA81',
+					'Opposed Definitive Map Modification Order (DMMO)',
+					'Opposed Public Path Order (PPO) HA80',
+					'Opposed Public Path Order (PPO) TCPA90',
+					'Schedule 14 Appeal',
+					'Schedule 14 Direction',
+					'Schedule 13A Appeal'
+				];
 
-		labels.forEach((text) => {
-			cy.contains('label', text).should('exist').and('be.visible');
-		});
+				labels.forEach((text) => {
+					cy.contains('label', text).should('exist').and('be.visible');
+				});
 
-		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+				cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+			}
+		);
 	}
 
 	selectRightsOfWaySubtype(option: RightOfWay): void {

@@ -1,5 +1,6 @@
 import { createAnswers, CaseAnswers } from 'cypress/types/answers.ts';
 
+import AnswersUtility from 'cypress/page-utilities/answers.utility.ts';
 import CasesListPage from 'cypress/page-objects/case-list.page.ts';
 import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';
 import DateUtility from 'cypress/page-utilities/date.utility.ts';
@@ -54,6 +55,7 @@ class CreateCaseUtility {
 
 	private createCase(journey: Journeys, fullValidation: boolean): void {
 		const answers: CaseAnswers = createAnswers();
+		AnswersUtility.init(answers);
 
 		CasesListPage.isPageDisplayed();
 		HeaderUtility.clickHeaderLink('createCase');
@@ -109,6 +111,7 @@ class CreateCaseUtility {
 		});
 
 		ApplicantOrAppellantPage.isPageDisplayed('createCase', 'withDetails', fullValidation);
+		CommonActionsUtility.clickActionButton('continue');
 
 		// Site address
 		SiteAddressPage.isPageDisplayed(fullValidation);
@@ -138,7 +141,7 @@ class CreateCaseUtility {
 		CheckAnswersPage.isPageDisplayed(fullValidation);
 
 		if (fullValidation) {
-			CheckAnswersPage.validateCheckYourAnswersRows();
+			CheckAnswersPage.validateCheckYourAnswersRows(journey);
 			CheckAnswersPage.verifyCheckYourAnswers(journey);
 		}
 
@@ -146,14 +149,18 @@ class CreateCaseUtility {
 
 		// Create case
 		CaseCreatedPage.isPageDisplayed(journey, fullValidation);
+
 		CaseCreatedPage.getCaseReference().then((caseReference) => {
 			answers.caseReference = caseReference;
-		});
-		CaseCreatedPage.clickContinueToCaseDetails();
-		CaseDetailsPage.isPageDisplayed(fullValidation, answers.caseName);
-		CaseDetailsPage.validateCaseReference(answers.caseReference!);
-		CaseDetailsPage.getCaseURL().then((caseURL) => {
-			answers.caseURL = caseURL;
+			AnswersUtility.set('caseReference', caseReference);
+			CaseCreatedPage.clickContinueToCaseDetails();
+			CaseDetailsPage.isPageDisplayed(fullValidation, answers.caseName);
+			CaseDetailsPage.validateCaseReference(caseReference);
+
+			CaseDetailsPage.getCaseURL().then((caseURL) => {
+				answers.caseURL = caseURL;
+				AnswersUtility.set('caseURL', caseURL);
+			});
 		});
 	}
 

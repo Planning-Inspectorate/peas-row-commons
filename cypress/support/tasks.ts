@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import AdmZip from 'adm-zip';
 
 import { chromium, type Browser, type Cookie } from 'playwright-core';
@@ -44,13 +45,12 @@ function requireConfigEnv(config: Cypress.PluginConfigOptions, name: string): st
  * - getZipContents:
  *   Reads a downloaded ZIP file and returns entry metadata
  *   for validating downloaded case archives.
+ *
+ * - clearDownloadsFolder:
+ *   Clears all files from the Cypress downloads folder.
  */
 export function setupNodeEvents(on: Cypress.PluginEvents, config: Cypress.PluginConfigOptions) {
 	on('task', {
-		/**
-		 * Authenticates against Microsoft login flow
-		 * and returns browser session cookies.
-		 */
 		async authenticate(): Promise<Cookie[]> {
 			let browser: Browser | undefined;
 
@@ -89,9 +89,6 @@ export function setupNodeEvents(on: Cypress.PluginEvents, config: Cypress.Plugin
 			}
 		},
 
-		/**
-		 * Reads ZIP file contents for download validation tests.
-		 */
 		getZipContents(zipPath: string): Array<{ name: string; isDirectory: boolean }> {
 			if (!fs.existsSync(zipPath)) {
 				throw new Error(`ZIP not found: ${zipPath}`);
@@ -103,6 +100,21 @@ export function setupNodeEvents(on: Cypress.PluginEvents, config: Cypress.Plugin
 				name: entry.entryName,
 				isDirectory: entry.isDirectory
 			}));
+		},
+
+		clearDownloadsFolder(): null {
+			const downloadsFolder = path.join(process.cwd(), 'cypress', 'downloads');
+
+			if (fs.existsSync(downloadsFolder)) {
+				fs.readdirSync(downloadsFolder).forEach((file) => {
+					fs.rmSync(path.join(downloadsFolder, file), {
+						recursive: true,
+						force: true
+					});
+				});
+			}
+
+			return null;
 		}
 	});
 

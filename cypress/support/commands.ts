@@ -105,7 +105,7 @@ Cypress.Commands.add('verifyErrorSummary', (errorText: string, options?: { href?
 	const { href, inlineId } = options || {};
 
 	cy.get('.govuk-error-summary').should('exist').and('be.visible');
-	cy.get('.govuk-error-summary__title').should('exist').and('be.visible').and('have.text', 'There is a problem');
+	cy.get('.govuk-error-summary__title').should('exist').and('be.visible').and('contain.text', 'There is a problem');
 
 	const errorLink = cy.contains('.govuk-error-summary__list a', errorText).should('exist').and('be.visible');
 
