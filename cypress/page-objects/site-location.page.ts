@@ -1,19 +1,24 @@
-class SiteApplicantPage {
-	isPageDisplayed(fullValidation = true): void {
-		cy.verifyPageLoaded('Applicant or appellant details');
-		cy.verifyPageTitle('Who is the applicant or appellant?');
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL('/cases/create-a-case/questions/applicant-details');
-		cy.contains('label', 'What is the site location if no address was added?').should('exist').and('be.visible');
-		cy.contains('#location-hint', 'For example, name of common, village green, area or body of water')
-			.should('exist')
-			.and('be.visible');
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
-		cy.get('#location').should('exist').and('be.visible');
-		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
-		cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible');
+class SiteLocationPage {
+	isPageDisplayed(fullValidation = true): void {
+		runPageValidation(
+			fullValidation,
+			() => {
+				cy.verifyPageLoaded('Site location');
+				cy.verifyPageTitle('What is the site location if no address was added? (optional)');
+			},
+			() => {
+				cy.verifyPageURL('/location');
+				cy.contains('#location-hint', 'For example, name of common, village green, area or body of water')
+					.should('exist')
+					.and('be.visible');
+
+				cy.get('#location').should('exist').and('be.visible');
+				cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+				cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible');
+			}
+		);
 	}
 
 	private readonly defaultSiteLocations = [
@@ -58,4 +63,4 @@ class SiteApplicantPage {
 	}
 }
 
-export default new SiteApplicantPage();
+export default new SiteLocationPage();

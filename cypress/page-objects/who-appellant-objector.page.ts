@@ -1,3 +1,5 @@
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
+
 class WhoAppellantObjectorPage {
 	/**
 	 * Verifies the name details page for either the applicant/appellant
@@ -8,14 +10,14 @@ class WhoAppellantObjectorPage {
 			applicantAppellant: {
 				pageName: 'Applicant or appellant details',
 				title: 'Who is the applicant or appellant?',
-				urlPart: '/cases/create-a-case/questions/applicant-details',
-				hintText: 'Enter the name of the main party. This could be an applicant, appellant or server.',
+				urlPart: 'applicant-details',
+				hintText: 'Enter the name of the main party. This could also be a server.',
 				fieldPrefix: 'applicant'
 			},
 			objector: {
 				pageName: 'Objector details',
 				title: 'Who is the objector?',
-				urlPart: '/objector-name',
+				urlPart: 'objector-name',
 				hintText: 'Enter the name of individual, company name, or both.',
 				fieldPrefix: 'objector'
 			}
@@ -23,40 +25,39 @@ class WhoAppellantObjectorPage {
 
 		const page = config[type];
 
-		cy.verifyPageLoaded(page.pageName);
-		cy.verifyPageTitle(page.title);
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL(page.urlPart);
-
-		cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible');
-		cy.contains('h1', page.title).should('exist').and('be.visible');
-		cy.contains('.govuk-hint', page.hintText).should('exist').and('be.visible');
-
-		cy.get(`#${page.fieldPrefix}FirstName`)
-			.should('exist')
-			.and('be.visible')
-			.and('have.attr', 'name', `${page.fieldPrefix}FirstName`);
-
-		cy.get(`#${page.fieldPrefix}LastName`)
-			.should('exist')
-			.and('be.visible')
-			.and('have.attr', 'name', `${page.fieldPrefix}LastName`);
-
-		cy.get(`#${page.fieldPrefix}OrgName`)
-			.should('exist')
-			.and('be.visible')
-			.and('have.attr', 'name', `${page.fieldPrefix}OrgName`);
-
-		cy.get('[data-cy="button-save-and-continue"]')
-			.should('exist')
-			.and('be.visible')
-			.and('have.attr', 'type', 'submit')
-			.and('contain.text', 'Continue');
+		runPageValidation(
+			fullValidation,
+			() => {
+				cy.verifyPageLoaded(page.pageName);
+				cy.verifyPageTitle(page.title);
+			},
+			() => {
+				cy.verifyPageURL(page.urlPart);
+				cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible');
+				cy.contains('h1', page.title).should('exist').and('be.visible');
+				cy.contains('.govuk-hint', page.hintText).should('be.visible');
+				cy.get(`#${page.fieldPrefix}FirstName`)
+					.should('exist')
+					.and('be.visible')
+					.and('have.attr', 'name', `${page.fieldPrefix}FirstName`);
+				cy.get(`#${page.fieldPrefix}LastName`)
+					.should('exist')
+					.and('be.visible')
+					.and('have.attr', 'name', `${page.fieldPrefix}LastName`);
+				cy.get(`#${page.fieldPrefix}OrgName`)
+					.should('exist')
+					.and('be.visible')
+					.and('have.attr', 'name', `${page.fieldPrefix}OrgName`);
+				cy.get('[data-cy="button-save-and-continue"]')
+					.should('exist')
+					.and('be.visible')
+					.and('have.attr', 'type', 'submit')
+					.and('contain.text', 'Continue');
+			}
+		);
 	}
+
 	private readonly defaultFirstNames = [
-		'',
 		'Sarah',
 		'James',
 		'Emily',

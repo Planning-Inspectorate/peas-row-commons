@@ -33,34 +33,78 @@ export function buildCaseName(journeyName: string): string {
 
 /**
  * Generates a random string of a given length using:
- * - letters (a-z, A-Z)
- * - numbers (0-9)
- * - special characters
- * - spaces (only within the body, never at start/end)
+ * - mostly lowercase letters
+ * - some uppercase letters and numbers
+ * - spaces and special characters
+ * - max 2 special characters per string
+ * - no adjacent special characters
+ * - no matching bracket pairs like (test), [test], {test}, <test>
+ * - spaces never at start/end
  */
 export function generateRandomString(length: number): string {
 	if (length <= 0) return '';
 
-	const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+	// Weighted toward lowercase by repeating lowercase chars
+	const lowercase = 'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz';
+	const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 	const numbers = '0123456789';
+
 	const specials = '!@£$%^&*()-_=+[]{};:\'",.<>?/\\|';
-	const space = ' ';
+	const brackets = '()[]{}<>';
 
-	const allChars = letters + numbers + specials;
+	const alphaNumeric = lowercase + uppercase + numbers;
 
-	// Ensure first & last chars are NOT spaces
-	const getRandomChar = (chars: string) => chars.charAt(Math.floor(Math.random() * chars.length));
+	const getRandomChar = (chars: string): string => {
+		return chars.charAt(Math.floor(Math.random() * chars.length));
+	};
 
 	let result = '';
+	let specialCount = 0;
+	let usedBracket = false;
 
 	for (let i = 0; i < length; i++) {
-		if (i === 0 || i === length - 1) {
-			result += getRandomChar(allChars);
-		} else {
-			// Middle can include spaces
-			const includeSpace = Math.random() < 0.15;
-			result += includeSpace ? space : getRandomChar(allChars);
+		const isFirstOrLast = i === 0 || i === length - 1;
+
+		const previousChar = result.charAt(result.length - 1);
+
+		const previousWasSpecial = specials.includes(previousChar);
+		const previousWasSpace = previousChar === ' ';
+
+		const canUseSpace = !isFirstOrLast && !previousWasSpace;
+		const canUseSpecial = !isFirstOrLast && specialCount < 2 && !previousWasSpecial;
+
+		const useSpecial = canUseSpecial && Math.random() < 0.08;
+		const useSpace = canUseSpace && !useSpecial && Math.random() < 0.12;
+
+		if (useSpecial) {
+			let availableSpecials = specials;
+
+			// Prevent paired bracket patterns
+			if (usedBracket) {
+				availableSpecials = availableSpecials
+					.split('')
+					.filter((char) => !brackets.includes(char))
+					.join('');
+			}
+
+			const char = getRandomChar(availableSpecials);
+
+			result += char;
+			specialCount++;
+
+			if (brackets.includes(char)) {
+				usedBracket = true;
+			}
+
+			continue;
 		}
+
+		if (useSpace) {
+			result += ' ';
+			continue;
+		}
+
+		result += getRandomChar(alphaNumeric);
 	}
 
 	return result;
@@ -118,63 +162,54 @@ export function generateUkAddress(): UkAddress {
 }
 
 /**
- * Generates a random phone number (max 15 chars total):
- * - Optional '+' prefix
- * - Optional '(XX)' area code if digits >= 8
- * - Optional spaces
- * - Ensures total length never exceeds 15 characters
+ * Generates a random phone number:
+ * - Either returns an empty string
+ * - Plain number: 6 to 9 digits
+ * - Prefix number: + followed by 6 to 9 digits
+ * - Area code number: (XX) or (XXX), one space, then digits
+ * - Prefix + area code number: +(XX) or +(XXX), one space, then digits
+ * - Maximum total length is 14 characters including spaces
  */
 export function generatePhoneNumber(): string {
-	const MAX_LENGTH = 15;
-
-	const digitsLength = Cypress._.random(0, 15);
-
-	let digits = '';
-	for (let i = 0; i < digitsLength; i++) {
-		digits += Cypress._.random(0, 9);
+	// 25% chance of returning no value
+	if (Cypress._.random(0, 3) === 0) {
+		return '';
 	}
 
-	const addPlus = Cypress._.random(0, 1) === 1;
-	const canHaveAreaCode = digits.length >= 8;
-	const addAreaCode = canHaveAreaCode && Cypress._.random(0, 1) === 1;
+	const generateDigits = (length: number): string => {
+		let value = '';
 
-	let result = digits;
-
-	if (addAreaCode) {
-		const countryCode = Cypress._.random(1, 999).toString();
-		result = `(${countryCode}) ${digits}`;
-	}
-
-	if (addPlus) {
-		result = `+${result}`;
-	}
-
-	if (result.length > MAX_LENGTH) {
-		const overflow = result.length - MAX_LENGTH;
-		const trimmedDigits = digits.slice(0, digits.length - overflow);
-
-		if (addAreaCode) {
-			const countryCode = result.match(/\((\d+)\)/)?.[1] ?? '';
-			result = `(${countryCode}) ${trimmedDigits}`;
-		} else {
-			result = trimmedDigits;
+		for (let i = 0; i < length; i++) {
+			value += Cypress._.random(0, 9);
 		}
 
-		if (addPlus) {
-			result = `+${result}`;
-		}
+		return value;
+	};
+
+	const format = Cypress._.sample(['number', 'prefix', 'areaCode', 'prefixAreaCode'])!;
+
+	if (format === 'number') {
+		return generateDigits(Cypress._.random(6, 9));
 	}
 
-	if (result.length < MAX_LENGTH - 1 && Cypress._.random(0, 1) === 1) {
-		const insertAt = Cypress._.random(1, result.length - 1);
-		const withSpace = result.slice(0, insertAt) + ' ' + result.slice(insertAt);
-
-		if (withSpace.length <= MAX_LENGTH) {
-			result = withSpace;
-		}
+	if (format === 'prefix') {
+		return `+${generateDigits(Cypress._.random(6, 9))}`;
 	}
 
-	return result;
+	const areaCodeLength = Cypress._.sample([2, 3])!;
+	const areaCode = generateDigits(areaCodeLength);
+
+	const maxMainDigitsLength =
+		format === 'prefixAreaCode' ? 14 - 1 - 1 - areaCodeLength - 1 - 1 : 14 - 1 - areaCodeLength - 1 - 1;
+
+	const mainDigitsLength = Cypress._.random(6, maxMainDigitsLength);
+	const mainDigits = generateDigits(mainDigitsLength);
+
+	if (format === 'areaCode') {
+		return `(${areaCode}) ${mainDigits}`;
+	}
+
+	return `+(${areaCode}) ${mainDigits}`;
 }
 
 /**

@@ -1,38 +1,42 @@
 import type { CommonLand } from '../../types/journey-subtypes.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class CommonLandSubtypePage {
 	isPageDisplayed(fullValidation = true): void {
-		cy.verifyPageLoaded('Common Land subtype');
-		cy.verifyPageTitle('Which Common Land subtype is it?');
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL('/cases/create-a-case/questions/common-land-subtype');
+		runPageValidation(
+			fullValidation,
+			() => {
+				cy.verifyPageLoaded('Common Land subtype');
+				cy.verifyPageTitle('Which Common Land subtype is it?');
+			},
+			() => {
+				cy.verifyPageURL('/cases/create-a-case/questions/common-land-subtype');
 
-		const labels = [
-			'Commons for Ecclesiastical Purposes',
-			'Commons in Greater London',
-			'Compulsory Purchase of Common Land',
-			'Deregistration & Exchange',
-			'Inclosure',
-			'Inclosure : obsolescent functions',
-			'Land Exchange',
-			'Local Acts and Provisional Order Confirmation Acts',
-			'Public Access to Commons - limitations and restrictions',
-			'Referred applications from Commons Registration Authorities',
-			'Scheme of Management',
-			'Stint Rates',
-			'Works on Common Land',
-			'Works on Common Land (National Trust)'
-		];
+				const labels = [
+					'Commons for Ecclesiastical Purposes',
+					'Commons in Greater London',
+					'Compulsory Purchase of Common Land',
+					'Deregistration & Exchange',
+					'Inclosure',
+					'Inclosure : obsolescent functions',
+					'Land Exchange',
+					'Local Acts and Provisional Order Confirmation Acts',
+					'Public Access to Commons - limitations and restrictions',
+					'Referred applications from Commons Registration Authorities',
+					'Scheme of Management',
+					'Stint Rates',
+					'Works on Common Land',
+					'Works on Common Land (National Trust)'
+				];
 
-		labels.forEach((text) => {
-			cy.contains('label.govuk-radios__label', text).should('exist').and('be.visible');
-		});
+				labels.forEach((text) => {
+					cy.contains('label.govuk-radios__label', text).should('exist').and('be.visible');
+				});
 
-		cy.get('input[type="radio"][name="commonLand"]').should('have.length', labels.length);
-
-		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+				cy.get('input[type="radio"][name="commonLand"]').should('have.length', labels.length);
+				cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+			}
+		);
 	}
 
 	selectCommonLandSubtype(option: CommonLand): void {
@@ -60,7 +64,7 @@ class CommonLandSubtypePage {
 				throw new Error("Test Failed: Option specified isn't displayed");
 			}
 
-			cy.get(selector).should('exist').and('be.visible').check().should('be.checked');
+			cy.get(selector).should('exist').check().should('be.checked');
 		});
 	}
 

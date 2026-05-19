@@ -1,33 +1,38 @@
 import type { SoS } from '../../types/journey-subtypes.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class SosSubtypePage {
 	isPageDisplayed(fullValidation = true): void {
-		cy.verifyPageLoaded('Secretary of State subtype');
-		cy.verifyPageTitle('Which Other Secretary of State casework subtype is it?');
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL('/cases/create-a-case/questions/other-sos-casework-subtype');
+		runPageValidation(
+			fullValidation,
+			() => {
+				cy.verifyPageLoaded('Secretary of State subtype');
+				cy.verifyPageTitle('Which Other Secretary of State casework subtype is it?');
+			},
+			() => {
+				cy.verifyPageURL('/cases/create-a-case/questions/other-sos-casework-subtype');
 
-		const labels = [
-			'DEFRA CPO',
-			'DESNZ CPO',
-			'DfT CPO',
-			'Ad hoc CPO',
-			'Advert',
-			'Completion notice',
-			'Discontinuance notice',
-			'Modification to planning permission',
-			'Review of mineral permission',
-			'Revocation',
-			'Other'
-		];
+				const labels = [
+					'DEFRA CPO',
+					'DESNZ CPO',
+					'DfT CPO',
+					'Ad hoc CPO',
+					'Advert',
+					'Completion notice',
+					'Discontinuance notice',
+					'Modification to planning permission',
+					'Review of mineral permission',
+					'Revocation',
+					'Other'
+				];
 
-		labels.forEach((text) => {
-			cy.contains('label', text).should('exist').and('be.visible');
-		});
+				labels.forEach((text) => {
+					cy.contains('label', text).should('exist').and('be.visible');
+				});
 
-		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+				cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+			}
+		);
 	}
 
 	selectOtherSosSubtype(option: SoS, otherText?: string): void {
@@ -46,7 +51,7 @@ class SosSubtypePage {
 		};
 
 		const selector = selectorMap[option];
-		cy.get(selector).should('exist').and('be.visible').check().should('be.checked');
+		cy.get(selector).should('exist').check().should('be.checked');
 
 		if (option === 'other') {
 			cy.get('#otherSosCasework_text').should('exist').and('be.visible');

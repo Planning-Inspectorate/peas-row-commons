@@ -1,17 +1,21 @@
 import type { Journeys } from '../types/journeys.ts';
 import { buildCaseName } from '../page-utilities/generate.utility.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class CaseNamePage {
 	isPageDisplayed(fullValidation = true): void {
-		cy.verifyPageLoaded('Case name');
-		cy.verifyPageTitle('What is the case name?');
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL('/cases/create-a-case/questions/case-name');
-
-		cy.get('#name').should('exist').and('be.visible');
-		cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+		runPageValidation(
+			fullValidation,
+			() => {
+				cy.verifyPageLoaded('Case name');
+				cy.verifyPageTitle('What is the case name?');
+			},
+			() => {
+				cy.verifyPageURL('/cases/create-a-case/questions/case-name');
+				cy.get('#name').should('exist').and('be.visible');
+				cy.get('[data-cy="button-save-and-continue"]').should('exist').and('be.visible');
+			}
+		);
 	}
 
 	/**
@@ -27,12 +31,7 @@ class CaseNamePage {
 	enterCaseName(arg1: Journeys | string, arg2?: string): string {
 		const valueToUse = typeof arg1 === 'string' ? arg1 : (arg2 ?? buildCaseName(arg1.name));
 
-		cy.get('[data-cy="case-name-input"]')
-			.should('exist')
-			.and('be.visible')
-			.clear()
-			.type(valueToUse)
-			.should('have.value', valueToUse);
+		cy.get('#name').should('exist').and('be.visible').clear().type(valueToUse).should('have.value', valueToUse);
 
 		return valueToUse;
 	}

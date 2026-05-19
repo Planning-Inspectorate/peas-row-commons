@@ -1,4 +1,5 @@
 import { generateEmail, generatePhoneNumber } from 'cypress/page-utilities/generate.utility.ts';
+import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class ContactDetailsPage {
 	isPageDisplayed(type: 'applicantAppellant' | 'objector', fullValidation = true): void {
@@ -20,23 +21,25 @@ class ContactDetailsPage {
 		} as const;
 
 		const { pageName, title, urlPart, emailId, phoneId } = config[type];
-		cy.verifyPageLoaded(pageName);
-		cy.verifyPageTitle(title);
-		if (!fullValidation) {
-			return;
-		}
-		cy.verifyPageURL(urlPart);
 
-		cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible').and('have.attr', 'href');
-
-		cy.get(`#${emailId}`).should('exist').and('be.visible').and('have.attr', 'name', emailId);
-		cy.get(`#${phoneId}`).should('exist').and('be.visible').and('have.attr', 'name', phoneId);
-
-		cy.get('[data-cy="button-save-and-continue"]')
-			.should('exist')
-			.and('be.visible')
-			.and('have.attr', 'type', 'submit')
-			.and('contain.text', 'Continue');
+		runPageValidation(
+			fullValidation,
+			() => {
+				cy.verifyPageLoaded(pageName);
+				cy.verifyPageTitle(title);
+			},
+			() => {
+				cy.verifyPageURL(urlPart);
+				cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible').and('have.attr', 'href');
+				cy.get(`#${emailId}`).should('exist').and('be.visible').and('have.attr', 'name', emailId);
+				cy.get(`#${phoneId}`).should('exist').and('be.visible').and('have.attr', 'name', phoneId);
+				cy.get('[data-cy="button-save-and-continue"]')
+					.should('exist')
+					.and('be.visible')
+					.and('have.attr', 'type', 'submit')
+					.and('contain.text', 'Continue');
+			}
+		);
 	}
 
 	/**
