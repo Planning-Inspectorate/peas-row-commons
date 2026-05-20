@@ -12,7 +12,8 @@ describe('buildViewCaseFolder', () => {
 	const mockDb = {
 		folder: { findUnique: mock.fn(), findMany: mock.fn() },
 		case: { findUnique: mock.fn() },
-		document: { findMany: mock.fn(), count: mock.fn() }
+		document: { findMany: mock.fn(), count: mock.fn() },
+		$queryRaw: mock.fn()
 	} as any;
 
 	const mockRes = () => {
@@ -102,13 +103,15 @@ describe('buildViewCaseFolder', () => {
 			};
 
 			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve(mockFolderData));
+			mockDb.$queryRaw.mock.mockImplementation(() => Promise.resolve([{ totalFolders: 2, totalDocuments: 15 }]));
 
 			await buildViewCaseFolder(service as any)(req, res, next);
 
-			assert.strictEqual(mockDb.folder.findUnique.mock.callCount(), 2);
-			assert.strictEqual(mockDb.case.findUnique.mock.callCount(), 1);
-			assert.strictEqual(mockDb.document.findMany.mock.callCount(), 2);
-			assert.strictEqual(mockDb.document.count.mock.callCount(), 2);
+			assert.strictEqual(mockDb.folder.findUnique.mock.callCount(), 2, 'call folder.findUnique twice');
+			assert.strictEqual(mockDb.case.findUnique.mock.callCount(), 1, 'call case.findUnique once');
+			assert.strictEqual(mockDb.document.findMany.mock.callCount(), 2, 'call document.findMany twice');
+			assert.strictEqual(mockDb.document.count.mock.callCount(), 2, 'call document.count twice');
+			assert.strictEqual(mockDb.$queryRaw.mock.callCount(), 1, 'call queryRaw once');
 
 			const dbArgs = mockDb.folder.findUnique.mock.calls[0].arguments[0];
 			assert.deepStrictEqual(dbArgs.where, { id: 'folder-456' });
@@ -121,7 +124,8 @@ describe('buildViewCaseFolder', () => {
 			assert.strictEqual(viewData.pageHeading, 'Case Name');
 			assert.strictEqual(viewData.folderName, 'My Folder');
 
-			assert.strictEqual(viewData.paginationParams.totalDocuments, 10);
+			assert.strictEqual(viewData.paginationParams.totalDocumentsCount, 15);
+			assert.strictEqual(viewData.paginationParams.subFoldersCount, 1);
 			assert.strictEqual(viewData.paginationParams.totalFilteredDocuments, 10);
 
 			assert.match(viewData.backLinkUrl, /parent-999/);

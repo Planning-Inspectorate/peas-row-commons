@@ -21,6 +21,7 @@ import {
 } from '@pins/peas-row-commons-lib/util/user-document-filter-generator.ts';
 import { determineDefaultStatuses } from '@pins/peas-row-commons-lib/util/user-document-status.ts';
 import { CLOSED_STATUSES } from '@pins/peas-row-commons-lib/constants/statuses.ts';
+import { getFolderStats } from '@pins/peas-row-commons-database/util/folder.ts';
 
 export function buildViewCaseFolder(
 	service: ManageService,
@@ -80,41 +81,48 @@ export function buildViewCaseFolder(
 				deletedAt: null
 			};
 
-			const [folderData, paginatedDocuments, totalFilteredDocuments, allDocumentStatuses, allDocumentsCount] =
-				await Promise.all([
-					db.folder.findUnique({
-						where: { id: folderId },
-						include: {
-							ChildFolders: { where: { caseId: id, deletedAt: null } },
-							ParentFolder: { select: { id: true, displayName: true } }
+			const [
+				folderData,
+				paginatedDocuments,
+				totalFilteredDocuments,
+				allDocumentStatuses,
+				folderDocumentsCount,
+				allDocumentsAndSubFoldersCount
+			] = await Promise.all([
+				db.folder.findUnique({
+					where: { id: folderId },
+					include: {
+						ChildFolders: { where: { caseId: id, deletedAt: null } },
+						ParentFolder: { select: { id: true, displayName: true } }
+					}
+				}),
+				db.document.findMany({
+					where: { ...baseDocumentWhere, ...dynamicDocumentWhere },
+					skip: skipSize,
+					take: pageSize,
+					include: {
+						Folder: true,
+						UserDocuments: { where: { User: { idpUserId: userId } } }
+					},
+					orderBy: { uploadedDate: 'desc' }
+				}),
+				db.document.count({
+					where: { ...baseDocumentWhere, ...dynamicDocumentWhere }
+				}),
+				db.document.findMany({
+					where: baseDocumentWhere,
+					select: {
+						UserDocuments: {
+							where: { User: { idpUserId: userId } },
+							select: { readStatus: true, flaggedStatus: true }
 						}
-					}),
-					db.document.findMany({
-						where: { ...baseDocumentWhere, ...dynamicDocumentWhere },
-						skip: skipSize,
-						take: pageSize,
-						include: {
-							Folder: true,
-							UserDocuments: { where: { User: { idpUserId: userId } } }
-						},
-						orderBy: { uploadedDate: 'desc' }
-					}),
-					db.document.count({
-						where: { ...baseDocumentWhere, ...dynamicDocumentWhere }
-					}),
-					db.document.findMany({
-						where: baseDocumentWhere,
-						select: {
-							UserDocuments: {
-								where: { User: { idpUserId: userId } },
-								select: { readStatus: true, flaggedStatus: true }
-							}
-						}
-					}),
-					db.document.count({
-						where: baseDocumentWhere
-					})
-				]);
+					}
+				}),
+				db.document.count({
+					where: baseDocumentWhere
+				}),
+				getFolderStats(db, folderId)
+			]);
 
 			if (!folderData) {
 				return notFoundHandler(req, res);
@@ -142,7 +150,10 @@ export function buildViewCaseFolder(
 				resultsStartNumber,
 				resultsEndNumber,
 				totalFilteredDocuments,
-				totalDocuments: allDocumentsCount,
+				totalDocumentsCount: allDocumentsAndSubFoldersCount.totalDocuments,
+				totalSubFolders: allDocumentsAndSubFoldersCount.totalFolders,
+				subFoldersCount: createFoldersViewModel(folderData.ChildFolders).length,
+				documentCount: folderDocumentsCount,
 				uiItems: getPaginationModel(req, totalPages, pageNumber),
 				filtersValue: filterGenerator.createCurrentlySelectedFilterValues(req.query)
 			};
