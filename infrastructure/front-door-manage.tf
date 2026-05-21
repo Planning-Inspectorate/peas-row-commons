@@ -212,6 +212,18 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
     }
 
     override {
+      rule_group_name = "PHP"
+      rule {
+        # PHP Injection Attack: Variable Function Call Found
+        # False positive observed as:
+        # PostParamValue:name = "Council (Upgrade ..."
+        action  = "Log"
+        enabled = true
+        rule_id = "933210"
+      }
+    }
+
+    override {
       rule_group_name = "General"
       rule {
         action  = "Log"
