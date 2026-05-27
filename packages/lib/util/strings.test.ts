@@ -7,7 +7,8 @@ import {
 	toCamelCase,
 	shouldTruncateComment,
 	truncateComment,
-	nl2br
+	nl2br,
+	nullEmptyString
 } from './strings.ts';
 
 describe('String Utils', () => {
@@ -180,6 +181,42 @@ describe('String Utils', () => {
 				nl2br('First line\n\n\n\n\nSecond line\r\nThird line'),
 				'First line<br><br><br><br><br>Second line<br>Third line'
 			);
+		});
+	});
+
+	describe('nullEmptyString', () => {
+		describe('should return non-string values unchanged', () => {
+			const nonStringTests = [
+				{ name: 'null', value: null },
+				{ name: 'undefined', value: undefined },
+				{ name: '1', value: 1 },
+				{ name: '0', value: 0 },
+				{ name: '0.1', value: 0.1 },
+				{ name: 'array', value: ['one', 'two', 'three ', ' '] },
+				{ name: 'object', value: { key: 'value' } },
+				{ name: 'false', value: false },
+				{ name: 'true', value: true }
+			];
+
+			for (const test of nonStringTests) {
+				it(`returns ${test.name}`, () => {
+					assert.deepStrictEqual(nullEmptyString(test.value), test.value);
+				});
+			}
+		});
+
+		describe('should handle string values', () => {
+			it('returns non-empty string unchanged', () => {
+				assert.strictEqual(nullEmptyString('string string  '), 'string string  ');
+			});
+
+			it('returns null for empty string', () => {
+				assert.strictEqual(nullEmptyString(''), null);
+			});
+
+			it('returns null for whitespace-only string', () => {
+				assert.strictEqual(nullEmptyString('   '), null);
+			});
 		});
 	});
 });
