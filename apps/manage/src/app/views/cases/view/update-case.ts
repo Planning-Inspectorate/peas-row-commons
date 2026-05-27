@@ -44,6 +44,7 @@ import { LIST_FIELDS } from '@pins/peas-row-commons-lib/constants/audit.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
 import { toFloat } from '@pins/peas-row-commons-lib/util/numbers.ts';
+import { nullEmptyString } from '@pins/peas-row-commons-lib/util/strings.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -64,6 +65,12 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 		logger.info({ id }, 'case update');
 
 		const rawAnswers = data?.answers || {};
+
+		for (const key of Object.keys(rawAnswers)) {
+			const value = rawAnswers[key];
+			rawAnswers[key] = nullEmptyString(value);
+		}
+
 		const updatedFieldNames = Object.keys(rawAnswers);
 
 		if (updatedFieldNames.length === 0) {

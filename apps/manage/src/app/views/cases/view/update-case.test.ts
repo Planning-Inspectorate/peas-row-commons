@@ -121,6 +121,21 @@ describe('Update Case Controller', () => {
 
 			assert.strictEqual(mockUpdate.mock.callCount(), 0);
 		});
+
+		it('should clear answers (set to null) if saved as an empty string when trimmed', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = { answers: { name: ' ' } };
+
+			const handler = buildUpdateCase(mockService as any);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockUpdate.mock.callCount(), 1);
+			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
+			assert.strictEqual(updateArgs.data.name, null);
+		});
 	});
 
 	describe('mapCasePayload (Transformation Logic)', () => {

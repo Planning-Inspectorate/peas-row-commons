@@ -95,3 +95,11 @@ export function escapeHtml(unsafe: string): string {
 		.replace(/"/g, '&quot;')
 		.replace(/'/g, '&#039;');
 }
+
+export function nullEmptyString<T>(value: T): T extends string ? T | null : T {
+	if (typeof value === 'string') {
+		const trimmed = value.trim();
+		return (trimmed === '' ? null : value) as T extends string ? T | null : T;
+	}
+	return value as T extends string ? T | null : T;
+}
