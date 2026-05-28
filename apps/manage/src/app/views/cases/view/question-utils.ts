@@ -29,7 +29,6 @@ import {
 	DECISION_MAKER_TYPES
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
-import type { CaseOfficer } from './types.ts';
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/outcome.ts';
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
@@ -1923,12 +1922,12 @@ export const PROCEDURE_QUESTIONS = {
  */
 export function createProcedureDetailQuestions(
 	procedureQuestions: typeof PROCEDURE_QUESTIONS,
-	groupMembers: { caseOfficers: CaseOfficer[] },
+	groupMembers: EntraGroupMembers,
 	inspectors: Record<string, unknown>[],
 	allUsers: Prisma.UserGetPayload<{ select: { id: true; idpUserId: true; legacyId: true } }>[]
 ) {
 	const inspectorIds = inspectors?.map((inspector) => inspector.inspectorId);
-	const relevantInspectors = [...groupMembers.caseOfficers].filter((member) => inspectorIds.includes(member.id));
+	const relevantInspectors = [...groupMembers.inspectors].filter((member) => inspectorIds.includes(member.id));
 	const inspectorOptions: RadioOption[] = relevantInspectors.map(referenceDataToRadioOptions);
 	const legacyOptions = allUsers.map((user) => ({ text: user.idpUserId, value: user.idpUserId }));
 	/**
