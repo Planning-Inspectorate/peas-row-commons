@@ -10,6 +10,15 @@ import type { Logger } from 'pino';
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { AUDIT_ACTIONS } from '../../../../audit/index.ts';
+import { checkFileNamesConflict } from '../../upload/upload-documents/file-duplicate-validation.ts';
+import type { ValidationError } from '../../upload/upload-documents/validation-middleware.ts';
+import { list } from '@planning-inspectorate/dynamic-forms/src/controller.js';
+
+const documentFindManySelectArg = {
+	id: true,
+	fileName: true,
+	Folder: { select: { displayName: true } }
+} as const satisfies Prisma.DocumentSelect;
 
 /**
  * Creates the middleware that fetches the case + folders from the DB
@@ -38,9 +47,7 @@ export function buildLoadCaseData(service: ManageService): RequestHandler {
 			return next(new Error('Case not found'));
 		}
 
-		const folderStructure = buildFolderTree(caseData.Folders);
-
-		(req as any).folderStructure = folderStructure;
+		(req as any).folderStructure = buildFolderTree(caseData.Folders);
 
 		next();
 	};
@@ -128,38 +135,70 @@ export async function moveFilesTransaction(
 	);
 }
 
+export function buildListController(listFn = list): RequestHandler {
+	return async (req: Request, res: Response) => {
+		await listFn(req, res, '', {
+			backLinkUrl: `${req.baseUrl}/folder/file-location`,
+			pageHeading: 'Check details and update file location',
+			cancelUrl: req.baseUrl.split('/move-files')[0] // we want to go all the way back to the folder page
+		});
+	};
+}
+
 /**
  * Controller for saving the new folder to the documents. Redirects to the new folder.
  */
 export function buildSaveController({ db, logger, audit }: ManageService): RequestHandler {
 	return async (req, res) => {
-		const { id } = req.params;
+		const { id, folderId, folderName } = req.params;
 
 		const state = validateRequestState(req, res, id, JOURNEY_ID, logger);
 		if (!state) return;
 
 		const { fileIds, destinationFolderId } = state;
 
-		// Fetch documents with their current folder before the move
-		const documentsBeforeMove = await db.document.findMany({
-			where: { id: { in: fileIds } },
-			select: {
-				id: true,
-				fileName: true,
-				Folder: { select: { displayName: true } }
-			}
-		});
+		// 1. Fetch documents and destination folder
+		const [documentsBeforeMove, destinationFolder] = await Promise.all([
+			db.document.findMany({
+				where: { id: { in: fileIds } },
+				select: documentFindManySelectArg
+			}),
+			db.folder.findUnique({
+				where: { id: destinationFolderId },
+				include: {
+					Documents: {
+						where: { deletedAt: null },
+						select: { fileName: true }
+					}
+				}
+			})
+		]);
 
-		let destinationFolder: { id: string; displayName: string | null } | null | undefined;
+		// 2. Validate destination folder exists and belongs to case
+		if (!destinationFolder) {
+			throw new Error(`Target folder ${destinationFolderId} not found`);
+		}
+
+		if (destinationFolder.caseId !== id) {
+			logger.error(
+				{ targetFolderCaseId: destinationFolder.caseId, requestCaseId: id },
+				'Attempted to move files to a folder in a different case'
+			);
+			throw new Error('Target folder does not belong to the current case');
+		}
+		// 3. Check for file name conflicts in the destination folder
+		const existingFileNames = new Set(destinationFolder.Documents.map((doc) => doc.fileName));
+		const fileNames = documentsBeforeMove.map((doc) => doc.fileName);
+		const nameConflicts: ValidationError[] | null = checkFileNamesConflict(fileNames, existingFileNames);
+		if (nameConflicts && nameConflicts.length > 0) {
+			addSessionData(req, id, { moveFileErrors: nameConflicts }, 'move-files');
+
+			return res.redirect(`/cases/${id}/case-folders/${folderId}/${folderName}/move-files`);
+		}
 
 		try {
-			destinationFolder = await db.$transaction(async ($tx) => {
+			await db.$transaction(async ($tx) => {
 				await moveFilesTransaction($tx, id, destinationFolderId, fileIds, logger);
-
-				return await $tx.folder.findUnique({
-					where: { id: destinationFolderId },
-					select: { id: true, displayName: true }
-				});
 			});
 
 			const auditEntries = documentsBeforeMove.map((doc) => ({
@@ -188,7 +227,8 @@ export function buildSaveController({ db, logger, audit }: ManageService): Reque
 			});
 		}
 
-		if (!destinationFolder?.displayName) {
+		const { displayName } = destinationFolder;
+		if (!displayName) {
 			return notFoundHandler(req, res);
 		}
 
@@ -196,8 +236,6 @@ export function buildSaveController({ db, logger, audit }: ManageService): Reque
 			req,
 			journeyId: JOURNEY_ID
 		});
-
-		const { displayName } = destinationFolder;
 
 		res.redirect(`/cases/${id}/case-folders/${destinationFolderId}/${stringToKebab(displayName)}`);
 	};
