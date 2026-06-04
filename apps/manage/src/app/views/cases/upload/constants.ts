@@ -85,5 +85,9 @@ export const ALLOWED_MIME_TYPES = [
  */
 export const PREVIEW_MIME_TYPES = ['image/png', 'image/jpeg', 'application/pdf', 'image/gif', 'image/bmp'];
 
-export const MAX_FILE_SIZE = 250 * 1024 * 1024; // 250MB
+export const MAX_FILE_SIZE_IN_MB = 250;
+export const MAX_FILE_SIZE = MAX_FILE_SIZE_IN_MB * 1024 * 1024; // 250MB
 export const TOTAL_UPLOAD_LIMIT = 1073741824; // 1GB
+export const FILE_NAME_MAX_LENGTH = 255;
+// Allows: a-z, A-Z, 0-9, dot, hyphen, underscore, space, (), &, ' and prevents consecutive apostrophes which can cause issues with some file systems
+export const FILE_NAMES_REGEX = /^(?!.*'')[a-zA-Z0-9.\-_ ()&']+$/;
