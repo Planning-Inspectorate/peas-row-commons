@@ -61,7 +61,6 @@ describe('validateUploadedFile', () => {
 				maxFileSize,
 				mockExistingNameSet
 			);
-			console.log(errors);
 			assert.strictEqual(errors.length, 1);
 			assert.match(errors[0].text, /empty/);
 		});
@@ -326,7 +325,6 @@ describe('validateUploadedFile', () => {
 				maxFileSize,
 				mockExistingNameSet
 			);
-			console.log(errors);
 			assert.strictEqual(errors.length, 0);
 		});
 
@@ -340,7 +338,6 @@ describe('validateUploadedFile', () => {
 				maxFileSize,
 				mockExistingNameSet
 			);
-			console.log(errors);
 			assert.strictEqual(errors.length, 1);
 			assert.match(errors[0].text, /file.pdf: Could not determine file type from signature/);
 		});

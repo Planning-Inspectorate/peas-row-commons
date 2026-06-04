@@ -273,9 +273,9 @@ function hasFilePassRecord(buffer: Buffer): boolean {
 }
 
 /**
- * Takes all uploaded files in current session
- * and see if it is under the passed in total limit.
- * I.e. fresh docs + previous docs.
+ * Returns true if the total size of all draft uploads
+ * in the current session (existing + newFiles)
+ * exceeds the provided totalUploadLimit
  */
 export async function checkTotalSizeLimit(
 	db: PrismaClient,
