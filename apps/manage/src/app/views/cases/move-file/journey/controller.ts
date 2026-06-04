@@ -189,7 +189,8 @@ export function buildSaveController({ db, logger, audit }: ManageService): Reque
 		// 3. Check for file name conflicts in the destination folder
 		const existingFileNames = new Set(destinationFolder.Documents.map((doc) => doc.fileName));
 		const fileNames = documentsBeforeMove.map((doc) => doc.fileName);
-		const nameConflicts: ValidationError[] | null = checkFileNamesConflict(fileNames, existingFileNames);
+		const nameConflicts: ValidationError[] | null =
+			checkFileNamesConflict(fileNames, existingFileNames)?.map((error) => ({ ...error, href: '#' })) ?? null; // TODO: HRP-295 Once we update the file list page we could link to the document?
 		if (nameConflicts && nameConflicts.length > 0) {
 			addSessionData(req, id, { moveFileErrors: nameConflicts }, 'move-files');
 
