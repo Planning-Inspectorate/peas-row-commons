@@ -475,7 +475,7 @@ describe('Move Files Controller', () => {
 			assert.deepStrictEqual(mockReq.session['move-files'][mockReq.params.id].moveFileErrors, [
 				{
 					text: 'doc.pdf: File with this name already exists in the folder',
-					href: '#upload-form'
+					href: '#'
 				}
 			]);
 		});
