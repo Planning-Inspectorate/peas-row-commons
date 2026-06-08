@@ -32,6 +32,8 @@ class CaseOfficerPage {
 	 * Throws an error if no options are available.
 	 */
 	selectRandomCaseOfficer(): Cypress.Chainable<string> {
+		const normaliseWhitespace = (value: string): string => value.trim().replace(/\s+/g, ' ');
+
 		return cy
 			.get('input#caseOfficerId[role="combobox"]')
 			.should('exist')
@@ -49,11 +51,9 @@ class CaseOfficerPage {
 						throw new Error('Test Failed: No case officer options were found');
 					}
 
-					cy.log(`Case officer options found: ${count}`);
-
 					const randomIndex = Cypress._.random(0, count - 1);
 					const option = $options[randomIndex];
-					const selectedValue = option.innerText.trim();
+					const selectedValue = normaliseWhitespace(option.innerText);
 
 					return cy
 						.wrap(option)
@@ -61,8 +61,11 @@ class CaseOfficerPage {
 						.then(() => {
 							return cy
 								.get('#caseOfficerId')
-								.should('have.value', selectedValue)
-								.then(() => selectedValue);
+								.invoke('val')
+								.then((value) => {
+									expect(normaliseWhitespace(String(value))).to.equal(selectedValue);
+									return selectedValue;
+								});
 						});
 				});
 			});

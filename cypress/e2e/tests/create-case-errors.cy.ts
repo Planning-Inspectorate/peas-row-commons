@@ -22,7 +22,7 @@ import CoastalAccessSubtypePage from 'cypress/page-objects/sub-types/coastal-acc
 import CommonLandSubtypePage from 'cypress/page-objects/sub-types/common-land-subtype.page.ts';
 import RightsOfWaySubtypePage from 'cypress/page-objects/sub-types/rights-of-way-subtype.page.ts';
 
-import ApplicantOrAppellantPage from 'cypress/page-objects/applicant-or-appellant.page.ts';
+import CheckDetailsPage from 'cypress/page-objects/check-details.page.ts';
 import ContactDetailsPage from 'cypress/page-objects/contact-details.page.ts';
 import WhoAppellantObjectorPage from 'cypress/page-objects/who-appellant-objector.page.ts';
 import CaseNamePage from 'cypress/page-objects/case-name.page.ts';
@@ -99,28 +99,28 @@ describe('Planning Inspectorate > Case creation validation', () => {
 		CommonActionsUtility.clickActionButton('continue');
 
 		// Applicant or Appellant
-		ApplicantOrAppellantPage.isPageDisplayed('createCase', 'noDetails');
+		CheckDetailsPage.isPageDisplayed('applicantAppellant', 'withoutDetails', true, 'createCase');
 		CommonActionsUtility.clickActionButton('addDetails');
 
 		WhoAppellantObjectorPage.isPageDisplayed('applicantAppellant');
 		CommonActionsUtility.clickActionButton('continue');
-		WhoAppellantObjectorPage.verifyErrorBanner();
+		WhoAppellantObjectorPage.verifyErrorBanner('applicantAppellant', 'required');
 
 		const applicantErrorScenarios = [
 			{
 				name: 'firstNameTooLong',
-				action: () => WhoAppellantObjectorPage.enterFirstName(generateRandomString(260)),
-				reset: () => WhoAppellantObjectorPage.enterFirstName('')
+				action: () => WhoAppellantObjectorPage.enterFirstName('applicantAppellant', generateRandomString(260)),
+				reset: () => WhoAppellantObjectorPage.enterFirstName('applicantAppellant', '')
 			},
 			{
 				name: 'lastNameTooLong',
-				action: () => WhoAppellantObjectorPage.enterLastName(generateRandomString(260)),
-				reset: () => WhoAppellantObjectorPage.enterLastName('')
+				action: () => WhoAppellantObjectorPage.enterLastName('applicantAppellant', generateRandomString(260)),
+				reset: () => WhoAppellantObjectorPage.enterLastName('applicantAppellant', '')
 			},
 			{
 				name: 'orgNameTooLong',
-				action: () => WhoAppellantObjectorPage.enterCompanyName(generateRandomString(260)),
-				reset: () => WhoAppellantObjectorPage.enterCompanyName('')
+				action: () => WhoAppellantObjectorPage.enterCompanyName('applicantAppellant', generateRandomString(260)),
+				reset: () => WhoAppellantObjectorPage.enterCompanyName('applicantAppellant', '')
 			}
 		] as const;
 
@@ -130,10 +130,10 @@ describe('Planning Inspectorate > Case creation validation', () => {
 
 		scenario.action();
 		CommonActionsUtility.clickActionButton('continue');
-		WhoAppellantObjectorPage.verifyErrorBanner(scenario.name);
+		WhoAppellantObjectorPage.verifyErrorBanner('applicantAppellant', scenario.name);
 		scenario.reset();
 
-		const applicant = WhoAppellantObjectorPage.enterFirstLastAndCompany();
+		const applicant = WhoAppellantObjectorPage.enterFirstLastAndCompany('applicantAppellant');
 
 		CommonActionsUtility.clickActionButton('continue');
 
@@ -142,7 +142,7 @@ describe('Planning Inspectorate > Case creation validation', () => {
 		CommonActionsUtility.clickActionButton('continue');
 
 		ContactDetailsPage.isPageDisplayed('applicantAppellant');
-		const applicantContact = ContactDetailsPage.enterContactDetails();
+		const applicantContact = ContactDetailsPage.enterContactDetails('applicantAppellant');
 		CommonActionsUtility.clickActionButton('continue');
 
 		answers.applicants?.push({
@@ -151,7 +151,7 @@ describe('Planning Inspectorate > Case creation validation', () => {
 			contact: applicantContact
 		});
 
-		ApplicantOrAppellantPage.isPageDisplayed('createCase', 'withDetails');
+		CheckDetailsPage.isPageDisplayed('applicantAppellant', 'withDetails', true, 'createCase');
 		CommonActionsUtility.clickActionButton('continue');
 
 		// Site Address - Optional no error

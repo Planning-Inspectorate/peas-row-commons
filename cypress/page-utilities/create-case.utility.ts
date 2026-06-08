@@ -20,7 +20,7 @@ import CoastalAccessSubtypePage from 'cypress/page-objects/sub-types/coastal-acc
 import CommonLandSubtypePage from 'cypress/page-objects/sub-types/common-land-subtype.page.ts';
 import RightsOfWaySubtypePage from 'cypress/page-objects/sub-types/rights-of-way-subtype.page.ts';
 
-import ApplicantOrAppellantPage from 'cypress/page-objects/applicant-or-appellant.page.ts';
+import CheckDetailsPage from '../page-objects/check-details.page.ts';
 import ContactDetailsPage from 'cypress/page-objects/contact-details.page.ts';
 import WhoAppellantObjectorPage from 'cypress/page-objects/who-appellant-objector.page.ts';
 import CaseNamePage from 'cypress/page-objects/case-name.page.ts';
@@ -89,11 +89,11 @@ class CreateCaseUtility {
 		CommonActionsUtility.clickActionButton('continue');
 
 		// Applicant or Appellant
-		ApplicantOrAppellantPage.isPageDisplayed('createCase', 'noDetails', fullValidation);
+		CheckDetailsPage.isPageDisplayed('applicantAppellant', 'withoutDetails', fullValidation, 'createCase');
 		CommonActionsUtility.clickActionButton('addDetails');
 
 		WhoAppellantObjectorPage.isPageDisplayed('applicantAppellant', fullValidation);
-		const applicant = WhoAppellantObjectorPage.enterFirstLastAndCompany();
+		const applicant = WhoAppellantObjectorPage.enterFirstLastAndCompany('applicantAppellant');
 		CommonActionsUtility.clickActionButton('continue');
 
 		AddressPage.isPageDisplayed('applicantAppellant', fullValidation);
@@ -101,7 +101,7 @@ class CreateCaseUtility {
 		CommonActionsUtility.clickActionButton('continue');
 
 		ContactDetailsPage.isPageDisplayed('applicantAppellant', fullValidation);
-		const applicantContact = ContactDetailsPage.enterContactDetails();
+		const applicantContact = ContactDetailsPage.enterContactDetails('applicantAppellant');
 		CommonActionsUtility.clickActionButton('continue');
 
 		answers.applicants?.push({
@@ -110,7 +110,7 @@ class CreateCaseUtility {
 			contact: applicantContact
 		});
 
-		ApplicantOrAppellantPage.isPageDisplayed('createCase', 'withDetails', fullValidation);
+		CheckDetailsPage.isPageDisplayed('applicantAppellant', 'withDetails', fullValidation, 'createCase');
 		CommonActionsUtility.clickActionButton('continue');
 
 		// Site address
