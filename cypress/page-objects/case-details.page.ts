@@ -1,9 +1,25 @@
+import type { CaseDetailsSection, CaseDetailsSectionRowMap, SummaryRowState } from 'cypress/types/case-details.ts';
+
 import HeaderUtility from 'cypress/page-utilities/header.utility.ts';
 import FooterUtility from 'cypress/page-utilities/footer.utility.ts';
+import CheckDetailsPage from './check-details.page.ts';
+import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class CaseDetailsPage {
-	visitPage() {}
+	private readonly sectionSelectors: Record<CaseDetailsSection, string> = {
+		overview: '#overview',
+		'case-details': '#case-details',
+		team: '#team',
+		timetable: '#timetable',
+		'key-contacts': '#key-contacts',
+		'outcome-overview': '#outcome-overview',
+		'additional-resource-locations': '#additional-resource-locations',
+		invoicing: '#invoicing',
+		'case-audit-log': '#case-audit-log'
+	};
+
+	visitPage(): void {}
 
 	isPageDisplayed(fullValidation = true, caseName?: string): void {
 		runPageValidation(
@@ -24,10 +40,169 @@ class CaseDetailsPage {
 		);
 	}
 
-	/**
-	 * Verifies the displayed case reference matches
-	 * the created case reference stored in answers.
-	 */
+	private getSummaryRow<TSection extends CaseDetailsSection>(
+		section: TSection,
+		rowKeyText: CaseDetailsSectionRowMap[TSection]
+	): Cypress.Chainable<JQuery<HTMLElement>> {
+		return cy
+			.get(this.sectionSelectors[section])
+			.contains('.govuk-summary-list__key', rowKeyText)
+			.parents('.govuk-summary-list__row');
+	}
+
+	validateSummaryRow<TSection extends CaseDetailsSection>(
+		section: TSection,
+		rowKeyText: CaseDetailsSectionRowMap[TSection],
+		state: SummaryRowState,
+		expectedValues: string[] = [],
+		rowNumber?: number
+	): void {
+		this.getSummaryRow(section, rowKeyText).within(() => {
+			cy.get('.govuk-summary-list__value')
+				.should('exist')
+				.and('be.visible')
+				.then(($value) => {
+					const actualText = $value.text().trim().replace(/\s+/g, ' ');
+
+					if (state === 'noDetails') {
+						expect(actualText, `Expected "${rowKeyText}" in section "${section}" to have no details`).to.equal('-');
+						return;
+					}
+
+					expect(actualText, `Expected "${rowKeyText}" in section "${section}" to contain details`).to.not.equal('-');
+
+					if (rowNumber) {
+						const rowText = $value
+							.find('[data-cy="answer-item"]')
+							.eq(rowNumber - 1)
+							.text()
+							.trim()
+							.replace(/\s+/g, ' ');
+
+						expect(
+							rowText,
+							`Expected row ${rowNumber} for "${rowKeyText}" in section "${section}" to exist`
+						).to.not.equal('');
+
+						expectedValues.forEach((expectedValue) => {
+							expect(
+								rowText,
+								`Expected row ${rowNumber} for "${rowKeyText}" in section "${section}" to contain "${expectedValue}"`
+							).to.contain(expectedValue);
+						});
+
+						return;
+					}
+
+					expectedValues.forEach((expectedValue) => {
+						expect(
+							actualText,
+							`Expected "${rowKeyText}" in section "${section}" to contain "${expectedValue}"`
+						).to.contain(expectedValue);
+					});
+				});
+		});
+	}
+
+	validateSummaryRowCount<TSection extends CaseDetailsSection>(
+		section: TSection,
+		rowKeyText: CaseDetailsSectionRowMap[TSection],
+		expectedRowCount: number
+	): void {
+		this.getSummaryRow(section, rowKeyText).within(() => {
+			if (expectedRowCount === 0) {
+				cy.get('.govuk-summary-list__value')
+					.invoke('text')
+					.then((text) => {
+						expect(
+							text.trim().replace(/\s+/g, ' '),
+							`Expected "${rowKeyText}" in section "${section}" to have no rows`
+						).to.equal('-');
+					});
+
+				return;
+			}
+
+			cy.get('[data-cy="answer-item"]').should('have.length', expectedRowCount);
+		});
+	}
+
+	clearSummaryRowDetailsIfPresent<TSection extends CaseDetailsSection>(
+		section: TSection,
+		rowKeyText: CaseDetailsSectionRowMap[TSection]
+	): void {
+		this.getSummaryRow(section, rowKeyText).then(($row) => {
+			const actualText = $row.find('.govuk-summary-list__value').text().trim().replace(/\s+/g, ' ');
+
+			if (actualText === '-') {
+				return;
+			}
+
+			const minimumRows = section === 'case-details' && rowKeyText === 'Applicant or appellant' ? 1 : 0;
+
+			cy.wrap($row)
+				.find('.govuk-summary-list__actions a.govuk-link')
+				.should('exist')
+				.and('be.visible')
+				.and('contain.text', 'Change')
+				.click();
+
+			CheckDetailsPage.removeAllRows(minimumRows);
+
+			CommonActionsUtility.clickActionButton('saveAndContinue');
+
+			this.isPageDisplayed(false);
+		});
+	}
+
+	clickSummaryRowAction<TSection extends CaseDetailsSection>(
+		section: TSection,
+		rowKeyText: CaseDetailsSectionRowMap[TSection]
+	): void {
+		this.getSummaryRow(section, rowKeyText).within(() => {
+			cy.get('.govuk-summary-list__actions a.govuk-link')
+				.should('exist')
+				.and('be.visible')
+				.invoke('text')
+				.then((rawText) => {
+					const actionText = rawText.trim();
+
+					if (!actionText.includes('Add') && !actionText.includes('Change') && !actionText.includes('View')) {
+						throw new Error(
+							`Expected action link for "${rowKeyText}" to be Add, Change or View, but found "${actionText}"`
+						);
+					}
+				});
+
+			cy.get('.govuk-summary-list__actions a.govuk-link').click();
+		});
+	}
+
+	validateSuccessBanner(section: CaseDetailsSection, state: 'displayed' | 'notDisplayed' = 'displayed'): void {
+		if (state === 'notDisplayed') {
+			cy.get('.govuk-notification-banner__content').should('not.exist');
+			return;
+		}
+
+		cy.get('.govuk-notification-banner__content')
+			.should('exist')
+			.and('be.visible')
+			.within(() => {
+				cy.contains('.govuk-notification-banner__heading', 'Case has been updated.').should('exist').and('be.visible');
+
+				cy.contains('a.govuk-notification-banner__link', 'Return to section')
+					.should('exist')
+					.and('be.visible')
+					.and('have.attr', 'href', this.sectionSelectors[section]);
+			});
+	}
+
+	clickBannerReturnToSection(section: CaseDetailsSection): void {
+		cy.contains('a.govuk-notification-banner__link', 'Return to section').should('exist').and('be.visible').click();
+		cy.hash().should('eq', this.sectionSelectors[section]);
+		cy.get(this.sectionSelectors[section]).scrollIntoView().should('be.visible');
+	}
+
 	validateCaseReference(caseReference: string): void {
 		cy.get('h2.govuk-hint')
 			.should('exist')
@@ -38,10 +213,6 @@ class CaseDetailsPage {
 			});
 	}
 
-	/**
-	 * Clicks one of the case action buttons and verifies
-	 * the target route matches the expected case URL pattern.
-	 */
 	clickCaseAction(action: 'manageCaseFiles' | 'downloadCase' | 'downloadContacts'): void {
 		const actionMap: Record<
 			typeof action,
@@ -55,13 +226,11 @@ class CaseDetailsPage {
 				text: 'Manage case files',
 				hrefPattern: /\/cases\/[0-9a-f-]+\/case-folders$/
 			},
-
 			downloadCase: {
 				text: 'Download this case',
 				selector: '[data-cy="download-case-button"]',
 				hrefPattern: /\/cases\/[0-9a-f-]+\/download$/
 			},
-
 			downloadContacts: {
 				text: 'Download all contacts',
 				selector: '[data-cy="download-contacts-button"]',
@@ -70,7 +239,6 @@ class CaseDetailsPage {
 		};
 
 		const { text, hrefPattern, selector } = actionMap[action];
-
 		const button = selector ? cy.get(selector) : cy.contains('a.govuk-button--secondary', text);
 
 		button
@@ -85,9 +253,6 @@ class CaseDetailsPage {
 			});
 	}
 
-	/**
-	 * Gets the current case details URL without the firstVisit query string.
-	 */
 	getCaseURL(): Cypress.Chainable<string> {
 		return cy.url().then((url) => {
 			const caseURL = new URL(url);
@@ -99,105 +264,12 @@ class CaseDetailsPage {
 		});
 	}
 
-	/**
-	 * Navigates to a summary card section using the anchor menu
-	 * and confirms the target card becomes visible.
-	 */
-	clickAnchorNavigationLink(
-		section:
-			| 'overview'
-			| 'case-details'
-			| 'team'
-			| 'timetable'
-			| 'key-contacts'
-			| 'procedure-1'
-			| 'procedure-2'
-			| 'procedure-3'
-			| 'outcome'
-			| 'documents'
-			| 'withdrawal-or-abeyance'
-			| 'costs'
-	): void {
-		const sectionMap: Record<
-			typeof section,
-			{
-				anchorHref: string;
-				cardSelector: string;
-				titleText: string;
-			}
-		> = {
-			overview: {
-				anchorHref: '#overview',
-				cardSelector: '#overview',
-				titleText: 'Overview'
-			},
-			'case-details': {
-				anchorHref: '#case details',
-				cardSelector: '#case\\ details',
-				titleText: 'Case details'
-			},
-			team: {
-				anchorHref: '#team',
-				cardSelector: '#team',
-				titleText: 'Team'
-			},
-			timetable: {
-				anchorHref: '#timetable',
-				cardSelector: '#timetable',
-				titleText: 'Timetable'
-			},
-			'key-contacts': {
-				anchorHref: '#key contacts',
-				cardSelector: '#key\\ contacts',
-				titleText: 'Key contacts'
-			},
-			'procedure-1': {
-				anchorHref: '#procedure 1',
-				cardSelector: '#procedure\\ 1',
-				titleText: 'Procedure 1'
-			},
-			'procedure-2': {
-				anchorHref: '#procedure 2',
-				cardSelector: '#procedure\\ 2',
-				titleText: 'Procedure 2'
-			},
-			'procedure-3': {
-				anchorHref: '#procedure 3',
-				cardSelector: '#procedure\\ 3',
-				titleText: 'Procedure 3'
-			},
-			outcome: {
-				anchorHref: '#outcome',
-				cardSelector: '#outcome',
-				titleText: 'Outcome'
-			},
-			documents: {
-				anchorHref: '#documents',
-				cardSelector: '#documents',
-				titleText: 'Documents'
-			},
-			'withdrawal-or-abeyance': {
-				anchorHref: '#withdrawal or abeyance',
-				cardSelector: '#withdrawal\\ or\\ abeyance',
-				titleText: 'Withdrawal or abeyance'
-			},
-			costs: {
-				anchorHref: '#costs',
-				cardSelector: '#costs',
-				titleText: 'Costs'
-			}
-		};
+	clickAnchorNavigationLink(section: CaseDetailsSection): void {
+		cy.get(`a[href="${this.sectionSelectors[section]}"]`).should('exist').and('be.visible').click();
 
-		const { anchorHref, cardSelector, titleText } = sectionMap[section];
-		cy.get(cardSelector).find('.govuk-summary-card__title').should('exist').and('not.be.visible');
-		cy.get(`a[href="${anchorHref}"]`).should('exist').and('be.visible').click();
-		cy.get(cardSelector).find('.govuk-summary-card__title').should('be.visible').and('have.text', titleText);
+		cy.get(this.sectionSelectors[section]).find('.govuk-summary-card__title').should('exist').and('be.visible');
 	}
 
-	/**
-	 * Opens the case notes panel or clicks Add case note,
-	 * depending on the requested action.
-	 */
 	clickCaseNotes(action: 'open' | 'add'): void {
 		const summarySelector = '.govuk-details__summary-text';
 		const addCaseNoteButtonText = 'Add case note';
@@ -223,316 +295,36 @@ class CaseDetailsPage {
 		cy.get('#comment').should('exist').and('be.visible').clear().type(text).should('have.value', text);
 	}
 
-	/**
-	 * Clicks a summary row action link after checking the row exists
-	 * and that its value state matches the Add or Change action.
-	 */
-	private clickCaseSubHeaderItem(rowKeyText: string, linkSelector: string): void {
-		cy.contains('.govuk-summary-list__key', rowKeyText)
-			.parents('.govuk-summary-list__row')
-			.then(($row) => {
-				if (!$row.length) {
-					throw new Error(`Test Failed: Summary row "${rowKeyText}" was not found`);
-				}
-
-				cy.wrap($row).within(() => {
-					cy.get(linkSelector).then(($link) => {
-						if (!$link.length) {
-							throw new Error(`Test Failed: Action link for "${rowKeyText}" was not found`);
-						}
-
-						const valueCell = cy.get('.govuk-summary-list__value');
-						const actionLink = cy.wrap($link);
-
-						actionLink
-							.should('be.visible')
-							.invoke('text')
-							.then((rawText) => {
-								const actionText = rawText.trim();
-
-								if (actionText.includes('Add')) {
-									valueCell.should('contain.text', '-');
-								} else if (actionText.includes('Change')) {
-									valueCell.should('not.contain.text', '-');
-								} else {
-									throw new Error(`Test Failed: Action link for "${rowKeyText}" was neither Add nor Change`);
-								}
-							});
-
-						actionLink.click();
-					});
-				});
-			});
-	}
-
-	/**
-	 * Clicks an editable item within the Overview summary card.
-	 */
-	clickOverviewItem(
-		section:
-			| 'act'
-			| 'consent-sought'
-			| 'primary-procedure'
-			| 'inspector-band'
-			| 'check-linked-cases'
-			| 'check-related-cases'
+	validateShowMoreState<TSection extends CaseDetailsSection>(
+		section: TSection,
+		rowKeyText: CaseDetailsSectionRowMap[TSection],
+		state: 'show' | 'hide'
 	): void {
-		const selectorMap: Record<typeof section, string> = {
-			act: 'a[href*="/overview/act"]',
-			'consent-sought': 'a[href*="/overview/consent-sought"]',
-			'primary-procedure': 'a[href*="/overview/primary-procedure"]',
-			'inspector-band': 'a[href*="/overview/inspector-band"]',
-			'check-linked-cases': 'a[href*="/overview/check-linked-cases"]',
-			'check-related-cases': 'a[href*="/overview/check-related-cases"]'
-		};
+		this.getSummaryRow(section, rowKeyText).within(() => {
+			const button = cy.get('[data-cy="expand-button"]').should('exist').and('be.visible');
 
-		const rowKeyMap: Record<typeof section, string> = {
-			act: 'Act',
-			'consent-sought': 'Consent sought',
-			'primary-procedure': 'Primary procedure',
-			'inspector-band': 'Inspector band',
-			'check-linked-cases': 'Linked case(s)',
-			'check-related-cases': 'Related case(s)'
-		};
+			if (state === 'show') {
+				button.should('have.attr', 'aria-expanded', 'false').and('contain.text', 'Show').and('contain.text', 'more');
 
-		cy.get('#overview').within(() => {
-			this.clickCaseSubHeaderItem(rowKeyMap[section], selectorMap[section]);
+				return;
+			}
+
+			button.should('have.attr', 'aria-expanded', 'true').and('contain.text', 'Hide');
 		});
 	}
 
-	/**
-	 * Clicks an editable item within the Team summary card.
-	 */
-	clickTeamItem(item: 'case-officer' | 'inspector-details'): void {
-		const linkSelectorMap: Record<typeof item, string> = {
-			'case-officer': 'a[href*="/team/case-officer"]',
-			'inspector-details': 'a[href*="/team/inspector-details"]'
-		};
-
-		const rowKeyMap: Record<typeof item, string> = {
-			'case-officer': 'Case officer',
-			'inspector-details': 'Inspector(s)'
-		};
-
-		cy.get('#team').within(() => {
-			this.clickCaseSubHeaderItem(rowKeyMap[item], linkSelectorMap[item]);
-		});
-	}
-
-	/**
-	 * Clicks an editable item within the Timetable summary card.
-	 */
-	clickTimetableItem(
-		item:
-			| 'case-received-date'
-			| 'start-date'
-			| 'expected-submission-date'
-			| 'target-decision-date'
-			| 'case-officer-verification-date'
-			| 'date-proposed-modifications-advertised'
-			| 'objection-period-end-date'
-			| 'deadline-consent'
-			| 'date-due-in-ogd'
-			| 'proposal-letter-date'
-			| 'date-decision-must-be-issued-by'
-			| 'date-parties-must-be-notified-decision'
+	clickShowHideAndValidate<TSection extends CaseDetailsSection>(
+		section: TSection,
+		rowKeyText: CaseDetailsSectionRowMap[TSection],
+		currentState: 'show' | 'hide'
 	): void {
-		const linkSelectorMap: Record<typeof item, string> = {
-			'case-received-date': 'a[href*="/timetable/case-received-date"]',
-			'start-date': 'a[href*="/timetable/start-date"]',
-			'expected-submission-date': 'a[href*="/timetable/expected-submission-date"]',
-			'target-decision-date': 'a[href*="/timetable/target-decision-date"]',
-			'case-officer-verification-date': 'a[href*="/timetable/case-officer-verification-date"]',
-			'date-proposed-modifications-advertised': 'a[href*="/timetable/date-proposed-modifications-advertised"]',
-			'objection-period-end-date': 'a[href*="/timetable/objection-period-end-date"]',
-			'deadline-consent': 'a[href*="/timetable/deadline-consent"]',
-			'date-due-in-ogd': 'a[href*="/timetable/date-due-in-ogd"]',
-			'proposal-letter-date': 'a[href*="/timetable/proposal-letter-date"]',
-			'date-decision-must-be-issued-by': 'a[href*="/timetable/date-decision-must-be-issued-by"]',
-			'date-parties-must-be-notified-decision': 'a[href*="/timetable/date-parties-must-be-notified-decision"]'
-		};
+		const expectedStateAfterClick = currentState === 'show' ? 'hide' : 'show';
 
-		const rowKeyMap: Record<typeof item, string> = {
-			'case-received-date': 'Case received / submitted',
-			'start-date': 'Start date',
-			'expected-submission-date': 'Expected submission date',
-			'target-decision-date': 'Target decision date',
-			'case-officer-verification-date': 'Case officer verification date',
-			'date-proposed-modifications-advertised': 'Date proposed modifications advertised',
-			'objection-period-end-date': 'Objection period ends',
-			'deadline-consent': 'Deadline for consent',
-			'date-due-in-ogd': 'Date due to Other Government Department (OGD)',
-			'proposal-letter-date': 'Proposal letter date',
-			'date-decision-must-be-issued-by': 'Date decision must be issued by / expiry date',
-			'date-parties-must-be-notified-decision': 'Date to notify parties of decision'
-		};
+		this.validateShowMoreState(section, rowKeyText, currentState);
 
-		cy.get('#timetable').within(() => {
-			this.clickCaseSubHeaderItem(rowKeyMap[item], linkSelectorMap[item]);
-		});
-	}
+		this.getSummaryRow(section, rowKeyText).find('[data-cy="expand-button"]').should('exist').and('be.visible').click();
 
-	/**
-	 * Clicks an editable item within the Key contacts summary card.
-	 */
-	clickKeyContactsItem(item: 'objector-details' | 'contact-details'): void {
-		const linkSelectorMap: Record<typeof item, string> = {
-			'objector-details': 'a[href*="/key-contacts/objector-details"]',
-			'contact-details': 'a[href*="/key-contacts/contact-details"]'
-		};
-
-		const rowKeyMap: Record<typeof item, string> = {
-			'objector-details': 'Objector(s)',
-			'contact-details': 'Contact(s)'
-		};
-
-		cy.get('#key\\ contacts').within(() => {
-			this.clickCaseSubHeaderItem(rowKeyMap[item], linkSelectorMap[item]);
-		});
-	}
-
-	/**
-	 * Clicks an editable item within one of the Procedure summary cards.
-	 */
-	clickProcedureItem(procedure: 'procedure1' | 'procedure2' | 'procedure3', item: 'type-of-procedure'): void {
-		const cardSelectorMap: Record<typeof procedure, string> = {
-			procedure1: '#procedure\\ 1',
-			procedure2: '#procedure\\ 2',
-			procedure3: '#procedure\\ 3'
-		};
-
-		const linkSelectorMap: Record<typeof procedure, Record<typeof item, string>> = {
-			procedure1: { 'type-of-procedure': 'a[href*="/procedure-one/type-of-procedure"]' },
-			procedure2: { 'type-of-procedure': 'a[href*="/procedure-two/type-of-procedure"]' },
-			procedure3: { 'type-of-procedure': 'a[href*="/procedure-three/type-of-procedure"]' }
-		};
-
-		const rowKeyMap: Record<typeof item, string> = {
-			'type-of-procedure': 'Procedure type'
-		};
-
-		const cardSelector = cardSelectorMap[procedure];
-
-		cy.get(cardSelector).within(() => {
-			this.clickCaseSubHeaderItem(rowKeyMap[item], linkSelectorMap[procedure][item]);
-		});
-	}
-
-	/**
-	 * Clicks an editable item within the Outcome summary card.
-	 */
-	clickOutcomeItem(
-		item:
-			| 'type-of-decision'
-			| 'decision-maker'
-			| 'outcome'
-			| 'in-target'
-			| 'outcome-date'
-			| 'decision-received-date'
-			| 'parties-notified-date'
-			| 'order-decision-dispatch-date'
-			| 'sealed-order-returned-date'
-			| 'decision-published-date'
-			| 'fencing-permanent'
-	): void {
-		const linkSelectorMap: Record<typeof item, string> = {
-			'type-of-decision': 'a[href*="/outcome/type-of-decision"]',
-			'decision-maker': 'a[href*="/outcome/decision-maker"]',
-			outcome: 'a[href*="/outcome/outcome"]',
-			'in-target': 'a[href*="/outcome/in-target"]',
-			'outcome-date': 'a[href*="/outcome/outcome-date"]',
-			'decision-received-date': 'a[href*="/outcome/decision-received-date"]',
-			'parties-notified-date': 'a[href*="/outcome/parties-notified-date"]',
-			'order-decision-dispatch-date': 'a[href*="/outcome/order-decision-dispatch-date"]',
-			'sealed-order-returned-date': 'a[href*="/outcome/sealed-order-returned-date"]',
-			'decision-published-date': 'a[href*="/outcome/decision-published-date"]',
-			'fencing-permanent': 'a[href*="/outcome/fencing-permanent"]'
-		};
-
-		const rowKeyMap: Record<typeof item, string> = {
-			'type-of-decision': 'Type of decision or report',
-			'decision-maker': 'Decision maker',
-			outcome: 'Outcome',
-			'in-target': 'In target?',
-			'outcome-date': 'Outcome date',
-			'decision-received-date': 'Decision received',
-			'parties-notified-date': 'Parties notified of outcome',
-			'order-decision-dispatch-date': 'Order decision dispatch',
-			'sealed-order-returned-date': 'Sealed order returned',
-			'decision-published-date': 'Decision published',
-			'fencing-permanent': 'Is fencing permanent'
-		};
-
-		cy.get('#outcome').within(() => {
-			this.clickCaseSubHeaderItem(rowKeyMap[item], linkSelectorMap[item]);
-		});
-	}
-
-	/**
-	 * Clicks an editable item within the Documents summary card.
-	 */
-	clickDocumentsItem(item: 'files-location'): void {
-		const linkSelectorMap: Record<typeof item, string> = {
-			'files-location': 'a[href*="/documents/files-location"]'
-		};
-
-		const rowKeyMap: Record<typeof item, string> = {
-			'files-location': 'Files location'
-		};
-
-		cy.get('#documents').within(() => {
-			this.clickCaseSubHeaderItem(rowKeyMap[item], linkSelectorMap[item]);
-		});
-	}
-
-	/**
-	 * Clicks an editable item within the Withdrawal or abeyance summary card.
-	 */
-	clickWithdrawalOrAbeyanceItem(item: 'withdrawal-date' | 'abeyance-start-date' | 'abeyance-end-date'): void {
-		const linkSelectorMap: Record<typeof item, string> = {
-			'withdrawal-date': 'a[href*="/withdrawal-abeyance/withdrawal-date"]',
-			'abeyance-start-date': 'a[href*="/withdrawal-abeyance/abeyance-start-date"]',
-			'abeyance-end-date': 'a[href*="/withdrawal-abeyance/abeyance-end-date"]'
-		};
-
-		const rowKeyMap: Record<typeof item, string> = {
-			'withdrawal-date': 'Withdrawal date',
-			'abeyance-start-date': 'Abeyance start date',
-			'abeyance-end-date': 'Abeyance end date'
-		};
-
-		const linkSelector = linkSelectorMap[item];
-		const rowKeyText = rowKeyMap[item];
-
-		cy.get('#withdrawal\\ or\\ abeyance').within(() => {
-			this.clickCaseSubHeaderItem(rowKeyText, linkSelector);
-		});
-	}
-
-	/**
-	 * Clicks an editable item within the Costs summary card.
-	 */
-	clickCostsItem(item: 'rechargeable' | 'final-cost' | 'fee-received' | 'invoice-sent'): void {
-		const linkSelectorMap: Record<typeof item, string> = {
-			rechargeable: 'a[href*="/costs/rechargeable"]',
-			'final-cost': 'a[href*="/costs/final-cost"]',
-			'fee-received': 'a[href*="/costs/fee-received"]',
-			'invoice-sent': 'a[href*="/costs/invoice-sent"]'
-		};
-
-		const rowKeyMap: Record<typeof item, string> = {
-			rechargeable: 'Rechargeable',
-			'final-cost': 'Final cost',
-			'fee-received': 'Fee received',
-			'invoice-sent': 'Invoice sent'
-		};
-
-		const linkSelector = linkSelectorMap[item];
-		const rowKeyText = rowKeyMap[item];
-
-		cy.get('#costs').within(() => {
-			this.clickCaseSubHeaderItem(rowKeyText, linkSelector);
-		});
+		this.validateShowMoreState(section, rowKeyText, expectedStateAfterClick);
 	}
 }
 

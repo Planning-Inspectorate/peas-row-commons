@@ -1,11 +1,66 @@
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
+type NameDetailsType = 'applicantAppellant' | 'objector';
+
+type NameDetailsErrorType = 'required' | 'firstNameTooLong' | 'lastNameTooLong' | 'orgNameTooLong';
+
+type NameDetailsErrorConfig = {
+	message: string;
+	href: string;
+	inlineId?: string;
+};
+
+const nameDetailsErrorMap: Record<NameDetailsType, Record<NameDetailsErrorType, NameDetailsErrorConfig>> = {
+	applicantAppellant: {
+		required: {
+			message: 'Add at least one of First name, Last name or Company or organisation name',
+			href: '#applicantName'
+		},
+		firstNameTooLong: {
+			message: 'Applicant or appellant first name must be less than 250 characters',
+			href: '#applicantFirstName',
+			inlineId: 'applicantFirstName-error'
+		},
+		lastNameTooLong: {
+			message: 'Applicant or appellant last name must be less than 250 characters',
+			href: '#applicantLastName',
+			inlineId: 'applicantLastName-error'
+		},
+		orgNameTooLong: {
+			message: 'Company or organisation name must be less than 250 characters',
+			href: '#applicantOrgName',
+			inlineId: 'applicantOrgName-error'
+		}
+	},
+	objector: {
+		required: {
+			message: 'Add at least one of First name, Last name or Company or organisation name',
+			href: '#objectorName'
+		},
+		firstNameTooLong: {
+			message: 'Objector first name must be less than 250 characters',
+			href: '#objectorFirstName',
+			inlineId: 'objectorFirstName-error'
+		},
+		lastNameTooLong: {
+			message: 'Objector last name must be less than 250 characters',
+			href: '#objectorLastName',
+			inlineId: 'objectorLastName-error'
+		},
+		orgNameTooLong: {
+			message: 'Company or organisation name must be less than 250 characters',
+			href: '#objectorOrgName',
+			inlineId: 'objectorOrgName-error'
+		}
+	}
+};
+
 class WhoAppellantObjectorPage {
 	/**
 	 * Verifies the name details page for either the applicant/appellant
 	 * or objector flow, including page-specific title, hint text and field ids.
 	 */
-	isPageDisplayed(type: 'applicantAppellant' | 'objector', fullValidation = true): void {
+	isPageDisplayed(type: NameDetailsType, fullValidation = true): void {
 		const config = {
 			applicantAppellant: {
 				pageName: 'Applicant or appellant details',
@@ -36,18 +91,22 @@ class WhoAppellantObjectorPage {
 				cy.contains('a.govuk-back-link', 'Back').should('exist').and('be.visible');
 				cy.contains('h1', page.title).should('exist').and('be.visible');
 				cy.contains('.govuk-hint', page.hintText).should('be.visible');
+
 				cy.get(`#${page.fieldPrefix}FirstName`)
 					.should('exist')
 					.and('be.visible')
 					.and('have.attr', 'name', `${page.fieldPrefix}FirstName`);
+
 				cy.get(`#${page.fieldPrefix}LastName`)
 					.should('exist')
 					.and('be.visible')
 					.and('have.attr', 'name', `${page.fieldPrefix}LastName`);
+
 				cy.get(`#${page.fieldPrefix}OrgName`)
 					.should('exist')
 					.and('be.visible')
 					.and('have.attr', 'name', `${page.fieldPrefix}OrgName`);
+
 				cy.get('[data-cy="button-save-and-continue"]')
 					.should('exist')
 					.and('be.visible')
@@ -69,6 +128,7 @@ class WhoAppellantObjectorPage {
 		'Edward',
 		'Thomas',
 		'Sophie',
+
 		'José',
 		'Chloé',
 		'Zoë',
@@ -83,7 +143,49 @@ class WhoAppellantObjectorPage {
 		'Noémie',
 		'Maëlle',
 		'Jürgen',
-		'Dvořák'
+		'Dvořák',
+
+		'Siobhán',
+		'Niamh',
+		'Óscar',
+		'Márton',
+		'Réka',
+		'Björn',
+		'Åsa',
+		'Kārlis',
+		'Željko',
+		'Petar',
+		'Yōko',
+		'Jiří',
+		'Anže',
+		'Nikša',
+		'Krzysztof',
+		'Elżbieta',
+		'Rūta',
+		'Göran',
+		'Inês',
+		'João',
+		'Rafael',
+		'Thiago',
+		'Ayşe',
+		'Fatih',
+		'Çağla',
+		'Ömer',
+		'Nguyễn',
+		'Min-jun',
+		'Ji-woo',
+		'Yūki',
+		'Saša',
+		'Adélaïde',
+		'Māris',
+		'Zuzana',
+		'Agnieszka',
+		'Kwame',
+		'Ama',
+		'Chinwe',
+		'Kemi',
+		'Yinka',
+		'Temitọpe'
 	] as const;
 
 	private readonly defaultLastNames = [
@@ -98,6 +200,7 @@ class WhoAppellantObjectorPage {
 		'Parker',
 		'Phillips',
 		'Edwards',
+
 		'García',
 		'Fernández',
 		'Muñoz',
@@ -112,7 +215,47 @@ class WhoAppellantObjectorPage {
 		'Brontë',
 		'López',
 		'François',
-		'Björnsdóttir'
+		'Björnsdóttir',
+
+		'O’Connor',
+		'McCarthy',
+		'Ó Briain',
+		'Kowalski',
+		'Nowicka',
+		'Novák',
+		'Horváth',
+		'Németh',
+		'Janković',
+		'Petrović',
+		'Đorđević',
+		'Källström',
+		'Öztürk',
+		'Yılmaz',
+		'Çelik',
+		'Aksoy',
+		'de la Cruz',
+		'Van der Merwe',
+		'van den Berg',
+		'Gonçalves',
+		'Rodríguez',
+		'Sánchez',
+		'Martínez',
+		'Rossi',
+		'Bianchi',
+		'Esposito',
+		'Kim',
+		'Nguyễn',
+		'Yamamoto',
+		'Takahashi',
+		'Wójcik',
+		'Król',
+		'Żukowski',
+		'Adébáyọ̀',
+		'Olubajo',
+		'Okonkwo',
+		'Adeyemi',
+		'Ndlovu',
+		'Mbatha'
 	] as const;
 
 	private readonly defaultCompanyNames = [
@@ -126,13 +269,49 @@ class WhoAppellantObjectorPage {
 		'Greenfield Developments',
 		'Urban Planning Ltd',
 		'County Council Services',
-		'Utility Partners UK'
+		'Utility Partners UK',
+
+		'Énergie Solutions',
+		'Grøn Energy',
+		'Árbol Consulting',
+		'Öresund Infrastructure',
+		'Česká Planning Group',
+		'Nordström & Co',
+		'Müller Holdings',
+		'García Transport Ltd',
+		'Björk Developments',
+		'François Construction',
+		'Łódź Engineering',
+		'São Paulo Logistics',
+		'Café & Partners',
+		'Réseau Planning',
+		'De La Cruz Estates',
+		'Öko Systems',
+		'Yılmaz Infrastructure',
+		'Nguyễn Consulting',
+		'Kōbe Transport',
+		'Adeyemi Holdings',
+		'Ndlovu Developments',
+		'Kwame & Sons',
+		'Živković Associates',
+		'Brontë Planning Group',
+		'Northern Utilities & Partners',
+		'Future-Rail Systems',
+		'Green Energy+',
+		'Land & Rights Co.',
+		'Phase-2 Infrastructure',
+		'Section(4) Consulting'
 	] as const;
 
-	enterFirstName(firstName?: string): string {
+	private getFieldPrefix(type: NameDetailsType): string {
+		return type === 'objector' ? 'objector' : 'applicant';
+	}
+
+	enterFirstName(type: NameDetailsType, firstName?: string): string {
 		const valueToUse = firstName !== undefined ? firstName : Cypress._.sample(this.defaultFirstNames)!;
+		const prefix = this.getFieldPrefix(type);
 
-		const input = cy.get('#applicantFirstName').should('exist').and('be.visible').clear();
+		const input = cy.get(`#${prefix}FirstName`).should('exist').and('be.visible').clear();
 
 		if (valueToUse !== '') {
 			input.type(valueToUse).should('have.value', valueToUse);
@@ -143,10 +322,11 @@ class WhoAppellantObjectorPage {
 		return valueToUse;
 	}
 
-	enterLastName(lastName?: string): string {
+	enterLastName(type: NameDetailsType, lastName?: string): string {
 		const valueToUse = lastName !== undefined ? lastName : Cypress._.sample(this.defaultLastNames)!;
+		const prefix = this.getFieldPrefix(type);
 
-		const input = cy.get('#applicantLastName').should('exist').and('be.visible').clear();
+		const input = cy.get(`#${prefix}LastName`).should('exist').and('be.visible').clear();
 
 		if (valueToUse !== '') {
 			input.type(valueToUse).should('have.value', valueToUse);
@@ -157,10 +337,11 @@ class WhoAppellantObjectorPage {
 		return valueToUse;
 	}
 
-	enterCompanyName(companyName?: string): string {
+	enterCompanyName(type: NameDetailsType, companyName?: string): string {
 		const valueToUse = companyName !== undefined ? companyName : Cypress._.sample(this.defaultCompanyNames)!;
+		const prefix = this.getFieldPrefix(type);
 
-		const input = cy.get('#applicantOrgName').should('exist').and('be.visible').clear();
+		const input = cy.get(`#${prefix}OrgName`).should('exist').and('be.visible').clear();
 
 		if (valueToUse !== '') {
 			input.type(valueToUse).should('have.value', valueToUse);
@@ -171,7 +352,10 @@ class WhoAppellantObjectorPage {
 		return valueToUse;
 	}
 
-	enterFirstLastAndCompany(details?: { firstName?: string; lastName?: string; companyName?: string }): {
+	enterFirstLastAndCompany(
+		type: NameDetailsType,
+		details?: { firstName?: string; lastName?: string; companyName?: string }
+	): {
 		firstName: string;
 		lastName: string;
 		companyName: string;
@@ -184,45 +368,23 @@ class WhoAppellantObjectorPage {
 			firstName = Cypress._.sample(this.defaultFirstNames)!;
 		}
 
-		if (firstName !== undefined) this.enterFirstName(firstName);
-		if (lastName !== undefined) this.enterLastName(lastName);
-		if (companyName !== undefined) this.enterCompanyName(companyName);
+		this.enterFirstName(type, firstName);
+		this.enterLastName(type, lastName);
+		this.enterCompanyName(type, companyName);
 
 		return { firstName, lastName, companyName };
 	}
 
-	/**
-	 * Verifies validation errors for the applicant/appellant name fields.
-	 */
-	verifyErrorBanner(type: 'required' | 'firstNameTooLong' | 'lastNameTooLong' | 'orgNameTooLong' = 'required'): void {
-		const errorMap = {
-			required: {
-				message: 'Add at least one of First name, Last name or Company or organisation name',
-				href: '#applicantName',
-				inlineId: undefined
-			},
-			firstNameTooLong: {
-				message: 'Applicant or appellant first name must be less than 250 characters',
-				href: '#applicantFirstName',
-				inlineId: 'applicantFirstName-error'
-			},
-			lastNameTooLong: {
-				message: 'Applicant or appellant last name must be less than 250 characters',
-				href: '#applicantLastName',
-				inlineId: 'applicantLastName-error'
-			},
-			orgNameTooLong: {
-				message: 'Company or organisation name must be less than 250 characters',
-				href: '#applicantOrgName',
-				inlineId: 'applicantOrgName-error'
-			}
-		} as const;
+	verifyErrorBanner(pageType: NameDetailsType, errorType: NameDetailsErrorType | NameDetailsErrorType[]): void {
+		const errorsToCheck = Array.isArray(errorType) ? errorType : [errorType];
 
-		const { message, href, inlineId } = errorMap[type];
+		errorsToCheck.forEach((error) => {
+			const { message, href, inlineId } = nameDetailsErrorMap[pageType][error];
 
-		cy.verifyErrorSummary(message, {
-			href,
-			inlineId
+			cy.verifyErrorSummary(message, {
+				href,
+				inlineId
+			});
 		});
 	}
 }

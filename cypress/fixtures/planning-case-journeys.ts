@@ -83,7 +83,7 @@ export const planningJourneys = [
 		tags: ['regression']
 	},
 	{
-		name: 'Planning > Other Secretary of State casework > Completion notice',
+		name: 'Planning > Other SoS casework > Completion notice',
 		caseworkArea: 'planning',
 		caseType: 'otherSosCasework',
 		sosSubtype: 'completionNotice',
@@ -91,7 +91,7 @@ export const planningJourneys = [
 		tags: ['regression']
 	},
 	{
-		name: 'Planning > Other Secretary of State casework > Discontinuance notice',
+		name: 'Planning > Other SoS casework > Discontinuance notice',
 		caseworkArea: 'planning',
 		caseType: 'otherSosCasework',
 		sosSubtype: 'discontinuanceNotice',
@@ -99,7 +99,7 @@ export const planningJourneys = [
 		tags: ['regression']
 	},
 	{
-		name: 'Planning > Other Secretary of State casework > Modification to planning permission',
+		name: 'Planning > Other SoS casework > Modification to planning permission',
 		caseworkArea: 'planning',
 		caseType: 'otherSosCasework',
 		sosSubtype: 'modificationToPp',
@@ -107,7 +107,7 @@ export const planningJourneys = [
 		tags: ['regression']
 	},
 	{
-		name: 'Planning > Other Secretary of State casework > Review of mineral permission',
+		name: 'Planning > Other SoS casework > Review of mineral permission',
 		caseworkArea: 'planning',
 		caseType: 'otherSosCasework',
 		sosSubtype: 'reviewOfMineralPp',
@@ -115,7 +115,7 @@ export const planningJourneys = [
 		tags: ['regression']
 	},
 	{
-		name: 'Planning > Other Secretary of State casework > Revocation',
+		name: 'Planning > Other SoS casework > Revocation',
 		caseworkArea: 'planning',
 		caseType: 'otherSosCasework',
 		sosSubtype: 'revocation',
@@ -123,7 +123,7 @@ export const planningJourneys = [
 		tags: ['regression']
 	},
 	{
-		name: 'Planning > Other Secretary of State casework > Other',
+		name: 'Planning > Other SoS casework > Other',
 		caseworkArea: 'planning',
 		caseType: 'otherSosCasework',
 		sosSubtype: 'other',

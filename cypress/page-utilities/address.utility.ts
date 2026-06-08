@@ -3,42 +3,69 @@ import { generateUkAddress } from './generate.utility.ts';
 
 type AddressFieldKey = 'address-line-1' | 'address-line-2' | 'address-town' | 'address-county' | 'address-postcode';
 
-type AddressFieldConfig = {
+type AddressErrorType =
+	| 'line1TooLong'
+	| 'line2TooLong'
+	| 'townTooLong'
+	| 'countyTooLong'
+	| 'postcodeLength'
+	| 'invalidPostcodeFormat';
+
+type AddressErrorConfig = {
+	message: string;
+	inlineId: string;
 	inputId: AddressFieldKey;
-	errorId: string;
+};
+
+const addressErrorMap: Record<AddressErrorType, AddressErrorConfig> = {
+	line1TooLong: {
+		message: 'Address line 1 must be 250 characters or less',
+		inlineId: 'address-line-1-error',
+		inputId: 'address-line-1'
+	},
+	line2TooLong: {
+		message: 'Address line 2 must be 250 characters or less',
+		inlineId: 'address-line-2-error',
+		inputId: 'address-line-2'
+	},
+	townTooLong: {
+		message: 'Town or city must be 250 characters or less',
+		inlineId: 'address-town-error',
+		inputId: 'address-town'
+	},
+	countyTooLong: {
+		message: 'County must be 250 characters or less',
+		inlineId: 'address-county-error',
+		inputId: 'address-county'
+	},
+	postcodeLength: {
+		message: 'Postcode must be between 5 and 8 characters',
+		inlineId: 'address-postcode-error',
+		inputId: 'address-postcode'
+	},
+	invalidPostcodeFormat: {
+		message: 'Enter a valid postcode',
+		inlineId: 'address-postcode-error',
+		inputId: 'address-postcode'
+	}
 };
 
 class AddressUtility {
-	private readonly addressFieldMap: AddressFieldConfig[] = [
-		{
-			inputId: 'address-line-1',
-			errorId: 'address-line-1-error'
-		},
-		{
-			inputId: 'address-line-2',
-			errorId: 'address-line-2-error'
-		},
-		{
-			inputId: 'address-town',
-			errorId: 'address-town-error'
-		},
-		{
-			inputId: 'address-county',
-			errorId: 'address-county-error'
-		},
-		{
-			inputId: 'address-postcode',
-			errorId: 'address-postcode-error'
-		}
-	];
-
 	/**
 	 * Fills address fields using generated defaults merged with optional overrides,
 	 * and returns the final address used.
 	 */
-	enterAddress(overrides?: Partial<UkAddress>): UkAddress {
+	enterAddress(overrides?: Partial<UkAddress>, useGeneratedDefaults = true): UkAddress {
 		const address: UkAddress = {
-			...generateUkAddress(),
+			...(useGeneratedDefaults
+				? generateUkAddress()
+				: {
+						line1: '',
+						line2: '',
+						town: '',
+						county: '',
+						postcode: ''
+					}),
 			...overrides
 		};
 
@@ -66,48 +93,39 @@ class AddressUtility {
 	}
 
 	/**
-	 * Validates address errors using explicit expected messages per field
+	 * Validates address errors using known error types.
 	 */
-	validateAddressErrors(expectedErrors: Partial<Record<AddressFieldKey, string>> = {}): void {
-		const fieldKeys = Object.keys(expectedErrors) as AddressFieldKey[];
-
-		if (fieldKeys.length === 0) {
+	validateAddressErrors(errorType?: AddressErrorType | AddressErrorType[]): void {
+		if (!errorType) {
 			cy.get('.govuk-error-summary').should('not.exist');
 			return;
 		}
 
+		const errorsToCheck = Array.isArray(errorType) ? errorType : [errorType];
+
 		cy.get('.govuk-error-summary')
-			.should('be.visible')
+			.should('exist')
+			.and('be.visible')
 			.within(() => {
 				cy.contains('h2', 'There is a problem').should('be.visible');
-				cy.get('.govuk-error-summary__list li').should('have.length', fieldKeys.length);
+				cy.get('.govuk-error-summary__list li').should('have.length', errorsToCheck.length);
 			});
 
-		fieldKeys.forEach((fieldKey) => {
-			const field = this.addressFieldMap.find((f) => f.inputId === fieldKey);
+		errorsToCheck.forEach((error) => {
+			const { message, inlineId, inputId } = addressErrorMap[error];
 
-			expect(field, `No field config found for ${fieldKey}`).to.not.equal(undefined);
-			if (!field) return;
+			cy.get('.govuk-error-summary').within(() => {
+				cy.contains('a', message).should('exist').and('be.visible');
+			});
 
-			const expectedMessage = expectedErrors[fieldKey];
-			expect(expectedMessage, `No expected error message provided for ${fieldKey}`).to.not.equal(undefined);
-			if (!expectedMessage) return;
-
-			cy.get(`#${field.errorId}`)
+			cy.get(`#${inlineId}`)
 				.should('be.visible')
 				.invoke('text')
 				.then((text) => {
-					const actual = text.replace('Error:', '').trim();
-					expect(actual).to.eq(expectedMessage);
+					expect(text.replace('Error:', '').trim()).to.eq(message);
 				});
 
-			cy.get(`#${field.inputId}`)
-				.should('have.class', 'govuk-input--error')
-				.and('have.attr', 'aria-describedby', field.errorId);
-
-			cy.get('.govuk-error-summary').within(() => {
-				cy.contains('a', expectedMessage).should('be.visible');
-			});
+			cy.get(`#${inputId}`).should('have.class', 'govuk-input--error').and('have.attr', 'aria-describedby', inlineId);
 		});
 	}
 }

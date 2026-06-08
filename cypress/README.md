@@ -29,3 +29,13 @@ Example:
   }
 }
 ```
+---
+# Most common case types
+
+Rights of Way:
+* Opposed Definitive Map Modification Orders (DMMO)
+* Opposed Public Path Orders (PPO)
+* Schedule 14 Directions
+PEAS:
+* Wayleaves
+* Housing and Planning CPOs
