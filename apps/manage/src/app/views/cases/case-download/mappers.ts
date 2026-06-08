@@ -25,6 +25,7 @@ import { DECISION_MAKER_TYPES } from '@pins/peas-row-commons-database/src/seed/s
 import { getUniqueProcedureFields } from '@pins/peas-row-commons-lib/util/dynamic-sections/procedures-section/procedure-section-builder.ts';
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
 import { formatAddress, formatDate, formatDateTime } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import { getUserDisplayName } from '#util/entra-groups.ts';
 
 /**
  * Maps a Prisma Address record to the simplified PDF address format.
@@ -236,7 +237,7 @@ function mapProcedure(
  * Maps a Prisma CaseDecision record to the PDF outcome format.
  *
  * Resolves the decision maker to a display name from the Entra group
- * members, falling back to the IDP user ID or role label.
+ * members and graph via redis, falling back to the Unknown User
  */
 function mapOutcome(
 	decision: CaseDownloadQueryResult['Outcome'] extends { CaseDecisions: (infer D)[] } | null ? D : never,
@@ -251,7 +252,7 @@ function mapOutcome(
 			(type) => type.id === DECISION_MAKER_TYPE_ID.SECRETARY_OF_STATE
 		)?.displayName;
 	} else if (makerIdpId) {
-		decisionMaker = inspectorNames.get(makerIdpId) ?? makerIdpId;
+		decisionMaker = getUserDisplayName(inspectorNames, makerIdpId);
 	}
 
 	return {
@@ -283,11 +284,10 @@ export function mapCaseDetailsData(
 		.map(mapContact);
 
 	const inspectors = (caseData.Inspectors ?? []).map((inspector) => {
-		const idpUserId = inspector.Inspector?.idpUserId;
-		const resolvedName = idpUserId ? inspectorNames.get(idpUserId) : undefined;
+		const resolvedName = getUserDisplayName(inspectorNames, inspector.Inspector?.idpUserId);
 
 		return {
-			name: resolvedName ?? idpUserId ?? 'Unknown',
+			name: resolvedName,
 			allocatedDate: formatDate(inspector.inspectorAllocatedDate)
 		};
 	});

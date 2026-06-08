@@ -2,6 +2,7 @@ import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildViewCaseHistory } from './controller.ts';
 import { ManageService } from '#service';
+import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 
 describe('buildViewCaseHistory', () => {
 	const mockLogger = {
@@ -152,7 +153,7 @@ describe('buildViewCaseHistory', () => {
 			assert.strictEqual(viewData.rows[0].user, 'Jane Smith');
 		});
 
-		it('should fall back to "Unknown User" when userId is not in entra group', async () => {
+		it('should fall back to "Unknown user" when userId is null', async () => {
 			const req = mockReq();
 			const res = mockRes();
 
@@ -167,7 +168,8 @@ describe('buildViewCaseHistory', () => {
 						action: 'CASE_CREATED',
 						userId: 'unknown-user-id',
 						createdAt: '2026-02-11T14:31:00Z',
-						metadata: { reference: 'REF-001' }
+						metadata: { reference: 'REF-001' },
+						User: { idpUserId: null }
 					}
 				])
 			);
@@ -176,7 +178,7 @@ describe('buildViewCaseHistory', () => {
 			await buildViewCaseHistory(buildService() as any)(req, res);
 
 			const viewData = res.render.mock.calls[0].arguments[1];
-			assert.strictEqual(viewData.rows[0].user, 'Unknown User');
+			assert.strictEqual(viewData.rows[0].user, UNKNOWN_USER);
 		});
 	});
 

@@ -29,6 +29,7 @@ import {
 	DECISION_MAKER_TYPES
 } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
+import type { UserMap } from './types.ts';
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/outcome.ts';
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
@@ -839,7 +840,7 @@ export const TEAM_QUESTIONS = {
 export function createTeamQuestions(
 	teamQuestions: typeof TEAM_QUESTIONS,
 	groupMembers: EntraGroupMembers,
-	allUsers: Prisma.UserGetPayload<{ select: { id: true; idpUserId: true; legacyId: true } }>[]
+	userMap: UserMap
 ) {
 	const caseOfficers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
 	caseOfficers.unshift({ text: '', value: '' });
@@ -847,17 +848,19 @@ export function createTeamQuestions(
 	const inspectors = groupMembers.inspectors.map(referenceDataToRadioOptions);
 	inspectors.unshift({ text: '', value: '' });
 
+	const legacyOptions = getAndSortLegacyUsers(userMap);
+
 	return {
 		...teamQuestions,
 		caseOfficer: {
 			...teamQuestions.caseOfficer,
 			options: caseOfficers,
-			legacyOptions: allUsers.map((user) => ({ text: user.idpUserId, value: user.idpUserId }))
+			legacyOptions
 		},
 		inspector: {
 			...teamQuestions.inspector,
 			options: inspectors,
-			legacyOptions: allUsers.map((user) => ({ text: user.idpUserId, value: user.idpUserId }))
+			legacyOptions
 		}
 	};
 }
@@ -1924,12 +1927,13 @@ export function createProcedureDetailQuestions(
 	procedureQuestions: typeof PROCEDURE_QUESTIONS,
 	groupMembers: EntraGroupMembers,
 	inspectors: Record<string, unknown>[],
-	allUsers: Prisma.UserGetPayload<{ select: { id: true; idpUserId: true; legacyId: true } }>[]
+	userMap: UserMap
 ) {
 	const inspectorIds = inspectors?.map((inspector) => inspector.inspectorId);
 	const relevantInspectors = [...groupMembers.inspectors].filter((member) => inspectorIds.includes(member.id));
 	const inspectorOptions: RadioOption[] = relevantInspectors.map(referenceDataToRadioOptions);
-	const legacyOptions = allUsers.map((user) => ({ text: user.idpUserId, value: user.idpUserId }));
+	const legacyOptions = getAndSortLegacyUsers(userMap);
+
 	/**
 	 * Add "Not allocated yet" as a fallback option, separated by a divider.
 	 */
@@ -1976,4 +1980,20 @@ const FIELD_DISPLAY_NAMES: Record<string, string> = Object.fromEntries(
  */
 export function getFieldDisplayNames(fieldNames: string[]): string {
 	return fieldNames.map((field) => FIELD_DISPLAY_NAMES[field] ?? field).join(', ');
+}
+
+/**
+ * Takes a userMap and creates a sorted array of users
+ * and prepends an empty option for legacy radio questions that require it.
+ */
+function getAndSortLegacyUsers(userMap: UserMap) {
+	return [
+		{ text: '', value: '' },
+		...[...userMap.entries()]
+			.sort((a, b) => a[1].localeCompare(b[1]))
+			.map(([idpUserId, displayName]) => ({
+				text: displayName || idpUserId,
+				value: idpUserId
+			}))
+	];
 }
