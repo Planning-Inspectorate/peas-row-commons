@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { mapCaseDetailsData, mapObjectorListData, mapContactListData, mapDownloadableDocuments } from './mappers.ts';
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
+import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 
 /** IDs matching the seed data constants */
 const OBJECTOR_TYPE_ID = 'objector';
@@ -195,24 +196,24 @@ describe('mappers', () => {
 			assert.strictEqual(result.inspectors[1].name, 'Bob Inspector');
 		});
 
-		it('should fall back to IDP user ID when inspector name not in map', () => {
+		it('should fall back to Unknown user when inspector name not in map', () => {
 			const caseData = createBaseCaseData({
 				Inspectors: [{ Inspector: { idpUserId: 'unknown-entra-id' }, inspectorAllocatedDate: new Date() }]
 			});
 
 			const result = mapCaseDetailsData(caseData as any, undefined, new Map());
 
-			assert.strictEqual(result.inspectors[0].name, 'unknown-entra-id');
+			assert.strictEqual(result.inspectors[0].name, UNKNOWN_USER);
 		});
 
-		it('should fall back to Unknown when inspector has no IDP user ID', () => {
+		it('should fall back to Unknown user when inspector has no IDP user ID', () => {
 			const caseData = createBaseCaseData({
 				Inspectors: [{ Inspector: { idpUserId: null }, inspectorAllocatedDate: new Date() }]
 			});
 
 			const result = mapCaseDetailsData(caseData as any, undefined, new Map());
 
-			assert.strictEqual(result.inspectors[0].name, 'Unknown');
+			assert.strictEqual(result.inspectors[0].name, UNKNOWN_USER);
 		});
 
 		it('should filter only applicant/appellant contacts', () => {

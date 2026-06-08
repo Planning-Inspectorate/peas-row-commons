@@ -2,7 +2,8 @@ import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/cl
 import type { Logger } from 'pino';
 import { parseMetadata, type AuditEntry, type AuditEvent, type AuditQueryOptions } from './types.ts';
 import { formatDateTime } from '@pins/peas-row-commons-lib/util/dates.ts';
-import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
+import { getUserDisplayName } from '#util/entra-groups.ts';
+import type { UserMap } from '../views/cases/view/types.ts';
 
 /**
  * Builds the audit service used to record and retrieve case history events.
@@ -176,11 +177,12 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 
 		/**
 		 * Get last modified information for display in case summary.
+		 * Pulls from all users (incl. non-entra group members)
 		 * Returns formatted data ready for the UI.
 		 */
 		async getLastModifiedInfo(
 			caseId: string,
-			groupMembers: EntraGroupMembers
+			userMap: UserMap
 		): Promise<{
 			updatedDate: { date: string; time: string } | null;
 			by: string | null;
@@ -204,12 +206,7 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 
 				const closedDate = caseRow.closedDate ? formatDateTime(caseRow.closedDate) : null;
 
-				const user = groupMembers.allUsers.find((member) => member.id === caseRow.UpdatedBy?.idpUserId);
-
-				// 1. Try and get a user from entra and show their name
-				// 2. Otherwise just show the idpUserId in plain text
-				// 3. Otherwise show Unknown
-				const userName = user?.displayName || caseRow.UpdatedBy?.idpUserId || 'Unknown';
+				const userName = getUserDisplayName(userMap, caseRow.UpdatedBy?.idpUserId);
 
 				return {
 					updatedDate,

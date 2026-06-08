@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import { buildAuditService } from './service.ts';
 import type { AuditEntry } from './types.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
+import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
 
 describe('Audit Service', () => {
 	const createMockDb = () => ({
@@ -223,50 +224,14 @@ describe('Audit Service', () => {
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
 
-			const groupMembers = {
-				allUsers: [
-					{ id: 'user-123', displayName: 'John Smith' },
-					{ id: 'user-456', displayName: 'Jane Doe' }
-				],
-				inspectors: [
-					{ id: 'user-123', displayName: 'John Smith' },
-					{ id: 'user-456', displayName: 'Jane Doe' }
-				],
-				caseOfficers: [
-					{ id: 'user-123', displayName: 'John Smith' },
-					{ id: 'user-456', displayName: 'Jane Doe' }
-				]
-			};
+			const userMap: Map<string, string> = new Map<string, string>();
+			userMap.set('user-123', 'John Smith');
 
-			const info = await service.getLastModifiedInfo('case-123', groupMembers);
+			const info = await service.getLastModifiedInfo('case-123', userMap);
 
 			assert.strictEqual(info.updatedDate?.date, '15 January 2025');
 			assert.strictEqual(info.closedDate?.date, '20 January 2025');
 			assert.strictEqual(info.by, 'John Smith');
-		});
-
-		it('should return idpUserId in plain text if user not found in group members', async () => {
-			const mockDb = createMockDb();
-			mockDb.case.findUnique.mock.mockImplementationOnce(() =>
-				Promise.resolve({
-					updatedDate: new Date('2025-01-15T14:30:00Z'),
-					closedDate: null,
-					UpdatedBy: { idpUserId: 'user-999' }
-				})
-			);
-
-			const logger = mockLogger();
-			const service = buildAuditService(mockDb as any, logger as any);
-
-			const groupMembers = {
-				caseOfficers: [{ id: 'user-123', displayName: 'John Smith' }],
-				allUsers: [{ id: 'user-123', displayName: 'John Smith' }],
-				inspectors: [{ id: 'user-123', displayName: 'John Smith' }]
-			};
-
-			const info = await service.getLastModifiedInfo('case-123', groupMembers);
-
-			assert.strictEqual(info.by, 'user-999');
 		});
 
 		it('should return null values and log error if case row does not exist', async () => {
@@ -276,9 +241,10 @@ describe('Audit Service', () => {
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
 
-			const groupMembers = { caseOfficers: [], inspectors: [], allUsers: [] };
+			const userMap: Map<string, string> = new Map<string, string>();
+			userMap.set('user-123', 'John Smith');
 
-			const info = await service.getLastModifiedInfo('case-123', groupMembers);
+			const info = await service.getLastModifiedInfo('case-123', userMap);
 
 			assert.strictEqual(info.updatedDate, null);
 			assert.strictEqual(info.closedDate, null);
@@ -292,20 +258,21 @@ describe('Audit Service', () => {
 				Promise.resolve({
 					updatedDate: null,
 					closedDate: null,
-					UpdatedBy: null
+					UpdatedBy: { idpUserId: 'user-123' }
 				})
 			);
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
 
-			const groupMembers = { caseOfficers: [], inspectors: [], allUsers: [] };
+			const userMap: Map<string, string> = new Map<string, string>();
+			userMap.set('user-123', 'John Smith');
 
-			const info = await service.getLastModifiedInfo('case-123', groupMembers);
+			const info = await service.getLastModifiedInfo('case-123', userMap);
 
 			assert.strictEqual(info.updatedDate, null);
 			assert.strictEqual(info.closedDate, null);
-			assert.strictEqual(info.by, 'Unknown');
+			assert.strictEqual(info.by, 'John Smith');
 		});
 
 		it('should return null values and log error on database failure', async () => {
@@ -316,9 +283,10 @@ describe('Audit Service', () => {
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
 
-			const groupMembers = { caseOfficers: [], inspectors: [], allUsers: [] };
+			const userMap: Map<string, string> = new Map<string, string>();
+			userMap.set('user-123', 'John Smith');
 
-			const info = await service.getLastModifiedInfo('case-123', groupMembers);
+			const info = await service.getLastModifiedInfo('case-123', userMap);
 
 			assert.strictEqual(info.updatedDate, null);
 			assert.strictEqual(info.closedDate, null);
@@ -326,24 +294,46 @@ describe('Audit Service', () => {
 			assert.strictEqual(logger.error.mock.callCount(), 1);
 		});
 
-		it('should handle empty caseOfficers array', async () => {
+		it('should handle missing users', async () => {
 			const mockDb = createMockDb();
 			mockDb.case.findUnique.mock.mockImplementationOnce(() =>
 				Promise.resolve({
 					updatedDate: new Date('2025-01-15T14:30:00Z'),
 					closedDate: null,
-					UpdatedBy: { idpUserId: 'user-123' }
+					UpdatedBy: { idpUserId: 'user-999' }
 				})
 			);
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
 
-			const groupMembers = { caseOfficers: [], inspectors: [], allUsers: [] };
+			const userMap: Map<string, string> = new Map<string, string>();
+			userMap.set('user-123', 'John Smith');
 
-			const info = await service.getLastModifiedInfo('case-123', groupMembers);
+			const info = await service.getLastModifiedInfo('case-123', userMap);
 
-			assert.strictEqual(info.by, 'user-123');
+			assert.strictEqual(info.by, UNKNOWN_USER);
+		});
+
+		it('should handle null idpUserIds as "Unknown user"', async () => {
+			const mockDb = createMockDb();
+			mockDb.case.findUnique.mock.mockImplementationOnce(() =>
+				Promise.resolve({
+					updatedDate: new Date('2025-01-15T14:30:00Z'),
+					closedDate: null,
+					UpdatedBy: { idpUserId: null }
+				})
+			);
+
+			const logger = mockLogger();
+			const service = buildAuditService(mockDb as any, logger as any);
+
+			const userMap: Map<string, string> = new Map<string, string>();
+			userMap.set('user-123', 'John Smith');
+
+			const info = await service.getLastModifiedInfo('case-123', userMap);
+
+			assert.strictEqual(info.by, UNKNOWN_USER);
 		});
 	});
 });
