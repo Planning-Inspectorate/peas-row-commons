@@ -57,6 +57,8 @@ describe('Planning Inspectorate > Case creation validation', () => {
 
 	it(`shows required validation errors before continuing: ${journey.name}`, () => {
 		const answers: CaseAnswers = createAnswers();
+		const over200Characters = generateRandomString(201);
+		const over50Characters = generateRandomString(51);
 
 		AnswersUtility.init(answers);
 
@@ -82,12 +84,18 @@ describe('Planning Inspectorate > Case creation validation', () => {
 		// Case name
 		CaseNamePage.isPageDisplayed();
 		CommonActionsUtility.clickActionButton('continue');
-		CaseNamePage.verifyErrorBanner();
+		CaseNamePage.verifyErrorBanner('required');
+		CaseNamePage.enterCaseName(over200Characters);
+		CommonActionsUtility.clickActionButton('continue');
+		CaseNamePage.verifyErrorBanner('tooLong');
 		answers.caseName = CaseNamePage.enterCaseName(journey);
 		CommonActionsUtility.clickActionButton('continue');
 
-		// External reference - Optional no error
+		// External reference
 		ExternalReferencePage.isPageDisplayed();
+		ExternalReferencePage.enterExternalReference(over50Characters);
+		CommonActionsUtility.clickActionButton('continue');
+		ExternalReferencePage.verifyErrorBanner();
 		answers.externalReference = ExternalReferencePage.enterExternalReference(journey);
 		CommonActionsUtility.clickActionButton('continue');
 

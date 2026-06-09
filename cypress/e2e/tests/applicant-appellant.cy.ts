@@ -200,7 +200,7 @@ describe('Planning Inspectorate > Overview > Applicant or appellant', () => {
 	}
 
 	if (shouldRunTest(['regression'])) {
-		it('can cancel an added Applicant or appellant > the Applicant or appellant is not saved', () => {
+		it('can cancel an added applicant or appellant > the applicant or appellant is not saved', () => {
 			// First has been added when creating the case
 			CaseDetailsPage.validateSummaryRowCount('case-details', 'Applicant or appellant', 1);
 
