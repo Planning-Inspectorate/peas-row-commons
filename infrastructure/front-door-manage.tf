@@ -176,17 +176,10 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
 
       rule {
         # SQL Injection Attack
-        action  = "AnomalyScoring"
+        # 942400 false positive observed as:
+        # PostParamValue:comment = "There are over x reps of support and x reps of objection..."
+        action  = "Log"
         rule_id = "942400"
-        enabled = true
-
-        exclusion {
-          # 942400 false positive observed as:
-          # PostParamValue:comment = "There are over x reps of support and x reps of objection..."
-          match_variable = "RequestBodyPostArgNames"
-          operator       = "Equals"
-          selector       = "comment"
-        }
       }
 
       rule {
