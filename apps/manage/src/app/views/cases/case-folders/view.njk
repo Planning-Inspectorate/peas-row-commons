@@ -78,17 +78,17 @@
     </div>
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-full">
-            <div class="pins-link-menu" data-cy="folder-list">
-                {% if folders|length == 0 %}
-                    <p class="govuk-body" data-cy="no-folders-message">There are no folders in this case</p>
-                {% else %}
+            {% if folders|length == 0 %}
+                <p class="govuk-body" data-cy="no-folders-message">There are no folders in this case</p>
+            {% else %}
+                <ul class="govuk-list" data-cy="folder-list">
                     {% for folder in folders %}
-                        <a class="govuk-link govuk-heading-s" href="{{ currentUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}" data-cy="folder-link-{{ folder.id }}">
+                        <li class="govuk-!-margin-bottom-4"><a class="govuk-link govuk-heading-s" href="{{ currentUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}" data-cy="folder-link-{{ folder.id }}">
                             {{ folder.displayName }}
-                        </a>
+                        </a></li>
                     {% endfor %}
-                {% endif %}
-            </div>
+                </ul>
+            {% endif %}
         </div>
     </div>
 {% endblock %}

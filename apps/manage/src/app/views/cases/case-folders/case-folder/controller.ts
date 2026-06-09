@@ -133,7 +133,7 @@ export function buildViewCaseFolder(
 			const currentPath = req.originalUrl.split('?')[0];
 			const filterViewModel = filterGenerator.generateFilters(req.query, currentPath, counts);
 
-			const folderPath = await getFolderPath(db, folderId);
+			const folderPath = await getFolderPath(db, id, folderId);
 			const breadcrumbItems = buildBreadcrumbItems(id, folderPath);
 
 			const { totalPages, resultsStartNumber, resultsEndNumber } = getPageData(
@@ -213,16 +213,20 @@ export function buildViewCaseFolder(
  * Fetches the folder path (ancestry chain) from current folder up to root.
  * Returns folders in order from root to current folder.
  */
-export async function getFolderPath(db: PrismaClient, folderId: string): Promise<FolderBreadcrumb[]> {
-	const currentFolder = await db.folder.findUnique({
-		where: { id: folderId },
-		select: { caseId: true }
-	});
+export async function getFolderPath(db: PrismaClient, folderId: string, caseId?: string): Promise<FolderBreadcrumb[]> {
+	const resolvedCaseId =
+		caseId ??
+		(
+			await db.folder.findUnique({
+				where: { id: folderId },
+				select: { caseId: true }
+			})
+		)?.caseId;
 
-	if (!currentFolder?.caseId) return [];
+	if (!resolvedCaseId) return [];
 
 	const allFolders = await db.folder.findMany({
-		where: { caseId: currentFolder.caseId },
+		where: { caseId: caseId },
 		select: {
 			id: true,
 			displayName: true,
