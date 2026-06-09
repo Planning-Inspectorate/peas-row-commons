@@ -17,7 +17,7 @@ import RemoveDetailsPage from 'cypress/page-objects/remove-details.page.ts';
 
 import { shouldRunTest } from '../../page-utilities/test-tags.utility.ts';
 
-describe('Planning Inspectorate > Overview > Linked cases', () => {
+describe('Planning Inspectorate > Overview > Objectors', () => {
 	let caseURL: string;
 
 	before(() => {
@@ -387,7 +387,7 @@ describe('Planning Inspectorate > Overview > Linked cases', () => {
 	}
 
 	if (shouldRunTest(['regression'])) {
-		it('correctly shows linked case error validations', () => {
+		it('correctly shows objector error validations', () => {
 			const over250Characters = generateRandomString(251);
 
 			// Add

@@ -40,6 +40,30 @@ class ExternalReferencePage {
 
 		return valueToUse;
 	}
+
+	verifyErrorBanner(): void {
+		const message = 'Case name must be less than 50 characters';
+		const href = '#externalReference';
+		const inlineId = 'externalReference-error';
+		const inputId = 'externalReference';
+
+		cy.get('.govuk-error-summary')
+			.should('exist')
+			.and('be.visible')
+			.within(() => {
+				cy.contains('h2', 'There is a problem').should('be.visible');
+				cy.get('.govuk-error-summary__list li').should('have.length', 1);
+			});
+
+		cy.verifyErrorSummary(message, {
+			href,
+			inlineId
+		});
+
+		cy.get(`#${inlineId}`).should('exist').and('be.visible').and('contain.text', message);
+
+		cy.get(`#${inputId}`).should('have.class', 'govuk-input--error').and('have.attr', 'aria-describedby', inlineId);
+	}
 }
 
 export default new ExternalReferencePage();
