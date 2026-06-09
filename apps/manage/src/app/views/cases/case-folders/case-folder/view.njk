@@ -123,18 +123,18 @@
                             <div class="govuk-!-margin-bottom-4">
 
                                 {% if paginationParams.totalSubFolders > 0 %}
-                                    <span class="govuk-body govuk-!-margin-bottom-0">
-                                        This folder contains {{ paginationParams.subFoldersCount }} subfolders which contain {{ paginationParams.totalDocumentsCount - paginationParams.documentCount | default(0) }} file(s) in total.
-                                    </span>
+                                    <p class="govuk-body govuk-!-margin-bottom-0">
+                                        This folder contains {{ paginationParams.subFoldersCount }} subfolders which contain {{ (paginationParams.totalDocumentsCount | default(0)) - (paginationParams.documentCount | default(0)) }} file(s) in total.
+                                    </p>
 
                                     {% set subFoldersHtml %}
-                                        <div class="pins-link-menu">
-                                            {% for folder in subFolders %}
-                                                <a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}" data-cy="subfolder-link-{{ folder.id }}">
-                                                    {{ folder.displayName }}
-                                                </a>
-                                            {% endfor %}
-                                        </div>
+                                        <ul class="govuk-list" data-cy="folder-list">
+                                        {% for folder in subFolders %}
+                                            <li class="govuk-!-margin-bottom-4"><a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}" data-cy="subfolder-link-{{ folder.id }}">
+                                                {{ folder.displayName }}
+                                            </a></li>
+                                        {% endfor %}
+                                        </ul>
                                     {% endset %}
 
                                     {{ govukAccordion({
@@ -153,15 +153,15 @@
                                         attributes: { "data-cy": "subfolders-accordion" }
                                     }) }}
                                 {% else %}
-                                    <span class="govuk-body govuk-!-margin-bottom-0">
+                                    <p class="govuk-body govuk-!-margin-bottom-0">
                                         This folder contains {{ paginationParams.documentCount | default(0) }} file(s).
-                                    </span>
+                                    </p>
                                 {% endif %}
                                 {% if documents|length !== 0 %}
-                                    <span class="govuk-body govuk-!-margin-bottom-0" data-cy="pagination-results-text">
+                                    <p class="govuk-body govuk-!-margin-bottom-0" data-cy="pagination-results-text">
                                         Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalFilteredDocuments > paginationParams.resultsEndNumber else paginationParams.totalFilteredDocuments }}</strong>
                                         of <strong>{{ paginationParams.totalFilteredDocuments }}</strong> files.
-                                    </span>
+                                    </p>
                                 {% endif %}
                             </div>
 

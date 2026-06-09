@@ -107,11 +107,31 @@ describe('buildViewCaseFolder', () => {
 
 			await buildViewCaseFolder(service as any)(req, res, next);
 
-			assert.strictEqual(mockDb.folder.findUnique.mock.callCount(), 2, 'call folder.findUnique twice');
-			assert.strictEqual(mockDb.case.findUnique.mock.callCount(), 1, 'call case.findUnique once');
-			assert.strictEqual(mockDb.document.findMany.mock.callCount(), 2, 'call document.findMany twice');
-			assert.strictEqual(mockDb.document.count.mock.callCount(), 2, 'call document.count twice');
-			assert.strictEqual(mockDb.$queryRaw.mock.callCount(), 1, 'call queryRaw once');
+			assert.strictEqual(
+				mockDb.folder.findUnique.mock.callCount(),
+				1,
+				'folder.findUnique: 1) fetch folder with children/parent'
+			);
+			assert.strictEqual(
+				mockDb.case.findUnique.mock.callCount(),
+				1,
+				'case.findUnique: fetch case reference, name, and status'
+			);
+			assert.strictEqual(
+				mockDb.document.findMany.mock.callCount(),
+				2,
+				'document.findMany: 1) paginated documents for display, 2) all docs to calculate filter counts'
+			);
+			assert.strictEqual(
+				mockDb.document.count.mock.callCount(),
+				2,
+				'document.count: 1) total matching current filter, 2) total documents in folder'
+			);
+			assert.strictEqual(
+				mockDb.$queryRaw.mock.callCount(),
+				1,
+				'$queryRaw: get recursive folder stats (total subfolders + documents)'
+			);
 
 			const dbArgs = mockDb.folder.findUnique.mock.calls[0].arguments[0];
 			assert.deepStrictEqual(dbArgs.where, { id: 'folder-456' });
@@ -293,6 +313,23 @@ describe('buildViewCaseFolder', () => {
 
 			assert.strictEqual(result.length, 1);
 			assert.strictEqual(result[0].id, 'folder-2');
+		});
+
+		it('should use the passed caseId if one is passed', async () => {
+			const mockDb = {
+				folder: {
+					findMany: mock.fn(() =>
+						Promise.resolve([{ id: 'folder-1', displayName: 'Root Folder', parentFolderId: null }])
+					),
+					findUnique: mock.fn()
+				}
+			};
+			await getFolderPath(mockDb as any, 'folder-1', 'case-123');
+			assert.strictEqual(mockDb.folder.findUnique.mock.callCount(), 0);
+			assert.strictEqual(mockDb.folder.findMany.mock.callCount(), 1);
+			assert.deepStrictEqual((mockDb.folder.findMany.mock.calls as any[])[0].arguments[0], {
+				where: { caseId: 'case-123' }
+			});
 		});
 	});
 });
