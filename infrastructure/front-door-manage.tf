@@ -162,8 +162,8 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
       rule {
         # SQL Injection Attack: SQL Operator Detected
         action  = "AnomalyScoring"
-        enabled = true
         rule_id = "942120"
+        enabled = true
 
         exclusion {
           # 942120 false positive observed as:
@@ -171,6 +171,21 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
           match_variable = "QueryStringArgNames"
           operator       = "Equals"
           selector       = "clientdata"
+        }
+      }
+
+      rule {
+        # SQL Injection Attack
+        action  = "AnomalyScoring"
+        rule_id = "942400"
+        enabled = true
+
+        exclusion {
+          # 942400 false positive observed as:
+          # PostParamValue:comment = "There are over x reps of support and x reps of objection..."
+          match_variable = "RequestBodyPostArgNames"
+          operator       = "Equals"
+          selector       = "comment"
         }
       }
 
