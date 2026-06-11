@@ -327,8 +327,8 @@ describe('buildViewCaseFolder', () => {
 			await getFolderPath(mockDb as any, 'folder-1', 'case-123');
 			assert.strictEqual(mockDb.folder.findUnique.mock.callCount(), 0);
 			assert.strictEqual(mockDb.folder.findMany.mock.callCount(), 1);
-			assert.deepStrictEqual((mockDb.folder.findMany.mock.calls as any[])[0].arguments[0], {
-				where: { caseId: 'case-123' }
+			assert.deepStrictEqual((mockDb.folder.findMany.mock.calls as any[])[0].arguments[0].where, {
+				caseId: 'case-123'
 			});
 		});
 	});
