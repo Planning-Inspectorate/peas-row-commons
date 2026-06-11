@@ -19,8 +19,11 @@ import RemoveDetailsPage from 'cypress/page-objects/remove-details.page.ts';
 import { shouldRunTest } from '../../page-utilities/test-tags.utility.ts';
 
 describe('Planning Inspectorate > Overview > Applicant or appellant', () => {
-	let caseURL: string;
-	let applicant: NonNullable<CaseAnswers['applicants']>[number];
+	let testData: {
+		caseURL: string;
+		caseReference: string;
+		applicant: NonNullable<CaseAnswers['applicants']>[number];
+	};
 
 	before(() => {
 		cy.authVisit('');
@@ -33,15 +36,19 @@ describe('Planning Inspectorate > Overview > Applicant or appellant', () => {
 				throw new Error('Case URL, case reference or applicant was not captured during case creation');
 			}
 
-			caseURL = answers.caseURL;
-			applicant = answers.applicants[0];
+			testData = {
+				caseURL: answers.caseURL,
+				caseReference: answers.caseReference,
+				applicant: answers.applicants[0]
+			};
 		});
 	});
 
 	beforeEach(() => {
 		cy.authVisit('');
-		cy.visit(caseURL);
+		cy.visit(testData.caseURL);
 		CaseDetailsPage.isPageDisplayed(false);
+		CaseDetailsPage.validateCaseReference(testData.caseReference);
 		CaseDetailsPage.clearSummaryRowDetailsIfPresent('case-details', 'Applicant or appellant');
 	});
 
@@ -52,14 +59,18 @@ describe('Planning Inspectorate > Overview > Applicant or appellant', () => {
 				'case-details',
 				'Applicant or appellant',
 				'withDetails',
-				[applicant.firstName, applicant.lastName, applicant.orgName].filter((value): value is string => Boolean(value))
+				[testData.applicant.firstName, testData.applicant.lastName, testData.applicant.orgName].filter(
+					(value): value is string => Boolean(value)
+				)
 			);
 
 			// Add second
 			CaseDetailsPage.clickSummaryRowAction('case-details', 'Applicant or appellant');
 			CheckDetailsPage.isPageDisplayed('applicantAppellant', 'withDetails');
 			CheckDetailsPage.validateRowValues(
-				[applicant.firstName, applicant.lastName, applicant.orgName].filter((value): value is string => Boolean(value)),
+				[testData.applicant.firstName, testData.applicant.lastName, testData.applicant.orgName].filter(
+					(value): value is string => Boolean(value)
+				),
 				'exists',
 				1
 			);
@@ -197,9 +208,7 @@ describe('Planning Inspectorate > Overview > Applicant or appellant', () => {
 			CaseDetailsPage.clickBannerReturnToSection('case-details');
 			CaseDetailsPage.validateSummaryRowCount('case-details', 'Applicant or appellant', 3);
 		});
-	}
 
-	if (shouldRunTest(['regression'])) {
 		it('can cancel an added applicant or appellant > the applicant or appellant is not saved', () => {
 			// First has been added when creating the case
 			CaseDetailsPage.validateSummaryRowCount('case-details', 'Applicant or appellant', 1);
@@ -237,9 +246,7 @@ describe('Planning Inspectorate > Overview > Applicant or appellant', () => {
 			CaseDetailsPage.validateSuccessBanner('case-details', 'notDisplayed');
 			CaseDetailsPage.validateSummaryRowCount('case-details', 'Applicant or appellant', 1);
 		});
-	}
 
-	if (shouldRunTest(['regression'])) {
 		it('can change an applicant or appellant', () => {
 			// Add
 			// First has been added when creating the case
@@ -352,9 +359,7 @@ describe('Planning Inspectorate > Overview > Applicant or appellant', () => {
 				applicantAppellantContactChanged.phone
 			]);
 		});
-	}
 
-	if (shouldRunTest(['regression'])) {
 		it('correctly shows applicant or appellant error validations', () => {
 			const over250Characters = generateRandomString(251);
 			CaseDetailsPage.validateSummaryRowCount('case-details', 'Applicant or appellant', 1);
