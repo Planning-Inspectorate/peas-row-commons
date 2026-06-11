@@ -20,7 +20,6 @@ import {
 	resetRemovedListItems,
 	trackRemovedItemId
 } from '@pins/peas-row-commons-lib/middleware/manage-list/track-removes.ts';
-import { guardEmptyRemove } from '@pins/peas-row-commons-lib/middleware/guard-empty-remove.ts';
 import { loadQuestionSpecificErrors, loadQuestionSpecificValidation } from './middleware.ts';
 import { createDownloadRoutes } from '../case-download/index.ts';
 
@@ -92,13 +91,7 @@ export function createRoutes(service: ManageService) {
 	);
 
 	// Deletes answer
-	router.post(
-		'/:section/:question/remove',
-		validateIdFormat,
-		getJourney,
-		guardEmptyRemove,
-		asyncHandler(clearAndUpdateCase)
-	);
+	router.post('/:section/:question/remove', validateIdFormat, getJourney, asyncHandler(clearAndUpdateCase));
 
 	return router;
 }
