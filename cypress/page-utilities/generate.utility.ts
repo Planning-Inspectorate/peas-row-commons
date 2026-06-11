@@ -32,10 +32,11 @@ export function buildCaseName(journeyName: string): string {
 }
 
 /**
- * Generates realistic sentences for validation testing:
+ * Generates realistic text for validation testing:
  * - mostly real words
  * - occasionally inserts safe special-character words
  * - always returns EXACT requested length
+ * - never starts or ends with a space
  */
 export function generateRandomString(length: number): string {
 	if (length <= 0) return '';
@@ -80,46 +81,40 @@ export function generateRandomString(length: number): string {
 		'case_ref',
 		'section(2)',
 		'phase+1',
-		'cost&fees',
+		'cost-fees',
 		'priority!',
 		'policy?',
 		'approval:',
 		'review,',
-		'group@team',
-		'rights%way',
-		'notice£250',
-		'stage=final'
+		'rights-way',
+		'notice250',
+		'stage-final'
 	];
 
 	let result = '';
 
 	while (result.length < length) {
-		const sentenceLength = Cypress._.random(6, 14);
+		const word = Math.random() < 0.1 ? Cypress._.sample(specialWords)! : Cypress._.sample(words)!;
+		const separator = result.length === 0 ? '' : Cypress._.sample([' ', ' ', ' ', '. '])!;
+		const chunk = `${separator}${word}`;
+		const remaining = length - result.length;
 
-		const sentence = Array.from({ length: sentenceLength }, () => {
-			const useSpecial = Math.random() < 0.12;
-
-			return useSpecial ? Cypress._.sample(specialWords)! : Cypress._.sample(words)!;
-		}).join(' ');
-
-		result += sentence.charAt(0).toUpperCase() + sentence.slice(1) + '. ';
-	}
-
-	let finalResult = result.substring(0, length).trim();
-
-	while (finalResult.length < length) {
-		const filler = Cypress._.sample(words)!;
-
-		if (finalResult.length + filler.length + 1 <= length) {
-			finalResult += ` ${filler}`;
+		if (chunk.length <= remaining) {
+			result += chunk;
 		} else {
-			finalResult += filler.substring(0, length - finalResult.length);
+			result += chunk.substring(0, remaining);
 		}
-
-		finalResult = finalResult.trimEnd();
 	}
 
-	return finalResult.substring(0, length).trimEnd();
+	if (/\s$/.test(result)) {
+		result = result.slice(0, -1) + Cypress._.sample('abcdefghijklmnopqrstuvwxyz'.split(''))!;
+	}
+
+	if (result.length !== length) {
+		throw new Error(`generateRandomString() returned ${result.length} characters instead of ${length}`);
+	}
+
+	return result;
 }
 
 /**
@@ -240,7 +235,6 @@ export function generateEmail(): string {
 	const prefixes = ['test', 'info', 'contact', 'admin', 'hello', 'support', 'enquiries'];
 	const companies = ['solirius', 'test-company', 'planning-inspectorate', 'local-authority'];
 	const tlds = ['.com', '.co.uk', '.org', '.net', '.gov.uk'];
-
 	const separators = ['.', '_', '-', ''];
 
 	const first = Cypress._.sample(firstNames)!;
@@ -248,61 +242,28 @@ export function generateEmail(): string {
 	const separator = Cypress._.sample(separators)!;
 	const number = Cypress._.random(1, 9999);
 
-	let localPart = '';
+	const localPartGenerators = [
+		() => `${first}.${last}`,
+		() => `${first}${separator}${last}${number}`,
+		() => Cypress._.sample(prefixes)!,
+		() => `${first.charAt(0)}${last}`,
+		() => `${first}${number}`,
+		() => `${Cypress._.sample(prefixes)!}-${Cypress._.sample(companies)!}`
+	];
 
-	switch (Cypress._.random(0, 5)) {
-		case 0:
-			localPart = `${first}.${last}`;
-			break;
+	const domainGenerators = [
+		() => `example${Cypress._.sample(tlds)!}`,
+		() => `${Cypress._.sample(companies)!}${Cypress._.sample(tlds)!}`,
+		() => 'planning-inspectorate.gov.uk',
+		() => 'local-authority.gov.uk'
+	];
 
-		case 1:
-			localPart = `${first}${separator}${last}${number}`;
-			break;
+	const localPart = Cypress._.sample(localPartGenerators)!();
+	const domain = Cypress._.sample(domainGenerators)!();
 
-		case 2:
-			localPart = Cypress._.sample(prefixes)!;
-			break;
+	const email = `${localPart}@${domain}`;
 
-		case 3:
-			localPart = `${first.charAt(0)}${last}`;
-			break;
-
-		case 4:
-			localPart = `${first}${number}`;
-			break;
-
-		case 5:
-			localPart = `${Cypress._.sample(prefixes)!}-${Cypress._.sample(companies)!}`;
-			break;
-	}
-
-	let domain = '';
-
-	switch (Cypress._.random(0, 3)) {
-		case 0:
-			domain = `example${Cypress._.sample(tlds)!}`;
-			break;
-
-		case 1:
-			domain = `${Cypress._.sample(companies)!}${Cypress._.sample(tlds)!}`;
-			break;
-
-		case 2:
-			domain = `planning-inspectorate.gov.uk`;
-			break;
-
-		case 3:
-			domain = `local-authority.gov.uk`;
-			break;
-	}
-
-	let email = `${localPart}@${domain}`;
-	const MAX_LENGTH = 250;
-	if (email.length > MAX_LENGTH) {
-		email = email.slice(0, MAX_LENGTH);
-	}
-
-	return email;
+	return email.length > 250 ? email.slice(0, 250) : email;
 }
 
 /**
@@ -340,36 +301,26 @@ export function generateCaseReference(type: 'related' | 'linked'): string {
 	];
 
 	const separators = ['/', '-', '_', '.', ''];
-	const years = ['2023', '2024', '2025', '2026'];
-	const suffixes = ['001', '002', '007', '011', '101', '445', '7781', '3344556'];
+
+	const currentYear = new Date().getFullYear();
+	const year = String(Cypress._.random(currentYear - 5, currentYear + 5));
+
+	const suffixLength = Cypress._.random(3, 8);
+	const suffix = Cypress._.random(10 ** (suffixLength - 1), 10 ** suffixLength - 1);
 
 	const prefix = Cypress._.sample(prefixes)!;
 	const caseType = Cypress._.sample(caseTypes)!;
 	const separator = Cypress._.sample(separators)!;
-	const year = Cypress._.sample(years)!;
-	const suffix = Cypress._.sample(suffixes)!;
 	const randomNumber = Cypress._.random(1000, 9999);
 
-	switch (Cypress._.random(0, 5)) {
-		case 0:
-			return `${caseType}${separator}${year}${separator}${suffix}`;
+	const formats = [
+		`${caseType}${separator}${year}${separator}${suffix}`,
+		`${prefix}${separator}${caseType}${separator}${randomNumber}`,
+		`${caseType}${separator}${prefix}${separator}${year}${separator}${suffix}`,
+		`${prefix}${separator}${caseType}${separator}${randomNumber}`,
+		`${prefix}${separator}${caseType}${separator}${year}${separator}${suffix}`,
+		`${caseType}${separator}${prefix}${separator}${randomNumber}`
+	];
 
-		case 1:
-			return `${prefix}${separator}${caseType}${separator}${randomNumber}`;
-
-		case 2:
-			return `${caseType}/${prefix}/${year}/${suffix}`;
-
-		case 3:
-			return `${prefix}.${caseType}.${randomNumber}`;
-
-		case 4:
-			return `${prefix}_${caseType}_${year}_${suffix}`;
-
-		case 5:
-			return `${caseType}-${prefix}-${randomNumber}`;
-
-		default:
-			return `${caseType}-${randomNumber}`;
-	}
+	return Cypress._.sample(formats)!;
 }

@@ -17,8 +17,55 @@ import RemoveDetailsPage from 'cypress/page-objects/remove-details.page.ts';
 
 import { shouldRunTest } from '../../page-utilities/test-tags.utility.ts';
 
+type ObjectorDetails = {
+	objector: ReturnType<typeof WhoAppellantObjectorPage.enterFirstLastAndCompany>;
+	objectorAddress: ReturnType<typeof AddressUtility.enterAddress>;
+	objectorContact: ReturnType<typeof ContactDetailsPage.enterContactDetails>;
+	objectorStatus: string;
+};
+
 describe('Planning Inspectorate > Overview > Objectors', () => {
-	let caseURL: string;
+	let testData: {
+		caseURL: string;
+		caseReference: string;
+	};
+
+	const addObjector = (status?: 'admissible' | 'inadmissible' | 'upheld' | 'withdrawn' | 'na'): ObjectorDetails => {
+		CommonActionsUtility.clickActionButton('addDetails');
+		WhoAppellantObjectorPage.isPageDisplayed('objector', true);
+		const objector = WhoAppellantObjectorPage.enterFirstLastAndCompany('objector');
+		CommonActionsUtility.clickActionButton('continue');
+		AddressPage.isPageDisplayed('objector', true);
+		const objectorAddress = AddressUtility.enterAddress();
+		CommonActionsUtility.clickActionButton('continue');
+		ContactDetailsPage.isPageDisplayed('objector', true);
+		const objectorContact = ContactDetailsPage.enterContactDetails('objector');
+		CommonActionsUtility.clickActionButton('continue');
+		ObjectorStatusPage.isPageDisplayed();
+		const objectorStatus = ObjectorStatusPage.selectAnswer(status);
+		CommonActionsUtility.clickActionButton('continue');
+		CheckDetailsPage.isPageDisplayed('objectors', 'withDetails');
+		CheckDetailsPage.validateRowValues([
+			objector.firstName,
+			objector.lastName,
+			objector.companyName,
+			objectorAddress.line1,
+			objectorAddress.line2,
+			objectorAddress.town,
+			objectorAddress.county,
+			objectorAddress.postcode,
+			objectorContact.email,
+			objectorContact.phone,
+			objectorStatus
+		]);
+
+		return {
+			objector,
+			objectorAddress,
+			objectorContact,
+			objectorStatus
+		};
+	};
 
 	before(() => {
 		cy.authVisit('');
@@ -31,14 +78,18 @@ describe('Planning Inspectorate > Overview > Objectors', () => {
 				throw new Error('Case URL or case reference was not captured during case creation');
 			}
 
-			caseURL = answers.caseURL;
+			testData = {
+				caseURL: answers.caseURL,
+				caseReference: answers.caseReference
+			};
 		});
 	});
 
 	beforeEach(() => {
 		cy.authVisit('');
-		cy.visit(caseURL);
+		cy.visit(testData.caseURL);
 		CaseDetailsPage.isPageDisplayed(false);
+		CaseDetailsPage.validateCaseReference(testData.caseReference);
 		CaseDetailsPage.clearSummaryRowDetailsIfPresent('key-contacts', 'Objector(s)');
 	});
 
@@ -48,36 +99,7 @@ describe('Planning Inspectorate > Overview > Objectors', () => {
 			CaseDetailsPage.validateSummaryRow('key-contacts', 'Objector(s)', 'noDetails');
 			CaseDetailsPage.clickSummaryRowAction('key-contacts', 'Objector(s)');
 			CheckDetailsPage.isPageDisplayed('objectors', 'withoutDetails');
-			CommonActionsUtility.clickActionButton('addDetails');
-
-			WhoAppellantObjectorPage.isPageDisplayed('objector', true);
-			const objector = WhoAppellantObjectorPage.enterFirstLastAndCompany('objector');
-			CommonActionsUtility.clickActionButton('continue');
-			AddressPage.isPageDisplayed('objector', true);
-			const objectorAddress = AddressUtility.enterAddress();
-			CommonActionsUtility.clickActionButton('continue');
-			ContactDetailsPage.isPageDisplayed('objector', true);
-			const objectorContact = ContactDetailsPage.enterContactDetails('objector');
-			CommonActionsUtility.clickActionButton('continue');
-			ObjectorStatusPage.isPageDisplayed();
-			const objectorStatus = ObjectorStatusPage.selectAnswer();
-			CommonActionsUtility.clickActionButton('continue');
-
-			CheckDetailsPage.isPageDisplayed('objectors', 'withDetails');
-			CheckDetailsPage.validateRowValues([
-				objector.firstName,
-				objector.lastName,
-				objector.companyName,
-				objectorAddress.line1,
-				objectorAddress.line2,
-				objectorAddress.town,
-				objectorAddress.county,
-				objectorAddress.postcode,
-				objectorContact.email,
-				objectorContact.phone,
-				objectorStatus
-			]);
-
+			addObjector();
 			CommonActionsUtility.clickActionButton('saveAndContinue');
 			CaseDetailsPage.isPageDisplayed(false);
 			CaseDetailsPage.validateSuccessBanner('key-contacts');
@@ -106,65 +128,10 @@ describe('Planning Inspectorate > Overview > Objectors', () => {
 			CaseDetailsPage.validateSummaryRow('key-contacts', 'Objector(s)', 'noDetails');
 			CaseDetailsPage.clickSummaryRowAction('key-contacts', 'Objector(s)');
 			CheckDetailsPage.isPageDisplayed('objectors', 'withoutDetails');
-			CommonActionsUtility.clickActionButton('addDetails');
-
-			WhoAppellantObjectorPage.isPageDisplayed('objector', true);
-			const objector = WhoAppellantObjectorPage.enterFirstLastAndCompany('objector');
-			CommonActionsUtility.clickActionButton('continue');
-			AddressPage.isPageDisplayed('objector', true);
-			const objectorAddress = AddressUtility.enterAddress();
-			CommonActionsUtility.clickActionButton('continue');
-			ContactDetailsPage.isPageDisplayed('objector', true);
-			const objectorContact = ContactDetailsPage.enterContactDetails('objector');
-			CommonActionsUtility.clickActionButton('continue');
-			ObjectorStatusPage.isPageDisplayed();
-			const objectorStatus = ObjectorStatusPage.selectAnswer();
-			CommonActionsUtility.clickActionButton('continue');
-
-			CheckDetailsPage.isPageDisplayed('objectors', 'withDetails');
-			CheckDetailsPage.validateRowValues([
-				objector.firstName,
-				objector.lastName,
-				objector.companyName,
-				objectorAddress.line1,
-				objectorAddress.line2,
-				objectorAddress.town,
-				objectorAddress.county,
-				objectorAddress.postcode,
-				objectorContact.email,
-				objectorContact.phone,
-				objectorStatus
-			]);
+			addObjector();
 
 			// Add second
-			CommonActionsUtility.clickActionButton('addDetails');
-			WhoAppellantObjectorPage.isPageDisplayed('objector', true);
-			const objectorTwo = WhoAppellantObjectorPage.enterFirstLastAndCompany('objector');
-			CommonActionsUtility.clickActionButton('continue');
-			AddressPage.isPageDisplayed('objector', true);
-			const objectorAddressTwo = AddressUtility.enterAddress();
-			CommonActionsUtility.clickActionButton('continue');
-			ContactDetailsPage.isPageDisplayed('objector', true);
-			const objectorContactTwo = ContactDetailsPage.enterContactDetails('objector');
-			CommonActionsUtility.clickActionButton('continue');
-			ObjectorStatusPage.isPageDisplayed();
-			const objectorStatusTwo = ObjectorStatusPage.selectAnswer();
-			CommonActionsUtility.clickActionButton('continue');
-
-			CheckDetailsPage.isPageDisplayed('objectors', 'withDetails');
-			CheckDetailsPage.validateRowValues([
-				objectorTwo.firstName,
-				objectorTwo.lastName,
-				objectorTwo.companyName,
-				objectorAddressTwo.line1,
-				objectorAddressTwo.line2,
-				objectorAddressTwo.town,
-				objectorAddressTwo.county,
-				objectorAddressTwo.postcode,
-				objectorContactTwo.email,
-				objectorContactTwo.phone,
-				objectorStatusTwo
-			]);
+			addObjector();
 
 			// Add but go back from who is the objector
 			CommonActionsUtility.clickActionButton('addDetails');
@@ -176,7 +143,7 @@ describe('Planning Inspectorate > Overview > Objectors', () => {
 				'notExist'
 			);
 
-			// Add but go back from objector address and contect
+			// Add but go back from objector address and contact
 			CommonActionsUtility.clickActionButton('addDetails');
 			WhoAppellantObjectorPage.isPageDisplayed('objector', true);
 			WhoAppellantObjectorPage.enterFirstLastAndCompany('objector', {
@@ -201,21 +168,18 @@ describe('Planning Inspectorate > Overview > Objectors', () => {
 			WhoAppellantObjectorPage.isPageDisplayed('objector', true);
 			CommonActionsUtility.clickActionButton('back');
 			CheckDetailsPage.isPageDisplayed('objectors', 'withDetails');
-			CheckDetailsPage.validateRowValues(
-				[
-					objectorThree.firstName,
-					objectorThree.lastName,
-					objectorThree.companyName,
-					objectorAddressThree.line1,
-					objectorAddressThree.line2,
-					objectorAddressThree.town,
-					objectorAddressThree.county,
-					objectorAddressThree.postcode,
-					objectorContactThree.email,
-					objectorContactThree.phone
-				],
-				'exists'
-			);
+			CheckDetailsPage.validateRowValues([
+				objectorThree.firstName,
+				objectorThree.lastName,
+				objectorThree.companyName,
+				objectorAddressThree.line1,
+				objectorAddressThree.line2,
+				objectorAddressThree.town,
+				objectorAddressThree.county,
+				objectorAddressThree.postcode,
+				objectorContactThree.email,
+				objectorContactThree.phone
+			]);
 			CheckDetailsPage.validateRowValues([objectorStatusThree], 'notExist', 3);
 
 			// Error banner shown
@@ -241,43 +205,13 @@ describe('Planning Inspectorate > Overview > Objectors', () => {
 			CaseDetailsPage.clickBannerReturnToSection('key-contacts');
 			CaseDetailsPage.validateSummaryRow('key-contacts', 'Objector(s)', 'withDetails', ['3 Objector(s)']);
 		});
-	}
 
-	if (shouldRunTest(['regression'])) {
 		it('can cancel an added objector > the objector is not saved', () => {
 			// Add
 			CaseDetailsPage.validateSummaryRow('key-contacts', 'Objector(s)', 'noDetails');
 			CaseDetailsPage.clickSummaryRowAction('key-contacts', 'Objector(s)');
 			CheckDetailsPage.isPageDisplayed('objectors', 'withoutDetails');
-			CommonActionsUtility.clickActionButton('addDetails');
-
-			WhoAppellantObjectorPage.isPageDisplayed('objector', true);
-			const objector = WhoAppellantObjectorPage.enterFirstLastAndCompany('objector');
-			CommonActionsUtility.clickActionButton('continue');
-			AddressPage.isPageDisplayed('objector', true);
-			const objectorAddress = AddressUtility.enterAddress();
-			CommonActionsUtility.clickActionButton('continue');
-			ContactDetailsPage.isPageDisplayed('objector', true);
-			const objectorContact = ContactDetailsPage.enterContactDetails('objector');
-			CommonActionsUtility.clickActionButton('continue');
-			ObjectorStatusPage.isPageDisplayed();
-			const objectorStatus = ObjectorStatusPage.selectAnswer();
-			CommonActionsUtility.clickActionButton('continue');
-
-			CheckDetailsPage.isPageDisplayed('objectors', 'withDetails');
-			CheckDetailsPage.validateRowValues([
-				objector.firstName,
-				objector.lastName,
-				objector.companyName,
-				objectorAddress.line1,
-				objectorAddress.line2,
-				objectorAddress.town,
-				objectorAddress.county,
-				objectorAddress.postcode,
-				objectorContact.email,
-				objectorContact.phone,
-				objectorStatus
-			]);
+			addObjector();
 
 			// Cancel
 			CommonActionsUtility.clickActionButton('cancel');
@@ -285,44 +219,13 @@ describe('Planning Inspectorate > Overview > Objectors', () => {
 			CaseDetailsPage.validateSuccessBanner('key-contacts', 'notDisplayed');
 			CaseDetailsPage.validateSummaryRow('key-contacts', 'Objector(s)', 'noDetails');
 		});
-	}
 
-	if (shouldRunTest(['regression'])) {
 		it('can change an objector', () => {
 			// Add
 			CaseDetailsPage.validateSummaryRow('key-contacts', 'Objector(s)', 'noDetails');
 			CaseDetailsPage.clickSummaryRowAction('key-contacts', 'Objector(s)');
 			CheckDetailsPage.isPageDisplayed('objectors', 'withoutDetails');
-			CommonActionsUtility.clickActionButton('addDetails');
-
-			WhoAppellantObjectorPage.isPageDisplayed('objector', true);
-			const objector = WhoAppellantObjectorPage.enterFirstLastAndCompany('objector');
-			CommonActionsUtility.clickActionButton('continue');
-			AddressPage.isPageDisplayed('objector', true);
-			const objectorAddress = AddressUtility.enterAddress();
-			CommonActionsUtility.clickActionButton('continue');
-			ContactDetailsPage.isPageDisplayed('objector', true);
-			const objectorContact = ContactDetailsPage.enterContactDetails('objector');
-			CommonActionsUtility.clickActionButton('continue');
-			ObjectorStatusPage.isPageDisplayed();
-			const objectorStatus = ObjectorStatusPage.selectAnswer();
-			CommonActionsUtility.clickActionButton('continue');
-
-			CheckDetailsPage.isPageDisplayed('objectors', 'withDetails');
-			CheckDetailsPage.validateRowValues([
-				objector.firstName,
-				objector.lastName,
-				objector.companyName,
-				objectorAddress.line1,
-				objectorAddress.line2,
-				objectorAddress.town,
-				objectorAddress.county,
-				objectorAddress.postcode,
-				objectorContact.email,
-				objectorContact.phone,
-				objectorStatus
-			]);
-
+			addObjector();
 			CommonActionsUtility.clickActionButton('saveAndContinue');
 			CaseDetailsPage.isPageDisplayed(false);
 			CaseDetailsPage.validateSuccessBanner('key-contacts');
@@ -346,7 +249,6 @@ describe('Planning Inspectorate > Overview > Objectors', () => {
 			const objectorStatusChanged = ObjectorStatusPage.selectAnswer();
 			CommonActionsUtility.clickActionButton('continue');
 			CheckDetailsPage.isPageDisplayed('objectors', 'withDetails');
-
 			CheckDetailsPage.validateRowValues([
 				objectorChanged.firstName,
 				objectorChanged.lastName,
@@ -360,7 +262,6 @@ describe('Planning Inspectorate > Overview > Objectors', () => {
 				objectorContactChanged.phone,
 				objectorStatusChanged
 			]);
-
 			CommonActionsUtility.clickActionButton('saveAndContinue');
 			CaseDetailsPage.isPageDisplayed(false);
 			CaseDetailsPage.validateSuccessBanner('key-contacts');
@@ -384,9 +285,7 @@ describe('Planning Inspectorate > Overview > Objectors', () => {
 				objectorStatusChanged
 			]);
 		});
-	}
 
-	if (shouldRunTest(['regression'])) {
 		it('correctly shows objector error validations', () => {
 			const over250Characters = generateRandomString(251);
 
@@ -414,45 +313,25 @@ describe('Planning Inspectorate > Overview > Objectors', () => {
 
 			// Errors for address postcode field entry
 			AddressPage.isPageDisplayed('objector', false);
-			AddressUtility.enterAddress(
-				{
-					postcode: 'bAdP0stCode'
-				},
-				false
-			);
+			AddressUtility.enterAddress({ postcode: 'bAdP0stCode' }, false);
 			CommonActionsUtility.clickActionButton('continue');
 			AddressPage.isPageDisplayed('objector', false);
 			AddressUtility.validateAddressErrors('postcodeLength');
-			AddressUtility.enterAddress(
-				{
-					postcode: 'u4852fw'
-				},
-				false
-			);
+			AddressUtility.enterAddress({ postcode: 'u4852fw' }, false);
 			CommonActionsUtility.clickActionButton('continue');
 			AddressPage.isPageDisplayed('objector', false);
 			AddressUtility.validateAddressErrors('invalidPostcodeFormat');
-			AddressUtility.enterAddress(
-				{
-					postcode: ''
-				},
-				false
-			);
+			AddressUtility.enterAddress({ postcode: '' }, false);
 
 			// Error for address fields
-			AddressUtility.enterAddress(
-				{
-					line1: `${over250Characters}`
-				},
-				false
-			);
+			AddressUtility.enterAddress({ line1: over250Characters }, false);
 			CommonActionsUtility.clickActionButton('continue');
 			AddressPage.isPageDisplayed('objector', false);
 			AddressUtility.validateAddressErrors('line1TooLong');
 			AddressUtility.enterAddress(
 				{
-					line1: `${over250Characters}`,
-					county: `${over250Characters}`
+					line1: over250Characters,
+					county: over250Characters
 				},
 				false
 			);
@@ -463,30 +342,24 @@ describe('Planning Inspectorate > Overview > Objectors', () => {
 				{
 					line1: '',
 					county: '',
-					town: `${over250Characters}`
+					town: over250Characters
 				},
 				false
 			);
 			CommonActionsUtility.clickActionButton('continue');
 			AddressPage.isPageDisplayed('objector', false);
 			AddressUtility.validateAddressErrors('townTooLong');
-			AddressUtility.enterAddress(
-				{
-					town: ''
-				},
-				false
-			);
+			AddressUtility.enterAddress({ town: '' }, false);
 			CommonActionsUtility.clickActionButton('continue');
 
 			// Errors for contact details
 			ContactDetailsPage.isPageDisplayed('objector', false);
-			ContactDetailsPage.enterEmail('objector', `${over250Characters}`);
+			ContactDetailsPage.enterEmail('objector', over250Characters);
 			CommonActionsUtility.clickActionButton('continue');
 			ContactDetailsPage.isPageDisplayed('objector', false);
 			ContactDetailsPage.verifyErrorBanner('objector', 'emailTooLong');
-
 			ContactDetailsPage.enterEmail('objector', '');
-			ContactDetailsPage.enterPhoneNumber('objector', `${over250Characters}`);
+			ContactDetailsPage.enterPhoneNumber('objector', over250Characters);
 			CommonActionsUtility.clickActionButton('continue');
 			ContactDetailsPage.isPageDisplayed('objector', false);
 			ContactDetailsPage.verifyErrorBanner('objector', 'phoneTooLong');
@@ -499,7 +372,6 @@ describe('Planning Inspectorate > Overview > Objectors', () => {
 			ObjectorStatusPage.verifyErrorBanner();
 			ObjectorStatusPage.selectAnswer();
 			CommonActionsUtility.clickActionButton('continue');
-
 			CheckDetailsPage.isPageDisplayed('objectors', 'withDetails');
 			CommonActionsUtility.clickActionButton('saveAndContinue');
 			CaseDetailsPage.isPageDisplayed(false);

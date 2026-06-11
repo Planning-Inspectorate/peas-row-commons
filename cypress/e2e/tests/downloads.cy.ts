@@ -9,8 +9,10 @@ import DownloadsUtility from 'cypress/page-utilities/downloads.utility.ts';
 import { shouldRunTest } from '../../page-utilities/test-tags.utility.ts';
 
 describe('Planning Inspectorate > Case downloads', () => {
-	let caseURL: string;
-	let caseReference: string;
+	let testData: {
+		caseURL: string;
+		caseReference: string;
+	};
 
 	before(() => {
 		cy.authVisit('');
@@ -24,21 +26,24 @@ describe('Planning Inspectorate > Case downloads', () => {
 				throw new Error('Case URL or case reference was not captured during case creation');
 			}
 
-			caseURL = answers.caseURL;
-			caseReference = answers.caseReference;
+			testData = {
+				caseURL: answers.caseURL,
+				caseReference: answers.caseReference
+			};
 		});
 	});
 
 	beforeEach(() => {
 		cy.authVisit('');
-		cy.visit(caseURL);
+		cy.visit(testData.caseURL);
 		CaseDetailsPage.isPageDisplayed(false);
+		CaseDetailsPage.validateCaseReference(testData.caseReference);
 	});
 
 	if (shouldRunTest(['smoke', 'regression'])) {
 		it('downloads the case', () => {
 			CaseDetailsPage.clickCaseAction('downloadCase');
-			DownloadsUtility.validateDownloadedFile('case', caseReference);
+			DownloadsUtility.validateDownloadedFile('case', testData.caseReference);
 		});
 	}
 
@@ -47,7 +52,7 @@ describe('Planning Inspectorate > Case downloads', () => {
 	if (shouldRunTest(['smoke', 'regression'])) {
 		it('downloads the contacts', () => {
 			CaseDetailsPage.clickCaseAction('downloadContacts');
-			DownloadsUtility.validateDownloadedFile('contacts', caseReference);
+			DownloadsUtility.validateDownloadedFile('contacts', testData.caseReference);
 		});
 	}
 

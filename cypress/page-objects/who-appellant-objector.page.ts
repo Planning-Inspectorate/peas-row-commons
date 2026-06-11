@@ -128,7 +128,6 @@ class WhoAppellantObjectorPage {
 		'Edward',
 		'Thomas',
 		'Sophie',
-
 		'José',
 		'Chloé',
 		'Zoë',
@@ -144,7 +143,6 @@ class WhoAppellantObjectorPage {
 		'Maëlle',
 		'Jürgen',
 		'Dvořák',
-
 		'Siobhán',
 		'Niamh',
 		'Óscar',
@@ -200,7 +198,6 @@ class WhoAppellantObjectorPage {
 		'Parker',
 		'Phillips',
 		'Edwards',
-
 		'García',
 		'Fernández',
 		'Muñoz',
@@ -216,7 +213,6 @@ class WhoAppellantObjectorPage {
 		'López',
 		'François',
 		'Björnsdóttir',
-
 		'O’Connor',
 		'McCarthy',
 		'Ó Briain',
@@ -270,7 +266,6 @@ class WhoAppellantObjectorPage {
 		'Urban Planning Ltd',
 		'County Council Services',
 		'Utility Partners UK',
-
 		'Énergie Solutions',
 		'Grøn Energy',
 		'Árbol Consulting',

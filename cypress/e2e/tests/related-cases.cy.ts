@@ -14,7 +14,21 @@ import RemoveDetailsPage from 'cypress/page-objects/remove-details.page.ts';
 import { shouldRunTest } from '../../page-utilities/test-tags.utility.ts';
 
 describe('Planning Inspectorate > Overview > Related cases', () => {
-	let caseURL: string;
+	let testData: {
+		caseURL: string;
+		caseReference: string;
+	};
+
+	const addRelatedCase = (value?: string): string => {
+		CommonActionsUtility.clickActionButton('addDetails');
+		AddDetailsPage.isPageDisplayed('related');
+		const relatedCaseText = AddDetailsPage.enterCaseText('related', value);
+		CommonActionsUtility.clickActionButton('continue');
+		CheckDetailsPage.isPageDisplayed('relatedCases', 'withDetails');
+		CheckDetailsPage.validateRowValues(relatedCaseText);
+
+		return relatedCaseText;
+	};
 
 	before(() => {
 		cy.authVisit('');
@@ -27,14 +41,18 @@ describe('Planning Inspectorate > Overview > Related cases', () => {
 				throw new Error('Case URL or case reference was not captured during case creation');
 			}
 
-			caseURL = answers.caseURL;
+			testData = {
+				caseURL: answers.caseURL,
+				caseReference: answers.caseReference
+			};
 		});
 	});
 
 	beforeEach(() => {
 		cy.authVisit('');
-		cy.visit(caseURL);
+		cy.visit(testData.caseURL);
 		CaseDetailsPage.isPageDisplayed(false);
+		CaseDetailsPage.validateCaseReference(testData.caseReference);
 		CaseDetailsPage.clearSummaryRowDetailsIfPresent('overview', 'Related case(s)');
 	});
 
@@ -44,12 +62,7 @@ describe('Planning Inspectorate > Overview > Related cases', () => {
 			CaseDetailsPage.validateSummaryRow('overview', 'Related case(s)', 'noDetails');
 			CaseDetailsPage.clickSummaryRowAction('overview', 'Related case(s)');
 			CheckDetailsPage.isPageDisplayed('relatedCases', 'withoutDetails');
-			CommonActionsUtility.clickActionButton('addDetails');
-			AddDetailsPage.isPageDisplayed('related');
-			const relatedCaseText = AddDetailsPage.enterCaseText('related');
-			CommonActionsUtility.clickActionButton('continue');
-			CheckDetailsPage.isPageDisplayed('relatedCases', 'withDetails');
-			CheckDetailsPage.validateRowValues(relatedCaseText);
+			const relatedCaseText = addRelatedCase();
 			CommonActionsUtility.clickActionButton('saveAndContinue');
 			CaseDetailsPage.isPageDisplayed(false);
 			CaseDetailsPage.validateSuccessBanner('overview');
@@ -80,36 +93,21 @@ describe('Planning Inspectorate > Overview > Related cases', () => {
 			CheckDetailsPage.isPageDisplayed('relatedCases', 'withoutDetails');
 
 			// Add first
-			CommonActionsUtility.clickActionButton('addDetails');
-			AddDetailsPage.isPageDisplayed('related');
-			const relatedCaseTextOne = AddDetailsPage.enterCaseText('related', 'Test text one');
-			CommonActionsUtility.clickActionButton('continue');
-			CheckDetailsPage.isPageDisplayed('relatedCases', 'withDetails');
-			CheckDetailsPage.validateRowValues(relatedCaseTextOne);
+			const relatedCaseTextOne = addRelatedCase('Test text one');
 
 			// Add second
-			CommonActionsUtility.clickActionButton('addDetails');
-			AddDetailsPage.isPageDisplayed('related');
-			const relatedCaseTextTwo = AddDetailsPage.enterCaseText('related', 'Test text two');
-			CommonActionsUtility.clickActionButton('continue');
-			CheckDetailsPage.isPageDisplayed('relatedCases', 'withDetails');
-			CheckDetailsPage.validateRowValues(relatedCaseTextTwo);
+			const relatedCaseTextTwo = addRelatedCase('Test text two');
 
 			// Add third
-			CommonActionsUtility.clickActionButton('addDetails');
-			AddDetailsPage.isPageDisplayed('related');
-			const relatedCaseTextThree = AddDetailsPage.enterCaseText('related', 'Test text two');
-			CommonActionsUtility.clickActionButton('continue');
-			CheckDetailsPage.isPageDisplayed('relatedCases', 'withDetails');
-			CheckDetailsPage.validateRowValues(relatedCaseTextTwo);
+			const relatedCaseTextThree = addRelatedCase('Test text three');
 
 			// Add but Go back
 			CommonActionsUtility.clickActionButton('addDetails');
 			AddDetailsPage.isPageDisplayed('related');
-			const relatedCaseTextfour = AddDetailsPage.enterCaseText('related', 'Test text three');
+			const relatedCaseTextFour = AddDetailsPage.enterCaseText('related', 'Test text four');
 			CommonActionsUtility.clickActionButton('back');
 			CheckDetailsPage.isPageDisplayed('relatedCases', 'withDetails');
-			CheckDetailsPage.validateRowValues(relatedCaseTextfour, 'notExist');
+			CheckDetailsPage.validateRowValues(relatedCaseTextFour, 'notExist');
 
 			// Save
 			CommonActionsUtility.clickActionButton('saveAndContinue');
@@ -126,42 +124,27 @@ describe('Planning Inspectorate > Overview > Related cases', () => {
 			CaseDetailsPage.clickShowHideAndValidate('overview', 'Related case(s)', 'show');
 			CaseDetailsPage.clickShowHideAndValidate('overview', 'Related case(s)', 'hide');
 		});
-	}
 
-	if (shouldRunTest(['regression'])) {
 		it('can cancel an added related case > related case is not saved', () => {
 			// Add
 			CaseDetailsPage.validateSummaryRow('overview', 'Related case(s)', 'noDetails');
 			CaseDetailsPage.clickSummaryRowAction('overview', 'Related case(s)');
 			CheckDetailsPage.isPageDisplayed('relatedCases', 'withoutDetails');
-			CommonActionsUtility.clickActionButton('addDetails');
-			AddDetailsPage.isPageDisplayed('related');
-			const relatedCaseText = AddDetailsPage.enterCaseText('related');
-			CommonActionsUtility.clickActionButton('continue');
-			CheckDetailsPage.isPageDisplayed('relatedCases', 'withDetails');
-			CheckDetailsPage.validateRowValues(relatedCaseText);
+			addRelatedCase();
 
 			// Cancel
 			CommonActionsUtility.clickActionButton('cancel');
 			CaseDetailsPage.isPageDisplayed(false);
 			CaseDetailsPage.validateSuccessBanner('overview', 'notDisplayed');
-			CaseDetailsPage.validateSuccessBanner('overview', 'notDisplayed');
 			CaseDetailsPage.validateSummaryRow('overview', 'Related case(s)', 'noDetails');
 		});
-	}
 
-	if (shouldRunTest(['regression'])) {
 		it('can change a related case', () => {
 			// Add
 			CaseDetailsPage.validateSummaryRow('overview', 'Related case(s)', 'noDetails');
 			CaseDetailsPage.clickSummaryRowAction('overview', 'Related case(s)');
 			CheckDetailsPage.isPageDisplayed('relatedCases', 'withoutDetails');
-			CommonActionsUtility.clickActionButton('addDetails');
-			AddDetailsPage.isPageDisplayed('related');
-			const relatedCaseText = AddDetailsPage.enterCaseText('related');
-			CommonActionsUtility.clickActionButton('continue');
-			CheckDetailsPage.isPageDisplayed('relatedCases', 'withDetails');
-			CheckDetailsPage.validateRowValues(relatedCaseText);
+			const relatedCaseText = addRelatedCase();
 			CommonActionsUtility.clickActionButton('saveAndContinue');
 			CaseDetailsPage.isPageDisplayed(false);
 			CaseDetailsPage.validateSuccessBanner('overview');
@@ -183,9 +166,7 @@ describe('Planning Inspectorate > Overview > Related cases', () => {
 			CaseDetailsPage.clickBannerReturnToSection('overview');
 			CaseDetailsPage.validateSummaryRow('overview', 'Related case(s)', 'withDetails', [changedCaseText]);
 		});
-	}
 
-	if (shouldRunTest(['regression'])) {
 		it('correctly shows related case error validation', () => {
 			const over250Characters = generateRandomString(251);
 
