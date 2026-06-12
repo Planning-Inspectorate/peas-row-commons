@@ -100,7 +100,7 @@
 
 
     <div class="govuk-grid-row">
-        <div class="case-folder-filter-column govuk-grid-column-two-thirds">
+        <div class="pins-case-folder-filter-column govuk-grid-column-two-thirds">
             <form method="GET" action="{{ currentPath }}">
                 {{ filterComponent(
                     filterData.checkboxGroups,
@@ -108,12 +108,12 @@
                 ) }}
             </form>
         </div>
-        
-        <div class="case-folder-table-column govuk-grid-column-two-thirds">
+
+        <div class="pins-case-folder-table-column govuk-grid-column-two-thirds">
             <div id="pagination" class="govuk-body">
                 <div class="govuk-grid-row">
                     <div class="govuk-grid-column-full">
-                        
+
                         <form action="{{ currentPath }}/move-files" method="POST">
                             {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
 
@@ -139,7 +139,7 @@
 
                                     {{ govukAccordion({
                                         id: "sub-folders-accordion",
-                                        classes: "hide-controls",
+                                        classes: "pins-accordion-hide-controls",
                                         hideAllSections: true,
                                         showSectionText: "Show subfolders list",
                                         hideSectionText: "Hide subfolders list",
