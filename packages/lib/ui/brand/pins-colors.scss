@@ -1,7 +1,5 @@
 @use 'sass:map' as map;
-@use 'node_modules/govuk-frontend/dist/govuk/settings/_colours-organisations.scss' as org-colors with (
-	$govuk-new-organisation-colours: true
-);
+@use 'node_modules/govuk-frontend/dist/govuk/settings/colours-organisations' as org-colors;
 
 $pins-grey-100: #f3f2f1;
 $pins-blue-500: #1d70b8;

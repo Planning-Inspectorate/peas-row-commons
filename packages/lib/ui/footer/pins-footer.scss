@@ -9,7 +9,7 @@
 	margin: 0 auto;
 	padding: 1.25rem 0;
 	font-family: govuk.$govuk-font-family;
-	color: map-get($map: govuk.$govuk-colours, $key: 'black');
+	color: govuk.govuk-colour('black');
 }
 .govuk-footer__meta {
 	display: flex;
@@ -32,6 +32,6 @@
 	transition: color 0.2s;
 }
 .govuk-footer__link:hover {
-	color: map-get($map: govuk.$govuk-colours, $key: 'dark-blue');
+	color: govuk.govuk-colour('blue', $variant: 'shade-50');
 	text-decoration: none;
 }
