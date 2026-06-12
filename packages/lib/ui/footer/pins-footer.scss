@@ -5,32 +5,38 @@
 	background: brand.$pins-grey-100;
 	border-top: 0.25rem solid brand.$pins-green-200;
 }
+
 .pins-footer-container {
-	margin: 0 auto;
 	padding: 1.25rem 0;
+	margin: 0 auto;
 	font-family: govuk.$govuk-font-family;
 	color: govuk.govuk-colour('black');
 }
+
 .govuk-footer__meta {
 	display: flex;
-	justify-content: space-between;
 	align-items: center;
+	justify-content: space-between;
 }
+
 .govuk-footer__inline-list {
-	list-style: none;
-	padding: 0;
-	margin: 0;
 	display: flex;
 	gap: 1.25rem;
+	padding: 0;
+	margin: 0;
+	list-style: none;
 }
+
 .govuk-footer__inline-list-item {
 	display: inline;
 }
+
 .govuk-footer__link {
 	color: brand.$pins-blue-500;
 	text-decoration: underline;
 	transition: color 0.2s;
 }
+
 .govuk-footer__link:hover {
 	color: govuk.govuk-colour('blue', $variant: 'shade-50');
 	text-decoration: none;
