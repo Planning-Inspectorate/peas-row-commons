@@ -23,7 +23,7 @@
    {{ header(config.headerTitle, currentPage) }}
 {% endblock %}
 
-{% block beforeContent %}
+{% block containerStart %}
 	<script {% if cspNonce %}nonce={{ cspNonce }}{% endif %}>
 		document.body.className += ' js-enabled' + ('noModule' in HTMLScriptElement.prototype ? ' govuk-frontend-supported' : '');
 	</script>
