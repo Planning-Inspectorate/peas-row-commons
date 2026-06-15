@@ -173,6 +173,12 @@ export const ACT_SECTIONS = [
 		displayName: 'Town and Country Planning Act 1990, 78'
 	},
 	{
+		id: `${ACT_ID.TOWN_AND_COUNTRY_PLANNING_1990}-${SECTION_ID.S_137}`,
+		actId: ACT_ID.TOWN_AND_COUNTRY_PLANNING_1990,
+		sectionId: SECTION_ID.S_137,
+		displayName: 'Town and Country Planning Act 1990, 137'
+	},
+	{
 		id: `${ACT_ID.TOWN_AND_COUNTRY_PLANNING_1990}-${SECTION_ID.S_247}`,
 		actId: ACT_ID.TOWN_AND_COUNTRY_PLANNING_1990,
 		sectionId: SECTION_ID.S_247,
