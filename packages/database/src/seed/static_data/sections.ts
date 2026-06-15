@@ -17,6 +17,7 @@ export const SECTIONS = [
 	{ id: SECTION_ID.S_119A, displayName: '119A' },
 	{ id: SECTION_ID.S_119B, displayName: '119B' },
 	{ id: SECTION_ID.S_119D, displayName: '119D' },
+	{ id: SECTION_ID.S_137, displayName: '137' },
 	{ id: SECTION_ID.S_149, displayName: '149' },
 	{ id: SECTION_ID.S_193, displayName: '193' },
 	{ id: SECTION_ID.S_247, displayName: '247' },
