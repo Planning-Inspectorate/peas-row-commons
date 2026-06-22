@@ -42,15 +42,15 @@
                     }
                 }, searchValue) }}
             </form>
-            <div id="pagination" class="govuk-body">
+            <div id="pagination">
                 <p class="govuk-body govuk-clearfix">
-                    <p class="govuk-body">
+                    <span>
                         Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalCases > paginationParams.resultsEndNumber else paginationParams.totalCases }}</strong>
                         of <strong>{{ paginationParams.totalCases }}</strong> results
-                    </p>
-                    <p class="pins-pagination-options">
+                    </span>
+                    <span class="pins-pagination-options">
                         {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalCases, paginationParams.pageNumber, searchValue, paginationParams.filtersValue) }}
-                    </p>
+                    </span>
                 </p>
 
                 {% if cases|length == 0 %}
