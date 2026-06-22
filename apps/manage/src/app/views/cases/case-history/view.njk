@@ -25,13 +25,13 @@
                     <p class="govuk-body" data-cy="no-history-message">There is no case history to display</p>
                 {% else %}
                     <p class="govuk-body govuk-clearfix">
-                        <p class="govuk-body" data-cy="pagination-results-text">
+                        <span class="govuk-body" data-cy="pagination-results-text">
                             Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalCount > paginationParams.resultsEndNumber else paginationParams.totalCount }}</strong>
                             of <strong>{{ paginationParams.totalCount }}</strong> results
-                        </p>
-                        <p class="pins-pagination-options">
+                        </span>
+                        <span class="pins-pagination-options">
                             {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalCount, paginationParams.pageNumber, paginationParams.searchValue) }}
-                        </p>
+                        </span>
                     </p>
 
                     {% set tableRows = [] %}
