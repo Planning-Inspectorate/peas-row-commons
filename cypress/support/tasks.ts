@@ -3,11 +3,12 @@ import path from 'path';
 import AdmZip from 'adm-zip';
 
 import { chromium, type Browser, type Cookie } from 'playwright-core';
-import { config as dotenvConfig } from 'dotenv';
+import { loadEnvFile } from 'node:process';
 
 import { LoginMicrosoftPage } from '../page-objects/login-microsoft.page.ts';
 
-dotenvConfig();
+// prettier-ignore
+try { loadEnvFile(); } catch {/* ignore errors*/}
 
 /**
  * Custom error used to wrap authentication and config failures
