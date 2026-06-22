@@ -7,6 +7,9 @@ export const caseListSelect = {
 	receivedDate: true,
 	Type: {
 		select: { displayName: true }
+	},
+	Status: {
+		select: { displayName: true }
 	}
 } satisfies Prisma.CaseSelect;
 
@@ -18,6 +21,7 @@ export interface CaseListViewModel {
 	receivedDate: string;
 	name: string;
 	Type: { displayName: string | null };
+	Status: { displayName: string | null };
 	receivedDateSortable: number;
 }
 
@@ -25,4 +29,5 @@ export type CurrentFilters = {
 	area: string[];
 	type: string[];
 	subType: string[];
+	status: string[];
 };

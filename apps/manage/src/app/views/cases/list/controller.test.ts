@@ -15,6 +15,7 @@ import {
 	CASE_TYPES_ID,
 	CASE_SUBTYPES_ID
 } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
+import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 
 const PAGINATION_TEST_CASES = [
 	{
@@ -126,6 +127,9 @@ const createMockCases = (count: number) => {
 			receivedDate: Date.now(),
 			Type: {
 				displayName: 'Test Type'
+			},
+			Status: {
+				displayName: 'In progress'
 			}
 		});
 	}
@@ -133,32 +137,21 @@ const createMockCases = (count: number) => {
 };
 
 describe('Case Controller', () => {
-	class MockFilterGenerator {
-		constructor(options: any) {}
-		generateFilters() {
-			return [];
-		}
-		createFilterWhereClause() {
-			return {};
-		}
-		getAllSelectedValues() {
-			return [[], [], []];
-		}
-	}
-
 	describe('caseToViewModel', () => {
 		it('should format receivedDate and create a sortable timestamp', () => {
 			const input = {
 				id: '123',
 				reference: 'ROW/001',
 				receivedDate: new Date('2024-01-15T12:00:00.000Z'),
-				Type: { displayName: 'Rights of Way' }
+				Type: { displayName: 'Rights of Way' },
+				Status: { displayName: 'In progress' }
 			};
 
 			const result = caseToViewModel(input as any);
 
 			assert.strictEqual(result.id, '123');
 			assert.strictEqual(result.Type.displayName, 'Rights of Way');
+			assert.strictEqual(result.Status.displayName, 'In progress');
 			assert.strictEqual(result.receivedDate, '15 Jan 2024');
 			assert.strictEqual(result.receivedDateSortable, input.receivedDate.getTime());
 		});
@@ -173,6 +166,7 @@ describe('Case Controller', () => {
 			};
 
 			const mockReq = {
+				query: {},
 				originalUrl: '/cases',
 				baseUrl: 'https://localhost:4000',
 				path: '/cases'
@@ -185,13 +179,15 @@ describe('Case Controller', () => {
 							id: '1',
 							reference: 'A',
 							receivedDate: new Date('2024-01-01'),
-							Type: { displayName: 'Type A' }
+							Type: { displayName: 'Type A' },
+							Status: { displayName: 'In progress' }
 						},
 						{
 							id: '2',
 							reference: 'B',
 							receivedDate: new Date('2024-02-01'),
-							Type: { displayName: 'Type B' }
+							Type: { displayName: 'Type B' },
+							Status: { displayName: 'Closed' }
 						}
 					]),
 					count: mock.fn(() => 2),
@@ -199,7 +195,7 @@ describe('Case Controller', () => {
 				}
 			};
 
-			const listCases = buildListCases({ db: mockDb, logger: mockLogger() } as any, MockFilterGenerator as any);
+			const listCases = buildListCases({ db: mockDb, logger: mockLogger() } as any);
 
 			await assert.doesNotReject(() => listCases(mockReq as any, mockRes as any));
 
@@ -212,6 +208,10 @@ describe('Case Controller', () => {
 			assert.strictEqual(renderArgs[1].pageHeading, 'Case list');
 			assert.strictEqual(renderArgs[1].cases.length, 2);
 			assert.strictEqual(renderArgs[1].cases[0].receivedDate, '01 Jan 2024');
+			assert.strictEqual(renderArgs[1].cases[0].Status.displayName, 'In progress');
+			const groups = renderArgs[1].filters.checkboxGroups.flat();
+			const statusGroup = groups.find((g: { idPrefix: string }) => g.idPrefix === 'status-root');
+			assert.ok(statusGroup, 'Status group should exist');
 
 			assert.ok(renderArgs[1].paginationParams, 'Pagination Params object should be passed to view');
 		});
@@ -242,7 +242,7 @@ describe('Case Controller', () => {
 					}
 				};
 
-				const listCases = buildListCases({ db: mockDb, logger: mockLogger() } as any, MockFilterGenerator as any);
+				const listCases = buildListCases({ db: mockDb, logger: mockLogger() } as any);
 				await assert.doesNotReject(() => listCases(mockReq as any, mockRes as any));
 
 				assert.strictEqual(mockRes.render.mock.callCount(), 1);
@@ -294,11 +294,13 @@ describe('Case Controller', () => {
 		it('should correctly map Types and SubTypes to their counts', () => {
 			const typeCounts = [{ typeId: CASE_TYPES_ID.DROUGHT, _count: { _all: 5 } }];
 			const subTypeCounts = [{ subTypeId: CASE_SUBTYPES_ID.NEW_LINES, _count: { _all: 3 } }];
+			const statusCounts = [{ statusId: CASE_STATUS_ID.IN_PROGRESS, _count: { _all: 2 } }];
 
-			const result = formatCountData(typeCounts as any, subTypeCounts as any);
+			const result = formatCountData(typeCounts as any, subTypeCounts as any, statusCounts as any);
 
 			assert.strictEqual(result[CASE_TYPES_ID.DROUGHT], 5);
 			assert.strictEqual(result[CASE_SUBTYPES_ID.NEW_LINES], 3);
+			assert.strictEqual(result[CASE_STATUS_ID.IN_PROGRESS], 2);
 		});
 
 		it('should correctly aggregate counts for Casework Areas based on Type parentage', () => {
@@ -308,7 +310,7 @@ describe('Case Controller', () => {
 				{ typeId: CASE_TYPES_ID.DROUGHT, _count: { _all: 5 } }
 			];
 
-			const result = formatCountData(typeCounts as any, []);
+			const result = formatCountData(typeCounts as any, [], []);
 
 			assert.strictEqual(result[CASE_TYPES_ID.COMMON_LAND], 10);
 			assert.strictEqual(result[CASE_TYPES_ID.RIGHTS_OF_WAY], 20);
@@ -331,7 +333,7 @@ describe('Case Controller', () => {
 			const typeCounts = [{ typeId: CASE_TYPES_ID.HOUSING_PLANNING_CPOS, _count: { _all: 100 } }];
 			const subTypeCounts = [{ subTypeId: CASE_SUBTYPES_ID.COMMONS_ECCLESIASTICAL, _count: { _all: 7 } }];
 
-			const result = formatCountData(typeCounts as any, subTypeCounts as any);
+			const result = formatCountData(typeCounts as any, subTypeCounts as any, []);
 
 			assert.strictEqual(result[CASE_TYPES_ID.HOUSING_PLANNING_CPOS], 100);
 
@@ -341,7 +343,7 @@ describe('Case Controller', () => {
 		});
 
 		it('should return empty object if no counts provided', () => {
-			const result = formatCountData([], []);
+			const result = formatCountData([], [], []);
 			assert.deepStrictEqual(result, {});
 		});
 	});
@@ -376,13 +378,13 @@ describe('Case Controller', () => {
 		describe('getCurrentFiltersAndGenerateString', () => {
 			it('should extract values using the generator and return formatted string', () => {
 				const mockReq = {
-					query: { area: 'North', type: 'Commercial' },
+					query: { area: 'North', type: 'Commercial', status: CASE_STATUS_ID.IN_PROGRESS },
 					baseUrl: 'https://localhost:4000'
 				};
 
 				const mockGenerator = {
-					getAllSelectedValues: mock.fn((query) => {
-						return [['North'], ['Commercial'], ['Specific Sub']];
+					getAllSelectedValues: mock.fn((_query) => {
+						return [['North'], ['Commercial'], ['Specific Sub'], [CASE_STATUS_ID.IN_PROGRESS]];
 					})
 				};
 
@@ -391,14 +393,17 @@ describe('Case Controller', () => {
 				assert.strictEqual(mockGenerator.getAllSelectedValues.mock.callCount(), 1);
 				assert.deepStrictEqual(mockGenerator.getAllSelectedValues.mock.calls[0].arguments[0], mockReq.query);
 
-				assert.strictEqual(result, '&area=North&type=Commercial&subType=Specific Sub');
+				assert.strictEqual(
+					result,
+					'&area=North&type=Commercial&subType=Specific Sub&status=' + CASE_STATUS_ID.IN_PROGRESS
+				);
 			});
 
 			it('should handle cases where generator returns empty arrays', () => {
 				const mockReq = { query: {}, baseUrl: 'https://localhost:4000' };
 
 				const mockGenerator = {
-					getAllSelectedValues: mock.fn(() => [[], [], []])
+					getAllSelectedValues: mock.fn(() => [[], [], [], []])
 				};
 
 				const result = getCurrentFiltersAndGenerateString(mockGenerator as any, mockReq as any);

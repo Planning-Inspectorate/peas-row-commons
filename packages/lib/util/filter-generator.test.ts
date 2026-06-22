@@ -5,6 +5,8 @@ import {
 	CASE_TYPES_ID,
 	CASE_SUBTYPES_ID
 } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
+import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
+import { CASE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { FilterGenerator } from './filter-generator.ts';
 
 // Type helper for accessing OR conditions in test assertions
@@ -13,13 +15,15 @@ type OrConditionWrapper = { OR: unknown[] };
 const MOCK_FILTER_KEYS = {
 	AREA: 'area',
 	TYPE: 'type',
-	SUBTYPE: 'subtype'
+	SUBTYPE: 'subtype',
+	STATUS: 'status'
 };
 
 const MOCK_FILTER_LABELS = {
 	AREA_SUFFIX: 'case work area',
 	TYPE_SUFFIX: 'case type',
-	SUBTYPE_SUFFIX: 'subtype'
+	SUBTYPE_SUFFIX: 'subtype',
+	STATUS_SUFFIX: 'status'
 };
 
 describe('FilterGenerator Integration Tests', () => {
@@ -148,12 +152,62 @@ describe('FilterGenerator Integration Tests', () => {
 			assert.deepStrictEqual(conditions[1], { typeId: { in: [CASE_TYPES_ID.RIGHTS_OF_WAY] } });
 			assert.deepStrictEqual(conditions[2], { subTypeId: { in: [CASE_SUBTYPES_ID.OPPOSED_DMMO] } });
 		});
+
+		it('should include Status in the query builder', () => {
+			const query = {
+				status: CASE_STATUS_ID.IN_PROGRESS
+			};
+
+			const result = generator.createFilterWhereClause(query);
+
+			assert.deepStrictEqual(result, {
+				AND: [
+					{
+						statusId: { in: [CASE_STATUS_ID.IN_PROGRESS] }
+					}
+				]
+			});
+		});
+
+		it('should combine status with area/type/subtype filters using AND', () => {
+			const query = {
+				area: CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND,
+				type: CASE_TYPES_ID.RIGHTS_OF_WAY,
+				subtype: CASE_SUBTYPES_ID.OPPOSED_DMMO,
+				status: CASE_STATUS_ID.IN_PROGRESS
+			};
+
+			const result = generator.createFilterWhereClause(query);
+
+			assert.deepStrictEqual(result, {
+				AND: [
+					{
+						OR: [
+							{ Type: { caseworkAreaId: { in: [CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND] } } },
+							{ typeId: { in: [CASE_TYPES_ID.RIGHTS_OF_WAY] } },
+							{ subTypeId: { in: [CASE_SUBTYPES_ID.OPPOSED_DMMO] } }
+						]
+					},
+					{
+						statusId: { in: [CASE_STATUS_ID.IN_PROGRESS] }
+					}
+				]
+			});
+		});
 	});
 
 	describe('Checkbox Generation', () => {
 		it('should generate the correct hierarchy for Rights of Way', () => {
 			const result = generator.generateFilters({}, baseUrl, {});
 			const groups = result.checkboxGroups.flat();
+
+			const statusGroup = groups.find((g) => g.idPrefix === 'status-root');
+			assert.ok(statusGroup, 'Status group should exist');
+			assert.strictEqual(statusGroup?.legend, 'Select status');
+
+			const statusTexts = statusGroup?.items.map((i) => i.text) || [];
+			assert.ok(statusTexts.includes('In progress (0)'));
+			assert.strictEqual(statusTexts.length, CASE_STATUSES.length);
 
 			const areaGroup = groups.find((g) => g.idPrefix === 'area-root');
 			const rowItem = areaGroup?.items.find((i) => i.value === CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND);
@@ -202,6 +256,19 @@ describe('FilterGenerator Integration Tests', () => {
 			assert.strictEqual(rowType?.checked, true);
 			assert.strictEqual(clType?.checked, true);
 		});
+
+		it('should mark status checkboxes as checked when present in query', () => {
+			const query = {
+				status: [CASE_STATUS_ID.IN_PROGRESS, CASE_STATUS_ID.CLOSED]
+			};
+
+			const result = generator.generateFilters(query, baseUrl, {});
+			const groups = result.checkboxGroups.flat();
+			const statusGroup = groups.find((g) => g.idPrefix === 'status-root');
+
+			assert.strictEqual(statusGroup?.items.find((i) => i.value === CASE_STATUS_ID.IN_PROGRESS)?.checked, true);
+			assert.strictEqual(statusGroup?.items.find((i) => i.value === CASE_STATUS_ID.CLOSED)?.checked, true);
+		});
 	});
 
 	describe('Selected Categories (Tags)', () => {
@@ -237,6 +304,26 @@ describe('FilterGenerator Integration Tests', () => {
 			assert.ok(!areaTag.href.includes(`subtype=${CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL}`));
 			assert.ok(areaTag.href.includes('page=2'));
 			assert.ok(areaTag.href.includes(`area=${CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND}`));
+		});
+
+		it('should generate status selected-category tags and removal links', () => {
+			const query = {
+				status: [CASE_STATUS_ID.IN_PROGRESS, CASE_STATUS_ID.CLOSED],
+				page: '2'
+			};
+
+			const result = generator.generateFilters(query, baseUrl, {});
+			const categories = result.selectedCategories.categories;
+
+			const statusCat = categories.find((c) => c.heading.text === 'Status');
+			assert.ok(statusCat);
+			assert.strictEqual(statusCat?.items.length, 2);
+
+			const inProgressTag = statusCat?.items.find((i) => i.text === 'In progress');
+			assert.ok(inProgressTag);
+			assert.ok(!inProgressTag?.href.includes(`status=${CASE_STATUS_ID.IN_PROGRESS}`));
+			assert.ok(inProgressTag?.href.includes(`status=${CASE_STATUS_ID.CLOSED}`));
+			assert.ok(inProgressTag?.href.includes('page=2'));
 		});
 
 		it('should handle removing one item from an array selection', () => {
