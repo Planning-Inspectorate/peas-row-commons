@@ -7,6 +7,9 @@ import {
 } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { FilterGenerator } from './filter-generator.ts';
 
+// Type helper for accessing OR conditions in test assertions
+type OrConditionWrapper = { OR: unknown[] };
+
 const MOCK_FILTER_KEYS = {
 	AREA: 'area',
 	TYPE: 'type',
@@ -25,6 +28,55 @@ describe('FilterGenerator Integration Tests', () => {
 		labels: MOCK_FILTER_LABELS
 	});
 	const baseUrl = '/cases';
+
+	describe('getAllSelectedValues Edge Cases', () => {
+		it('should filter out empty strings from array query params', () => {
+			const query = { type: ['', CASE_TYPES_ID.RIGHTS_OF_WAY, ''] };
+			const [, types] = generator.getAllSelectedValues(query);
+
+			assert.deepStrictEqual(types, [CASE_TYPES_ID.RIGHTS_OF_WAY]);
+		});
+
+		it('should filter out non-string values from array query params', () => {
+			const query = { type: [CASE_TYPES_ID.RIGHTS_OF_WAY, { nested: 'value' }, CASE_TYPES_ID.COMMON_LAND] };
+			const [, types] = generator.getAllSelectedValues(query);
+
+			assert.deepStrictEqual(types, [CASE_TYPES_ID.RIGHTS_OF_WAY, CASE_TYPES_ID.COMMON_LAND]);
+		});
+
+		it('should return empty array for single empty string value', () => {
+			const query = { type: '' };
+			const [, types] = generator.getAllSelectedValues(query);
+
+			assert.deepStrictEqual(types, []);
+		});
+
+		it('should return empty array for undefined query param', () => {
+			const query = {};
+			const [areas, types, subtypes, statuses] = generator.getAllSelectedValues(query);
+
+			assert.deepStrictEqual(areas, []);
+			assert.deepStrictEqual(types, []);
+			assert.deepStrictEqual(subtypes, []);
+			assert.deepStrictEqual(statuses, []);
+		});
+
+		it('should handle mixed valid and invalid values across all keys', () => {
+			const query = {
+				area: ['', CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND],
+				type: CASE_TYPES_ID.RIGHTS_OF_WAY,
+				subtype: ['', ''],
+				status: [CASE_STATUS_ID.IN_PROGRESS, { nested: 'object' }]
+			};
+
+			const [areas, types, subtypes, statuses] = generator.getAllSelectedValues(query);
+
+			assert.deepStrictEqual(areas, [CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND]);
+			assert.deepStrictEqual(types, [CASE_TYPES_ID.RIGHTS_OF_WAY]);
+			assert.deepStrictEqual(subtypes, []);
+			assert.deepStrictEqual(statuses, [CASE_STATUS_ID.IN_PROGRESS]);
+		});
+	});
 
 	describe('Query Logic', () => {
 		it('should return undefined if query is empty', () => {
@@ -52,7 +104,7 @@ describe('FilterGenerator Integration Tests', () => {
 			};
 
 			const result = generator.createFilterWhereClause(query);
-			const orConditions = result?.AND[0].OR;
+			const orConditions = (result?.AND[0] as OrConditionWrapper).OR;
 
 			assert.deepStrictEqual(orConditions[0], {
 				Type: { caseworkAreaId: { in: [CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND] } }
@@ -87,7 +139,7 @@ describe('FilterGenerator Integration Tests', () => {
 			};
 
 			const result = generator.createFilterWhereClause(query);
-			const conditions = result?.AND[0].OR;
+			const conditions = (result?.AND[0] as OrConditionWrapper).OR;
 
 			assert.strictEqual(conditions.length, 3);
 			assert.deepStrictEqual(conditions[0], {

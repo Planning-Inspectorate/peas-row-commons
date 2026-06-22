@@ -3,6 +3,7 @@ import {
 	CASEWORK_AREAS,
 	CASE_SUBTYPES
 } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import type { ParsedQs } from 'qs';
 
 interface FilterItem {
 	value: string;
@@ -48,6 +49,36 @@ interface FilterConfig {
 
 type CountMap = Record<string, number>;
 
+type AreaCondition = {
+	Type: {
+		caseworkAreaId: {
+			in: string[];
+		};
+	};
+};
+
+type TypeCondition = {
+	typeId: {
+		in: string[];
+	};
+};
+
+type SubTypeCondition = {
+	subTypeId: {
+		in: string[];
+	};
+};
+
+type StatusCondition = {
+	statusId: {
+		in: string[];
+	};
+};
+
+type FilterOrCondition = AreaCondition | TypeCondition | SubTypeCondition;
+type FilterAndCondition = { OR: FilterOrCondition[] } | StatusCondition;
+export type FilterWhereClause = { AND: FilterAndCondition[] };
+
 /**
  * Class that generates the filter data, formatted ready for use in the
  * MoJ filter component used on the landing page. Needs to create 2 sets of
@@ -64,7 +95,7 @@ export class FilterGenerator {
 	 * Creates the filters used in the filter component, including the checkboxes to be ticked
 	 * and the currently selected categories that are displayed in the top section of the component.
 	 */
-	public generateFilters(query: Record<string, any>, baseUrl: string, counts: CountMap): FilterViewModel {
+	public generateFilters(query: ParsedQs, baseUrl: string, counts: CountMap): FilterViewModel {
 		const [selectedAreas, selectedTypes, selectedSubTypes] = this.getAllSelectedValues(query);
 
 		const checkboxGroups = this.generateAllCheckboxes(selectedAreas, selectedTypes, selectedSubTypes, counts);
@@ -87,18 +118,18 @@ export class FilterGenerator {
 	 * Creates the where clause used in the query based on the currently selected items
 	 * (area, type, and subtype)
 	 */
-	public createFilterWhereClause(query: Record<string, any>) {
+	public createFilterWhereClause(query: ParsedQs): FilterWhereClause | undefined {
 		const [selectedAreas, selectedTypes, selectedSubTypes] = this.getAllSelectedValues(query);
 
 		if (selectedAreas.length === 0 && selectedTypes.length === 0 && selectedSubTypes.length === 0) {
 			return undefined;
 		}
 
-		const where: Record<string, any> = {
+		const where: FilterWhereClause = {
 			AND: []
 		};
 
-		const orConditions: Record<string, any>[] = [];
+		const orConditions: FilterOrCondition[] = [];
 
 		if (selectedAreas.length) {
 			orConditions.push({
@@ -123,7 +154,7 @@ export class FilterGenerator {
 		return where.AND.length > 0 ? where : undefined;
 	}
 
-	public getAllSelectedValues(query: Record<string, any>) {
+	public getAllSelectedValues(query: ParsedQs) {
 		const { keys } = this.config;
 
 		const selectedAreas = this.getSelectedValues(query, keys.AREA);
@@ -136,9 +167,9 @@ export class FilterGenerator {
 	/**
 	 * Checks if current value is in the query params as "selected"
 	 */
-	private getSelectedValues(query: Record<string, any>, key: string): string[] {
+	private getSelectedValues(query: ParsedQs, key: string): string[] {
 		const val = query[key];
-		if (Array.isArray(val)) return val;
+		if (Array.isArray(val)) return val.filter((v): v is string => typeof v === 'string' && v !== '');
 		if (typeof val === 'string' && val) return [val];
 		return [];
 	}
@@ -147,7 +178,7 @@ export class FilterGenerator {
 	 * Formats the Case Areas, Case Types and Case Subtypes currently selected into
 	 * their own objects ready for displaying to the user in the component.
 	 */
-	private createSelectedCategories(query: Record<string, any>, baseUrl: string) {
+	private createSelectedCategories(query: ParsedQs, baseUrl: string) {
 		const { keys, labels } = this.config;
 
 		const selectedAreaCategories = this.createGroupedSelectedCategories(
@@ -196,7 +227,7 @@ export class FilterGenerator {
 		relationKey: keyof TItem,
 		queryParamKey: string,
 		suffix: string,
-		query: Record<string, any>,
+		query: ParsedQs,
 		baseUrl: string
 	) {
 		const selectedValues = this.getSelectedValues(query, queryParamKey);
