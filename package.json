@@ -51,6 +51,7 @@
     "connect-redis": "^9.0.0",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
+    "eslint-plugin-check-file": "^3.3.1",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "express-validator": "^7.3.0",
@@ -106,9 +107,9 @@
     "*.{js,ts}": [
       "eslint --fix"
     ],
-		"*.{css,scss}": [
-			"stylelint --fix"
-		],
+    "*.{css,scss}": [
+      "stylelint --fix"
+    ],
     "*.{js,ts,json,md,prisma,yml,yaml,scss}": [
       "prettier --write"
     ]
