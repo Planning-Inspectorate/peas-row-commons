@@ -8,7 +8,7 @@ import {
 	FOLDER_TEMPLATES_MAP,
 	buildBreadcrumbItems
 } from './folder-utils.ts';
-import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/types.ts';
+import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/types.ts';
 import type { FolderBreadcrumb } from './types.ts';
 
 describe('Folder creation utils', () => {

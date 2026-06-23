@@ -4,7 +4,7 @@ import {
 	CASEWORK_AREAS_ID,
 	CASE_TYPES_ID,
 	CASE_SUBTYPES_ID
-} from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { FilterGenerator } from './filter-generator.ts';
 
 const MOCK_FILTER_KEYS = {

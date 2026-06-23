@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'fs/promises';
 import path from 'path';
-import { AUTHORITY_STATUS_ID } from './static_data/ids/authority-status.ts';
+import { AUTHORITY_STATUS_ID } from './static-data/ids/authority-status.ts';
 
 const __dirname = import.meta.dirname;
 

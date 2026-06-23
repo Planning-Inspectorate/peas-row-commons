@@ -3,7 +3,7 @@ import assert from 'node:assert';
 import { buildAuditService } from './service.ts';
 import type { AuditEntry } from './types.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
-import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 
 describe('Audit Service', () => {
 	const createMockDb = () => ({

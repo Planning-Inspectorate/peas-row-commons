@@ -3,7 +3,7 @@ import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journe
 import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import type { Handler, Request } from 'express';
 import { questionHasAnswer } from '@planning-inspectorate/dynamic-forms/src/components/utils/question-has-answer.js';
-import { CASEWORK_AREAS_ID, CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
+import { CASEWORK_AREAS_ID, CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js';
 
 export const JOURNEY_ID = 'create-a-case';

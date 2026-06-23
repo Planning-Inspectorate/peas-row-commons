@@ -2,8 +2,8 @@ import {
 	PEAS_FOLDERS,
 	ROW_FOLDERS,
 	COMMON_LAND_FOLDERS
-} from '@pins/peas-row-commons-database/src/seed/static_data/folders.ts';
-import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/types.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/folders.ts';
+import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/types.ts';
 import type { BreadcrumbItem, FlatFolder, FolderBreadcrumb, FolderNode } from './types.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 

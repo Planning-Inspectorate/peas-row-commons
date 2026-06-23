@@ -16,11 +16,11 @@ import { yesNoToBoolean } from '@planning-inspectorate/dynamic-forms/src/compone
 import { JOURNEY_ID } from './journey.ts';
 import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 import { CONTACT_MAPPINGS, handleContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
-import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
+import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
 import { AUDIT_ACTIONS, type AuditEntry, type AuditService, type AuditAction } from '../../../audit/index.ts';
 import { getFieldDisplayNames } from './question-utils.ts';
-import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
-import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
+import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
+import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 import { remapFlattenedFieldsToArray } from '@pins/peas-row-commons-lib/util/remap-flattened-fields.ts';
 import { toDateOrNull } from '@pins/peas-row-commons-lib/util/dates.ts';
 import { mapProceduresToArray, sortProceduresChronologically } from './view-model.ts';
@@ -41,7 +41,7 @@ import {
 	resolveOutcomeAudits
 } from '../../../audit/resolvers/index.ts';
 import { LIST_FIELDS } from '@pins/peas-row-commons-lib/constants/audit.ts';
-import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
 import { toFloat } from '@pins/peas-row-commons-lib/util/numbers.ts';
 import { nullEmptyString } from '@pins/peas-row-commons-lib/util/strings.ts';

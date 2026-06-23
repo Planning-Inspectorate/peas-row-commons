@@ -17,13 +17,13 @@ import type {
 	PdfOutcomeDates,
 	DownloadableDocument
 } from './types.ts';
-import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
-import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
+import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
 import type { CaseDownloadQueryResult } from './query.ts';
 import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
-import { DECISION_MAKER_TYPES } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+import { DECISION_MAKER_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { getUniqueProcedureFields } from '@pins/peas-row-commons-lib/util/dynamic-sections/procedures-section/procedure-section-builder.ts';
-import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
 import { formatAddress, formatDate, formatDateTime } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
 import { getUserDisplayName } from '#util/entra-groups.ts';
 

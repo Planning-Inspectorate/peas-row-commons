@@ -1,5 +1,5 @@
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { CASE_TYPES_ID, CASE_SUBTYPES_ID } from './static_data/ids/index.ts';
+import { CASE_TYPES_ID, CASE_SUBTYPES_ID } from './static-data/ids/index.ts';
 
 export async function seedDev(dbClient: PrismaClient) {
 	console.log('starting seed of 100 cases...');

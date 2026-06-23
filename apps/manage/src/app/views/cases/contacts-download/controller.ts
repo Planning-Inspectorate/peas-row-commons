@@ -12,7 +12,7 @@ import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-
 import type { PdfContact } from '../case-download/index.ts';
 import { fetchCaseContactsForDownload, type CaseContactsQueryResult } from './query.ts';
 import { buildContactsCsv } from './csv-builder.ts';
-import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address.ts';
 
