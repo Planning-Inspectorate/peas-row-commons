@@ -82,7 +82,7 @@
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.19.0",
     "@types/multer": "^2.1.0",
-    "@types/node": "^25.9.1",
+    "@types/node": "^25.9.3",
     "@types/nunjucks": "^3.2.6",
     "@types/prompts": "^2.4.9",
     "adm-zip": "^0.5.17",
