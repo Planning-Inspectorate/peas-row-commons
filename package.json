@@ -64,13 +64,7 @@
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
     "puppeteer": "^24.40.0",
-    "redis": "^5.8.3",
-    "stylelint": "^17.13.0",
-    "stylelint-config-prettier-scss": "^1.0.0",
-    "stylelint-config-recess-order": "^7.7.0",
-    "stylelint-config-standard-scss": "^17.0.0",
-    "stylelint-order": "^8.1.1",
-    "stylelint-scss": "^7.2.0"
+    "redis": "^5.8.3"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.2",
@@ -99,6 +93,12 @@
     "prisma": "^7.8.0",
     "prompts": "^2.4.2",
     "sass": "^1.93.2",
+    "stylelint": "^17.13.0",
+    "stylelint-config-prettier-scss": "^1.0.0",
+    "stylelint-config-recess-order": "^7.7.0",
+    "stylelint-config-standard-scss": "^17.0.0",
+    "stylelint-order": "^8.1.1",
+    "stylelint-scss": "^7.2.0",
     "tsx": "^4.22.4",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.59.0"
