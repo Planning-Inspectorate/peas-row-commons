@@ -1,8 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { mapCaseDetailsData, mapObjectorListData, mapContactListData, mapDownloadableDocuments } from './mappers.ts';
-import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
-import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
+import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 
 /** IDs matching the seed data constants */
 const OBJECTOR_TYPE_ID = 'objector';

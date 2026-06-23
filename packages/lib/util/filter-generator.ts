@@ -2,7 +2,7 @@ import {
 	CASE_TYPES,
 	CASEWORK_AREAS,
 	CASE_SUBTYPES
-} from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 
 interface FilterItem {
 	value: string;

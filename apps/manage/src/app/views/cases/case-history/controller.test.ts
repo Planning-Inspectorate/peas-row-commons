@@ -2,7 +2,7 @@ import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildViewCaseHistory } from './controller.ts';
 import { ManageService } from '#service';
-import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 
 describe('buildViewCaseHistory', () => {
 	const mockLogger = {

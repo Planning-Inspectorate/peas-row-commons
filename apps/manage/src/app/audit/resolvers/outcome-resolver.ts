@@ -5,7 +5,7 @@ import {
 	DECISION_TYPES,
 	DECISION_MAKER_TYPES,
 	OUTCOMES
-} from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { formatDate } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
 
 export type DecisionWithRelations = Prisma.CaseDecisionGetPayload<{

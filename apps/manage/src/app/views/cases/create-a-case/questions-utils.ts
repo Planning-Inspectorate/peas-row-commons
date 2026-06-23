@@ -1,4 +1,4 @@
-import { CASE_TYPES_ID, CASEWORK_AREAS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
+import { CASE_TYPES_ID, CASEWORK_AREAS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 
 import type { DataPoint, GroupRelationships, UIGroup } from './types.ts';
 

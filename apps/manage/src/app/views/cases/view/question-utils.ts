@@ -5,7 +5,7 @@ import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/
 import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js';
 import NumericValidator from '@planning-inspectorate/dynamic-forms/src/validator/numeric-validator.js';
 import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
-import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
 import CustomDatePeriodValidator from '@pins/peas-row-commons-lib/validators/custom-date-period-validator.ts';
 
 import {
@@ -27,26 +27,26 @@ import {
 	OBJECTOR_STATUSES,
 	CONTACT_TYPES,
 	DECISION_MAKER_TYPES
-} from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
 import type { UserMap } from './types.ts';
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
-import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/outcome.ts';
+import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/outcome.ts';
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
 import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/validator.ts';
-import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
+import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
 import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-components/optional-date-component/validator.ts';
-import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
-import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
+import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
 import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../../config.ts';
 import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
 import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
 import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { LEGACY_CONTACT_TYPES } from '@pins/peas-row-commons-database/src/seed/static_data/legacy/contact-types.ts';
-import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/legacy/act-sections.ts';
-import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/admin-procedure-type.ts';
+import { LEGACY_CONTACT_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/legacy/contact-types.ts';
+import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/legacy/act-sections.ts';
+import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/admin-procedure-type.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
 import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
 import type { EntraGroupMembers } from '#util/entra-groups-types.ts';

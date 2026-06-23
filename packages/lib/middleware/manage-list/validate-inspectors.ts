@@ -6,7 +6,7 @@ import {
 	PROCEDURE_STATUSES,
 	PROCEDURES,
 	DECISION_TYPES
-} from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 
 const SESSION_ERROR_KEY = 'removalError';
 const SESSION_NAMESPACE = 'inspectorDetails';

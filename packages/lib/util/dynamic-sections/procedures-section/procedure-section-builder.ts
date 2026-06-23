@@ -2,9 +2,9 @@ import { DynamicSectionBuilder } from '../dynamic-section-builder.ts';
 import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import { PROCEDURES } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
-import { PROCEDURE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
-import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
+import { PROCEDURES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import { PROCEDURE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
 
 /**
  * Fields that are collected during the "add procedure" flow.

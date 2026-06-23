@@ -5,12 +5,12 @@ import { questionClasses } from '@planning-inspectorate/dynamic-forms/src/questi
 import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
 import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
-import { CASEWORK_AREAS } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
-import { AUTHORITY_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/authority-status.ts';
+import { CASEWORK_AREAS } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import { AUTHORITY_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/authority-status.ts';
 import {
 	PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES,
 	RIGHTS_OF_WAY_COMMON_LAND_TYPES
-} from '@pins/peas-row-commons-database/src/seed/static_data/types.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/types.ts';
 import {
 	COASTAL_ACCESS_SUBTYPES,
 	COMMON_LAND_SUBTYPES,
@@ -19,7 +19,7 @@ import {
 	OTHER_SOS_CASEWORK_SUBTYPES,
 	RIGHTS_OF_WAY_SUBTYPES,
 	WAYLEAVES_SUBTYPES
-} from '@pins/peas-row-commons-database/src/seed/static_data/subtypes.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/subtypes.ts';
 import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
 import {
 	referenceDataToRadioOptions,

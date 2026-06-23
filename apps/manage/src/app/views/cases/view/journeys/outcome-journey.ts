@@ -2,7 +2,7 @@ import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/comp
 import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 import { questionHasAnswer } from '@planning-inspectorate/dynamic-forms/src/components/utils/question-has-answer.js';
-import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
+import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
 import { OutcomeSectionBuilder } from '@pins/peas-row-commons-lib/util/dynamic-sections/outcomes-section/outcomes-section-builder.ts';
 
 export function buildOutcomeManageList(questions: Record<string, unknown>): ManageListSection {

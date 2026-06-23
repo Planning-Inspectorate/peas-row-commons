@@ -2,8 +2,8 @@ import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/comp
 import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 import { questionHasAnswer } from '@planning-inspectorate/dynamic-forms/src/components/utils/question-has-answer.js';
-import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
-import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
+import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { ProcedureSectionBuilder } from '@pins/peas-row-commons-lib/util/dynamic-sections/procedures-section/procedure-section-builder.ts';
 
 /**

@@ -1,5 +1,5 @@
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { mapAddressDbToViewModel, mapAddressViewModelToDb } from './address.ts';
 import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';

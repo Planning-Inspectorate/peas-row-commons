@@ -11,9 +11,9 @@ import {
 	DECISION_TYPE_ID,
 	DECISION_MAKER_TYPE_ID,
 	PROCEDURES_ID
-} from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import type { CaseDecisionFields, CaseProcedureFields } from './types.ts';
-import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 
 describe('view-model', () => {
 	const userMap: Map<string, string> = new Map<string, string>();
