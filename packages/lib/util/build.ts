@@ -30,7 +30,7 @@ async function compileSass({ staticDir, srcDir, repoRoot, localsFile, mojRoot }:
 		// ensure scss can find the govuk-frontend folders
 		loadPaths: [repoRoot, mojRoot],
 		style: 'compressed',
-		// don't show depreciate warnings for govuk
+		// don't show deprecation warnings for govuk
 		// see https://frontend.design-system.service.gov.uk/importing-css-assets-and-javascript/#silence-deprecation-warnings-from-dependencies-in-dart-sass
 		quietDeps: true
 	});
@@ -62,11 +62,10 @@ async function compileSass({ staticDir, srcDir, repoRoot, localsFile, mojRoot }:
  * @param filename
  */
 async function deleteOldCssFiles({ staticDir, filename }: { staticDir: string; filename: string }) {
-	const files = await fs.readdir(staticDir);
-	const oldStyleFiles = files.filter(
-		(file) => file !== filename && file.endsWith('.css') && file.match(/^style(-[0-9a-f]{8})?\.css$/)
-	);
-	const deleteTasks = [];
+	const files: string[] = await fs.readdir(staticDir);
+	const stylePattern = /^style(-[0-9a-f]{8})?\.css$/;
+	const oldStyleFiles = files.filter((file) => file !== filename && file.endsWith('.css') && stylePattern.test(file));
+	const deleteTasks: Promise<void>[] = [];
 	for (const file of oldStyleFiles) {
 		deleteTasks.push(fs.unlink(path.join(staticDir, file)));
 	}
