@@ -5,7 +5,11 @@
 		"allowImportingTsExtensions": true,
 		"allowJs": true,
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
+		"paths": {
+			"cypress/*": ["./cypress/*"],
+			"packages/*": ["./packages/*"],
+			"apps/*": ["./apps/*"]
+		},
 		"checkJs": false,
 		"erasableSyntaxOnly": true,
 		"esModuleInterop": true,
