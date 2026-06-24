@@ -70,9 +70,10 @@ describe('buildViewCaseHistory', () => {
 			const req = mockReq({ params: {} });
 			const res = mockRes();
 
-			await assert.rejects(() => buildViewCaseHistory(buildService() as any)(req, res), {
-				message: 'id param required'
-			});
+			await assert.rejects(
+				() => buildViewCaseHistory(buildService() as any)(req, res),
+				/id must be a single string value/
+			);
 		});
 	});
 

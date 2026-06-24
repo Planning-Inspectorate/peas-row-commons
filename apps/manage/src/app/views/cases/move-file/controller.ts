@@ -3,6 +3,7 @@ import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts
 import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import type { ValidationError } from '../upload/upload-documents/validation-middleware.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
  * Controller used for the POST request when a user sends files to move,
@@ -13,7 +14,7 @@ import type { ValidationError } from '../upload/upload-documents/validation-midd
 export function buildHandleMoveSelection(): RequestHandler {
 	return async (req, res) => {
 		const { selectedFiles } = req.body;
-		const { id } = req.params;
+		const id = getStringParam(req.params, 'id');
 
 		// If no files, just refresh and show the error.
 		if (!selectedFiles) {
@@ -86,7 +87,7 @@ export function buildViewMoveFiles(service: ManageService): RequestHandler {
  */
 export function buildHandleDuplicateFileNamesMiddleware() {
 	return async (req: Request, res: Response, next: NextFunction) => {
-		const { id } = req.params;
+		const id = getStringParam(req.params, 'id');
 
 		const sessionErrors = readSessionData(req, id, 'moveFileErrors', [], 'move-files');
 		const errorsToDisplay: ValidationError[] =

@@ -7,17 +7,14 @@ import { createCaseHistoryViewModel } from './view-model.ts';
 import { getPageData, getPaginationParams } from '../../pagination/pagination-utils.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 export function buildViewCaseHistory(service: ManageService): AsyncRequestHandler {
 	const { db, audit, logger, getEntraClient } = service;
 	const groupIds = service.entraGroupIds;
 
 	return async (req, res) => {
-		const { id } = req.params;
-
-		if (!id) {
-			throw new Error('id param required');
-		}
+		const id = getStringParam(req.params, 'id');
 
 		let caseRow;
 		try {

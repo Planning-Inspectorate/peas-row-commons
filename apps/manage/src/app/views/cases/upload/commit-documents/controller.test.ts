@@ -94,6 +94,19 @@ describe('Create Documents Logic', () => {
 	});
 
 	describe('createDocumentsController', () => {
+		it('should throw if id is missing', async () => {
+			const req = mockReq({ params: {} });
+			const res = mockRes();
+			const service = {
+				db: {},
+				logger: mockLogger,
+				audit: { record: mock.fn(() => Promise.resolve()) }
+			} as unknown as ManageService;
+
+			const controller = createDocumentsController(service);
+
+			await assert.rejects(async () => controller(req, res as unknown as Response), /id must be a single string value/);
+		});
 		it('should handle missing params by redirecting and setting a generic error in session', async () => {
 			const req = mockReq({ params: { id: 'case-1' } });
 			const res = mockRes();

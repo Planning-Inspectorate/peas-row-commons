@@ -15,6 +15,7 @@ import { buildContactsCsv } from './csv-builder.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /** A single contact row as returned by the lightweight contacts query */
 type QueryContact = CaseContactsQueryResult['Contacts'][number];
@@ -64,11 +65,7 @@ export function buildDownloadContacts(service: ManageService): AsyncRequestHandl
 	const { db, logger } = service;
 
 	return async (req: Request, res: Response) => {
-		const { id } = req.params;
-
-		if (!id) {
-			throw new Error('Case ID parameter is required for contact download');
-		}
+		const id = getStringParam(req.params, 'id');
 
 		logger.info({ caseId: id }, 'Starting contact download');
 

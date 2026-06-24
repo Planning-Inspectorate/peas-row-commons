@@ -15,6 +15,7 @@ import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.j
 import { hasAnyContacts } from '../contacts-download/index.ts';
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
+import { getOptionalStringParams, getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 const caseToViewInclude = {
 	SiteAddress: true,
@@ -84,11 +85,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 
 		const firstVisit = req?.query?.firstVisit;
 
-		const id = req.params.id;
-
-		if (!id) {
-			throw new Error('id param required');
-		}
+		const id = getStringParam(req.params, 'id');
 
 		const caseUpdated = readSessionData(req, id, 'updated', { section: '' });
 
@@ -131,11 +128,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 }
 
 export function validateIdFormat(req: Request, res: Response, next: NextFunction) {
-	const id = req.params.id;
-
-	if (!id) {
-		throw new Error('id param required');
-	}
+	const id = getStringParam(req.params, 'id');
 
 	if (!isValidUuidFormat(id)) {
 		return notFoundHandler(req, res);
@@ -149,7 +142,8 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 	const groupIds = service.entraGroupIds;
 
 	return async (req, res, next) => {
-		const { id, section, manageListQuestion } = req.params;
+		const id = getStringParam(req.params, 'id');
+		const { section, manageListQuestion } = getOptionalStringParams(req.params, ['section', 'manageListQuestion']);
 
 		if (!id) {
 			throw new Error('id param required');
@@ -297,19 +291,28 @@ function clearAllSessionData(req: Request, res: Response, id: string) {
 }
 
 /**
- * Takes a section name and builds the html around it so we can anchor to
- * the correct section after successful update.
+ * Builds a success banner
+ *
+ * Takes an optional section name and builds the HTML around it so we can anchor to
+ * the correct section after successful update if defined.
  *
  * Replaces spaces with hyphens for consistency in URL
  */
-function buildSuccessHtml(section: string) {
+function buildSuccessHtml(section?: string | undefined) {
+	if (!section) {
+		return `
+		<p class="govuk-notification-banner__heading">
+      		Case has been updated.
+    </p>
+	`;
+	}
 	const safeAnchorId = section.toLowerCase().replace(/\s+/g, '-');
 
 	return `
 		<p class="govuk-notification-banner__heading">
       		Case has been updated.
 			<a class="govuk-notification-banner__link" href="#${safeAnchorId}">Return to section</a>
-    	</p>
+    </p>
 	`;
 }
 

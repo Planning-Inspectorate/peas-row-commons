@@ -4,6 +4,7 @@ import type { Request, Response } from 'express';
 import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { Document } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
  * Extracts document IDs from the request body.
@@ -72,7 +73,7 @@ export function buildDeleteFileView(service: ManageService) {
 	const { db, logger } = service;
 
 	return async (req: Request, res: Response) => {
-		const { id } = req.params;
+		const id = getStringParam(req.params, 'id');
 		const documentIds = extractDocumentIds(req);
 
 		const safeReturnUrl = getSafeReturnUrl(req);
@@ -108,11 +109,8 @@ export function buildDeleteFileController(service: ManageService) {
 	const { db, logger, audit } = service;
 
 	return async (req: Request, res: Response) => {
-		const { id } = req.params;
+		const id = getStringParam(req.params, 'id');
 
-		if (!id) {
-			throw new Error('id param required');
-		}
 		const documentIds = extractDocumentIds(req);
 
 		const safeReturnUrl = getSafeReturnUrl(req);

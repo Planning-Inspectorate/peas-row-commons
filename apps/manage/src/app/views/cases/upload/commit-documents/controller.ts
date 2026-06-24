@@ -6,6 +6,7 @@ import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/cl
 import type { Logger } from 'pino';
 import { NoUploadsError } from './error.ts';
 import { AUDIT_ACTIONS } from '../../../../audit/index.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
  * Creates the documents controller that is used when
@@ -15,13 +16,9 @@ import { AUDIT_ACTIONS } from '../../../../audit/index.ts';
 export function createDocumentsController(service: ManageService) {
 	const { db, logger, audit } = service;
 	return async (req: Request, res: Response) => {
+		const id = getStringParam(req.params, 'id');
 		try {
-			const { id, folderId } = req.params;
-
-			if (!id || !folderId) {
-				throw new Error('Missing required parameters: id or folderId');
-			}
-
+			const folderId = getStringParam(req.params, 'folderId');
 			const { createdLength, fileNames } = await createDocumentsFromDrafts(req, db, logger, id, folderId);
 
 			if (createdLength === 0) {
@@ -68,7 +65,7 @@ export function createDocumentsController(service: ManageService) {
 			const folderUrl = req.baseUrl.replace(/\/upload\/?$/, '');
 			return res.redirect(folderUrl);
 		} catch (error) {
-			logger.error({ error, caseId: req.params.id }, 'Failed to create documents from drafts');
+			logger.error({ error, caseId: id }, 'Failed to create documents from drafts');
 
 			const errorMessage =
 				error instanceof NoUploadsError
@@ -77,7 +74,7 @@ export function createDocumentsController(service: ManageService) {
 
 			addSessionData(
 				req,
-				req.params.id,
+				id,
 				{
 					uploadErrors: [
 						{

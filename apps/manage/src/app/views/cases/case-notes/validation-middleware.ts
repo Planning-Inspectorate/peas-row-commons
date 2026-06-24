@@ -2,14 +2,11 @@ import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import type { Request } from 'express';
 import { checkAnswerlength, checkRequiredAnswer } from '@pins/peas-row-commons-lib/util/strings.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 export function buildValidateCaseNotesMiddleware(): AsyncRequestHandler {
 	return async (req, res, next) => {
-		const { id } = req.params;
-
-		if (!id) {
-			throw new Error('id param required');
-		}
+		const id = getStringParam(req.params, 'id');
 
 		const errors = generateCaseNoteErrors(req);
 		if (errors.length) {

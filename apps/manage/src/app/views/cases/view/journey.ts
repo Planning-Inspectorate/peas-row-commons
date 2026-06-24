@@ -10,14 +10,14 @@ import {
 	buildProcedureAllQuestionsSection,
 	buildDynamicProcedureSections
 } from './journeys/procedure-journey.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 export const JOURNEY_ID = 'case-details';
 
 export function createJourney(questions: Record<string, any>, response: JourneyResponse, req: Request) {
-	if (!req.params.id) {
-		throw new Error(`not a valid request for the ${JOURNEY_ID} journey (no id param)`);
-	}
-	if (!req.baseUrl?.includes(req.params.id)) {
+	const id = getStringParam(req.params, 'id');
+
+	if (!req.baseUrl?.includes(id)) {
 		throw new Error(`not a valid request for the ${JOURNEY_ID} journey (invalid baseUrl)`);
 	}
 

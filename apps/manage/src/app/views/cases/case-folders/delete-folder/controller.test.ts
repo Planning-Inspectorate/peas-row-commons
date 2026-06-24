@@ -70,12 +70,22 @@ describe('Delete Folder Controller', () => {
 
 		it('should throw error if folderId param is missing', async () => {
 			const mockService = { db: {}, logger: {} };
-			const req = { params: {} };
+			const req = { params: { id: 'case-123' } };
 			const res = {};
 
 			const handler = buildDeleteFolderView(mockService as any);
 
-			await assert.rejects(async () => await handler(req as any, res as any), { message: 'folderId param required' });
+			await assert.rejects(async () => await handler(req as any, res as any), /folderId must be a single string value/);
+		});
+
+		it('should throw error if id param is missing', async () => {
+			const mockService = { db: {}, logger: {} };
+			const req = { params: { folderId: 'folder-123' } };
+			const res = {};
+
+			const handler = buildDeleteFolderView(mockService as any);
+
+			await assert.rejects(async () => await handler(req as any, res as any), /id must be a single string value/);
 		});
 	});
 

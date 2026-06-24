@@ -13,6 +13,7 @@ import { AUDIT_ACTIONS } from '../../../../audit/index.ts';
 import { checkFileNamesConflict } from '../../upload/upload-documents/file-duplicate-validation.ts';
 import type { ValidationError } from '../../upload/upload-documents/validation-middleware.ts';
 import { list } from '@planning-inspectorate/dynamic-forms/src/controller.js';
+import { getStringParam, getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 
 const documentFindManySelectArg = {
 	id: true,
@@ -27,11 +28,7 @@ const documentFindManySelectArg = {
 export function buildLoadCaseData(service: ManageService): RequestHandler {
 	const { db } = service;
 	return async (req, res, next) => {
-		const { id } = req.params;
-
-		if (!id) {
-			throw new Error('id is required');
-		}
+		const id = getStringParam(req.params, 'id');
 
 		const caseData = await db.case.findUnique({
 			where: { id },
@@ -150,7 +147,7 @@ export function buildListController(listFn = list): RequestHandler {
  */
 export function buildSaveController({ db, logger, audit }: ManageService): RequestHandler {
 	return async (req, res) => {
-		const { id, folderId, folderName } = req.params;
+		const { id, folderId, folderName } = getStringParams(req.params, ['id', 'folderId', 'folderName']);
 
 		const state = validateRequestState(req, res, id, JOURNEY_ID, logger);
 		if (!state) return;
