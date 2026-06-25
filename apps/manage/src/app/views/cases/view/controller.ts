@@ -145,10 +145,6 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 		const id = getStringParam(req.params, 'id');
 		const { section, manageListQuestion } = getOptionalStringParams(req.params, ['section', 'manageListQuestion']);
 
-		if (!id) {
-			throw new Error('id param required');
-		}
-
 		logger.info({ id }, 'view case');
 
 		const caseToView = await db.case.findUnique({

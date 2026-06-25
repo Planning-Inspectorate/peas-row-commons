@@ -39,7 +39,7 @@ export function getOptionalStringParam(obj: Record<string, unknown> | undefined,
 }
 
 /**
- * Get multiple optional required string values from an object
+ * Get multiple optional string values from an object
  */
 export function getOptionalStringParams<K extends string>(
 	obj: Record<string, unknown> | undefined,
