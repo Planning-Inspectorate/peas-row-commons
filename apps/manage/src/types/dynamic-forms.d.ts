@@ -308,12 +308,31 @@ declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/questions/create-questions.js' {
-	export function createQuestions(
-		definitions: any,
-		classes: any,
-		questionMethodOverrides?: any,
-		textOverrides?: any
-	): any;
+	import { Question, QuestionParameters } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+
+	export interface BaseQuestionProps extends Partial<QuestionParameters> {
+		type: string;
+	}
+
+	export type MethodOverride = (...args: any[]) => any;
+
+	export interface QuestionClass {
+		new (params: any, methodOverrides?: Record<string, MethodOverride>): Question;
+	}
+
+	export interface TextOverrides {
+		notStartedText?: string;
+		continueButtonText?: string;
+		changeActionText?: string;
+		answerActionText?: string;
+	}
+
+	export function createQuestions<T extends Record<string, BaseQuestionProps>>(
+		questionPropsRecord: T,
+		questionClasses: Record<string, QuestionClass>,
+		questionMethodOverrides: Record<string, Record<string, MethodOverride>>,
+		textOverrides?: TextOverrides
+	): { [K in keyof T]: Question };
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/questions/questions.js' {
