@@ -279,7 +279,39 @@ export function getQuestions(groupMembers: EntraGroupMembers) {
 			label: 'Applicant or appellant',
 			hintPrefix: 'Enter the name of the main party. This could also be a server.',
 			orgNameLabel: 'Joint applicants/appellants or company name'
-		})
+		}),
+		hasLinkedCases: {
+			type: COMPONENT_TYPES.BOOLEAN,
+			title: 'Is this a linked case?',
+			question: 'Is this a linked case?',
+			fieldName: 'hasLinkedCases',
+			url: 'is-linked-case',
+			validators: [new RequiredValidator('Select whether this is a linked case')]
+		},
+		isLeadCase: {
+			type: COMPONENT_TYPES.BOOLEAN,
+			title: 'Is this case the lead case?',
+			question: 'Is this case the lead case?',
+			fieldName: 'isLeadCase',
+			url: 'is-lead-case',
+			validators: [new RequiredValidator('Select whether this is the lead case')]
+		},
+		leadCaseReference: {
+			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
+			title: 'What is the case reference of the lead case?',
+			question: 'What is the case reference of the lead case?',
+			fieldName: 'leadCaseReference',
+			url: 'lead-case-reference',
+			validators: [
+				new RequiredValidator('Enter the lead case reference'),
+				new StringValidator({
+					maxLength: {
+						maxLength: 25,
+						maxLengthMessage: 'Lead case must be between 1 and 25 characters'
+					}
+				})
+			]
+		}
 	};
 
 	const classes = {
