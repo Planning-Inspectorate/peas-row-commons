@@ -3,6 +3,7 @@ import { kebabToCamel } from './questions-utils.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { mapAddressViewModelToDb } from '@pins/peas-row-commons-lib/util/address.ts';
+import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
 
 /**
  * Takes an answers object and formats the data correctly ready for insertion into DB.
@@ -83,6 +84,22 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 	// Authority is optional in create a case, so could be an empty string
 	if (answers.authorityId) {
 		input.Authority = { connect: { id: answers.authorityId } };
+	}
+
+	// Handle linked cases - create LinkedCase record when this case is linked but not the lead
+	if (
+		answers.hasLinkedCases === BOOLEAN_OPTIONS.YES &&
+		answers.isLeadCase === BOOLEAN_OPTIONS.NO &&
+		answers.leadCaseReference
+	) {
+		input.LinkedCases = {
+			create: [
+				{
+					reference: answers.leadCaseReference,
+					isLead: true
+				}
+			]
+		};
 	}
 
 	return input;
