@@ -43,7 +43,9 @@ describe('buildViewCaseFolders', () => {
 			const req = mockReq({ params: {} });
 			const res = mockRes();
 
-			await assert.rejects(() => buildViewCaseFolders(service as any)(req, res), { message: 'id param required' });
+			await assert.rejects(() => buildViewCaseFolders(service as any)(req, res), {
+				message: 'id must be a single string value'
+			});
 		});
 	});
 

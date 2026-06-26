@@ -48,14 +48,17 @@ describe('buildUploadToFolderView', () => {
 			const req = mockReq({ params: { folderId: 'folder-456' } });
 			const res = mockRes();
 
-			await assert.rejects(() => buildUploadToFolderView(service as any)(req, res), { message: 'id param required' });
+			await assert.rejects(() => buildUploadToFolderView(service as any)(req, res), /id must be a single string value/);
 		});
 
 		it('should throw error if "folderId" param is missing', async () => {
 			const req = mockReq({ params: { id: 'case-123' } });
 			const res = mockRes();
 
-			await assert.rejects(() => buildUploadToFolderView(service as any)(req, res), { message: 'id param required' });
+			await assert.rejects(
+				() => buildUploadToFolderView(service as any)(req, res),
+				/folderId must be a single string value/
+			);
 		});
 	});
 

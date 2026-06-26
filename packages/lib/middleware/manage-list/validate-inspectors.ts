@@ -7,6 +7,7 @@ import {
 	PROCEDURES,
 	DECISION_TYPES
 } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 const SESSION_ERROR_KEY = 'removalError';
 const SESSION_NAMESPACE = 'inspectorDetails';
@@ -36,7 +37,7 @@ const getOutcomeName = (id?: string) => DECISION_TYPES.find((item) => item.id ==
  * If they are then we must error and ask them to remedy this before attempting to remove.
  */
 export const validateInspectorRemoval: RequestHandler = (req, res, next) => {
-	const { manageListAction, manageListItemId, question: manageListQuestion, id, section } = req.params;
+	const { manageListAction, manageListItemId, question: manageListQuestion, section } = req.params;
 
 	if (
 		manageListAction !== MANAGE_LIST_ACTIONS.REMOVE ||
@@ -80,6 +81,7 @@ export const validateInspectorRemoval: RequestHandler = (req, res, next) => {
 
 	const errorListItems = buildRemovalErrorSummary(assignedProcedures, assignedOutcomes);
 
+	const id = getStringParam(req.params, 'id');
 	addSessionData(req, id, { [SESSION_ERROR_KEY]: errorListItems }, SESSION_NAMESPACE);
 
 	const inspectorsUrl = `/cases/${id}/${section}/${INSPECTOR_CONSTANTS.INSPECTOR_URL}`;
@@ -90,9 +92,10 @@ export const validateInspectorRemoval: RequestHandler = (req, res, next) => {
  *  Checks for unique "remove" errors on the Inspector Details
  */
 export const checkForInspectorErrors: RequestHandler = (req, res, next) => {
-	const { question: manageListQuestion, id } = req.params;
+	const { question: manageListQuestion } = req.params;
 
 	if (manageListQuestion === INSPECTOR_CONSTANTS.INSPECTOR_URL) {
+		const id = getStringParam(req.params, 'id');
 		const removeInspectorErrors = readSessionData(req, id, SESSION_ERROR_KEY, [], SESSION_NAMESPACE);
 
 		if (Array.isArray(removeInspectorErrors) && removeInspectorErrors.length > 0) {

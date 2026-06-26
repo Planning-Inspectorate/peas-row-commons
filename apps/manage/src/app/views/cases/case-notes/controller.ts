@@ -9,12 +9,13 @@ import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts
 import { mapNotes } from '../view/view-model.ts';
 import { buildUserDisplayNameMap, getEntraGroupMembers } from '#util/entra-groups.ts';
 import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler {
 	const { db, logger, audit } = service;
 
 	return async (req, res) => {
-		const { id } = req.params;
+		const id = getStringParam(req.params, 'id');
 		const { comment } = req.body;
 		const userId = req?.session?.account?.localAccountId;
 
@@ -25,7 +26,7 @@ export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler
 		await audit.record({
 			caseId: id,
 			action: AUDIT_ACTIONS.CASE_NOTE_ADDED,
-			userId: req?.session?.account?.localAccountId,
+			userId,
 			metadata: {
 				caseNote: comment
 			}
@@ -89,11 +90,7 @@ export function buildViewCaseNotes(service: ManageService): AsyncRequestHandler 
 	const groupIds = service.entraGroupIds;
 
 	return async (req, res) => {
-		const id = req.params.id;
-
-		if (!id) {
-			throw new Error('id param required');
-		}
+		const id = getStringParam(req.params, 'id');
 
 		let caseRow;
 		try {

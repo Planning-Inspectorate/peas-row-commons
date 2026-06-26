@@ -6,7 +6,6 @@ import {
 	buildGetJourneyMiddleware,
 	combineSessionAndDbData
 } from './controller.ts';
-import * as entraGroups from '#util/entra-groups.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 
 describe('Case Controller', () => {
@@ -23,9 +22,10 @@ describe('Case Controller', () => {
 			const mockReq = { params: {}, session: {} };
 			const mockRes = newMockRes();
 
-			assert.throws(() => validateIdFormat(mockReq as any, mockRes as any, mockNext), {
-				message: 'id param required'
-			});
+			assert.throws(
+				() => validateIdFormat(mockReq as any, mockRes as any, mockNext),
+				/id must be a single string value/
+			);
 		});
 
 		it('should call next() if id is a valid UUID', () => {
@@ -59,9 +59,7 @@ describe('Case Controller', () => {
 			const mockRes = newMockRes();
 			const handler = buildViewCaseDetails();
 
-			await assert.rejects(() => handler(mockReq as any, mockRes as any, mockNext), {
-				message: 'id param required'
-			});
+			await assert.rejects(() => handler(mockReq as any, mockRes as any, mockNext), /id must be a single string value/);
 		});
 	});
 
@@ -91,9 +89,10 @@ describe('Case Controller', () => {
 
 			const middleware = buildGetJourneyMiddleware(mockService as any);
 
-			await assert.rejects(() => middleware(mockReq as any, mockRes as any, mockNext), {
-				message: 'id param required'
-			});
+			await assert.rejects(
+				() => middleware(mockReq as any, mockRes as any, mockNext),
+				/id must be a single string value/
+			);
 			assert.strictEqual(mockNext.mock.callCount(), 0);
 		});
 

@@ -73,7 +73,10 @@ describe('buildViewCaseFolder', () => {
 			const res = mockRes();
 			const next = mock.fn();
 
-			await assert.rejects(() => buildViewCaseFolder(service as any)(req, res, next), { message: 'id param required' });
+			await assert.rejects(
+				() => buildViewCaseFolder(service as any)(req, res, next),
+				/id must be a single string value/
+			);
 		});
 
 		it('should throw error if "folderId" param is missing', async () => {
@@ -81,9 +84,10 @@ describe('buildViewCaseFolder', () => {
 			const res = mockRes();
 			const next = mock.fn();
 
-			await assert.rejects(() => buildViewCaseFolder(service as any)(req, res, next), {
-				message: 'folderId param required'
-			});
+			await assert.rejects(
+				() => buildViewCaseFolder(service as any)(req, res, next),
+				/folderId must be a single string value/
+			);
 		});
 	});
 

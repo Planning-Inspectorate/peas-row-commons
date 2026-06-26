@@ -59,14 +59,11 @@ describe('Move Files Controller', () => {
 
 	describe('buildLoadCaseData', () => {
 		it('should throw if id is missing', async () => {
-			mockReq.params = {};
+			delete mockReq.params.id;
 			const handler = buildLoadCaseData(mockService);
 
-			await assert.rejects(() => handler(mockReq, mockRes, mockNext) as any, {
-				message: 'id is required'
-			});
+			await assert.rejects(() => handler(mockReq, mockRes, mockNext) as any, /id must be a single string value/);
 		});
-
 		it('should call next(error) if case is not found', async () => {
 			mockDb.case.findUnique.mock.mockImplementation(() => Promise.resolve(null));
 
@@ -197,9 +194,17 @@ describe('Move Files Controller', () => {
 	});
 
 	describe('buildSaveController', () => {
+		beforeEach(() => {
+			mockReq.params = {
+				...mockReq.params,
+				folderId: 'folder-123',
+				folderName: 'folder-name'
+			};
+		});
 		it('should successfully move files and redirect to the new folder url', async () => {
 			mockRes.locals.journeyResponse = { answers: { fileLocation: 'dest-folder-id' } };
 			mockReq.session.moveFilesIds = ['file-1'];
+			mockReq.params = { id: 'case-123', folderId: 'folder-1', folderName: 'folder-name' };
 
 			mockDb.document.findMany.mock.mockImplementation(() =>
 				Promise.resolve([{ id: 'file-1', fileName: 'report.pdf', Folder: { displayName: 'Old Folder' } }])
@@ -478,6 +483,30 @@ describe('Move Files Controller', () => {
 					href: '#'
 				}
 			]);
+		});
+
+		it('should throw if id is missing', async () => {
+			delete mockReq.params.id;
+			const handler = buildSaveController(mockService);
+
+			await assert.rejects(() => handler(mockReq, mockRes, mockNext) as any, /id must be a single string value/);
+		});
+
+		it('should throw if folderId is missing', async () => {
+			delete mockReq.params.folderId;
+			const handler = buildSaveController(mockService);
+
+			await assert.rejects(() => handler(mockReq, mockRes, mockNext) as any, /folderId must be a single string value/);
+		});
+
+		it('should throw if folderName is missing', async () => {
+			delete mockReq.params.folderName;
+			const handler = buildSaveController(mockService);
+
+			await assert.rejects(
+				() => handler(mockReq, mockRes, mockNext) as any,
+				/folderName must be a single string value/
+			);
 		});
 	});
 });

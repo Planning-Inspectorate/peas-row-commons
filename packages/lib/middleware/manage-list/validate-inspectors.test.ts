@@ -164,6 +164,25 @@ describe('Inspector Removal Logic', () => {
 			assert.strictEqual(nextCalledTimes, 0);
 			assert.strictEqual(redirectedUrl, '/cases/case-123/team/inspector-details');
 		});
+
+		it('should throw if id is missing', () => {
+			mockReq.params = {
+				manageListAction: MANAGE_LIST_ACTIONS.REMOVE,
+				manageListItemId: 'list-id-1',
+				question: INSPECTOR_CONSTANTS.INSPECTOR_URL,
+				section: 'team'
+			};
+
+			if (mockRes.locals?.journeyResponse?.answers) {
+				mockRes.locals.journeyResponse.answers.inspectorDetails = [{ id: 'list-id-1', inspectorId: 'user-123' }];
+				mockRes.locals.journeyResponse.answers.procedureDetails = [{ inspectorId: 'user-123' }];
+			}
+
+			assert.throws(
+				() => validateInspectorRemoval(mockReq as Request, mockRes as Response, mockNext),
+				/id must be a single string value/
+			);
+		});
 	});
 
 	describe('checkForInspectorErrors', () => {

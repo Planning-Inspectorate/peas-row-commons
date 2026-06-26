@@ -5,15 +5,12 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { createFoldersViewModel } from './view-model.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { Request } from 'express';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 export function buildViewCaseFolders(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
 	return async (req, res) => {
-		const id = req.params.id;
-
-		if (!id) {
-			throw new Error('id param required');
-		}
+		const id = getStringParam(req.params, 'id');
 
 		const [folderCreated, folderDeleted] = readAndClearSessionData(req);
 
@@ -64,7 +61,7 @@ export function buildViewCaseFolders(service: ManageService): AsyncRequestHandle
  * so that the user doesn't see it on refresh repeatedly.
  */
 function readAndClearSessionData(req: Request) {
-	const { id } = req.params;
+	const id = getStringParam(req.params, 'id');
 
 	const folderCreated = readSessionData(req, id, 'created', false, 'folder');
 	const folderDeleted = readSessionData(req, id, 'deleted', false, 'folder');

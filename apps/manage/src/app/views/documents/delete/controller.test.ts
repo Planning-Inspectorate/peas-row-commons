@@ -1,7 +1,6 @@
 import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildDeleteFileView, buildDeleteFileController } from './controller.ts';
-import { ManageService } from '#service';
 
 describe('Delete File Controllers', () => {
 	const mockLogger = {
@@ -115,9 +114,10 @@ describe('Delete File Controllers', () => {
 				const req = mockReq({ params: {} });
 				const res = mockRes();
 
-				await assert.rejects(() => buildDeleteFileController(service as any)(req, res), {
-					message: 'id param required'
-				});
+				await assert.rejects(
+					() => buildDeleteFileController(service as any)(req, res),
+					/id must be a single string value/
+				);
 			});
 
 			it('should throw error if document IDs are missing from body', async () => {

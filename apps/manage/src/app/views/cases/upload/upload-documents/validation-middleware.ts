@@ -3,6 +3,7 @@ import { checkTotalSizeLimit, validateUploadedFile } from './validation-util.ts'
 import type { Request, Response, NextFunction } from 'express';
 import type { ManageService } from '#service';
 import { checkForDuplicateFilesInDraft, getExistingFileNamesInFolder } from './file-duplicate-validation.ts';
+import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 
 export interface ValidationError {
 	text: string;
@@ -22,7 +23,7 @@ export function validateUploads(
 ) {
 	return async (req: Request, res: Response, next: NextFunction) => {
 		const { logger, db } = service;
-		const { id, folderId } = req.params;
+		const { id, folderId } = getStringParams(req.params, ['id', 'folderId']);
 		const files = req.files as Express.Multer.File[];
 
 		if (!id) throw new Error('id param required');

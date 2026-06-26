@@ -14,7 +14,10 @@ describe('buildValidateCaseNotesMiddleware', () => {
 
 		const middleware = buildValidateCaseNotesMiddleware();
 
-		await assert.rejects(async () => await middleware(req as any, res as any, next), { message: 'id param required' });
+		await assert.rejects(
+			async () => await middleware(req as any, res as any, next),
+			/id must be a single string value/
+		);
 	});
 
 	it('should call next() when the comment is valid', async () => {

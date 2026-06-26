@@ -45,6 +45,7 @@ import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
 import { toFloat } from '@pins/peas-row-commons-lib/util/numbers.ts';
 import { nullEmptyString } from '@pins/peas-row-commons-lib/util/strings.ts';
+import { getOptionalStringParam, getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 interface HandlerParams {
 	req: Request;
@@ -55,12 +56,9 @@ interface HandlerParams {
 export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 	return async ({ req, data }: HandlerParams) => {
 		const { db, logger, audit, getEntraClient } = service;
-		const { id, section } = req.params;
+		const id = getStringParam(req.params, 'id');
+		const section = getOptionalStringParam(req.params, 'section') || undefined;
 		const groupIds = service.entraGroupIds;
-
-		if (!id) {
-			throw new Error(`invalid update case request, id param required (id:${id})`);
-		}
 
 		logger.info({ id }, 'case update');
 

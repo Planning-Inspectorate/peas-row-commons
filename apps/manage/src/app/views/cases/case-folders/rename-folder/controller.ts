@@ -6,6 +6,7 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { Request } from 'express';
 import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
+import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
  * Controller to render the Rename Folder view (get)
@@ -13,15 +14,7 @@ import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
 export function buildRenameFolderView(service: ManageService): AsyncRequestHandler {
 	const { db } = service;
 	return async (req, res, next) => {
-		const { id, folderId } = req.params;
-
-		if (!id) {
-			throw new Error('id param required');
-		}
-
-		if (!folderId) {
-			throw new Error('folderId param required');
-		}
+		const { id, folderId } = getStringParams(req.params, ['id', 'folderId']);
 
 		let folder;
 
@@ -61,13 +54,9 @@ export function buildRenameFolder(service: ManageService): AsyncRequestHandler {
 	const { db, logger, audit } = service;
 
 	return async (req, res) => {
+		const { id, folderId } = getStringParams(req.params, ['id', 'folderId']);
+
 		try {
-			const { id, folderId } = req.params;
-
-			if (!folderId) {
-				throw new Error('folder id param required');
-			}
-
 			const { folderName } = req.body;
 
 			// Fetch old name before renaming
