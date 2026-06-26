@@ -6,7 +6,7 @@
  * - All case documents from Azure Blob Storage, organised into subfolders
  */
 
-import type archiver from 'archiver';
+import type { ZipArchiveFactory } from '#service';
 import type { Response } from 'express';
 import type { Logger } from 'pino';
 import type { Readable } from 'node:stream';
@@ -45,7 +45,7 @@ export async function streamCaseZip(
 	documents: DownloadableDocument[],
 	blobStore: BlobStorageClient | null,
 	logger: Logger,
-	archiverFactory: typeof archiver
+	createZipArchive: ZipArchiveFactory
 ): Promise<void> {
 	// Sanitise the reference for use as a filename (remove characters invalid in file paths)
 	const safeReference = caseReference.replace(/[/\\:*?"<>|]/g, '_');
@@ -58,7 +58,7 @@ export async function streamCaseZip(
 
 	// Compression level 5-6 is a good middle ground between speed and size,
 	// consistent with the existing document download controller
-	const archive = archiverFactory('zip', { zlib: { level: 5 } });
+	const archive = createZipArchive({ zlib: { level: 5 } });
 
 	// Handle archive-level errors by destroying the response
 	archive.on('error', (err: Error) => {
@@ -99,7 +99,7 @@ export async function streamCaseZip(
  * behaviour where one failure doesn't stop the other files.
  */
 async function appendBlobDocuments(
-	archive: ReturnType<typeof archiver>,
+	archive: ReturnType<ZipArchiveFactory>,
 	rootFolder: string,
 	documents: DownloadableDocument[],
 	blobStore: BlobStorageClient,

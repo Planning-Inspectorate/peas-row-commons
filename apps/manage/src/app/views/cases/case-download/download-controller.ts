@@ -48,7 +48,7 @@ const PDF_TEMPLATES = [
  * Builds the download case controller.
  */
 export function buildDownloadCase(service: ManageService): AsyncRequestHandler {
-	const { db, logger, blobStore, audit, archiverFactory, chromiumPath } = service;
+	const { db, logger, blobStore, audit, createZipArchive, chromiumPath } = service;
 	const groupIds = service.entraGroupIds;
 
 	return async (req: Request, res: Response) => {
@@ -76,7 +76,7 @@ export function buildDownloadCase(service: ManageService): AsyncRequestHandler {
 
 		registerAuditOnFinish(res, audit, id, req, logger);
 
-		await streamCaseZip(res, caseData.reference, generatedPdfs, documents, blobStore, logger, archiverFactory);
+		await streamCaseZip(res, caseData.reference, generatedPdfs, documents, blobStore, logger, createZipArchive);
 	};
 }
 
