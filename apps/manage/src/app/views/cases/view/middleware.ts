@@ -4,6 +4,7 @@ import {
 	validateInspectorRemoval
 } from '@pins/peas-row-commons-lib/middleware/manage-list/validate-inspectors.ts';
 import type { RequestHandler } from 'express';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
  * Map of error checks for questions
@@ -25,7 +26,7 @@ const questionValidationLoaders = new Map<string, RequestHandler>([
  * being assigned to procedures or outcomes
  */
 export const loadQuestionSpecificErrors: RequestHandler = (req, res, next) => {
-	const { question } = req.params;
+	const question = getStringParam(req.params, 'question');
 
 	if (questionErrorLoaders.has(question)) {
 		const specificMiddleware = questionErrorLoaders.get(question);
@@ -42,7 +43,7 @@ export const loadQuestionSpecificErrors: RequestHandler = (req, res, next) => {
  * it needs to check whether the users exist in Procedures & Outcomes before removing.
  */
 export const loadQuestionSpecificValidation: RequestHandler = (req, res, next) => {
-	const { question } = req.params;
+	const question = getStringParam(req.params, 'question');
 
 	if (questionValidationLoaders.has(question)) {
 		const specificMiddleware = questionValidationLoaders.get(question);

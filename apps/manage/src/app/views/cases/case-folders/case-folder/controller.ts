@@ -22,6 +22,7 @@ import {
 import { determineDefaultStatuses } from '@pins/peas-row-commons-lib/util/user-document-status.ts';
 import { CLOSED_STATUSES } from '@pins/peas-row-commons-lib/constants/statuses.ts';
 import { getFolderStats } from '@pins/peas-row-commons-database/util/folder.ts';
+import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 
 export function buildViewCaseFolder(
 	service: ManageService,
@@ -31,22 +32,12 @@ export function buildViewCaseFolder(
 	const filterGenerator = new FilterGenerator();
 
 	return async (req, res, next) => {
-		const id = req.params.id;
-		const folderId = req.params.folderId;
+		const { id, folderId } = getStringParams(req.params, ['id', 'folderId']);
+
 		const userId = req?.session?.account?.localAccountId;
-
-		if (!id) {
-			throw new Error('id param required');
-		}
-
-		if (!folderId) {
-			throw new Error('folderId param required');
-		}
-
 		if (!userId) {
 			throw new Error('userId required for folder documents');
 		}
-
 		const [folderUpdated, folderCreated, folderDeleted, folderRenamed, filesMoved, filesDeleted, errorSummary] =
 			readAndClearSessionData(req);
 
@@ -261,7 +252,7 @@ export async function getFolderPath(db: PrismaClient, folderId: string, caseId?:
  * to a folder, so we use its own id, same with renaming and moving files.
  */
 function readAndClearSessionData(req: Request) {
-	const { id, folderId } = req.params;
+	const { id, folderId } = getStringParams(req.params, ['id', 'folderId']);
 
 	const folderUpdated = readSessionData(req, folderId, 'updated', false, 'folder');
 	const folderRenamed = readSessionData(req, folderId, 'renamed', false, 'folder');

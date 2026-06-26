@@ -7,6 +7,7 @@ import { getPageData, getPaginationParams } from '../../../pagination/pagination
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 import type { Request } from 'express';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
  * Controller for viewing the file search page, handles the pagination and select of the files.
@@ -15,7 +16,7 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 	const { db } = service;
 
 	return async (req, res) => {
-		const { id } = req.params;
+		const id = getStringParam(req.params, 'id');
 		const searchString = req.query?.searchCriteria?.toString().trim() || '';
 
 		const userId = req?.session?.account?.localAccountId;
@@ -122,7 +123,7 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
  * Reads session data for deleting files, then clears from session to avoid it showing repeatedly
  */
 function readAndClearSessionData(req: Request) {
-	const { id } = req.params;
+	const id = getStringParam(req.params, 'id');
 
 	const filesDeleted = readSessionData(req, id, 'filesDeleted', false, 'folder');
 

@@ -29,6 +29,7 @@ import {
 } from './index.ts';
 import type { CaseDownloadQueryResult } from './query.ts';
 import { AUDIT_ACTIONS } from '../../../audit/index.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
  * Relative template paths from the configured Nunjucks views dir
@@ -51,11 +52,7 @@ export function buildDownloadCase(service: ManageService): AsyncRequestHandler {
 	const groupIds = service.entraGroupIds;
 
 	return async (req: Request, res: Response) => {
-		const { id } = req.params;
-
-		if (!id) {
-			throw new Error('Case ID parameter is required for download');
-		}
+		const id = getStringParam(req.params, 'id');
 
 		logger.info({ caseId: id }, 'Starting case download');
 

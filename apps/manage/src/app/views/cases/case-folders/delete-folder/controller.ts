@@ -5,10 +5,11 @@ import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-ro
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { Request, Response } from 'express';
 import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
+import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
- * Grabs folder and meta data for displaying,
- * used inside of the main view but also when
+ * Grabs folder and metadata for displaying,
+ * used inside the main view but also when
  * re-rendering after an error with POST-ing
  */
 async function getFolderContext(db: PrismaClient, folderId: string) {
@@ -59,11 +60,7 @@ export function buildDeleteFolderView(service: ManageService) {
 	const { db, logger } = service;
 
 	return async (req: Request, res: Response) => {
-		const { folderId, id } = req.params;
-
-		if (!folderId) {
-			throw new Error('folderId param required');
-		}
+		const { id, folderId } = getStringParams(req.params, ['id', 'folderId']);
 
 		try {
 			const context = await getFolderContext(db, folderId);
@@ -87,9 +84,7 @@ export function buildDeleteFolderController(service: ManageService) {
 	const { db, logger, audit } = service;
 
 	return async (req: Request, res: Response) => {
-		const { id, folderId } = req.params;
-
-		if (!folderId) throw new Error('folderId param required');
+		const { id, folderId } = getStringParams(req.params, ['id', 'folderId']);
 
 		const context = await getFolderContext(db, folderId);
 

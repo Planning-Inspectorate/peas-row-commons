@@ -2,6 +2,7 @@ import type { ManageService } from '#service';
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { Request, Response, NextFunction, RequestHandler } from 'express';
+import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 
 type ValidationMode = 'create' | 'edit';
 
@@ -24,7 +25,7 @@ export function buildValidateFolder(
 	const { db } = service;
 
 	return async (req: Request, res: Response, next: NextFunction) => {
-		const { folderId, id } = req.params;
+		const { id, folderId } = getStringParams(req.params, ['id', 'folderId']);
 		const folderName = sanitiseFolderName(req.body.folderName);
 
 		// Update the request body folderName to be the sanitised one for next function in middleware

@@ -5,6 +5,7 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { ALLOWED_MIME_TYPES } from './constants.ts';
 import { createUploadedFilesViewModel } from './view-model.ts';
+import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
  * Builds the view that allows users to upload new files to a specific folder
@@ -13,12 +14,7 @@ import { createUploadedFilesViewModel } from './view-model.ts';
 export function buildUploadToFolderView(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;
 	return async (req, res) => {
-		const id = req.params.id;
-		const folderId = req.params.folderId;
-
-		if (!id || !folderId) {
-			throw new Error('id param required');
-		}
+		const { id, folderId } = getStringParams(req.params, ['id', 'folderId']);
 
 		const uploadErrors = readSessionData(req, id, 'uploadErrors', [], 'files');
 
