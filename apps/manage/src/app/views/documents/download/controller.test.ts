@@ -55,7 +55,7 @@ describe('buildDownloadDocument', () => {
 		audit: {
 			record: mock.fn(() => Promise.resolve())
 		},
-		archiverFactory: mock.fn(() => mockArchiveInstance)
+		createZipArchive: mock.fn(() => mockArchiveInstance)
 	};
 
 	beforeEach(() => {
@@ -71,7 +71,7 @@ describe('buildDownloadDocument', () => {
 		mockArchiveInstance.pipe.mock.resetCalls();
 		mockArchiveInstance.append.mock.resetCalls();
 		mockArchiveInstance.finalize.mock.resetCalls();
-		service.archiverFactory.mock.resetCalls();
+		service.createZipArchive.mock.resetCalls();
 	});
 
 	describe('Validation', () => {
@@ -372,7 +372,7 @@ describe('buildDownloadDocument', () => {
 			const whereClause = mockDb.document.findMany.mock.calls[0].arguments[0].where;
 			assert.deepStrictEqual(whereClause.id.in, ['doc-1', 'doc-2']);
 
-			assert.strictEqual(service.archiverFactory.mock.callCount(), 1);
+			assert.strictEqual(service.createZipArchive.mock.callCount(), 1);
 			assert.strictEqual(mockArchiveInstance.append.mock.callCount(), 2);
 			assert.strictEqual(mockArchiveInstance.finalize.mock.callCount(), 1);
 

@@ -7,7 +7,10 @@ import { initBlobStore } from '@pins/peas-row-commons-lib/blob-store/index.ts';
 import { initLogger } from '@pins/peas-row-commons-lib/util/logger.ts';
 import { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
 import { buildAuditService, type AuditService } from './audit/index.ts';
-import archiver from 'archiver';
+import { ZipArchive } from 'archiver';
+import type { Archiver, ArchiverOptions } from 'archiver';
+
+export type ZipArchiveFactory = (options?: ArchiverOptions) => Archiver;
 
 /**
  * This class encapsulates all the services and clients for the application
@@ -27,7 +30,7 @@ export class ManageService extends BaseService {
 	/**
 	 * Used for zipping files in bulk download
 	 */
-	archiverFactory: typeof archiver;
+	createZipArchive: ZipArchiveFactory;
 
 	constructor(config: Config) {
 		super(config);
@@ -42,7 +45,7 @@ export class ManageService extends BaseService {
 
 		this.audit = buildAuditService(this.db, logger);
 
-		this.archiverFactory = archiver;
+		this.createZipArchive = (options) => new ZipArchive(options);
 	}
 
 	get blobStore() {

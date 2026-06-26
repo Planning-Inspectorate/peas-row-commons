@@ -44,8 +44,8 @@ function createMockArchive() {
 	};
 }
 
-function createMockArchiverFactory(mockArchive: ReturnType<typeof createMockArchive>) {
-	return mock.fn((_format: string, _options: unknown) => mockArchive);
+function createMockCreateZipArchive(mockArchive: ReturnType<typeof createMockArchive>) {
+	return mock.fn((_options?: unknown) => mockArchive);
 }
 
 function createMockBlobStore(streamBody: unknown = { pipe: mock.fn() }) {
@@ -60,17 +60,17 @@ describe('streamCaseZip', () => {
 	let mockLogger: ReturnType<typeof createMockLogger>;
 	let mockRes: ReturnType<typeof createMockResponse>;
 	let mockArchive: ReturnType<typeof createMockArchive>;
-	let mockArchiverFactory: ReturnType<typeof createMockArchiverFactory>;
+	let mockCreateZipArchive: ReturnType<typeof createMockCreateZipArchive>;
 
 	beforeEach(() => {
 		mockLogger = createMockLogger();
 		mockRes = createMockResponse();
 		mockArchive = createMockArchive();
-		mockArchiverFactory = createMockArchiverFactory(mockArchive);
+		mockCreateZipArchive = createMockCreateZipArchive(mockArchive);
 	});
 
 	it('should set correct Content-Type and Content-Disposition headers', async () => {
-		await streamCaseZip(mockRes as any, 'DRT/2025/0001', [], [], null, mockLogger as any, mockArchiverFactory as any);
+		await streamCaseZip(mockRes as any, 'DRT/2025/0001', [], [], null, mockLogger as any, mockCreateZipArchive as any);
 
 		const headers = mockRes.setHeader.mock.calls.map((call) => call.arguments as unknown as [string, string]);
 
@@ -82,7 +82,7 @@ describe('streamCaseZip', () => {
 	});
 
 	it('should sanitise special characters in case reference for filename', async () => {
-		await streamCaseZip(mockRes as any, 'TEST/REF:2025', [], [], null, mockLogger as any, mockArchiverFactory as any);
+		await streamCaseZip(mockRes as any, 'TEST/REF:2025', [], [], null, mockLogger as any, mockCreateZipArchive as any);
 
 		const disposition = mockRes.setHeader.mock.calls.find(
 			(call) => (call.arguments as unknown as [string])[0] === 'Content-Disposition'
@@ -95,15 +95,14 @@ describe('streamCaseZip', () => {
 	});
 
 	it('should create archive with zip format and compression level 5', async () => {
-		await streamCaseZip(mockRes as any, 'REF/001', [], [], null, mockLogger as any, mockArchiverFactory as any);
+		await streamCaseZip(mockRes as any, 'REF/001', [], [], null, mockLogger as any, mockCreateZipArchive as any);
 
-		const factoryArgs = mockArchiverFactory.mock.calls[0].arguments as unknown as [string, { zlib: { level: number } }];
-		assert.strictEqual(factoryArgs[0], 'zip');
-		assert.strictEqual(factoryArgs[1].zlib.level, 5);
+		const factoryArgs = mockCreateZipArchive.mock.calls[0].arguments as unknown as [{ zlib: { level: number } }];
+		assert.strictEqual(factoryArgs[0].zlib.level, 5);
 	});
 
 	it('should pipe the archive to the response', async () => {
-		await streamCaseZip(mockRes as any, 'REF/001', [], [], null, mockLogger as any, mockArchiverFactory as any);
+		await streamCaseZip(mockRes as any, 'REF/001', [], [], null, mockLogger as any, mockCreateZipArchive as any);
 
 		assert.strictEqual(mockArchive.pipe.mock.callCount(), 1);
 		assert.strictEqual(mockArchive.pipe.mock.calls[0].arguments[0], mockRes);
@@ -116,7 +115,15 @@ describe('streamCaseZip', () => {
 			{ fileName: 'Contact list.pdf', buffer: Buffer.from('pdf-3') }
 		];
 
-		await streamCaseZip(mockRes as any, 'DRT/2025/0001', pdfs, [], null, mockLogger as any, mockArchiverFactory as any);
+		await streamCaseZip(
+			mockRes as any,
+			'DRT/2025/0001',
+			pdfs,
+			[],
+			null,
+			mockLogger as any,
+			mockCreateZipArchive as any
+		);
 
 		assert.strictEqual(mockArchive.append.mock.callCount(), 3);
 
@@ -146,7 +153,7 @@ describe('streamCaseZip', () => {
 			documents,
 			mockBlobStore as any,
 			mockLogger as any,
-			mockArchiverFactory as any
+			mockCreateZipArchive as any
 		);
 
 		assert.strictEqual(mockBlobStore.downloadBlob.mock.callCount(), 2);
@@ -173,7 +180,7 @@ describe('streamCaseZip', () => {
 			documents,
 			mockBlobStore as any,
 			mockLogger as any,
-			mockArchiverFactory as any
+			mockCreateZipArchive as any
 		);
 
 		const appendCall = mockArchive.append.mock.calls[0].arguments as unknown as [unknown, { name: string }];
@@ -186,7 +193,7 @@ describe('streamCaseZip', () => {
 			{ fileName: 'report.pdf', blobName: 'case-1/blob-1', folderName: 'Evidence' }
 		];
 
-		await streamCaseZip(mockRes as any, 'REF/001', [], documents, null, mockLogger as any, mockArchiverFactory as any);
+		await streamCaseZip(mockRes as any, 'REF/001', [], documents, null, mockLogger as any, mockCreateZipArchive as any);
 
 		// No appends for documents (only PDFs would be appended, and we passed none)
 		assert.strictEqual(mockArchive.append.mock.callCount(), 0);
@@ -202,7 +209,7 @@ describe('streamCaseZip', () => {
 			[],
 			mockBlobStore as any,
 			mockLogger as any,
-			mockArchiverFactory as any
+			mockCreateZipArchive as any
 		);
 
 		assert.strictEqual(mockBlobStore.downloadBlob.mock.callCount(), 0);
@@ -226,7 +233,7 @@ describe('streamCaseZip', () => {
 			documents,
 			mockBlobStore as any,
 			mockLogger as any,
-			mockArchiverFactory as any
+			mockCreateZipArchive as any
 		);
 
 		assert.strictEqual(mockArchive.append.mock.callCount(), 0);
@@ -255,7 +262,7 @@ describe('streamCaseZip', () => {
 			documents,
 			mockBlobStore as any,
 			mockLogger as any,
-			mockArchiverFactory as any
+			mockCreateZipArchive as any
 		);
 
 		// First failed, second succeeded
@@ -265,7 +272,7 @@ describe('streamCaseZip', () => {
 	});
 
 	it('should call archive.finalize', async () => {
-		await streamCaseZip(mockRes as any, 'REF/001', [], [], null, mockLogger as any, mockArchiverFactory as any);
+		await streamCaseZip(mockRes as any, 'REF/001', [], [], null, mockLogger as any, mockCreateZipArchive as any);
 
 		assert.strictEqual(mockArchive.finalize.mock.callCount(), 1);
 	});
@@ -283,7 +290,7 @@ describe('streamCaseZip', () => {
 			documents,
 			mockBlobStore as any,
 			mockLogger as any,
-			mockArchiverFactory as any
+			mockCreateZipArchive as any
 		);
 
 		const finalLog = mockLogger.info.mock.calls.find((call) => {
@@ -298,7 +305,7 @@ describe('streamCaseZip', () => {
 	});
 
 	it('should register error and warning handlers on the archive', async () => {
-		await streamCaseZip(mockRes as any, 'REF/001', [], [], null, mockLogger as any, mockArchiverFactory as any);
+		await streamCaseZip(mockRes as any, 'REF/001', [], [], null, mockLogger as any, mockCreateZipArchive as any);
 
 		const registeredEvents = mockArchive.on.mock.calls.map((call) => call.arguments[0] as string);
 
@@ -307,7 +314,7 @@ describe('streamCaseZip', () => {
 	});
 
 	it('should destroy response when archive emits an error', async () => {
-		await streamCaseZip(mockRes as any, 'REF/001', [], [], null, mockLogger as any, mockArchiverFactory as any);
+		await streamCaseZip(mockRes as any, 'REF/001', [], [], null, mockLogger as any, mockCreateZipArchive as any);
 
 		const archiveError = new Error('Archive corrupt');
 		mockArchive._triggerError(archiveError);
@@ -317,7 +324,7 @@ describe('streamCaseZip', () => {
 	});
 
 	it('should log when archive emits a warning', async () => {
-		await streamCaseZip(mockRes as any, 'REF/001', [], [], null, mockLogger as any, mockArchiverFactory as any);
+		await streamCaseZip(mockRes as any, 'REF/001', [], [], null, mockLogger as any, mockCreateZipArchive as any);
 
 		mockArchive._triggerWarning(new Error('Minor issue'));
 
@@ -338,7 +345,7 @@ describe('streamCaseZip', () => {
 			documents,
 			mockBlobStore as any,
 			mockLogger as any,
-			mockArchiverFactory as any
+			mockCreateZipArchive as any
 		);
 
 		// 1 PDF + 1 document
