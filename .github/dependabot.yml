@@ -12,6 +12,10 @@ updates:
     cooldown:
       default-days: 7
     groups:
+      prisma: # group prisma library (dev-dep) and client (prod dep) updates together
+        patterns:
+          - 'prisma'
+          - '@prisma/*'
       deps: # all non-dev dependencies
         patterns:
           - '*'
