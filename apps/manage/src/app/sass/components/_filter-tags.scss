@@ -1,0 +1,38 @@
+@use 'node_modules/govuk-frontend/dist/govuk/index' as govuk;
+
+// active filter display tags
+
+.pins-filter-tag {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: govuk.govuk-spacing(2) govuk.govuk-spacing(3);
+	background-color: govuk.govuk-colour('white');
+	border: 1px solid govuk.$govuk-border-colour;
+}
+
+.pins-filter-tag__text {
+	flex: 1;
+	@include govuk.govuk-font($size: 16);
+}
+
+.pins-filter-tag__remove {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	margin-left: govuk.govuk-spacing(2);
+	font-size: 24px;
+	line-height: 1;
+	color: govuk.govuk-colour('black');
+	text-decoration: none;
+
+	&:hover {
+		color: govuk.$govuk-link-hover-colour;
+	}
+
+	&:focus {
+		@include govuk.govuk-focused-text;
+	}
+}

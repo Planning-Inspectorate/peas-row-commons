@@ -1,0 +1,144 @@
+{% from "govuk/components/accordion/macro.njk" import govukAccordion %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% macro filterAccordion(filters, currentPath, searchValue, cspNonce) %}
+    <div class="pins-filter-container">
+        <div class="pins-filter__header">
+            <h2 class="govuk-heading-m govuk-!-margin-0">Filter</h2>
+        </div>
+
+        <form method="GET" action="{{ currentPath or '' }}">
+            {% if searchValue %}
+                <input type="hidden" name="searchCriteria" value="{{ searchValue }}">
+            {% endif %}
+
+            <div class="pins-filter__selected-section">
+                <div class="pins-filter__selected-header">
+                    <h3 class="govuk-heading-m govuk-!-margin-0">Selected filters</h3>
+                    <a href="{{ filters.selectedCategories.clearLinkHref }}"
+                       class="govuk-link govuk-link--no-visited-state">Clear filters</a>
+                </div>
+
+                {% if filters.selectedCategories.categories.length > 0 %}
+                    {% for category in filters.selectedCategories.categories %}
+                        <div class="pins-filter__selected-category">
+                            <h4 class="pins-filter__category-heading">{{ category.heading.text }}</h4>
+                            <div class="pins-filter__selected-items">
+                                {% for item in category.items %}
+                                    <div class="pins-filter-tag">
+                                        <span class="pins-filter-tag__text">{{ item.text }}</span>
+                                        <a href="{{ item.href }}" class="pins-filter-tag__remove"
+                                           aria-label="Remove {{ item.text }} filter">×</a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="pins-filter-options-section govuk-!-padding-4 ">
+                <div class="pins-apply-filter-top govuk-!-margin-bottom-4 ">
+                    {{ govukButton({
+                        text: "Apply filters",
+                        classes: "govuk-button--full-width govuk-!-margin-bottom-0",
+                        attributes: {
+                            "data-test-id": "submit-button"
+                        }
+                    }) }}
+                </div>
+
+                <div class="pins-show-all-sections govuk-!-margin-bottom-4">
+                    <button id="show-hide-all-sections" class="govuk-button-as-link pins-show-all-sections-button"
+                            type="button"> Show all sections
+                    </button>
+                </div>
+
+                {% set accordionItems = [] %}
+                {% for groups in filters.checkboxGroups %}
+                    {% set combinedCheckboxesHtml %}
+                        {% for group in groups %}
+                            {# Show visible legend for case type and sub type, visually hide legend for area (but keep for screen readers) #}
+                            {{ govukCheckboxes({
+                                name: group.name,
+                                idPrefix: group.idPrefix,
+                                items: group.items,
+                                classes: "govuk-checkboxes--small",
+                                fieldset: {
+                                    legend: {
+                                        text: group.legend,
+                                        classes: "govuk-fieldset__legend--s" if group.name == "type" or group.name == "subType" else "govuk-visually-hidden"
+                                    }
+                                }
+                            }) }}
+                        {% endfor %}
+                    {% endset %}
+
+                    {% set accordionItems = (accordionItems.push({
+                        heading: {
+                            text: groups[0].heading
+                        },
+                        content: {
+                            html: combinedCheckboxesHtml
+                        }
+                    }), accordionItems) %}
+                {% endfor %}
+
+                {{ govukAccordion({
+                    id: "filter-accordion",
+                    classes: "pins-filter-accordion",
+                    items: accordionItems
+                }) }}
+
+                <script {% if cspNonce %}nonce="{{ cspNonce }}"{% endif %}>
+									document.addEventListener('DOMContentLoaded', function() {
+										const toggleButton = document.getElementById('show-hide-all-sections');
+										const accordion = document.getElementById('filter-accordion');
+
+										if (!toggleButton || !accordion) {
+											return;
+										}
+
+										function updateToggleButtonText() {
+											const sections = accordion.querySelectorAll('.govuk-accordion__section');
+											if (sections.length === 0) return;
+
+											const allExpanded = Array.from(sections).every(section =>
+												section.classList.contains('govuk-accordion__section--expanded')
+											);
+											toggleButton.textContent = allExpanded ? 'Hide all sections' : 'Show all sections';
+											toggleButton.setAttribute('aria-expanded', allExpanded);
+										}
+
+										// Set up the click handler for our custom toggle button
+										toggleButton.addEventListener('click', function() {
+											const sections = accordion.querySelectorAll('.govuk-accordion__section');
+											const allExpanded = Array.from(sections).every(section =>
+												section.classList.contains('govuk-accordion__section--expanded')
+											);
+
+											sections.forEach(section => {
+												const isExpanded = section.classList.contains('govuk-accordion__section--expanded');
+												const button = section.querySelector('.govuk-accordion__section-button');
+
+												if (button && (allExpanded === isExpanded)) {
+													button.click();
+												}
+											});
+										});
+
+										// Watch for any changes to the accordion and update button text
+										const observer = new MutationObserver(updateToggleButtonText);
+
+										observer.observe(accordion, {
+											attributes: true,
+											childList: true,
+											subtree: true
+										});
+									});
+                </script>
+            </div>
+        </form>
+    </div>
+{% endmacro %}
+

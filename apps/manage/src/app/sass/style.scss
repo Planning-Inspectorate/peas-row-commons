@@ -9,6 +9,8 @@ $font-family: arial, helvetica, sans-serif;
 @forward 'node_modules/@ministryofjustice/frontend/moj/all';
 @use 'node_modules/@pins/peas-row-commons-lib/ui/header/pins-header';
 @use 'node_modules/@pins/peas-row-commons-lib/ui/footer/pins-footer';
+@use 'components/filter-accordion';
+@use 'components/filter-tags';
 
 // TODO HRP-578 split this one file into multiple files for better maintainability, e.g. one per page or component
 // Use this pattern for any new additions
@@ -98,7 +100,6 @@ $font-family: arial, helvetica, sans-serif;
 	display: inline;
 	padding: 0;
 	margin: 0;
-	font-family: inherit;
 	font-size: inherit;
 	color: govuk.govuk-colour('blue');
 	text-decoration: underline;
