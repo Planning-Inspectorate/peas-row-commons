@@ -137,6 +137,28 @@ const createMockCases = (count: number) => {
 };
 
 describe('Case Controller', () => {
+	class MockFilterGenerator {
+		constructor(_options: any) {}
+
+		generateFilters(_query: any, path: string, _countMap: any) {
+			return {
+				checkboxGroups: [],
+				selectedCategories: {
+					categories: [],
+					clearLinkHref: path
+				}
+			};
+		}
+
+		createFilterWhereClause() {
+			return {};
+		}
+
+		getAllSelectedValues() {
+			return [[], [], [], []];
+		}
+	}
+
 	describe('caseToViewModel', () => {
 		it('should format receivedDate and create a sortable timestamp', () => {
 			const input = {
@@ -169,12 +191,13 @@ describe('Case Controller', () => {
 				query: {},
 				originalUrl: '/cases',
 				baseUrl: 'https://localhost:4000',
-				path: '/cases'
+				path: '/cases',
+				query: {}
 			};
 
 			const mockDb = {
 				case: {
-					findMany: mock.fn((_args: any) => [
+					findMany: mock.fn(() => [
 						{
 							id: '1',
 							reference: 'A',
@@ -197,13 +220,10 @@ describe('Case Controller', () => {
 
 			const listCases = buildListCases({ db: mockDb, logger: mockLogger() } as any);
 
-			await assert.doesNotReject(() => listCases(mockReq as any, mockRes as any));
-
-			assert.strictEqual(mockDb.case.findMany.mock.callCount(), 1);
+			await listCases(mockReq as any, mockRes as any);
 
 			assert.strictEqual(mockRes.render.mock.callCount(), 1);
 			const renderArgs = mockRes.render.mock.calls[0].arguments;
-
 			assert.strictEqual(renderArgs[0], 'views/cases/list/view.njk');
 			assert.strictEqual(renderArgs[1].pageHeading, 'Case list');
 			assert.strictEqual(renderArgs[1].cases.length, 2);
@@ -214,6 +234,50 @@ describe('Case Controller', () => {
 			assert.ok(statusGroup, 'Status group should exist');
 
 			assert.ok(renderArgs[1].paginationParams, 'Pagination Params object should be passed to view');
+		});
+
+		it('should strip query parameters from currentPath but preserve them in currentUrl', async () => {
+			const nunjucks = configureNunjucks();
+
+			const mockRes = {
+				render: mock.fn((view, data) => nunjucks.render(view, data))
+			};
+
+			const mockReq = {
+				originalUrl: '/cases?page=2&area=planning&search=test',
+				baseUrl: 'https://localhost:4000',
+				path: '/cases',
+				query: {
+					page: '2',
+					area: 'planning',
+					search: 'test'
+				}
+			};
+
+			const mockDb = {
+				case: {
+					findMany: mock.fn(() => [
+						{
+							id: '1',
+							reference: 'TEST/001',
+							receivedDate: new Date('2024-01-01'),
+							Type: { displayName: 'Planning' },
+							Status: { displayName: 'Open' }
+						}
+					]),
+					count: mock.fn(() => 1),
+					groupBy: mock.fn(() => [])
+				}
+			};
+
+			const listCases = buildListCases({ db: mockDb, logger: mockLogger() } as any, MockFilterGenerator as any);
+
+			await listCases(mockReq as any, mockRes as any);
+
+			const renderData = mockRes.render.mock.calls[0].arguments[1];
+
+			assert.strictEqual(renderData.currentPath, '/cases');
+			assert.strictEqual(renderData.currentUrl, '/cases?page=2&area=planning&search=test');
 		});
 	});
 

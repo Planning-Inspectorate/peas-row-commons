@@ -280,11 +280,11 @@ describe('FilterGenerator Integration Tests', () => {
 			const result = generator.generateFilters(query, baseUrl, {});
 			const categories = result.selectedCategories.categories;
 
-			const commonLandCat = categories.find((c) => c.heading.text.includes('Common Land'));
-			assert.ok(commonLandCat);
+			const subtypeCat = categories.find((c) => c.heading.text === 'Subtype');
+			assert.ok(subtypeCat, 'Subtype category should exist');
 
-			const tag = commonLandCat.items.find((i) => i.text === 'Works on Common Land');
-			assert.ok(tag);
+			const tag = subtypeCat.items.find((i) => i.text === 'Works on Common Land');
+			assert.ok(tag, 'Works on Common Land tag should exist');
 			assert.strictEqual(tag.href, baseUrl);
 		});
 
@@ -298,12 +298,15 @@ describe('FilterGenerator Integration Tests', () => {
 			const result = generator.generateFilters(query, baseUrl, {});
 			const categories = result.selectedCategories.categories;
 
-			const areaCat = categories.find((c) => c.heading.text.includes('Rights of Way'));
-			const areaTag: any = areaCat?.items[0];
+			const areaCat = categories.find((c) => c.heading.text === 'Case work area');
+			assert.ok(areaCat, 'Area category should exist');
 
-			assert.ok(!areaTag.href.includes(`subtype=${CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL}`));
-			assert.ok(areaTag.href.includes('page=2'));
-			assert.ok(areaTag.href.includes(`area=${CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND}`));
+			const areaTag = areaCat.items[0];
+			assert.ok(areaTag, 'Area tag should exist');
+
+			assert.ok(areaTag.href.includes(`subtype=${CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL}`), 'Should keep subtype filter');
+			assert.ok(areaTag.href.includes('page=2'), 'Should keep page parameter');
+			assert.ok(!areaTag.href.includes(`area=`), 'Should remove area filter');
 		});
 
 		it('should generate status selected-category tags and removal links', () => {
@@ -334,15 +337,161 @@ describe('FilterGenerator Integration Tests', () => {
 			const result = generator.generateFilters(query, baseUrl, {});
 			const categories = result.selectedCategories.categories;
 
-			const subtypeCat = categories.find((c) => c.heading.text.includes('subtype'));
+			const subtypeCat = categories.find((c) => c.heading.text === 'Subtype');
+			assert.ok(subtypeCat, 'Subtype category should exist');
 
-			const s14Tag = subtypeCat?.items.find((i) => i.text === 'Schedule 14 Appeal');
-			const dmmoTag = subtypeCat?.items.find((i) => i.text.includes('Opposed'));
+			const s14Tag = subtypeCat.items.find((i) => i.text === 'Schedule 14 Appeal');
+			const dmmoTag = subtypeCat.items.find((i) => i.text.includes('Opposed'));
 
-			assert.ok(s14Tag && dmmoTag);
+			assert.ok(s14Tag && dmmoTag, 'Both subtype tags should exist');
 
 			assert.ok(s14Tag.href.includes(`subtype=${CASE_SUBTYPES_ID.OPPOSED_DMMO}`));
 			assert.ok(!s14Tag.href.includes(`subtype=${CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL}`));
+		});
+	});
+	describe('Fixed Heading Behavior', () => {
+		it('should use "Case type" as fixed heading for all selected types regardless of area', () => {
+			const query = {
+				type: [CASE_TYPES_ID.RIGHTS_OF_WAY, CASE_TYPES_ID.COMMON_LAND]
+			};
+
+			const result = generator.generateFilters(query, baseUrl, {});
+			const categories = result.selectedCategories.categories;
+
+			// Should have only ONE category for types with fixed heading
+			const typeCategories = categories.filter((c) => c.heading.text === 'Case type');
+			assert.strictEqual(typeCategories.length, 1, 'Should have exactly one "Case type" category');
+
+			// Should contain both types under the single heading
+			const typeCategory = typeCategories[0];
+			assert.strictEqual(typeCategory.items.length, 2, 'Should contain both selected types');
+
+			const rowTypeTag = typeCategory.items.find((i) => i.text === 'Rights of Way');
+			const clTypeTag = typeCategory.items.find((i) => i.text === 'Common Land');
+
+			assert.ok(rowTypeTag, 'Rights of Way type should be in the category');
+			assert.ok(clTypeTag, 'Common Land type should be in the category');
+		});
+
+		it('should use "Subtype" as fixed heading for all selected subtypes regardless of parent type', () => {
+			const query = {
+				subtype: [CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL, CASE_SUBTYPES_ID.WORKS_COMMON_LAND]
+			};
+
+			const result = generator.generateFilters(query, baseUrl, {});
+			const categories = result.selectedCategories.categories;
+
+			// Should have only ONE category for subtypes with fixed heading
+			const subtypeCategories = categories.filter((c) => c.heading.text === 'Subtype');
+			assert.strictEqual(subtypeCategories.length, 1, 'Should have exactly one "Subtype" category');
+
+			// Should contain both subtypes under the single heading
+			const subtypeCategory = subtypeCategories[0];
+			assert.strictEqual(subtypeCategory.items.length, 2, 'Should contain both selected subtypes');
+
+			const s14Tag = subtypeCategory.items.find((i) => i.text === 'Schedule 14 Appeal');
+			const worksTag = subtypeCategory.items.find((i) => i.text === 'Works on Common Land');
+
+			assert.ok(s14Tag, 'Schedule 14 Appeal should be in the category');
+			assert.ok(worksTag, 'Works on Common Land should be in the category');
+		});
+
+		it('should generate correct removal links for types under fixed heading', () => {
+			const query = {
+				type: [CASE_TYPES_ID.RIGHTS_OF_WAY, CASE_TYPES_ID.COMMON_LAND],
+				area: CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND
+			};
+
+			const result = generator.generateFilters(query, baseUrl, {});
+			const categories = result.selectedCategories.categories;
+
+			const typeCategory = categories.find((c) => c.heading.text === 'Case type');
+			assert.ok(typeCategory, 'Case type category should exist');
+
+			const rowTypeTag = typeCategory.items.find((i) => i.text === 'Rights of Way');
+			assert.ok(rowTypeTag, 'Rights of Way tag should exist');
+
+			// Clicking this tag should remove only Rights of Way, keep Common Land and area
+			assert.ok(rowTypeTag.href.includes(`type=${CASE_TYPES_ID.COMMON_LAND}`), 'Should keep Common Land type');
+			assert.ok(
+				rowTypeTag.href.includes(`area=${CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND}`),
+				'Should keep area filter'
+			);
+			assert.ok(!rowTypeTag.href.includes(`type=${CASE_TYPES_ID.RIGHTS_OF_WAY}`), 'Should remove Rights of Way type');
+		});
+
+		it('should generate correct removal links for subtypes under fixed heading', () => {
+			const query = {
+				subtype: [CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL, CASE_SUBTYPES_ID.OPPOSED_DMMO],
+				type: CASE_TYPES_ID.RIGHTS_OF_WAY
+			};
+
+			const result = generator.generateFilters(query, baseUrl, {});
+			const categories = result.selectedCategories.categories;
+
+			const subtypeCategory = categories.find((c) => c.heading.text === 'Subtype');
+			assert.ok(subtypeCategory, 'Subtype category should exist');
+
+			const dmmoTag = subtypeCategory.items.find((i) => i.text.includes('Opposed'));
+			assert.ok(dmmoTag, 'Opposed DMMO tag should exist');
+
+			// Clicking this tag should remove only Opposed DMMO, keep Schedule 14 and type
+			assert.ok(
+				dmmoTag.href.includes(`subtype=${CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL}`),
+				'Should keep Schedule 14 Appeal'
+			);
+			assert.ok(dmmoTag.href.includes(`type=${CASE_TYPES_ID.RIGHTS_OF_WAY}`), 'Should keep type filter');
+			assert.ok(!dmmoTag.href.includes(`subtype=${CASE_SUBTYPES_ID.OPPOSED_DMMO}`), 'Should remove Opposed DMMO');
+		});
+
+		it('should filter into same fixed heading when multiple filters are selected in same section', () => {
+			// This tests that we DON'T get separate categories like:
+			// "Rights of Way and Common Land case type"
+			// and instead get a single "Case type" category with each in individual boxes
+			const query = {
+				type: [CASE_TYPES_ID.RIGHTS_OF_WAY, CASE_TYPES_ID.COMMON_LAND]
+			};
+
+			const result = generator.generateFilters(query, baseUrl, {});
+			const categories = result.selectedCategories.categories;
+
+			// Should NOT have area-specific type headings
+			const areaSpecificHeading = categories.find((c) =>
+				c.heading.text.includes('Rights of Way and Common Land case type')
+			);
+			assert.strictEqual(areaSpecificHeading, undefined, 'Should not have area-specific type heading');
+
+			// Should have the fixed "Case type" heading instead
+			const fixedHeading = categories.find((c) => c.heading.text === 'Case type');
+			assert.ok(fixedHeading, 'Should have fixed "Case type" heading');
+		});
+
+		it('should handle single selected type with fixed heading', () => {
+			const query = {
+				type: CASE_TYPES_ID.RIGHTS_OF_WAY
+			};
+
+			const result = generator.generateFilters(query, baseUrl, {});
+			const categories = result.selectedCategories.categories;
+
+			const typeCategory = categories.find((c) => c.heading.text === 'Case type');
+			assert.ok(typeCategory, 'Case type category should exist');
+			assert.strictEqual(typeCategory.items.length, 1, 'Should have exactly one item');
+			assert.strictEqual(typeCategory.items[0].text, 'Rights of Way');
+		});
+
+		it('should handle single selected subtype with fixed heading', () => {
+			const query = {
+				subtype: CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL
+			};
+
+			const result = generator.generateFilters(query, baseUrl, {});
+			const categories = result.selectedCategories.categories;
+
+			const subtypeCategory = categories.find((c) => c.heading.text === 'Subtype');
+			assert.ok(subtypeCategory, 'Subtype category should exist');
+			assert.strictEqual(subtypeCategory.items.length, 1, 'Should have exactly one item');
+			assert.strictEqual(subtypeCategory.items[0].text, 'Schedule 14 Appeal');
 		});
 	});
 });

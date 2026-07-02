@@ -71,7 +71,9 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			statusCountsGrouped
 		);
 
-		const filters: FilterViewModel = filterGenerator.generateFilters(req.query, req.baseUrl, countMap);
+		const currentPath = req.originalUrl.split('?')[0];
+
+		const filters: FilterViewModel = filterGenerator.generateFilters(req.query, currentPath, countMap);
 
 		const caseViewModels = cases.map(caseToViewModel);
 
@@ -101,6 +103,7 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			currentPage: 'all-cases',
 			cases: caseViewModels,
 			currentUrl: req.originalUrl,
+			currentPath,
 			paginationParams,
 			filters,
 			searchValue: searchString

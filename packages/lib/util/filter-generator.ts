@@ -23,6 +23,7 @@ export interface FilterViewModel {
 			idPrefix: string;
 			name: string;
 			legend: string;
+			heading: string;
 			items: FilterItem[];
 		}>
 	>;
@@ -248,7 +249,8 @@ export class FilterGenerator {
 			keys.TYPE,
 			labels.TYPE_SUFFIX,
 			query,
-			baseUrl
+			baseUrl,
+			'Case type' // Fixed heading
 		);
 
 		const selectedSubTypeCategories = this.createGroupedSelectedCategories(
@@ -258,7 +260,8 @@ export class FilterGenerator {
 			keys.SUBTYPE,
 			labels.SUBTYPE_SUFFIX,
 			query,
-			baseUrl
+			baseUrl,
+			'Subtype' // Fixed heading
 		);
 
 		return [selectedAreaCategories, selectedTypeCategories, selectedSubTypeCategories];
@@ -323,12 +326,49 @@ export class FilterGenerator {
 		queryParamKey: string,
 		suffix: string,
 		query: ParsedQs,
-		baseUrl: string
+		baseUrl: string,
+		fixedHeading?: string // Optional fixed heading
 	) {
 		const selectedValues = this.getSelectedValues(query, queryParamKey);
 
 		if (selectedValues.length === 0) return [];
 
+		// If fixedHeading is provided, merge all groups into one category
+		if (fixedHeading) {
+			const selectedItems = items.filter((item) => selectedValues.includes(item.id));
+
+			if (selectedItems.length === 0) return [];
+
+			const categoryItems: SelectedFilterItem[] = selectedItems.map((item) => {
+				const params = new URLSearchParams();
+
+				Object.keys(query).forEach((key) => {
+					if (key !== queryParamKey) {
+						const vals = this.getSelectedValues(query, key);
+						vals.forEach((value) => params.append(key, value));
+					}
+				});
+
+				const valuesToKeep = selectedValues.filter((value) => value !== item.id);
+				valuesToKeep.forEach((value) => params.append(queryParamKey, value));
+
+				const queryString = params.toString();
+
+				return {
+					text: item.displayName || '',
+					href: queryString ? `${baseUrl}?${queryString}` : baseUrl
+				};
+			});
+
+			return [
+				{
+					heading: { text: fixedHeading },
+					items: categoryItems
+				}
+			];
+		}
+
+		// Original grouped behavior
 		return groups
 			.map((group) => {
 				const selectedItemsInGroup = items.filter(
@@ -337,10 +377,24 @@ export class FilterGenerator {
 
 				if (selectedItemsInGroup.length === 0) return null;
 
-				const categoryItems: SelectedFilterItem[] = selectedItemsInGroup.map((item) => ({
-					text: item.displayName || '',
-					href: this.buildRemovalUrl(item.id, queryParamKey, selectedValues, query, baseUrl)
-				}));
+				const categoryItems: SelectedFilterItem[] = selectedItemsInGroup.map((item) => {
+					const params = new URLSearchParams();
+
+					Object.keys(query).forEach((key) => {
+						if (key !== queryParamKey) {
+							const vals = this.getSelectedValues(query, key);
+							vals.forEach((value) => params.append(key, value));
+						}
+					});
+
+					const valuesToKeep = selectedValues.filter((value) => value !== item.id);
+					valuesToKeep.forEach((value) => params.append(queryParamKey, value));
+
+					return {
+						text: item.displayName || '',
+						href: this.buildRemovalUrl(item.id, queryParamKey, selectedValues, query, baseUrl)
+					};
+				});
 
 				return {
 					heading: { text: `${group.displayName} ${suffix}`.trim() },
@@ -351,8 +405,10 @@ export class FilterGenerator {
 	}
 
 	/**
-	 * Formats the Case Areas, Case Types and Case Subtypes into the checkbox groupings following the format:
-	 * Casework Area A to Casework A Types to Casework A Subtypes, then the same for B.
+	 * Formats the Case Areas, Case Types, Case Subtypes into checkbox groupings:
+	 * - Case work area (all areas)
+	 * - Case type (grouped by casework area)
+	 * - Sub type (grouped by type)
 	 *
 	 * We nest the groupings so that we can insert a break line between the subsections.
 	 */
@@ -363,7 +419,7 @@ export class FilterGenerator {
 		selectedStatuses: string[],
 		counts: CountMap
 	) {
-		const { keys, labels } = this.config;
+		const { keys } = this.config;
 
 		const checkboxGroups = [];
 
@@ -377,41 +433,59 @@ export class FilterGenerator {
 			{
 				idPrefix: `${keys.AREA}-root`,
 				name: keys.AREA,
-				legend: 'Select case work area',
+				legend: 'Case work area',
+				heading: 'Case work area',
 				items: areaItems
 			}
 		]);
 
-		CASEWORK_AREAS.forEach((area) => {
-			const grouping = [];
-
-			const typeGroupsForArea = this.createGenericCheckboxGroups(
-				[area],
-				CASE_TYPES,
-				'caseworkAreaId',
-				keys.TYPE,
-				labels.TYPE_SUFFIX,
-				selectedTypes,
-				counts
-			);
-
-			grouping.push(...typeGroupsForArea);
-
+		const caseTypeGroups = CASEWORK_AREAS.map((area) => {
 			const typesInArea = CASE_TYPES.filter((type) => type.caseworkAreaId === area.id);
-			const subTypeGroupsForArea = this.createGenericCheckboxGroups(
-				typesInArea,
-				CASE_SUBTYPES,
-				'parentTypeId',
-				keys.SUBTYPE,
-				labels.SUBTYPE_SUFFIX,
-				selectedSubTypes,
-				counts
-			);
 
-			grouping.push(...subTypeGroupsForArea);
+			if (typesInArea.length === 0) return null;
 
-			checkboxGroups.push(grouping);
-		});
+			const filterItems: FilterItem[] = typesInArea.map((type) => ({
+				value: type.id,
+				text: this.formatLabelWithCount(type.displayName || '', counts[type.id]),
+				checked: selectedTypes.includes(type.id)
+			}));
+
+			return {
+				idPrefix: `${keys.TYPE}-${area.id}`,
+				name: keys.TYPE,
+				legend: `${area.displayName || ''}`,
+				heading: 'Case type',
+				items: filterItems
+			};
+		}).filter((group): group is NonNullable<typeof group> => group !== null);
+
+		if (caseTypeGroups.length > 0) {
+			checkboxGroups.push(caseTypeGroups);
+		}
+
+		const subTypeGroups = CASE_TYPES.map((type) => {
+			const subTypesInType = CASE_SUBTYPES.filter((subType) => subType.parentTypeId === type.id);
+
+			if (subTypesInType.length === 0) return null;
+
+			const filterItems: FilterItem[] = subTypesInType.map((subType) => ({
+				value: subType.id,
+				text: this.formatLabelWithCount(subType.displayName || '', counts[subType.id]),
+				checked: selectedSubTypes.includes(subType.id)
+			}));
+
+			return {
+				idPrefix: `${keys.SUBTYPE}-${type.id}`,
+				name: keys.SUBTYPE,
+				legend: `${type.displayName || ''}`,
+				heading: 'Subtype',
+				items: filterItems
+			};
+		}).filter((group): group is NonNullable<typeof group> => group !== null);
+
+		if (subTypeGroups.length > 0) {
+			checkboxGroups.push(subTypeGroups);
+		}
 
 		const statusItems: FilterItem[] = CASE_STATUSES.map((status) => ({
 			value: status.id,
@@ -424,49 +498,12 @@ export class FilterGenerator {
 				idPrefix: `${keys.STATUS}-root`,
 				name: keys.STATUS,
 				legend: 'Select status',
+				heading: 'Status',
 				items: statusItems
 			}
 		]);
 
 		return checkboxGroups;
-	}
-
-	/**
-	 * Creates a group of checkboxes for an item:
-	 * (e.g. all types for a casework area, or all subtypes for a type)
-	 */
-	private createGenericCheckboxGroups<
-		TGroup extends { id: string; displayName?: string },
-		TItem extends { id: string; displayName?: string }
-	>(
-		groups: TGroup[],
-		items: TItem[],
-		relationKey: keyof TItem,
-		queryParamKey: string,
-		suffix: string,
-		selectedValues: string[],
-		counts: CountMap
-	) {
-		return groups
-			.map((group) => {
-				const itemsInGroup = items.filter((item) => item[relationKey] === group.id);
-
-				if (itemsInGroup.length === 0) return null;
-
-				const filterItems: FilterItem[] = itemsInGroup.map((item) => ({
-					value: item.id,
-					text: this.formatLabelWithCount(item.displayName || '', counts[item.id]),
-					checked: selectedValues.includes(item.id)
-				}));
-
-				return {
-					idPrefix: `${queryParamKey}-${group.id}`,
-					name: queryParamKey,
-					legend: `Select ${group.displayName} ${suffix}`,
-					items: filterItems
-				};
-			})
-			.filter((group): group is NonNullable<typeof group> => group !== null);
 	}
 
 	/**
