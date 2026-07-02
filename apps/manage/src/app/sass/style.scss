@@ -1,12 +1,13 @@
 $font-family: arial, helvetica, sans-serif;
 
-// Main gov styles
-@use 'node_modules/govuk-frontend/dist/govuk/index' as govuk with (
-	// don't use the GDS Transport font, this service is not on GOV.UK
+@forward 'node_modules/@ministryofjustice/frontend/moj/all' with (
+	// don't use the MOJ font
 	// https://www.gov.uk/service-manual/design/making-your-service-look-like-govuk#if-your-service-isnt-on-govuk
-	$govuk-font-family: $font-family
+	$moj-font-family: $font-family
 );
-@forward 'node_modules/@ministryofjustice/frontend/moj/all';
+
+// Main gov styles
+@use 'node_modules/govuk-frontend/dist/govuk/index' as govuk;
 @use 'node_modules/@pins/peas-row-commons-lib/ui/header/pins-header';
 @use 'node_modules/@pins/peas-row-commons-lib/ui/footer/pins-footer';
 @use 'components/filter-accordion';
