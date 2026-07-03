@@ -13,7 +13,7 @@ import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { FolderBreadcrumb } from '../types.ts';
-import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
+import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms';
 import { JOURNEY_ID } from '../../move-file/journey/journey.ts';
 import {
 	DocumentFilterGenerator,

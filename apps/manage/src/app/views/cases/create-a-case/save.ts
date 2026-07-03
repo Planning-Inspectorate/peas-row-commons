@@ -9,7 +9,7 @@ import { AUDIT_ACTIONS } from '../../../audit/index.ts';
 
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 
-import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
+import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms';
 
 export function buildSaveController({ db, logger, audit }: ManageService) {
 	return async (req: Request, res: Response) => {

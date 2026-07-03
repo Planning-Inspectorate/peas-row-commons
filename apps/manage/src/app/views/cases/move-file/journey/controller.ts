@@ -2,7 +2,7 @@ import { ManageService } from '#service';
 import type { Request, RequestHandler, Response } from 'express';
 import { buildFolderTree } from '../../case-folders/folder-utils.ts';
 import { JOURNEY_ID } from './journey.ts';
-import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
+import { clearDataFromSession, list } from '@planning-inspectorate/dynamic-forms';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
@@ -12,7 +12,6 @@ import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { AUDIT_ACTIONS } from '../../../../audit/index.ts';
 import { checkFileNamesConflict } from '../../upload/upload-documents/file-duplicate-validation.ts';
 import type { ValidationError } from '../../upload/upload-documents/validation-middleware.ts';
-import { list } from '@planning-inspectorate/dynamic-forms/src/controller.js';
 import { getStringParam, getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 
 const documentFindManySelectArg = {
