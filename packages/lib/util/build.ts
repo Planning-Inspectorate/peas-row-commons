@@ -11,20 +11,16 @@ interface SassOptions {
 	 * The root of the repository where `node_modules` can be found
 	 */
 	repoRoot: string;
-	/**
-	 * a file to update with the new css filename
-	 */
-	localsFile?: string;
 	mojRoot: string;
 }
 
 /**
  * Compile sass into a css file in the .static folder
- * Optionally, update a file which contains the css file name
+ * Creates a manifest json in the static folder with the hashed css filename
  *
  * @see https://sass-lang.com/documentation/js-api/#md:usage
  */
-async function compileSass({ staticDir, srcDir, repoRoot, localsFile, mojRoot }: SassOptions): Promise<void> {
+async function compileSass({ staticDir, srcDir, repoRoot, mojRoot }: SassOptions): Promise<void> {
 	const styleFile = path.join(srcDir, 'app', 'sass/style.scss');
 	const out = sass.compile(styleFile, {
 		// ensure scss can find the govuk-frontend folders
@@ -43,15 +39,14 @@ async function compileSass({ staticDir, srcDir, repoRoot, localsFile, mojRoot }:
 	// write the css file
 	await fs.writeFile(outputPath, out.css);
 
-	if (localsFile) {
-		// update the given file with the new css filename
-		await replaceInFile(localsFile, [
-			{
-				replace: /'style(-[0-9a-f]{8})?\.css'/,
-				with: `'${filename}'`
-			}
-		]);
-	}
+	const manifest = {
+		'style.css': filename
+	};
+
+	const manifestPath = path.join(staticDir, 'manifest.json');
+	await fs.mkdir(path.dirname(manifestPath), { recursive: true });
+	await fs.writeFile(manifestPath, JSON.stringify(manifest, null, 2));
+
 	await deleteOldCssFiles({ staticDir, filename });
 }
 
@@ -133,31 +128,7 @@ interface BuildOptions {
 	srcDir: string;
 	repoRoot: string;
 	accessibleAutocompleteRoot?: string;
-	localsFile?: string;
 	mojRoot: string;
-}
-
-interface Replacement {
-	replace: string | RegExp;
-	with: string;
-}
-
-/**
- * Replace content in files and overwrite them
- *
- * @param file
- * @param replacements
- */
-async function replaceInFile(file: string, replacements: Replacement[]) {
-	let newContent = await fs.readFile(file, 'utf8');
-	for (const replacement of replacements) {
-		if (replacement.replace instanceof RegExp) {
-			newContent = newContent.replace(replacement.replace, replacement.with);
-		} else {
-			newContent = newContent.replaceAll(replacement.replace, replacement.with);
-		}
-	}
-	await fs.writeFile(file, newContent, 'utf8');
 }
 
 /**
@@ -168,13 +139,9 @@ export function runBuild({
 	srcDir,
 	repoRoot,
 	accessibleAutocompleteRoot,
-	localsFile,
 	mojRoot
 }: BuildOptions): Promise<void[]> {
-	const tasks = [
-		compileSass({ staticDir, srcDir, repoRoot, localsFile, mojRoot }),
-		copyAssets({ staticDir, repoRoot, mojRoot })
-	];
+	const tasks = [compileSass({ staticDir, srcDir, repoRoot, mojRoot }), copyAssets({ staticDir, repoRoot, mojRoot })];
 	if (accessibleAutocompleteRoot) {
 		tasks.push(copyAutocompleteAssets({ staticDir, root: accessibleAutocompleteRoot }));
 	}

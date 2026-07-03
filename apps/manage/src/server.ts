@@ -5,7 +5,7 @@ import { ManageService } from '#service';
 const config = loadConfig();
 const service = new ManageService(config);
 
-const app = createApp(service);
+const app = await createApp(service);
 
 // Trust proxy, because our application is behind Front Door
 // required for secure session cookies

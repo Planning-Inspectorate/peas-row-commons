@@ -8,21 +8,20 @@ import { runBuild } from '@pins/peas-row-commons-lib/util/build.ts';
  */
 async function run(): Promise<void> {
 	const require = createRequire(import.meta.url);
-	// resolves to <root>/node_modules/govuk-frontend/dist/govuk/all.bundle.js than maps to `<root>`
+	// resolves to <root>/node_modules/govuk-frontend/dist/govuk/all.bundle.js then maps to `<root>`
 	const repoRoot = path.resolve(require.resolve('govuk-frontend'), '../../../../..');
-	// resolves to <root>/node_modules/accessible-autocomplete/dist/*.js than maps to `dist`
+	// resolves to <root>/node_modules/accessible-autocomplete/dist/*.js then maps to `dist`
 	const accessibleAutocompleteRoot = path.resolve(require.resolve('accessible-autocomplete'), '..');
-	// resolves to <root>/node_modules/@ministryofjustice/frontend/moj/all.bundle.js than maps to `<root>`
+	// resolves to <root>/node_modules/@ministryofjustice/frontend/moj/all.bundle.js then maps to `<root>`
 	const mojRoot = path.resolve(require.resolve('@ministryofjustice/frontend'), '../../../../..');
 
 	const config = loadBuildConfig();
-	const localsFile = path.join(config.srcDir, 'util', 'config-middleware.ts');
+
 	await runBuild({
 		staticDir: config.staticDir,
 		srcDir: config.srcDir,
 		repoRoot,
 		accessibleAutocompleteRoot,
-		localsFile,
 		mojRoot
 	});
 }
