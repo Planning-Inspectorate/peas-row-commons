@@ -1,5 +1,4 @@
-import { createQuestions } from '@planning-inspectorate/dynamic-forms/src/questions/create-questions.js';
-import { questionClasses } from '@planning-inspectorate/dynamic-forms/src/questions/questions.js';
+import { createQuestions, questionClasses } from '@planning-inspectorate/dynamic-forms';
 import NestedRequiredValidator from '@pins/peas-row-commons-lib/forms/custom-components/nested-folder-radio/validator.ts';
 import {
 	CUSTOM_COMPONENT_CLASSES,

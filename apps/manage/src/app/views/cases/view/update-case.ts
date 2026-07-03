@@ -12,9 +12,8 @@ import { getRelationForField } from '@pins/peas-row-commons-lib/util/schema-map.
 import type { Request, Response } from 'express';
 import type { Logger } from 'pino';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
-import { yesNoToBoolean } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
+import { clearDataFromSession, yesNoToBoolean } from '@planning-inspectorate/dynamic-forms';
 import { JOURNEY_ID } from './journey.ts';
-import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
 import { CONTACT_MAPPINGS, handleContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
 import { AUDIT_ACTIONS, type AuditEntry, type AuditService, type AuditAction } from '../../../audit/index.ts';

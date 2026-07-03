@@ -5,7 +5,7 @@ import {
 } from '@pins/peas-row-commons-lib/util/dates.ts';
 import type { CaseDecisionFields, CaseListFields, CaseNoteFields, CaseProcedureFields, UserMap } from './types.ts';
 import { formatInTimeZone } from 'date-fns-tz';
-import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
+import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms';
 import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address.ts';
 import { mapContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
