@@ -14,7 +14,6 @@
     "@pins/peas-row-commons-database": "*",
     "connect-redis": "*",
     "express-session": "*",
-    "notifications-node-client": "*",
     "pino": "*",
     "pino-pretty": "*",
     "redis": "*"
