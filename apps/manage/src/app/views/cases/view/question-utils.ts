@@ -1,4 +1,4 @@
-import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
+import { COMPONENT_TYPES, CrossQuestionValidator } from '@planning-inspectorate/dynamic-forms';
 import BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
 import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
 import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
@@ -481,7 +481,13 @@ export const CASE_DETAILS_QUESTIONS = {
 				true, // endDateAfterStartDate
 				true, // endOptional
 				'Abeyance start date must be before the abeyance end date' // error message
-			)
+			),
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate', // from session - already a Date
+				useBodyValuesForCurrent: true,
+				validationFunction: (abeyancePeriod, receivedDate) =>
+					validateDateRangeIsAfterReceivedDate(abeyancePeriod, receivedDate, 'Abeyance')
+			})
 		],
 		labels: { start: 'Start', end: 'End' },
 		hintStart: 'For example, 27 3 2007',
@@ -1996,4 +2002,33 @@ function getAndSortLegacyUsers(userMap: UserMap) {
 				value: idpUserId
 			}))
 	];
+}
+
+export function validateDateRangeIsAfterReceivedDate(datePeriod: unknown, receivedDate: unknown, label: string) {
+	// Don't validate against received date if it doesn't exist
+	if (!receivedDate || !(receivedDate instanceof Date)) {
+		return true;
+	}
+
+	if (!datePeriod || typeof datePeriod !== 'object') {
+		throw new Error(`${label} period not found`);
+	}
+
+	if (!('start' in datePeriod) || !(datePeriod.start instanceof Date)) {
+		throw new Error(`${label} start date not found`);
+	}
+
+	if (!('end' in datePeriod) || !(datePeriod.end instanceof Date)) {
+		throw new Error(`${label} end date not found`);
+	}
+
+	if (datePeriod.start < receivedDate) {
+		throw new Error(`${label} start date cannot be before case received date`);
+	}
+
+	if (datePeriod.end < receivedDate) {
+		throw new Error(`${label} end date cannot be before case received date`);
+	}
+
+	return true;
 }
