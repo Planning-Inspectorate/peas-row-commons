@@ -10,6 +10,14 @@ export default class NestedRequiredValidator extends BaseValidator {
 	}
 
 	/**
+	 * Indicates whether this validator makes the field required.
+	 * Since this validator checks for a root folder selection, it is effectively a required validator.
+	 */
+	isRequired(): boolean {
+		return true;
+	}
+
+	/**
 	 * We only need to check if the base level folder was at least selected
 	 * if they did that then we know they've at least chosen something.
 	 */
