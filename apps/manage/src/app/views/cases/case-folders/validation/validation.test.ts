@@ -1,7 +1,8 @@
 import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import {
-	buildValidateFolder,
+	buildValidateFolderCreate,
+	buildValidateFolderRename,
 	sanitiseFolderName,
 	getSyntaxError,
 	getDuplicateErrorsCreate,
@@ -101,15 +102,6 @@ describe('Folder Validation Utils', () => {
 			assert.ok(result);
 			assert.strictEqual(result.text, 'Folder name already exists');
 		});
-
-		it('should handle undefined by converting null to only get base level folders', async () => {
-			mockFindFirst.mock.mockImplementationOnce(() => Promise.resolve(null) as any);
-
-			await getDuplicateErrorsCreate(mockDb, 'case-1', undefined, 'New Folder');
-
-			const callArgs = mockFindFirst.mock.calls[0].arguments[0];
-			assert.strictEqual(callArgs.where.parentFolderId, null);
-		});
 	});
 
 	describe('getDuplicateErrorsRename', () => {
@@ -163,7 +155,7 @@ describe('Folder Validation Utils', () => {
 	});
 });
 
-describe('buildValidateFolder Middleware', () => {
+describe('buildValidateFolderCreate Middleware', () => {
 	let mockReq: any;
 	let mockRes: any;
 	let mockNext: any;
@@ -191,7 +183,7 @@ describe('buildValidateFolder Middleware', () => {
 	it('should sanitize name, pass validation, and call next()', async () => {
 		mockDb.folder.findFirst.mock.mockImplementationOnce(() => Promise.resolve(null));
 
-		const middleware = buildValidateFolder(mockService, 'create', mockSessionFn);
+		const middleware = buildValidateFolderCreate(mockService, mockSessionFn);
 		await middleware(mockReq, mockRes, mockNext);
 
 		assert.strictEqual(mockReq.body.folderName, 'My Folder');
@@ -203,7 +195,7 @@ describe('buildValidateFolder Middleware', () => {
 	it('should redirect and write to session on syntax error', async () => {
 		mockReq.body.folderName = 'AB';
 
-		const middleware = buildValidateFolder(mockService, 'create', mockSessionFn);
+		const middleware = buildValidateFolderCreate(mockService, mockSessionFn);
 		await middleware(mockReq, mockRes, mockNext);
 
 		assert.strictEqual(mockRes.redirect.mock.callCount(), 1);
@@ -218,7 +210,7 @@ describe('buildValidateFolder Middleware', () => {
 	it('should redirect and write to session on duplicate error', async () => {
 		mockDb.folder.findFirst.mock.mockImplementationOnce(() => Promise.resolve({ displayName: 'My Folder' }));
 
-		const middleware = buildValidateFolder(mockService, 'create', mockSessionFn);
+		const middleware = buildValidateFolderCreate(mockService, mockSessionFn);
 		await middleware(mockReq, mockRes, mockNext);
 
 		assert.strictEqual(mockRes.redirect.mock.callCount(), 1);
@@ -229,49 +221,86 @@ describe('buildValidateFolder Middleware', () => {
 		);
 	});
 
-	describe('Mode: "edit"', () => {
-		beforeEach(() => {
-			mockReq.params.folderId = 'folder-to-edit-123';
-			mockReq.body.folderName = 'New Name';
+	it('should allow null parentFolderId for root-level folder creation', async () => {
+		delete mockReq.params.folderId;
+		mockDb.folder.findFirst.mock.mockImplementationOnce(() => Promise.resolve(null));
 
-			mockDb.folder.findUnique = mock.fn();
+		const middleware = buildValidateFolderCreate(mockService, mockSessionFn);
+		await middleware(mockReq, mockRes, mockNext);
+
+		assert.strictEqual(mockNext.mock.callCount(), 1);
+		const callArgs = mockDb.folder.findFirst.mock.calls[0].arguments[0];
+		assert.strictEqual(callArgs.where.parentFolderId, null);
+	});
+});
+
+describe('buildValidateFolderRename Middleware', () => {
+	let mockReq: any;
+	let mockRes: any;
+	let mockNext: any;
+	let mockDb: any;
+	let mockService: any;
+	let mockSessionFn: any;
+
+	beforeEach(() => {
+		mockReq = {
+			params: { id: 'case-123', folderId: 'folder-to-edit-123' },
+			body: { folderName: 'New Name' },
+			originalUrl: '/current/url'
+		};
+		mockRes = {
+			redirect: mock.fn()
+		};
+		mockNext = mock.fn();
+		mockDb = {
+			folder: { findFirst: mock.fn(), findUnique: mock.fn() }
+		};
+		mockService = { db: mockDb };
+		mockSessionFn = mock.fn();
+	});
+
+	it('should throw error if folderId is missing (required param)', async () => {
+		delete mockReq.params.folderId;
+
+		const middleware = buildValidateFolderRename(mockService, mockSessionFn);
+
+		await assert.rejects(async () => await middleware(mockReq, mockRes, mockNext), {
+			message: 'folderId must be a single string value'
 		});
+	});
 
-		it('should perform Rename validation and call next() on success', async () => {
-			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve({ parentFolderId: 'parent-1' }));
+	it('should perform Rename validation and call next() on success', async () => {
+		mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve({ parentFolderId: 'parent-1' }));
+		mockDb.folder.findFirst.mock.mockImplementation(() => Promise.resolve(null));
 
-			mockDb.folder.findFirst.mock.mockImplementation(() => Promise.resolve(null));
+		const middleware = buildValidateFolderRename(mockService, mockSessionFn);
+		await middleware(mockReq, mockRes, mockNext);
 
-			const middleware = buildValidateFolder(mockService, 'edit', mockSessionFn);
-			await middleware(mockReq, mockRes, mockNext);
+		assert.strictEqual(mockNext.mock.callCount(), 1);
+		assert.strictEqual(mockRes.redirect.mock.callCount(), 0);
+	});
 
-			assert.strictEqual(mockNext.mock.callCount(), 1);
-			assert.strictEqual(mockRes.redirect.mock.callCount(), 0);
-		});
+	it('should use "createFolderErrors" session key on duplicate error', async () => {
+		mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve({ parentFolderId: 'parent-1' }));
+		mockDb.folder.findFirst.mock.mockImplementation(() => Promise.resolve({ displayName: 'New Name' }));
 
-		it('should use "createFolderErrors" session key on duplicate error', async () => {
-			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve({ parentFolderId: 'parent-1' }));
+		const middleware = buildValidateFolderRename(mockService, mockSessionFn);
+		await middleware(mockReq, mockRes, mockNext);
 
-			mockDb.folder.findFirst.mock.mockImplementation(() => Promise.resolve({ displayName: 'New Name' }));
+		assert.strictEqual(mockRes.redirect.mock.callCount(), 1);
+		const args = mockSessionFn.mock.calls[0].arguments;
+		assert.strictEqual(args[2].createFolderErrors[0].text, 'Folder name already exists');
+	});
 
-			const middleware = buildValidateFolder(mockService, 'edit', mockSessionFn);
-			await middleware(mockReq, mockRes, mockNext);
+	it('should pass error to next() if folder lookup fails entirely', async () => {
+		mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve(null));
 
-			assert.strictEqual(mockRes.redirect.mock.callCount(), 1);
-			const args = mockSessionFn.mock.calls[0].arguments;
-			assert.strictEqual(args[2].createFolderErrors[0].text, 'Folder name already exists');
-		});
+		const middleware = buildValidateFolderRename(mockService, mockSessionFn);
+		await middleware(mockReq, mockRes, mockNext);
 
-		it('should pass error to next() if folder lookup fails entirely', async () => {
-			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve(null));
-
-			const middleware = buildValidateFolder(mockService, 'edit', mockSessionFn);
-			await middleware(mockReq, mockRes, mockNext);
-
-			assert.strictEqual(mockNext.mock.callCount(), 1);
-			const error = mockNext.mock.calls[0].arguments[0];
-			assert.ok(error);
-			assert.match(error.message, /Could not find folder for id/);
-		});
+		assert.strictEqual(mockNext.mock.callCount(), 1);
+		const error = mockNext.mock.calls[0].arguments[0];
+		assert.ok(error);
+		assert.match(error.message, /Could not find folder for id/);
 	});
 });

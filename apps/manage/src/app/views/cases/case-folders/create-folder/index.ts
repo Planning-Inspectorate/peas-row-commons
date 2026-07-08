@@ -3,7 +3,7 @@ import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { validateIdFormat } from '../../view/controller.ts';
 import type { ManageService } from '#service';
 import { buildCreateFolders, buildViewCreateFolders } from './controller.ts';
-import { buildValidateFolder } from '../validation/validation.ts';
+import { buildValidateFolderCreate } from '../validation/validation.ts';
 
 export function createRoutes(service: ManageService) {
 	const router = createRouter({ mergeParams: true });
@@ -22,5 +22,5 @@ export function createRoutes(service: ManageService) {
  * Creates the middlewares needed for the get and post for creating folders
  */
 function createMiddlewares(service: ManageService) {
-	return [buildViewCreateFolders(), buildCreateFolders(service), buildValidateFolder(service, 'create')];
+	return [buildViewCreateFolders(), buildCreateFolders(service), buildValidateFolderCreate(service)];
 }

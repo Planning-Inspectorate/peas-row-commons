@@ -2,7 +2,7 @@ import { Router as createRouter } from 'express';
 import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { validateIdFormat } from '../../view/controller.ts';
 import type { ManageService } from '#service';
-import { buildValidateFolder } from '../validation/validation.ts';
+import { buildValidateFolderRename } from '../validation/validation.ts';
 import { buildRenameFolder, buildRenameFolderView } from './controller.ts';
 
 export function createRoutes(service: ManageService) {
@@ -22,5 +22,5 @@ export function createRoutes(service: ManageService) {
  * Creates the middlewares needed for the get and post for creating folders
  */
 function createMiddlewares(service: ManageService) {
-	return [buildRenameFolderView(service), buildRenameFolder(service), buildValidateFolder(service, 'edit')];
+	return [buildRenameFolderView(service), buildRenameFolder(service), buildValidateFolderRename(service)];
 }
