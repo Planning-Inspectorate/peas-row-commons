@@ -129,9 +129,13 @@ interface DateQuestionProps {
 	url?: string;
 	isDateTime?: boolean;
 	/**
-	 * Needed when we want dates to be optional.
+	 * Replaces DateValidator entirely. Needed when we want dates to be optional.
 	 */
 	overrideValidator?: typeof BaseValidator;
+	/**
+	 * Additional validators to merge with DateValidator (or overrideValidator if set).
+	 */
+	validators?: InstanceType<typeof BaseValidator>[];
 }
 
 export function dateQuestion({
@@ -143,7 +147,8 @@ export function dateQuestion({
 	question,
 	url,
 	isDateTime = false,
-	overrideValidator
+	overrideValidator,
+	validators = []
 }: DateQuestionProps) {
 	if (!title) {
 		title = camelCaseToSentenceCase(fieldName);
@@ -156,7 +161,7 @@ export function dateQuestion({
 		hint: hint,
 		fieldName: fieldName,
 		url: url || camelCaseToKebabCase(fieldName),
-		validators: [overrideValidator ? new overrideValidator(title) : new DateValidator(title)],
+		validators: [overrideValidator ? new overrideValidator(title) : new DateValidator(title), ...validators],
 		editable: editable,
 		viewData
 	};
@@ -241,7 +246,15 @@ export const DATE_QUESTIONS = {
 					formaction: 'date-decision-must-be-issued-by/remove'
 				}
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (expiryDate, receivedDate) =>
+					validateDateIsAfterReceivedDate(expiryDate, receivedDate, 'Date decision must be issued by / expiry date')
+			})
+		]
 	}),
 	partiesDecisionNotificationDeadlineDate: dateQuestion({
 		fieldName: 'partiesDecisionNotificationDeadlineDate',
@@ -483,7 +496,7 @@ export const CASE_DETAILS_QUESTIONS = {
 				'Abeyance start date must be before the abeyance end date' // error message
 			),
 			new CrossQuestionValidator({
-				dependencyFieldName: 'receivedDate', // from session - already a Date
+				dependencyFieldName: 'receivedDate',
 				useBodyValuesForCurrent: true,
 				validationFunction: (abeyancePeriod, receivedDate) =>
 					validateDateRangeIsAfterReceivedDate(abeyancePeriod, receivedDate, 'Abeyance')
@@ -2028,6 +2041,23 @@ export function validateDateRangeIsAfterReceivedDate(datePeriod: unknown, receiv
 
 	if (datePeriod.end < receivedDate) {
 		throw new Error(`${label} end date cannot be before case received date`);
+	}
+
+	return true;
+}
+
+export function validateDateIsAfterReceivedDate(date: unknown, receivedDate: unknown, label: string) {
+	// Don't validate against received date if it doesn't exist
+	if (!receivedDate || !(receivedDate instanceof Date)) {
+		return true;
+	}
+
+	if (!date || !(date instanceof Date)) {
+		throw new Error(`${label} not found`);
+	}
+
+	if (date < receivedDate) {
+		throw new Error(`${label} cannot be before case received date`);
 	}
 
 	return true;
