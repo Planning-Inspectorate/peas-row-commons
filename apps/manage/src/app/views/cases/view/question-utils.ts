@@ -864,7 +864,15 @@ export const TEAM_QUESTIONS = {
 		viewData: {
 			tableHeader: 'Date appointed',
 			continueButtonText: 'Continue'
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date inspector appointed')
+			})
+		]
 	})
 };
 
