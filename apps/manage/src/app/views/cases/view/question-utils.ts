@@ -222,8 +222,8 @@ export const DATE_QUESTIONS = {
 			new CrossQuestionValidator({
 				dependencyFieldName: 'receivedDate',
 				useBodyValuesForCurrent: true,
-				validationFunction: (expiryDate, receivedDate) =>
-					validateDateIsAfterReceivedDate(expiryDate, receivedDate, 'Date objection period ends')
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date objection period ends')
 			})
 		]
 	}),
@@ -259,8 +259,8 @@ export const DATE_QUESTIONS = {
 			new CrossQuestionValidator({
 				dependencyFieldName: 'receivedDate',
 				useBodyValuesForCurrent: true,
-				validationFunction: (expiryDate, receivedDate) =>
-					validateDateIsAfterReceivedDate(expiryDate, receivedDate, 'Date decision must be issued by / expiry date')
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date decision must be issued by / expiry date')
 			})
 		]
 	}),
@@ -277,7 +277,15 @@ export const DATE_QUESTIONS = {
 					formaction: 'date-parties-must-be-notified-decision/remove'
 				}
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date to notify parties of decision')
+			})
+		]
 	}),
 	targetDecisionDate: dateQuestion({
 		fieldName: 'targetDecisionDate',
