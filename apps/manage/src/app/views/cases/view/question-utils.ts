@@ -300,7 +300,15 @@ export const DATE_QUESTIONS = {
 					formaction: 'target-decision-date/remove'
 				}
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Target decision date')
+			})
+		]
 	}),
 	proposedModificationsDate: dateQuestion({
 		fieldName: 'proposedModificationsDate',
