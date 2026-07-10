@@ -202,7 +202,14 @@ export const DATE_QUESTIONS = {
 					formaction: 'start-date/remove'
 				}
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) => validateDateIsAfterReceivedDate(date, receivedDate, 'Start date')
+			})
+		]
 	}),
 	objectionPeriodEndsDate: dateQuestion({
 		fieldName: 'objectionPeriodEndsDate',
