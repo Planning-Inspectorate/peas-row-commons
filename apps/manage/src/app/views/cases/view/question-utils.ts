@@ -230,7 +230,7 @@ export const DATE_QUESTIONS = {
 				dependencyFieldName: 'receivedDate',
 				useBodyValuesForCurrent: true,
 				validationFunction: (date, receivedDate) =>
-					validateDateIsAfterReceivedDate(date, receivedDate, 'Date objection period ends')
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Objection period end date')
 			})
 		]
 	}),
