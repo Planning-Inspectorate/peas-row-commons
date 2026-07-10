@@ -1,8 +1,7 @@
 import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
-import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import type { Handler, Request } from 'express';
-import { questionHasAnswer } from '@planning-inspectorate/dynamic-forms/src/components/utils/question-has-answer.js';
+import { whenQuestionHasAnswer } from '@planning-inspectorate/dynamic-forms';
 import { CASEWORK_AREAS_ID, CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js';
 import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
@@ -15,13 +14,14 @@ export function createJourney(documentTypeId: string, questions: CreateCaseQuest
 		throw new Error(`not a valid request for the ${documentTypeId} journey`);
 	}
 
-	const isSpecificArea = (response: JourneyResponse, areaToCheck: string) =>
-		questionHasAnswer(response, questions.caseworkArea, areaToCheck);
-
-	const isPlanningEnvAppArea = (response: JourneyResponse) =>
-		isSpecificArea(response, CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS);
-	const isRightsOfWayCommonLandArea = (response: JourneyResponse) =>
-		isSpecificArea(response, CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND);
+	const isPlanningEnvAppArea = whenQuestionHasAnswer(
+		questions.caseworkArea,
+		CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS
+	);
+	const isRightsOfWayCommonLandArea = whenQuestionHasAnswer(
+		questions.caseworkArea,
+		CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND
+	);
 
 	return new Journey({
 		journeyId: documentTypeId,
@@ -37,24 +37,20 @@ export function createJourney(documentTypeId: string, questions: CreateCaseQuest
 				.addQuestion(questions.planningEnvironmentApplications)
 
 				.addQuestion(questions.drought)
-				.withCondition((response: JourneyResponse) =>
-					questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.DROUGHT)
-				)
+				.withCondition(whenQuestionHasAnswer(questions.planningEnvironmentApplications, CASE_TYPES_ID.DROUGHT))
 
 				.addQuestion(questions.housingAndPlanningCpos)
-				.withCondition((response: JourneyResponse) =>
-					questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.HOUSING_PLANNING_CPOS)
+				.withCondition(
+					whenQuestionHasAnswer(questions.planningEnvironmentApplications, CASE_TYPES_ID.HOUSING_PLANNING_CPOS)
 				)
 
 				.addQuestion(questions.otherSecretaryofStateCasework)
-				.withCondition((response: JourneyResponse) =>
-					questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.OTHER_SOS_CASEWORK)
+				.withCondition(
+					whenQuestionHasAnswer(questions.planningEnvironmentApplications, CASE_TYPES_ID.OTHER_SOS_CASEWORK)
 				)
 
 				.addQuestion(questions.wayleaves)
-				.withCondition((response: JourneyResponse) =>
-					questionHasAnswer(response, questions.planningEnvironmentApplications, CASE_TYPES_ID.WAYLEAVES)
-				)
+				.withCondition(whenQuestionHasAnswer(questions.planningEnvironmentApplications, CASE_TYPES_ID.WAYLEAVES))
 
 				.endMultiQuestionCondition(CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS)
 
@@ -66,19 +62,13 @@ export function createJourney(documentTypeId: string, questions: CreateCaseQuest
 				.addQuestion(questions.rightsOfWayAndCommonLand)
 
 				.addQuestion(questions.coastalAccess)
-				.withCondition((response: JourneyResponse) =>
-					questionHasAnswer(response, questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.COASTAL_ACCESS)
-				)
+				.withCondition(whenQuestionHasAnswer(questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.COASTAL_ACCESS))
 
 				.addQuestion(questions.commonLand)
-				.withCondition((response: JourneyResponse) =>
-					questionHasAnswer(response, questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.COMMON_LAND)
-				)
+				.withCondition(whenQuestionHasAnswer(questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.COMMON_LAND))
 
 				.addQuestion(questions.rightsOfWay)
-				.withCondition((response: JourneyResponse) =>
-					questionHasAnswer(response, questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.RIGHTS_OF_WAY)
-				)
+				.withCondition(whenQuestionHasAnswer(questions.rightsOfWayAndCommonLand, CASE_TYPES_ID.RIGHTS_OF_WAY))
 
 				.endMultiQuestionCondition(CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND)
 
@@ -101,13 +91,9 @@ export function createJourney(documentTypeId: string, questions: CreateCaseQuest
 				.addQuestion(questions.caseOfficer)
 				.addQuestion(questions.hasLinkedCases)
 				.addQuestion(questions.isLeadCase)
-				.withCondition((response: JourneyResponse) =>
-					questionHasAnswer(response, questions.hasLinkedCases, BOOLEAN_OPTIONS.YES)
-				)
+				.withCondition(whenQuestionHasAnswer(questions.hasLinkedCases, BOOLEAN_OPTIONS.YES))
 				.addQuestion(questions.leadCaseReference)
-				.withCondition((response: JourneyResponse) =>
-					questionHasAnswer(response, questions.isLeadCase, BOOLEAN_OPTIONS.NO)
-				)
+				.withCondition(whenQuestionHasAnswer(questions.isLeadCase, BOOLEAN_OPTIONS.NO))
 		],
 		taskListUrl: 'check-your-answers',
 		journeyTemplate: 'views/layouts/forms-question.njk',

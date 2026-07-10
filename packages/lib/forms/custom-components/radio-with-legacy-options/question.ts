@@ -17,7 +17,6 @@ import OptionsQuestion from '@planning-inspectorate/dynamic-forms/src/questions/
  * allow any new cases to change their subtype to this.
  */
 export default class LegacyRadioQuestion extends RadioQuestion {
-	html?: string;
 	label?: string;
 	legend?: string;
 	legacyOptions: Option[];
