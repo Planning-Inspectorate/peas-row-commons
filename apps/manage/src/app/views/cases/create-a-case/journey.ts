@@ -90,10 +90,14 @@ export function createJourney(documentTypeId: string, questions: CreateCaseQuest
 				.addQuestion(questions.authority)
 				.addQuestion(questions.caseOfficer)
 				.addQuestion(questions.hasLinkedCases)
+				.startMultiQuestionCondition(
+					'has-linked-cases',
+					whenQuestionHasAnswer(questions.hasLinkedCases, BOOLEAN_OPTIONS.YES)
+				)
 				.addQuestion(questions.isLeadCase)
-				.withCondition(whenQuestionHasAnswer(questions.hasLinkedCases, BOOLEAN_OPTIONS.YES))
 				.addQuestion(questions.leadCaseReference)
 				.withCondition(whenQuestionHasAnswer(questions.isLeadCase, BOOLEAN_OPTIONS.NO))
+				.endMultiQuestionCondition('has-linked-cases')
 		],
 		taskListUrl: 'check-your-answers',
 		journeyTemplate: 'views/layouts/forms-question.njk',
