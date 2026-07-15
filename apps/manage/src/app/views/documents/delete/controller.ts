@@ -65,6 +65,7 @@ function renderConfirmationView(
 		backLinkUrl: safeReturnUrl,
 		returnUrl: safeReturnUrl,
 		documents: context.documents || [],
+		removeSelectedFilesFromListUrl: `${basePath}/documents/delete-confirmation`,
 		deleteUrl: `${basePath}/documents/delete`
 	});
 }
@@ -168,13 +169,48 @@ export function buildDeleteFileController(service: ManageService) {
 }
 
 /**
- * Checks that the URL is redirecting to somewhere relative and not a new URL
+ * Returns a safe local redirect target.
+ * Only relative URLs are allowed; otherwise fallback to the folder view.
  */
 function getSafeReturnUrl(req: Request): string {
-	const returnUrl = req.body.returnUrl as string;
-	if (returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//')) {
+	const returnUrl = typeof req.body?.returnUrl === 'string' ? req.body.returnUrl : '';
+	const fallbackUrl = req.originalUrl.split('/documents/delete')[0];
+
+	if (!returnUrl) return fallbackUrl;
+
+	if (returnUrl.startsWith('/') && !returnUrl.startsWith('//') && !returnUrl.includes(':')) {
 		return returnUrl;
 	}
 
-	return req.originalUrl.split('/documents/')[0];
+	return fallbackUrl;
+}
+export function buildRemoveFileFromSelection(service: ManageService) {
+	return async (req: Request, res: Response) => {
+		const fileIdToRemove = req.body.removeFile;
+		const documentIds = extractDocumentIds(req);
+
+		// Filter out the file to remove
+		const updatedDocumentIds = documentIds.filter((id) => id !== fileIdToRemove);
+
+		const safeReturnUrl = getSafeReturnUrl(req);
+
+		// If no files left, redirect back to folder
+		if (!updatedDocumentIds.length) {
+			return res.redirect(safeReturnUrl);
+		}
+
+		// Re-render the confirmation page with updated list
+		try {
+			const context = await getDocumentsContext(service.db, updatedDocumentIds, req);
+			return renderConfirmationView(req, res, context, safeReturnUrl);
+		} catch (error: any) {
+			wrapPrismaError({
+				error,
+				logger: service.logger,
+				message: 'fetching documents after removal',
+				logParams: { documentIds: updatedDocumentIds }
+			});
+			throw error;
+		}
+	};
 }
