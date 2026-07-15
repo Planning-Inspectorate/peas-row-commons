@@ -1,6 +1,6 @@
 import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildDeleteFileView, buildDeleteFileController } from './controller.ts';
+import { buildDeleteFileView, buildDeleteFileController, buildRemoveFileFromSelection } from './controller.ts';
 
 describe('Delete File Controllers', () => {
 	const mockLogger = {
@@ -190,6 +190,79 @@ describe('Delete File Controllers', () => {
 				assert.strictEqual(res.locals.errorSummary.length, 1);
 				assert.strictEqual(res.locals.errorSummary[0].text, 'Failed to delete documents, please try again.');
 			});
+		});
+	});
+	describe('buildRemoveFileFromSelection', () => {
+		const validDocuments = [
+			{
+				id: 'doc-123',
+				fileName: 'test.pdf',
+				caseId: 'case-1',
+				deletedAt: null,
+				Folder: { id: 'folder-1', displayName: 'Evidence' }
+			},
+			{
+				id: 'doc-456',
+				fileName: 'test2.pdf',
+				caseId: 'case-1',
+				deletedAt: null,
+				Folder: { id: 'folder-1', displayName: 'Evidence' }
+			},
+			{
+				id: 'doc-789',
+				fileName: 'test3.pdf',
+				caseId: 'case-1',
+				deletedAt: null,
+				Folder: { id: 'folder-1', displayName: 'Evidence' }
+			}
+		];
+
+		it('should remove file from list of deletable files and update confirmation view', async () => {
+			const req = mockReq({
+				body: {
+					selectedFiles: ['doc-123', 'doc-456', 'doc-789'],
+					removeFile: 'doc-456',
+					returnUrl: '/cases/case-1/folders/folder-1'
+				}
+			});
+			const res = mockRes();
+
+			const remainingDocuments = validDocuments.filter((doc) => doc.id !== 'doc-456');
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve(remainingDocuments));
+
+			await buildRemoveFileFromSelection(service as any)(req, res);
+
+			// Should fetch only the remaining documents (not the removed one)
+			assert.strictEqual(mockDb.document.findMany.mock.callCount(), 1);
+			const findManyArgs = mockDb.document.findMany.mock.calls[0].arguments[0];
+			assert.deepStrictEqual(findManyArgs.where.id.in, ['doc-123', 'doc-789']);
+
+			// Should render the confirmation view with updated list
+			assert.strictEqual(res.render.mock.callCount(), 1);
+			const [viewPath, viewData] = res.render.mock.calls[0].arguments;
+			assert.strictEqual(viewPath, 'views/cases/case-folders/case-folder/delete-file/confirmation.njk');
+			assert.strictEqual(viewData.documents.length, 2);
+			assert.deepStrictEqual(viewData.documents, remainingDocuments);
+		});
+
+		it('should redirect to folder if all files are removed', async () => {
+			const req = mockReq({
+				body: {
+					selectedFiles: ['doc-123'],
+					removeFile: 'doc-123',
+					returnUrl: '/cases/case-1/folders/folder-1'
+				}
+			});
+			const res = mockRes();
+
+			await buildRemoveFileFromSelection(service as any)(req, res);
+
+			// Should not call database if no files left
+			assert.strictEqual(mockDb.document.findMany.mock.callCount(), 0);
+
+			// Should redirect back to folder
+			assert.strictEqual(res.redirect.mock.callCount(), 1);
+			assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/cases/case-1/folders/folder-1');
 		});
 	});
 });
