@@ -1,5 +1,5 @@
 module "app_manage" {
-  #checkov:skip=CKV_TF_1: Use of commit hash are not required for our Terraform modules
+  #checkov:skip=CKV_TF_1: Use of commit hash is not required for our Terraform modules
   source = "github.com/Planning-Inspectorate/infrastructure-modules.git//modules/node-app-service?ref=1.54"
 
   resource_group_name = azurerm_resource_group.primary.name
@@ -73,9 +73,6 @@ module "app_manage" {
     #Auth
     MICROSOFT_PROVIDER_AUTHENTICATION_SECRET = local.key_vault_refs["microsoft-provider-authentication-secret"]
     WEBSITE_AUTH_AAD_ALLOWED_TENANTS         = data.azurerm_client_config.current.tenant_id
-
-    # gov notify
-    GOV_NOTIFY_API_KEY = local.key_vault_refs["peas-gov-notify-api-key"]
 
     # blob store
     BLOB_STORE_DISABLED  = var.apps_config.blob_store.disabled
