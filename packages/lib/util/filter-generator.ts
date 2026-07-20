@@ -90,7 +90,11 @@ type SelectedValuesTuple = [string[], string[], string[], string[]];
  * data: (1) currently selected items in top component (2) groups of checkboxes
  */
 export class FilterGenerator {
-	private config: FilterConfig;
+	private readonly config: FilterConfig;
+	private static readonly typeToArea: Map<string, string> = new Map(CASE_TYPES.map((t) => [t.id, t.caseworkAreaId]));
+	private static readonly subtypeToType: Map<string, string> = new Map(
+		CASE_SUBTYPES.map((s) => [s.id, s.parentTypeId])
+	);
 
 	constructor(params: FilterConfig) {
 		this.config = params;
@@ -146,33 +150,17 @@ export class FilterGenerator {
 			return undefined;
 		}
 
+		const hierarchyConditions = this.buildHierarchyConditions(selectedAreas, selectedTypes, selectedSubTypes);
+
 		const where: FilterWhereClause = {
 			AND: []
 		};
 
-		const orConditions: FilterOrCondition[] = [];
-
-		if (selectedAreas.length) {
-			orConditions.push({
-				Type: {
-					caseworkAreaId: { in: selectedAreas }
-				}
-			});
+		if (hierarchyConditions.length > 0) {
+			where.AND.push({ OR: hierarchyConditions });
 		}
 
-		if (selectedTypes.length) {
-			orConditions.push({ typeId: { in: selectedTypes } });
-		}
-
-		if (selectedSubTypes.length) {
-			orConditions.push({ subTypeId: { in: selectedSubTypes } });
-		}
-
-		if (orConditions.length) {
-			where.AND.push({ OR: orConditions });
-		}
-
-		if (selectedStatuses.length) {
+		if (selectedStatuses.length > 0) {
 			where.AND.push({ statusId: { in: selectedStatuses } });
 		}
 
@@ -340,23 +328,9 @@ export class FilterGenerator {
 			if (selectedItems.length === 0) return [];
 
 			const categoryItems: SelectedFilterItem[] = selectedItems.map((item) => {
-				const params = new URLSearchParams();
-
-				Object.keys(query).forEach((key) => {
-					if (key !== queryParamKey) {
-						const vals = this.getSelectedValues(query, key);
-						vals.forEach((value) => params.append(key, value));
-					}
-				});
-
-				const valuesToKeep = selectedValues.filter((value) => value !== item.id);
-				valuesToKeep.forEach((value) => params.append(queryParamKey, value));
-
-				const queryString = params.toString();
-
 				return {
 					text: item.displayName || '',
-					href: queryString ? `${baseUrl}?${queryString}` : baseUrl
+					href: this.buildRemovalUrl(item.id, queryParamKey, selectedValues, query, baseUrl)
 				};
 			});
 
@@ -378,18 +352,6 @@ export class FilterGenerator {
 				if (selectedItemsInGroup.length === 0) return null;
 
 				const categoryItems: SelectedFilterItem[] = selectedItemsInGroup.map((item) => {
-					const params = new URLSearchParams();
-
-					Object.keys(query).forEach((key) => {
-						if (key !== queryParamKey) {
-							const vals = this.getSelectedValues(query, key);
-							vals.forEach((value) => params.append(key, value));
-						}
-					});
-
-					const valuesToKeep = selectedValues.filter((value) => value !== item.id);
-					valuesToKeep.forEach((value) => params.append(queryParamKey, value));
-
 					return {
 						text: item.displayName || '',
 						href: this.buildRemovalUrl(item.id, queryParamKey, selectedValues, query, baseUrl)
@@ -504,6 +466,71 @@ export class FilterGenerator {
 		]);
 
 		return checkboxGroups;
+	}
+
+	/**
+	 * Builds hierarchy-aware conditions with "lowest-level wins" semantics.
+	 *
+	 * When a child selection (Type/Subtype) falls under a selected parent (Area/Type),
+	 * the parent is considered redundant and excluded. This restricts results to the
+	 * most specific selection within each lineage branch.
+	 * Example: Selecting "Planning" area + "Listed Building" type (under Planning)
+	 * → Returns only "Listed Building" cases, not all Planning cases.
+	 *
+	 * Cross-branch selections are OR'd together:
+	 * Example: Selecting "Planning" area + "Highway" type (under Rights of Way)
+	 * → Returns all Planning cases OR Highway cases. */
+	private buildHierarchyConditions(
+		selectedAreas: string[],
+		selectedTypes: string[],
+		selectedSubTypes: string[]
+	): FilterOrCondition[] {
+		const conditions: FilterOrCondition[] = [];
+
+		// Track which types and areas are "covered" by more specific selections
+		const typesCoveredBySubtype = new Set<string>();
+		const areasCoveredByType = new Set<string>();
+
+		const subTypes: string[] = [];
+		// 1. Add all selected subtypes directly
+		for (const subTypeId of selectedSubTypes) {
+			subTypes.push(subTypeId);
+			// Mark parent type as covered
+			const parentTypeId = FilterGenerator.subtypeToType.get(subTypeId);
+			if (parentTypeId) {
+				typesCoveredBySubtype.add(parentTypeId);
+				// Also mark the area as covered
+				const areaId = FilterGenerator.typeToArea.get(parentTypeId);
+				if (areaId) {
+					areasCoveredByType.add(areaId);
+				}
+			}
+		}
+
+		const types: string[] = [];
+		// 2. Add selected types that aren't covered by a subtype selection
+		for (const typeId of selectedTypes) {
+			if (typesCoveredBySubtype.has(typeId)) continue;
+			types.push(typeId);
+			// Mark parent area as covered
+			const areaId = FilterGenerator.typeToArea.get(typeId);
+			if (areaId) {
+				areasCoveredByType.add(areaId);
+			}
+		}
+
+		const areas: string[] = [];
+		// 3. Add selected areas that aren't covered by a type/subtype selection
+		for (const areaId of selectedAreas) {
+			if (areasCoveredByType.has(areaId)) continue;
+			areas.push(areaId);
+		}
+
+		if (areas.length) conditions.push({ Type: { caseworkAreaId: { in: areas } } });
+		if (types.length) conditions.push({ typeId: { in: types } });
+		if (subTypes.length) conditions.push({ subTypeId: { in: subTypes } });
+
+		return conditions;
 	}
 
 	/**

@@ -101,22 +101,53 @@ describe('FilterGenerator Integration Tests', () => {
 			});
 		});
 
-		it('should handle complex cross-area queries (RoW Area + Common Land Subtype)', () => {
+		it('should consolidate dependent complex cross-area queries (RoW Area + Common Land Subtype)', () => {
 			const query = {
 				area: CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND,
 				subtype: CASE_SUBTYPES_ID.WORKS_COMMON_LAND
 			};
 
 			const result = generator.createFilterWhereClause(query);
-			const orConditions = (result?.AND[0] as OrConditionWrapper).OR;
 
-			assert.deepStrictEqual(orConditions[0], {
-				Type: { caseworkAreaId: { in: [CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND] } }
-			});
+			assert.deepStrictEqual(result?.AND, [
+				{
+					OR: [
+						{
+							subTypeId: {
+								in: [CASE_SUBTYPES_ID.WORKS_COMMON_LAND]
+							}
+						}
+					]
+				}
+			]);
+		});
 
-			assert.deepStrictEqual(orConditions[1], {
-				subTypeId: { in: [CASE_SUBTYPES_ID.WORKS_COMMON_LAND] }
-			});
+		it('should handle independent complex cross-area queries (RoW Area + PEAS Subtype)', () => {
+			const query = {
+				area: CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND,
+				subtype: CASE_SUBTYPES_ID.DROUGHT_PERMITS
+			};
+
+			const result = generator.createFilterWhereClause(query);
+
+			assert.deepStrictEqual(result?.AND, [
+				{
+					OR: [
+						{
+							Type: {
+								caseworkAreaId: {
+									in: [CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND]
+								}
+							}
+						},
+						{
+							subTypeId: {
+								in: [CASE_SUBTYPES_ID.DROUGHT_PERMITS]
+							}
+						}
+					]
+				}
+			]);
 		});
 
 		it('should handle array values for the same key', () => {
@@ -143,14 +174,11 @@ describe('FilterGenerator Integration Tests', () => {
 			};
 
 			const result = generator.createFilterWhereClause(query);
-			const conditions = (result?.AND[0] as OrConditionWrapper).OR;
-
-			assert.strictEqual(conditions.length, 3);
-			assert.deepStrictEqual(conditions[0], {
-				Type: { caseworkAreaId: { in: [CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND] } }
-			});
-			assert.deepStrictEqual(conditions[1], { typeId: { in: [CASE_TYPES_ID.RIGHTS_OF_WAY] } });
-			assert.deepStrictEqual(conditions[2], { subTypeId: { in: [CASE_SUBTYPES_ID.OPPOSED_DMMO] } });
+			assert.deepStrictEqual((result?.AND[0] as OrConditionWrapper).OR, [
+				{
+					subTypeId: { in: [CASE_SUBTYPES_ID.OPPOSED_DMMO] }
+				}
+			]);
 		});
 
 		it('should include Status in the query builder', () => {
@@ -169,7 +197,7 @@ describe('FilterGenerator Integration Tests', () => {
 			});
 		});
 
-		it('should combine status with area/type/subtype filters using AND', () => {
+		it('should fetch the lowest level filters (Area, Type, Subtype) and status', () => {
 			const query = {
 				area: CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND,
 				type: CASE_TYPES_ID.RIGHTS_OF_WAY,
@@ -183,9 +211,11 @@ describe('FilterGenerator Integration Tests', () => {
 				AND: [
 					{
 						OR: [
-							{ Type: { caseworkAreaId: { in: [CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND] } } },
-							{ typeId: { in: [CASE_TYPES_ID.RIGHTS_OF_WAY] } },
-							{ subTypeId: { in: [CASE_SUBTYPES_ID.OPPOSED_DMMO] } }
+							{
+								subTypeId: {
+									in: [CASE_SUBTYPES_ID.OPPOSED_DMMO]
+								}
+							}
 						]
 					},
 					{
@@ -216,8 +246,8 @@ describe('FilterGenerator Integration Tests', () => {
 			const rowSubtypeGroup = groups.find((g) => g.idPrefix === `subtype-${CASE_TYPES_ID.RIGHTS_OF_WAY}`);
 			assert.ok(rowSubtypeGroup, 'Subtype group for RoW should exist');
 
-			const s14 = rowSubtypeGroup.items.find((i) => i.value === CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL);
-			const dmmo = rowSubtypeGroup.items.find((i) => i.value === CASE_SUBTYPES_ID.OPPOSED_DMMO);
+			const s14 = rowSubtypeGroup?.items.find((i) => i.value === CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL);
+			const dmmo = rowSubtypeGroup?.items.find((i) => i.value === CASE_SUBTYPES_ID.OPPOSED_DMMO);
 
 			assert.ok(s14, 'Schedule 14 Appeal should be listed');
 			assert.ok(dmmo, 'Opposed DMMO should be listed');
@@ -283,9 +313,9 @@ describe('FilterGenerator Integration Tests', () => {
 			const subtypeCat = categories.find((c) => c.heading.text === 'Subtype');
 			assert.ok(subtypeCat, 'Subtype category should exist');
 
-			const tag = subtypeCat.items.find((i) => i.text === 'Works on Common Land');
+			const tag = subtypeCat?.items.find((i) => i.text === 'Works on Common Land');
 			assert.ok(tag, 'Works on Common Land tag should exist');
-			assert.strictEqual(tag.href, baseUrl);
+			assert.strictEqual(tag?.href, baseUrl);
 		});
 
 		it('should generate correct removal links retaining other query params', () => {
@@ -301,12 +331,12 @@ describe('FilterGenerator Integration Tests', () => {
 			const areaCat = categories.find((c) => c.heading.text === 'Case work area');
 			assert.ok(areaCat, 'Area category should exist');
 
-			const areaTag = areaCat.items[0];
+			const areaTag = areaCat?.items[0];
 			assert.ok(areaTag, 'Area tag should exist');
 
-			assert.ok(areaTag.href.includes(`subtype=${CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL}`), 'Should keep subtype filter');
-			assert.ok(areaTag.href.includes('page=2'), 'Should keep page parameter');
-			assert.ok(!areaTag.href.includes(`area=`), 'Should remove area filter');
+			assert.ok(areaTag?.href.includes(`subtype=${CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL}`), 'Should keep subtype filter');
+			assert.ok(areaTag?.href.includes('page=2'), 'Should keep page parameter');
+			assert.ok(!areaTag?.href.includes(`area=`), 'Should remove area filter');
 		});
 
 		it('should generate status selected-category tags and removal links', () => {
@@ -340,15 +370,16 @@ describe('FilterGenerator Integration Tests', () => {
 			const subtypeCat = categories.find((c) => c.heading.text === 'Subtype');
 			assert.ok(subtypeCat, 'Subtype category should exist');
 
-			const s14Tag = subtypeCat.items.find((i) => i.text === 'Schedule 14 Appeal');
-			const dmmoTag = subtypeCat.items.find((i) => i.text.includes('Opposed'));
+			const s14Tag = subtypeCat?.items.find((i) => i.text === 'Schedule 14 Appeal');
+			const dmmoTag = subtypeCat?.items.find((i) => i.text.includes('Opposed'));
 
 			assert.ok(s14Tag && dmmoTag, 'Both subtype tags should exist');
 
-			assert.ok(s14Tag.href.includes(`subtype=${CASE_SUBTYPES_ID.OPPOSED_DMMO}`));
-			assert.ok(!s14Tag.href.includes(`subtype=${CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL}`));
+			assert.ok(s14Tag?.href.includes(`subtype=${CASE_SUBTYPES_ID.OPPOSED_DMMO}`));
+			assert.ok(!s14Tag?.href.includes(`subtype=${CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL}`));
 		});
 	});
+
 	describe('Fixed Heading Behavior', () => {
 		it('should use "Case type" as fixed heading for all selected types regardless of area', () => {
 			const query = {
@@ -408,16 +439,16 @@ describe('FilterGenerator Integration Tests', () => {
 			const typeCategory = categories.find((c) => c.heading.text === 'Case type');
 			assert.ok(typeCategory, 'Case type category should exist');
 
-			const rowTypeTag = typeCategory.items.find((i) => i.text === 'Rights of Way');
+			const rowTypeTag = typeCategory?.items.find((i) => i.text === 'Rights of Way');
 			assert.ok(rowTypeTag, 'Rights of Way tag should exist');
 
 			// Clicking this tag should remove only Rights of Way, keep Common Land and area
-			assert.ok(rowTypeTag.href.includes(`type=${CASE_TYPES_ID.COMMON_LAND}`), 'Should keep Common Land type');
+			assert.ok(rowTypeTag?.href.includes(`type=${CASE_TYPES_ID.COMMON_LAND}`), 'Should keep Common Land type');
 			assert.ok(
-				rowTypeTag.href.includes(`area=${CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND}`),
+				rowTypeTag?.href.includes(`area=${CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND}`),
 				'Should keep area filter'
 			);
-			assert.ok(!rowTypeTag.href.includes(`type=${CASE_TYPES_ID.RIGHTS_OF_WAY}`), 'Should remove Rights of Way type');
+			assert.ok(!rowTypeTag?.href.includes(`type=${CASE_TYPES_ID.RIGHTS_OF_WAY}`), 'Should remove Rights of Way type');
 		});
 
 		it('should generate correct removal links for subtypes under fixed heading', () => {
@@ -432,16 +463,16 @@ describe('FilterGenerator Integration Tests', () => {
 			const subtypeCategory = categories.find((c) => c.heading.text === 'Subtype');
 			assert.ok(subtypeCategory, 'Subtype category should exist');
 
-			const dmmoTag = subtypeCategory.items.find((i) => i.text.includes('Opposed'));
+			const dmmoTag = subtypeCategory?.items.find((i) => i.text.includes('Opposed'));
 			assert.ok(dmmoTag, 'Opposed DMMO tag should exist');
 
 			// Clicking this tag should remove only Opposed DMMO, keep Schedule 14 and type
 			assert.ok(
-				dmmoTag.href.includes(`subtype=${CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL}`),
+				dmmoTag?.href.includes(`subtype=${CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL}`),
 				'Should keep Schedule 14 Appeal'
 			);
-			assert.ok(dmmoTag.href.includes(`type=${CASE_TYPES_ID.RIGHTS_OF_WAY}`), 'Should keep type filter');
-			assert.ok(!dmmoTag.href.includes(`subtype=${CASE_SUBTYPES_ID.OPPOSED_DMMO}`), 'Should remove Opposed DMMO');
+			assert.ok(dmmoTag?.href.includes(`type=${CASE_TYPES_ID.RIGHTS_OF_WAY}`), 'Should keep type filter');
+			assert.ok(!dmmoTag?.href.includes(`subtype=${CASE_SUBTYPES_ID.OPPOSED_DMMO}`), 'Should remove Opposed DMMO');
 		});
 
 		it('should filter into same fixed heading when multiple filters are selected in same section', () => {
@@ -476,8 +507,8 @@ describe('FilterGenerator Integration Tests', () => {
 
 			const typeCategory = categories.find((c) => c.heading.text === 'Case type');
 			assert.ok(typeCategory, 'Case type category should exist');
-			assert.strictEqual(typeCategory.items.length, 1, 'Should have exactly one item');
-			assert.strictEqual(typeCategory.items[0].text, 'Rights of Way');
+			assert.strictEqual(typeCategory?.items.length, 1, 'Should have exactly one item');
+			assert.strictEqual(typeCategory?.items[0].text, 'Rights of Way');
 		});
 
 		it('should handle single selected subtype with fixed heading', () => {
@@ -490,8 +521,8 @@ describe('FilterGenerator Integration Tests', () => {
 
 			const subtypeCategory = categories.find((c) => c.heading.text === 'Subtype');
 			assert.ok(subtypeCategory, 'Subtype category should exist');
-			assert.strictEqual(subtypeCategory.items.length, 1, 'Should have exactly one item');
-			assert.strictEqual(subtypeCategory.items[0].text, 'Schedule 14 Appeal');
+			assert.strictEqual(subtypeCategory?.items.length, 1, 'Should have exactly one item');
+			assert.strictEqual(subtypeCategory?.items[0].text, 'Schedule 14 Appeal');
 		});
 	});
 });
