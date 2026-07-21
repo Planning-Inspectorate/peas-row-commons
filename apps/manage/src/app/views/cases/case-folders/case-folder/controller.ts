@@ -257,7 +257,7 @@ function readAndClearSessionData(req: Request) {
 	const folderUpdated = readSessionData(req, folderId, 'updated', false, 'folder');
 	const folderRenamed = readSessionData(req, folderId, 'renamed', false, 'folder');
 	const filesMoved = readSessionData(req, folderId, 'filesMoved', false, 'folder');
-	const filesDeleted = readSessionData(req, id, 'filesDeleted', false, 'folder');
+	const filesDeleted = readSessionData(req, id, 'filesDeleted', 0, 'folder');
 	const folderCreated = readSessionData(req, id, 'created', false, 'folder');
 	const folderDeleted = readSessionData(req, id, 'deleted', false, 'folder');
 

@@ -55,10 +55,12 @@
             type: "success"
         }) }}
     {% endif %}
-    {% if folderUpdates.filesDeleted %}
+    {% set deletedCount = folderUpdates.filesDeleted | int %}
+    {% if deletedCount > 0 %}
+        {% set filesDeletedText = deletedCount + " selected file" + ("s" if deletedCount != 1 else "") + " deleted" %}
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
-            text: "Selected file(s) deleted",
+            text: filesDeletedText,
             type: "success"
         }) }}
     {% endif %}

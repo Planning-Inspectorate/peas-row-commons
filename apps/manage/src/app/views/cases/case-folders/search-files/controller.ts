@@ -125,7 +125,7 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 function readAndClearSessionData(req: Request) {
 	const id = getStringParam(req.params, 'id');
 
-	const filesDeleted = readSessionData(req, id, 'filesDeleted', false, 'folder');
+	const filesDeleted = readSessionData(req, id, 'filesDeleted', 0, 'folder');
 
 	clearSessionData(req, id, 'filesDeleted', 'folder');
 
