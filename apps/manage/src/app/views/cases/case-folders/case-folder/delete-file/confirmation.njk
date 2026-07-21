@@ -17,7 +17,6 @@
 
                 <input type="hidden" name="returnUrl" value="{{ returnUrl }}">
 
-
                 {{ deleteTable(documents) }}
 
                 {{ govukWarningText({
@@ -47,17 +46,20 @@
 
 {% macro deleteTable(docRows) %}
     {% set docs = [] %}
+    {% set multipleFiles = docRows | length > 1 %}
 
     {% for doc in docRows %}
         {% set actionHtml %}
             <input type="hidden" name="selectedFiles" value="{{ doc.id }}">
-            <button type="submit"
-                    name="removeFile"
-                    value="{{ doc.id }}"
-                    class="govuk-button-as-link">
-                <span class="govuk-visually-hidden">Remove {{ doc.fileName }} from list</span>
-                <span aria-hidden="true">Remove</span>
-            </button>
+            {% if multipleFiles %}
+                <button type="submit"
+                        name="removeFile"
+                        value="{{ doc.id }}"
+                        class="govuk-button-as-link">
+                    <span class="govuk-visually-hidden">Remove {{ doc.fileName }} from list</span>
+                    <span aria-hidden="true">Remove</span>
+                </button>
+            {% endif %}
         {% endset %}
 
         {% set docs = (docs.push([

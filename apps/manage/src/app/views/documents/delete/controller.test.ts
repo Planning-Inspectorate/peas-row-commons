@@ -59,6 +59,7 @@ describe('Delete File Controllers', () => {
 
 				await buildDeleteFileView(service as any)(req, res);
 
+				assert.strictEqual(mockDb.document.findMany.mock.callCount(), 0);
 				assert.strictEqual(res.redirect.mock.callCount(), 1);
 				assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/cases/case-1/folders/folder-1');
 			});
@@ -69,6 +70,22 @@ describe('Delete File Controllers', () => {
 				{
 					id: 'doc-123',
 					fileName: 'test.pdf',
+					caseId: 'case-1',
+					deletedAt: null,
+					Folder: { id: 'folder-1', displayName: 'Evidence' }
+				}
+			];
+			const validMultipleDocuments = [
+				{
+					id: 'doc-123',
+					fileName: 'test.pdf',
+					caseId: 'case-1',
+					deletedAt: null,
+					Folder: { id: 'folder-1', displayName: 'Evidence' }
+				},
+				{
+					id: 'doc-456',
+					fileName: 'test-2.pdf',
 					caseId: 'case-1',
 					deletedAt: null,
 					Folder: { id: 'folder-1', displayName: 'Evidence' }
@@ -88,9 +105,81 @@ describe('Delete File Controllers', () => {
 
 				const [viewPath, viewData] = res.render.mock.calls[0].arguments;
 				assert.strictEqual(viewPath, 'views/cases/case-folders/case-folder/delete-file/confirmation.njk');
-				assert.strictEqual(viewData.pageHeading, 'Delete file(s)');
+				assert.strictEqual(viewData.pageHeading, 'Delete 1 file');
 				assert.deepStrictEqual(viewData.documents, validDocuments);
 				assert.strictEqual(viewData.backLinkUrl, '/cases/case-1/folders/folder-1');
+				assert.strictEqual(viewData.returnUrl, '/cases/case-1/folders/folder-1');
+				assert.strictEqual(
+					viewData.removeSelectedFilesFromListUrl,
+					'/cases/case-1/folders/folder-1/documents/delete-confirmation'
+				);
+				assert.strictEqual(viewData.deleteUrl, '/cases/case-1/folders/folder-1/documents/delete');
+			});
+
+			it('should render confirmation view with multiple fetched documents', async () => {
+				const req = mockReq({
+					body: { selectedFiles: ['doc-123', 'doc-456'] }
+				});
+				const res = mockRes();
+
+				mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve(validMultipleDocuments));
+
+				await buildDeleteFileView(service as any)(req, res);
+
+				assert.strictEqual(mockDb.document.findMany.mock.callCount(), 1);
+				assert.strictEqual(res.render.mock.callCount(), 1);
+
+				const [viewPath, viewData] = res.render.mock.calls[0].arguments;
+				assert.strictEqual(viewPath, 'views/cases/case-folders/case-folder/delete-file/confirmation.njk');
+				assert.strictEqual(viewData.pageHeading, 'Delete 2 files');
+				assert.deepStrictEqual(viewData.documents, validMultipleDocuments);
+				assert.strictEqual(viewData.backLinkUrl, '/cases/case-1/folders/folder-1');
+			});
+
+			it('should redirect early when selectedFiles contains only non-string values', async () => {
+				const req = mockReq({
+					body: { selectedFiles: [123, null, '', false] }
+				});
+				const res = mockRes();
+
+				await buildDeleteFileView(service as any)(req, res);
+
+				assert.strictEqual(mockDb.document.findMany.mock.callCount(), 0);
+				assert.strictEqual(res.redirect.mock.callCount(), 1);
+				assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/cases/case-1/folders/folder-1');
+			});
+
+			it('should keep only valid string IDs when selectedFiles has mixed values', async () => {
+				const req = mockReq({
+					body: { selectedFiles: ['doc-123', '', null, 42, 'doc-456'] }
+				});
+				const res = mockRes();
+
+				mockDb.document.findMany.mock.mockImplementation(() =>
+					Promise.resolve([
+						{
+							id: 'doc-123',
+							fileName: 'test.pdf',
+							caseId: 'case-1',
+							deletedAt: null,
+							Folder: { id: 'folder-1', displayName: 'Evidence' }
+						},
+						{
+							id: 'doc-456',
+							fileName: 'test-2.pdf',
+							caseId: 'case-1',
+							deletedAt: null,
+							Folder: { id: 'folder-1', displayName: 'Evidence' }
+						}
+					])
+				);
+
+				await buildDeleteFileView(service as any)(req, res);
+
+				assert.strictEqual(mockDb.document.findMany.mock.callCount(), 1);
+				const findManyArgs = mockDb.document.findMany.mock.calls[0].arguments[0];
+				assert.deepStrictEqual(findManyArgs.where.id.in, ['doc-123', 'doc-456']);
+				assert.strictEqual(res.render.mock.callCount(), 1);
 			});
 		});
 
@@ -137,11 +226,22 @@ describe('Delete File Controllers', () => {
 				});
 				const res = mockRes();
 
-				mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve([{ id: 1 }]));
+				mockDb.document.findMany.mock.mockImplementation(() =>
+					Promise.resolve([
+						{
+							id: 'doc-123',
+							fileName: 'test.pdf',
+							caseId: 'case-1',
+							deletedAt: null,
+							Folder: { id: 'folder-1', displayName: 'Evidence' }
+						}
+					])
+				);
 				mockDb.document.updateMany.mock.mockImplementation(() => Promise.resolve({}));
 
 				await buildDeleteFileController(service as any)(req, res);
 
+				assert.strictEqual(mockDb.document.findMany.mock.callCount(), 1);
 				assert.strictEqual(mockDb.document.updateMany.mock.callCount(), 1);
 
 				const updateArgs = mockDb.document.updateMany.mock.calls[0].arguments[0];
@@ -184,14 +284,15 @@ describe('Delete File Controllers', () => {
 				const [viewPath, viewData] = res.render.mock.calls[0].arguments;
 
 				assert.strictEqual(viewPath, 'views/cases/case-folders/case-folder/delete-file/confirmation.njk');
+				assert.strictEqual(viewData.pageHeading, 'Delete 1 file');
 				assert.deepStrictEqual(viewData.documents, validDocuments);
 				assert.strictEqual(viewData.backLinkUrl, '/cases/case-1/folders/folder-1');
-
 				assert.strictEqual(res.locals.errorSummary.length, 1);
 				assert.strictEqual(res.locals.errorSummary[0].text, 'Failed to delete documents, please try again.');
 			});
 		});
 	});
+
 	describe('buildRemoveFileFromSelection', () => {
 		const validDocuments = [
 			{
@@ -241,7 +342,7 @@ describe('Delete File Controllers', () => {
 			assert.strictEqual(res.render.mock.callCount(), 1);
 			const [viewPath, viewData] = res.render.mock.calls[0].arguments;
 			assert.strictEqual(viewPath, 'views/cases/case-folders/case-folder/delete-file/confirmation.njk');
-			assert.strictEqual(viewData.documents.length, 2);
+			assert.strictEqual(viewData.pageHeading, 'Delete 2 files');
 			assert.deepStrictEqual(viewData.documents, remainingDocuments);
 		});
 
@@ -263,6 +364,123 @@ describe('Delete File Controllers', () => {
 			// Should redirect back to folder
 			assert.strictEqual(res.redirect.mock.callCount(), 1);
 			assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/cases/case-1/folders/folder-1');
+		});
+
+		it('should ignore invalid selectedFiles entries before removing one valid file', async () => {
+			const req = mockReq({
+				body: {
+					selectedFiles: ['doc-123', '', null, 99, 'doc-456', 'doc-789'],
+					removeFile: 'doc-456',
+					returnUrl: '/cases/case-1/folders/folder-1'
+				}
+			});
+			const res = mockRes();
+
+			const remainingDocuments = [
+				{
+					id: 'doc-123',
+					fileName: 'test.pdf',
+					caseId: 'case-1',
+					deletedAt: null,
+					Folder: { id: 'folder-1', displayName: 'Evidence' }
+				},
+				{
+					id: 'doc-789',
+					fileName: 'test3.pdf',
+					caseId: 'case-1',
+					deletedAt: null,
+					Folder: { id: 'folder-1', displayName: 'Evidence' }
+				}
+			];
+
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve(remainingDocuments));
+
+			await buildRemoveFileFromSelection(service as any)(req, res);
+
+			assert.strictEqual(mockDb.document.findMany.mock.callCount(), 1);
+			const findManyArgs = mockDb.document.findMany.mock.calls[0].arguments[0];
+			assert.deepStrictEqual(findManyArgs.where.id.in, ['doc-123', 'doc-789']);
+
+			assert.strictEqual(res.render.mock.callCount(), 1);
+			const [, viewData] = res.render.mock.calls[0].arguments;
+			assert.deepStrictEqual(viewData.documents, remainingDocuments);
+		});
+	});
+
+	describe('Page heading', () => {
+		it('should render "Delete 1 file" when there is one document', async () => {
+			const req = mockReq();
+			const res = mockRes();
+
+			mockDb.document.findMany.mock.mockImplementation(() =>
+				Promise.resolve([
+					{
+						id: 'doc-123',
+						fileName: 'test.pdf',
+						caseId: 'case-1',
+						deletedAt: null,
+						Folder: { id: 'folder-1', displayName: 'Evidence' }
+					}
+				])
+			);
+
+			await buildDeleteFileView(service as any)(req, res);
+
+			assert.strictEqual(res.render.mock.callCount(), 1);
+			const [, viewData] = res.render.mock.calls[0].arguments;
+			assert.strictEqual(viewData.pageHeading, 'Delete 1 file');
+		});
+
+		it('should render "Delete N files" when there are multiple documents', async () => {
+			const req = mockReq({
+				body: { selectedFiles: ['doc-123', 'doc-456'] }
+			});
+			const res = mockRes();
+
+			mockDb.document.findMany.mock.mockImplementation(() =>
+				Promise.resolve([
+					{
+						id: 'doc-123',
+						fileName: 'test.pdf',
+						caseId: 'case-1',
+						deletedAt: null,
+						Folder: { id: 'folder-1', displayName: 'Evidence' }
+					},
+					{
+						id: 'doc-456',
+						fileName: 'test-2.pdf',
+						caseId: 'case-1',
+						deletedAt: null,
+						Folder: { id: 'folder-1', displayName: 'Evidence' }
+					}
+				])
+			);
+
+			await buildDeleteFileView(service as any)(req, res);
+
+			assert.strictEqual(res.render.mock.callCount(), 1);
+			const [, viewData] = res.render.mock.calls[0].arguments;
+			assert.strictEqual(viewData.pageHeading, 'Delete 2 files');
+		});
+
+		it('should render "Delete files" heading when delete fails before context is built', async () => {
+			const req = mockReq({
+				originalUrl: '/cases/case-1/folders/folder-1/documents/delete-confirmation'
+			});
+			const res = mockRes();
+
+			// getDocumentsContext fails immediately -> controller catch renders fallback context
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve([]));
+
+			await buildDeleteFileController(service as any)(req, res);
+
+			assert.strictEqual(res.render.mock.callCount(), 1);
+			const [viewPath, viewData] = res.render.mock.calls[0].arguments;
+
+			assert.strictEqual(viewPath, 'views/cases/case-folders/case-folder/delete-file/confirmation.njk');
+			assert.deepStrictEqual(viewData.documents, []);
+			assert.strictEqual(viewData.pageHeading, 'Delete files');
+			assert.strictEqual(res.locals.errorSummary[0].text, 'Failed to delete documents, please try again.');
 		});
 	});
 });

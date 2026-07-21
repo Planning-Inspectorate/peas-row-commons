@@ -11,8 +11,9 @@ import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
  * Ensures we always return an array of strings.
  */
 function extractDocumentIds(req: Request): string[] {
-	const rawIds = req.body.selectedFiles;
-	return (Array.isArray(rawIds) ? rawIds : [rawIds]).filter(Boolean);
+	const rawIds = req.body?.selectedFiles;
+	const values = Array.isArray(rawIds) ? rawIds : [rawIds];
+	return values.filter((id): id is string => typeof id === 'string' && id.length > 0);
 }
 
 /**
@@ -59,12 +60,15 @@ function renderConfirmationView(
 	}
 
 	const basePath = req.originalUrl.split('/documents/')[0];
+	const documents = Array.isArray(context?.documents) ? context.documents : [];
+	const fileCount = documents.length;
+	const pageHeading = getDeleteHeading(fileCount);
 
 	return res.render('views/cases/case-folders/case-folder/delete-file/confirmation.njk', {
-		pageHeading: 'Delete file(s)',
+		pageHeading,
 		backLinkUrl: safeReturnUrl,
 		returnUrl: safeReturnUrl,
-		documents: context.documents || [],
+		documents,
 		removeSelectedFilesFromListUrl: `${basePath}/documents/delete-confirmation`,
 		deleteUrl: `${basePath}/documents/delete`
 	});
@@ -79,8 +83,8 @@ export function buildDeleteFileView(service: ManageService) {
 
 		const safeReturnUrl = getSafeReturnUrl(req);
 
-		if (!documentIds?.length) {
-			addSessionData(req, id, { filesErrors: [{ text: 'Select file(s) to delete', href: '#' }] }, 'folder');
+		if (!documentIds.length) {
+			addSessionData(req, id, { filesDeleted: 0 }, 'folder');
 			return res.redirect(safeReturnUrl);
 		}
 
@@ -150,7 +154,7 @@ export function buildDeleteFileController(service: ManageService) {
 				});
 			}
 
-			addSessionData(req, id, { filesDeleted: true }, 'folder');
+			addSessionData(req, id, { filesDeleted: context.documents.length }, 'folder');
 
 			return res.redirect(safeReturnUrl);
 		} catch (error) {
@@ -213,4 +217,12 @@ export function buildRemoveFileFromSelection(service: ManageService) {
 			throw error;
 		}
 	};
+}
+
+/**
+ * Returns the appropriate heading for the delete confirmation page based on the number of files.
+ */
+function getDeleteHeading(fileCount: number): string {
+	if (fileCount === 0) return 'Delete files';
+	return fileCount === 1 ? 'Delete 1 file' : `Delete ${fileCount} files`;
 }
