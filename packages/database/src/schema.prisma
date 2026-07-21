@@ -212,6 +212,7 @@ model Folder {
   DraftDocuments DraftDocument[]
 
   @@unique([caseId, displayName, parentFolderId, deletedAt])
+  @@index([deletedAt, parentFolderId])
 }
 
 model CaseCosts {
@@ -254,6 +255,8 @@ model CaseNote {
   /// The type of this note (e.g. Case note, Sticky note, Important info)
   noteTypeId   String?
   NoteType     NoteType? @relation(fields: [noteTypeId], references: [id])
+
+  @@index([caseId])
 }
 
 model NoteType {
