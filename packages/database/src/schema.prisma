@@ -313,6 +313,9 @@ model Document {
   folderId      String         @db.UniqueIdentifier
   Folder        Folder         @relation(fields: [folderId], references: [id], onDelete: Cascade)
   UserDocuments UserDocument[]
+
+  // Note: A covering index with INCLUDE columns exists via custom migration
+  // See migration: add_document_covering_index
 }
 
 /// Indicates a document that has been uploaded
