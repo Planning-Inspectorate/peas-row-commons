@@ -9,12 +9,12 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@azure/storage-blob": "*",
     "@azure/msal-node": "*",
+    "@azure/storage-blob": "*",
     "@pins/peas-row-commons-database": "*",
     "connect-redis": "*",
     "express-session": "*",
-    "notifications-node-client": "*",
+    "notifications-node-client": "^8.4.0",
     "pino": "*",
     "pino-pretty": "*",
     "redis": "*"
