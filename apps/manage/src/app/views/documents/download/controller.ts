@@ -1,12 +1,11 @@
 import type { Request, Response } from 'express';
-import type { ManageService } from '#service';
+import type { ManageService, ZipArchiveFactory } from '#service';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import type { Document, PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { Logger } from 'pino';
 import type { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
 import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
-import archiver from 'archiver';
 import type { Readable } from 'stream';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
@@ -32,7 +31,7 @@ function extractDocumentIds(req: Request): string[] {
  * If multiple: streams blobs into a dynamic ZIP archive.
  */
 export function buildDownloadDocument(service: ManageService): AsyncRequestHandler {
-	const { db, logger, blobStore, audit, archiverFactory } = service;
+	const { db, logger, blobStore, audit, createZipArchive } = service;
 
 	return async (req: Request, res: Response) => {
 		const documentIds = extractDocumentIds(req);
@@ -72,7 +71,7 @@ export function buildDownloadDocument(service: ManageService): AsyncRequestHandl
 		if (documents.length === 1) {
 			await streamDocumentToResponse(res, blobStore, documents[0], isPreview, logger);
 		} else {
-			zipFileName = await streamZipToResponse(res, blobStore, documents, logger, archiverFactory);
+			zipFileName = await streamZipToResponse(res, blobStore, documents, logger, createZipArchive);
 		}
 
 		// Since downloadStream.pipe(res) is async, the function returns before the
@@ -147,22 +146,22 @@ async function streamZipToResponse(
 	blobStore: BlobStorageClient | null,
 	documents: (Document & { Case: { reference: string } })[],
 	logger: Logger,
-	archiverFactory: typeof archiver
+	createZipArchive: ZipArchiveFactory
 ): Promise<string> {
 	if (!blobStore) throw new Error('Blob store client missing');
 
 	// All documents will have the same case join so just take doc 1 to get the reference
-	const kebabedReference = stringToKebab(documents[0].Case.reference);
+	const kebabReference = stringToKebab(documents[0].Case.reference);
 
 	// File name follows format `<case-ref>-bulk-download-2026-01-01.zip`
-	const zipFileName = `${kebabedReference}-bulk-download-${new Date().toISOString().split('T')[0]}.zip`;
+	const zipFileName = `${kebabReference}-bulk-download-${new Date().toISOString().split('T')[0]}.zip`;
 
 	res.setHeader('Content-Type', 'application/zip');
 	res.setHeader('Content-Disposition', `attachment; filename="${zipFileName}"`);
 
 	// 5-6 is considered a good middle ground for zip files, from what I undestand.
 	// We may want to move towards 'fast' (1-3) at speed is more important than compression.
-	const archive = archiverFactory('zip', {
+	const archive = createZipArchive({
 		zlib: { level: 5 }
 	});
 

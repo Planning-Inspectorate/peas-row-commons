@@ -1,0 +1,18 @@
+@use 'node_modules/govuk-frontend/dist/govuk/index' as govuk;
+
+@mixin chevron-icon($size: 1em, $color: govuk.govuk-colour('black')) {
+	display: block;
+	width: $size;
+	height: $size;
+	content: '';
+	background: $color;
+	clip-path: polygon(6.38% 22.63%, 49.5% 65.75%, 92.63% 22.63%, 100% 30%, 50% 80%, 0% 30%);
+	transform: translateY(-50%);
+	transition: transform 0.2s ease;
+}
+
+// icon when expanded/rotated
+@mixin chevron-icon-expanded {
+	transform: translateY(-50%) rotate(180deg);
+	transform-origin: center;
+}

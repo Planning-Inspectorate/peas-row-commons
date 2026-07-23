@@ -43,7 +43,7 @@ describe('Create Folders Helpers', () => {
 				}
 			};
 
-			const result = await getNextDisplayOrder(mockDb, 'parent-1');
+			const result = await getNextDisplayOrder(mockDb, 'parent-1', 'case-123');
 			assert.strictEqual(result, 100);
 		});
 
@@ -54,7 +54,7 @@ describe('Create Folders Helpers', () => {
 				}
 			};
 
-			const result = await getNextDisplayOrder(mockDb, 'parent-1');
+			const result = await getNextDisplayOrder(mockDb, 'parent-1', 'case-123');
 			assert.strictEqual(result, 350);
 		});
 	});

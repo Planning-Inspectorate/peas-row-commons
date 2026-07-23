@@ -67,11 +67,11 @@ describe('createCaseHistoryViewModel', () => {
 	});
 
 	it('should use userName from the event', () => {
-		const events = [createMockEvent({ userName: 'Unknown User' })];
+		const events = [createMockEvent({ userName: 'Some User' })];
 
 		const result = createCaseHistoryViewModel(events);
 
-		assert.strictEqual(result[0].user, 'Unknown User');
+		assert.strictEqual(result[0].user, 'Some User');
 	});
 
 	it('should pass metadata to resolveTemplate for details', () => {

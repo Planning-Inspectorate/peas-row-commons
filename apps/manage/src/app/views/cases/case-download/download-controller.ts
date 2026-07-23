@@ -29,6 +29,7 @@ import {
 } from './index.ts';
 import type { CaseDownloadQueryResult } from './query.ts';
 import { AUDIT_ACTIONS } from '../../../audit/index.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
  * Relative template paths from the configured Nunjucks views dir
@@ -47,15 +48,11 @@ const PDF_TEMPLATES = [
  * Builds the download case controller.
  */
 export function buildDownloadCase(service: ManageService): AsyncRequestHandler {
-	const { db, logger, blobStore, audit, archiverFactory, chromiumPath } = service;
+	const { db, logger, blobStore, audit, createZipArchive, chromiumPath } = service;
 	const groupIds = service.entraGroupIds;
 
 	return async (req: Request, res: Response) => {
-		const { id } = req.params;
-
-		if (!id) {
-			throw new Error('Case ID parameter is required for download');
-		}
+		const id = getStringParam(req.params, 'id');
 
 		logger.info({ caseId: id }, 'Starting case download');
 
@@ -79,7 +76,7 @@ export function buildDownloadCase(service: ManageService): AsyncRequestHandler {
 
 		registerAuditOnFinish(res, audit, id, req, logger);
 
-		await streamCaseZip(res, caseData.reference, generatedPdfs, documents, blobStore, logger, archiverFactory);
+		await streamCaseZip(res, caseData.reference, generatedPdfs, documents, blobStore, logger, createZipArchive);
 	};
 }
 

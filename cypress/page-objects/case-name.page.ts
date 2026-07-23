@@ -2,6 +2,30 @@ import type { Journeys } from '../types/journeys.ts';
 import { buildCaseName } from '../page-utilities/generate.utility.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
+type CaseNameErrorType = 'required' | 'tooLong';
+
+type CaseNameErrorConfig = {
+	message: string;
+	href: string;
+	inlineId: string;
+	inputId: string;
+};
+
+const caseNameErrorMap: Record<CaseNameErrorType, CaseNameErrorConfig> = {
+	required: {
+		message: 'Enter the case name',
+		href: '#name',
+		inlineId: 'name-error',
+		inputId: 'name'
+	},
+	tooLong: {
+		message: 'Case name must be less than 200 characters',
+		href: '#name',
+		inlineId: 'name-error',
+		inputId: 'name'
+	}
+};
+
 class CaseNamePage {
 	isPageDisplayed(fullValidation = true): void {
 		runPageValidation(
@@ -18,12 +42,6 @@ class CaseNamePage {
 		);
 	}
 
-	/**
-	 * Enters a case name:
-	 * - uses a provided string directly, or
-	 * - generates one from the journey when not supplied.
-	 * Returns the value entered.
-	 */
 	enterCaseName(journey: Journeys): string;
 	enterCaseName(journey: Journeys, caseName: string): string;
 	enterCaseName(caseName: string): string;
@@ -36,11 +54,25 @@ class CaseNamePage {
 		return valueToUse;
 	}
 
-	verifyErrorBanner(): void {
-		cy.verifyErrorSummary('Enter the case name', {
-			href: '#name',
-			inlineId: 'name-error'
+	verifyErrorBanner(errorType: CaseNameErrorType): void {
+		const { message, href, inlineId, inputId } = caseNameErrorMap[errorType];
+
+		cy.get('.govuk-error-summary')
+			.should('exist')
+			.and('be.visible')
+			.within(() => {
+				cy.contains('h2', 'There is a problem').should('be.visible');
+				cy.get('.govuk-error-summary__list li').should('have.length', 1);
+			});
+
+		cy.verifyErrorSummary(message, {
+			href,
+			inlineId
 		});
+
+		cy.get(`#${inlineId}`).should('exist').and('be.visible').and('contain.text', message);
+
+		cy.get(`#${inputId}`).should('have.class', 'govuk-input--error').and('have.attr', 'aria-describedby', inlineId);
 	}
 }
 

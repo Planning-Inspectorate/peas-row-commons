@@ -7,6 +7,7 @@ import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-ro
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { Request } from 'express';
 import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
+import { getOptionalStringParam, getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
  * Controller to render the Create Folder view (get)
@@ -14,11 +15,7 @@ import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
 export function buildViewCreateFolders(): AsyncRequestHandler {
 	return async (req, res, next) => {
 		try {
-			const id = req.params.id;
-
-			if (!id) {
-				throw new Error('id param required');
-			}
+			const id = getStringParam(req.params, 'id');
 
 			const errorSummary = getSessionErrors(req, id);
 			const erroredFolderName = getErroredFolderName(req, id);
@@ -43,13 +40,10 @@ export function buildCreateFolders(service: ManageService): AsyncRequestHandler 
 
 	return async (req, res) => {
 		try {
-			const { id } = req.params;
+			const id = getStringParam(req.params, 'id');
 
-			if (!id) {
-				throw new Error('id param required');
-			}
+			const folderId = getOptionalStringParam(req.params, 'folderId');
 
-			const folderId = req.params?.folderId ?? null;
 			const { folderName } = req.body;
 
 			const parentFolder = await getParentFolder(db, folderId, id);

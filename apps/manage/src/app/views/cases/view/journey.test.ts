@@ -7,9 +7,10 @@ describe('case details journey', () => {
 		const mockQuestions = { reference: {} };
 		const mockRes = {};
 
-		assert.throws(() => createJourney(mockQuestions, mockRes as any, { params: {}, baseUrl: '/some/path' } as any), {
-			message: `not a valid request for the ${JOURNEY_ID} journey (no id param)`
-		});
+		assert.throws(
+			() => createJourney(mockQuestions, mockRes as any, { params: {}, baseUrl: '/some/path' } as any),
+			/id must be a single string value/
+		);
 
 		assert.throws(
 			() =>

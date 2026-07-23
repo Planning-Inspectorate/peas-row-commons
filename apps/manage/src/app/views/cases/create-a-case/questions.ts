@@ -5,12 +5,12 @@ import { questionClasses } from '@planning-inspectorate/dynamic-forms/src/questi
 import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
 import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
-import { CASEWORK_AREAS } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
-import { AUTHORITY_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/authority-status.ts';
+import { CASEWORK_AREAS } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import { AUTHORITY_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/authority-status.ts';
 import {
 	PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES,
 	RIGHTS_OF_WAY_COMMON_LAND_TYPES
-} from '@pins/peas-row-commons-database/src/seed/static_data/types.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/types.ts';
 import {
 	COASTAL_ACCESS_SUBTYPES,
 	COMMON_LAND_SUBTYPES,
@@ -19,7 +19,7 @@ import {
 	OTHER_SOS_CASEWORK_SUBTYPES,
 	RIGHTS_OF_WAY_SUBTYPES,
 	WAYLEAVES_SUBTYPES
-} from '@pins/peas-row-commons-database/src/seed/static_data/subtypes.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/subtypes.ts';
 import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
 import {
 	referenceDataToRadioOptions,
@@ -279,7 +279,39 @@ export function getQuestions(groupMembers: EntraGroupMembers) {
 			label: 'Applicant or appellant',
 			hintPrefix: 'Enter the name of the main party. This could also be a server.',
 			orgNameLabel: 'Joint applicants/appellants or company name'
-		})
+		}),
+		hasLinkedCases: {
+			type: COMPONENT_TYPES.BOOLEAN,
+			title: 'Is this a linked case?',
+			question: 'Is this a linked case?',
+			fieldName: 'hasLinkedCases',
+			url: 'is-linked-case',
+			validators: [new RequiredValidator('Select whether this is a linked case')]
+		},
+		isLeadCase: {
+			type: COMPONENT_TYPES.BOOLEAN,
+			title: 'Is this case the lead case?',
+			question: 'Is this case the lead case?',
+			fieldName: 'isLeadCase',
+			url: 'is-lead-case',
+			validators: [new RequiredValidator('Select whether this is the lead case')]
+		},
+		leadCaseReference: {
+			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
+			title: 'What is the case reference of the lead case?',
+			question: 'What is the case reference of the lead case?',
+			fieldName: 'leadCaseReference',
+			url: 'lead-case-reference',
+			validators: [
+				new RequiredValidator('Enter the lead case reference'),
+				new StringValidator({
+					maxLength: {
+						maxLength: 25,
+						maxLengthMessage: 'Lead case must be between 1 and 25 characters'
+					}
+				})
+			]
+		}
 	};
 
 	const classes = {
@@ -289,3 +321,6 @@ export function getQuestions(groupMembers: EntraGroupMembers) {
 
 	return createQuestions(questions, classes, {});
 }
+
+/** Type representing the questions returned by getQuestions */
+export type CreateCaseQuestions = ReturnType<typeof getQuestions>;

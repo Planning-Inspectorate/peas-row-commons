@@ -1,12 +1,14 @@
 import type { Handler } from 'express';
+import type { Manifest } from '@pins/peas-row-commons-lib/util/manifest.ts';
 
 /**
  * Add configuration values to locals.
  */
-export function addLocalsConfiguration(): Handler {
+export function addLocalsConfiguration(manifest: Manifest): Handler {
+	const styleFile = manifest['style.css'] ?? 'style.css';
 	return (req, res, next) => {
 		res.locals.config = {
-			styleFile: 'style-0b5340ec.css',
+			styleFile,
 			headerTitle: 'MPESC',
 			footerLinks: [
 				{

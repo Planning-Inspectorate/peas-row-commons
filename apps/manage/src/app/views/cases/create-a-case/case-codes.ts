@@ -1,4 +1,4 @@
-import { CASE_TYPES_ID, CASE_SUBTYPES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
+import { CASE_TYPES_ID, CASE_SUBTYPES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 
 const TYPE_CODES: Record<string, string> = {
 	[CASE_TYPES_ID.DROUGHT]: 'DRO',

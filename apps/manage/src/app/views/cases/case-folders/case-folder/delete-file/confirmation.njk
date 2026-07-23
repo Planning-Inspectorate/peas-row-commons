@@ -13,13 +13,10 @@
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
 
-            <form action="{{ deleteUrl }}" method="post" novalidate>
+            <form action="{{ removeSelectedFilesFromListUrl }}" method="post" novalidate>
 
                 <input type="hidden" name="returnUrl" value="{{ returnUrl }}">
-                
-                {% for doc in documents %}
-                    <input type="hidden" name="selectedFiles" value="{{ doc.id }}">
-                {% endfor %}
+
 
                 {{ deleteTable(documents) }}
 
@@ -29,10 +26,13 @@
                 }) }}
 
                 {{ govukButton({
-                    text: "Delete file(s)",
-                    classes: "govuk-button--warning"
+                    text: "Delete files",
+                    classes: "govuk-button--warning",
+                    attributes: {
+                        formaction: deleteUrl
+                    }
                 }) }}
-                
+
             </form>
 
         </div>
@@ -49,9 +49,23 @@
     {% set docs = [] %}
 
     {% for doc in docRows %}
+        {% set actionHtml %}
+            <input type="hidden" name="selectedFiles" value="{{ doc.id }}">
+            <button type="submit"
+                    name="removeFile"
+                    value="{{ doc.id }}"
+                    class="govuk-button-as-link">
+                <span class="govuk-visually-hidden">Remove {{ doc.fileName }} from list</span>
+                <span aria-hidden="true">Remove</span>
+            </button>
+        {% endset %}
+
         {% set docs = (docs.push([
             {
                 text: doc.fileName
+            },
+            {
+                html: actionHtml
             }
         ]), docs) %}
     {% endfor %}
@@ -59,7 +73,11 @@
     {% set headers = [
         {
             text: 'File name',
-            classes: "govuk-!-width-one-fifth"
+            classes: "govuk-!-width-three-quarters"
+        },
+        {
+            text: 'Actions',
+            classes: "govuk-!-width-one-quarter"
         }
     ] %}
 

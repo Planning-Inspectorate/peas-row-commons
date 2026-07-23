@@ -2,9 +2,9 @@ import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert';
 import { buildUpdateCase, mapCasePayload, handleAbeyancePeriod } from './update-case.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
-import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
-import { ACT_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/act.ts';
-import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
+import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
+import { ACT_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/act.ts';
+import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 
 const mockFindUnique = mock.fn();
 const mockUpdate = mock.fn();
@@ -928,6 +928,113 @@ describe('Update Case Controller', () => {
 
 			assert.strictEqual(prismaPayload.Abeyance.upsert.create.abeyanceStartDate, null);
 			assert.strictEqual(prismaPayload.Abeyance.upsert.create.abeyanceEndDate, null);
+		});
+	});
+
+	describe('clearAndUpdateCase - empty submissions', () => {
+		it('should clear field to null when undefined (absent from answers)', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = { answers: { description: undefined } };
+
+			const handler = buildUpdateCase(mockService as any, true);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockUpdate.mock.callCount(), 1);
+			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
+			assert.strictEqual(updateArgs.data.description, null);
+		});
+
+		it('should clear field to null when null value is submitted', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = { answers: { description: null } };
+
+			const handler = buildUpdateCase(mockService as any, true);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockUpdate.mock.callCount(), 1);
+			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
+			assert.strictEqual(updateArgs.data.description, null);
+		});
+
+		it('should clear field to null when empty string is submitted', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = { answers: { description: '' } };
+
+			const handler = buildUpdateCase(mockService as any, true);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockUpdate.mock.callCount(), 1);
+			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
+			assert.strictEqual(updateArgs.data.description, null);
+		});
+
+		it('should clear field to null when empty array is submitted', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = { answers: { tags: [] } };
+
+			const handler = buildUpdateCase(mockService as any, true);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockUpdate.mock.callCount(), 1);
+			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
+			assert.strictEqual(updateArgs.data.tags, null);
+		});
+
+		it('should clear field to null when array with falsy values is submitted', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = { answers: { tags: [null, undefined, ''] } };
+
+			const handler = buildUpdateCase(mockService as any, true);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockUpdate.mock.callCount(), 1);
+			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
+			assert.strictEqual(updateArgs.data.tags, null);
+		});
+
+		it('should clear date field to null when date sub-fields are all empty', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = { answers: { hearingClosedDate: null } };
+
+			const handler = buildUpdateCase(mockService as any, true);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockUpdate.mock.callCount(), 1);
+			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
+			assert.strictEqual(updateArgs.data.hearingClosedDate, null);
+		});
+
+		it('should clear whitespace-only strings to null', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = { answers: { description: '   ' } };
+
+			const handler = buildUpdateCase(mockService as any, true);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockUpdate.mock.callCount(), 1);
+			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
+			assert.strictEqual(updateArgs.data.description, null);
 		});
 	});
 });

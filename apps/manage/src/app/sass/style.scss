@@ -1,22 +1,28 @@
 $font-family: arial, helvetica, sans-serif;
 
-//Main gov styles
-@use 'node_modules/govuk-frontend/dist/govuk/index' with (
-	// don't use the GDS Transport font, this service is not on GOV.UK
+@forward 'node_modules/@ministryofjustice/frontend/moj/all' with (
+	// don't use the MOJ font
 	// https://www.gov.uk/service-manual/design/making-your-service-look-like-govuk#if-your-service-isnt-on-govuk
-	$govuk-font-family: $font-family
+	$moj-font-family: $font-family
 );
-@forward 'node_modules/@ministryofjustice/frontend/moj/all';
+
+// Main gov styles
+@use 'node_modules/govuk-frontend/dist/govuk/index' as govuk;
 @use 'node_modules/@pins/peas-row-commons-lib/ui/header/pins-header';
 @use 'node_modules/@pins/peas-row-commons-lib/ui/footer/pins-footer';
-@use 'node_modules/govuk-frontend/dist/govuk/index' as govuk;
+@use 'components/filter-accordion';
+@use 'components/filter-tags';
+
+// TODO HRP-578 split this one file into multiple files for better maintainability, e.g. one per page or component
+// Use this pattern for any new additions
 
 // set font-family for any autocomplete menu items
+// stylelint-disable-next-line selector-class-pattern -- Autocomplete is an external component
 .autocomplete__menu {
 	font-family: $font-family;
 }
 
-@media (min-width: 1440px) {
+@media (width >= 1440px) {
 	.pins-container-wide {
 		max-width: 1280px;
 	}
@@ -26,29 +32,16 @@ $font-family: arial, helvetica, sans-serif;
 	white-space: pre-wrap;
 }
 
-.status-tag-width {
-	max-width: 250px !important;
-}
-
-.row-inline {
+.pins-row-inline {
 	display: flex;
 	gap: 8px;
 }
 
 // Button by GOV-UK default gets 32px of margin-bottom.
 // However, we have styled this button to be inline so we do not want that much.
+// stylelint-disable-next-line selector-max-id -- TODO HRP-580 style this using classes and remove this stylelint-disable
 #search-button {
 	margin-bottom: 16px;
-}
-
-.uploading-bar--hidden {
-	display: none;
-	margin-bottom: 1em;
-}
-
-.uploading-bar--visible {
-	display: block;
-	margin-bottom: 1em;
 }
 
 // This component goes Files Addes -> File Uploader by default with a black dashed dropzone
@@ -58,11 +51,11 @@ $font-family: arial, helvetica, sans-serif;
 	flex-direction: column-reverse;
 
 	.moj-multi-file-upload__dropzone {
-		outline: 3px dashed #1d70b8;
+		outline: 3px dashed govuk.govuk-colour('blue');
 	}
 }
 
-.govuk-accordion.hide-controls {
+.govuk-accordion.pins-accordion-hide-controls {
 	.govuk-accordion__controls {
 		display: none;
 	}
@@ -105,39 +98,31 @@ $font-family: arial, helvetica, sans-serif;
 * too.
 */
 .govuk-button-as-link {
-	background: transparent;
-	border: none;
-	color: #1d70b8;
-	cursor: pointer;
 	display: inline;
-	font-family: inherit;
-	font-size: inherit;
-	margin: 0;
 	padding: 0;
+	margin: 0;
+	font-size: inherit;
+	color: govuk.govuk-colour('blue');
 	text-decoration: underline;
 	text-decoration-thickness: max(1px, 0.0625rem);
 	text-underline-offset: 0.1578em;
-	-webkit-appearance: none;
 	appearance: none;
+	cursor: pointer;
+	background: transparent;
+	border: none;
 
 	&:hover {
-		color: #003078;
+		color: govuk.govuk-colour('blue', $variant: 'shade-50');
 		text-decoration-thickness: max(3px, 0.1875rem, 0.12em);
 	}
 
 	&:focus {
-		background-color: #ffdd00;
-		color: #0b0c0c;
-		box-shadow:
-			0 -2px #ffdd00,
-			0 4px #0b0c0c;
-		outline: none;
-		text-decoration: none;
+		@include govuk.govuk-focused-text;
 	}
 }
 
 // Table header for documents table need to be centred for checkbox alignment
-.govuk-table.documents-table {
+.govuk-table.pins-documents-table {
 	.govuk-table__header {
 		vertical-align: middle;
 	}
@@ -145,6 +130,7 @@ $font-family: arial, helvetica, sans-serif;
 
 // Specific class to make minor changes to the filter spacing
 // and sizing. MOJ filter does not allow custom classes.
+// stylelint-disable max-nesting-depth -- TODO HRP-580 style this using minimum specificity and remove this stylelint-disable
 .pins-clean-filter {
 	.moj-filter {
 		.moj-filter__header {
@@ -166,7 +152,7 @@ $font-family: arial, helvetica, sans-serif;
 
 					.moj-filter__heading-action {
 						> p {
-							margin: 0 0 20px 0;
+							margin: 0 0 20px;
 						}
 					}
 				}
@@ -180,13 +166,14 @@ $font-family: arial, helvetica, sans-serif;
 		}
 	}
 }
+// stylelint-enable max-nesting-depth -- TODO HRP-580 remove
 
 // Widths need to be slightly adjusted for the folder page
-.case-folder-filter-column {
+.pins-case-folder-filter-column {
 	width: 30%;
 }
 
-.case-folder-table-column {
+.pins-case-folder-table-column {
 	width: 70%;
 }
 
@@ -194,11 +181,11 @@ $font-family: arial, helvetica, sans-serif;
 * GOVUK column widths smallest size is one-quarter
 * But we need sixths for "Assigned to me"
 */
-.mpesc-width-one-sixth {
+.pins-width-one-sixth {
 	width: 16.66%;
 }
 
 // We want less than default (40px) padding for case details items.
-.manage-list-summary {
+.pins-manage-list-summary {
 	padding-left: 1rem;
 }

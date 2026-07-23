@@ -3,20 +3,20 @@ import {
 	dateISOStringToDisplayTime12hr,
 	getDayFromISODate
 } from '@pins/peas-row-commons-lib/util/dates.ts';
-import type { CaseDecisionFields, CaseListFields, CaseNoteFields, CaseProcedureFields } from './types.ts';
+import type { CaseDecisionFields, CaseListFields, CaseNoteFields, CaseProcedureFields, UserMap } from './types.ts';
 import { formatInTimeZone } from 'date-fns-tz';
-import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
+import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms';
 import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address.ts';
 import { mapContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
-import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
-import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
+import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
 import { nl2br, truncateComment } from '@pins/peas-row-commons-lib/util/strings.ts';
-import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
-import { DECISION_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-type.ts';
-import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
-import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/legacy/act-sections.ts';
+import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
+import { DECISION_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-type.ts';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
+import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/legacy/act-sections.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
-import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
+import { getUserDisplayName } from '#util/entra-groups.ts';
 
 function formatValue(value: any) {
 	if (typeof value === 'boolean') {
@@ -147,7 +147,7 @@ export function mapProceduresToArray(procedures: any[]): Record<string, any>[] |
  * Takes raw case data and converts into UI usable data format.
  * Converts the nested nature of join tables into a flat object.
  */
-export function caseToViewModel(caseRow: CaseListFields, groupMembers: EntraGroupMembers) {
+export function caseToViewModel(caseRow: CaseListFields, userMap: UserMap) {
 	const mergedData: Record<string, any> = { ...caseRow };
 
 	NESTED_SECTIONS.forEach((sectionKey) => {
@@ -225,7 +225,7 @@ export function caseToViewModel(caseRow: CaseListFields, groupMembers: EntraGrou
 
 	const siteAddress = mapAddressDbToViewModel(caseRow.SiteAddress);
 
-	const mappedNotes = mapNotes(caseRow.Notes || [], groupMembers, caseRow.id);
+	const mappedNotes = mapNotes(caseRow.Notes || [], userMap, caseRow.id);
 
 	const objectors = (caseRow.Contacts || []).filter((contact) => contact.contactTypeId === CONTACT_TYPE_ID.OBJECTOR);
 	const applicants = (caseRow.Contacts || []).filter(
@@ -313,25 +313,20 @@ export const mapAndSortDecisions = (decisions?: CaseDecisionFields[]) => {
 /**
  * Maps the raw case data into data presented in the UI.
  */
-export const mapNotes = (
-	unmappedCaseNotes: Omit<CaseNoteFields, 'Case'>[],
-	groupMembers: EntraGroupMembers,
-	caseId: string
-) => {
+export const mapNotes = (unmappedCaseNotes: Omit<CaseNoteFields, 'Case'>[], userMap: UserMap, caseId: string) => {
 	// Sort the cases first so that they are in descending order by creation date.
 	const caseNotes = [...unmappedCaseNotes].sort((a: any, b: any) => b.createdAt - a.createdAt);
 
 	return {
 		caseNotes: caseNotes.map((caseNote) => {
-			const user = groupMembers.allUsers.find((member) => member.id === caseNote.Author.idpUserId);
-
+			const userName = getUserDisplayName(userMap, caseNote.Author.idpUserId);
 			return {
 				date: dateISOStringToDisplayDate(caseNote.createdAt),
 				dayOfWeek: getDayFromISODate(caseNote.createdAt),
 				time: dateISOStringToDisplayTime12hr(caseNote.createdAt),
 				commentText: nl2br(caseNote.comment),
 				truncatedCommentText: nl2br(truncateComment(caseNote.comment, `/cases/${caseId}/case-notes`)),
-				userName: user?.displayName || caseNote.Author.idpUserId || 'Unknown' // Attempts to find the user in entra, otherwise falls back to plain text 'idpUserId' then finally just 'Unknown'
+				userName
 			};
 		})
 	};

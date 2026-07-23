@@ -12,24 +12,18 @@ updates:
     cooldown:
       default-days: 7
     groups:
-      azure:
-        patterns:
-          - '@azure/*'
-      commitlint:
-        patterns:
-          - '@commitlint/*'
-      prettier:
-        patterns:
-          - 'prettier'
-          - 'prettier-*'
-      prisma: # group prisma library and client updates together
+      prisma: # group prisma library (dev-dep) and client (prod dep) updates together
         patterns:
           - 'prisma'
           - '@prisma/*'
-      types:
+      deps: # all non-dev dependencies
         patterns:
-          - '@microsoft/microsoft-graph-types'
-          - '@types/*'
+          - '*'
+        dependency-type: 'production'
+      devDeps: # all dev dependencies
+        patterns:
+          - '*'
+        dependency-type: 'development'
   - package-ecosystem: 'terraform'
     directory: '/infrastructure' # Location of package manifests
     schedule:

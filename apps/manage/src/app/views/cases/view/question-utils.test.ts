@@ -7,7 +7,9 @@ import {
 	camelCaseToKebabCase,
 	camelCaseToSentenceCase,
 	ALL_QUESTIONS,
-	handleOriginatorFormattingFn
+	handleOriginatorFormattingFn,
+	validateDateRangeIsAfterReceivedDate,
+	validateDateIsAfterReceivedDate
 } from './question-utils.ts';
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 
@@ -62,6 +64,40 @@ describe('questions utils', () => {
 			const question = dateQuestion({ fieldName: 'test', viewData });
 
 			assert.deepStrictEqual(question.viewData, viewData);
+		});
+
+		it('should merge additional validators with DateValidator', () => {
+			const mockValidator = { validate: () => [] };
+			const question = dateQuestion({
+				fieldName: 'testField',
+				validators: [mockValidator as any]
+			});
+
+			assert.ok(Array.isArray(question.validators));
+			assert.strictEqual(question.validators.length, 2);
+			assert.strictEqual(question.validators[1], mockValidator);
+		});
+
+		it('should merge additional validators with overrideValidator when both are provided', () => {
+			const mockValidator = { validate: () => [] };
+			class MockOverride {
+				title: string;
+				constructor(title: string) {
+					this.title = title;
+				}
+				validate() {
+					return [];
+				}
+			}
+			const question = dateQuestion({
+				fieldName: 'testField',
+				overrideValidator: MockOverride as any,
+				validators: [mockValidator as any]
+			});
+
+			assert.ok(Array.isArray(question.validators));
+			assert.strictEqual(question.validators.length, 2);
+			assert.strictEqual(question.validators[1], mockValidator);
 		});
 	});
 	describe('camelCaseToSentenceCase', () => {
@@ -181,6 +217,190 @@ describe('questions utils', () => {
 			const result = handleOriginatorFormattingFn(TYPES.OFFICER, row, context as any);
 
 			assert.strictEqual(result, 'Officer<br>');
+		});
+	});
+
+	describe('validateDateRangeIsAfterReceivedDate', () => {
+		const label = 'Mock';
+
+		it('should return true when receivedDate is null', () => {
+			const datePeriod = { start: new Date(), end: new Date() };
+			const result = validateDateRangeIsAfterReceivedDate(datePeriod, null, label);
+			assert.strictEqual(result, true);
+		});
+
+		it('should return true when receivedDate is not a Date', () => {
+			const datePeriod = { start: new Date(), end: new Date() };
+			const result = validateDateRangeIsAfterReceivedDate(datePeriod, 'not-a-date', label);
+			assert.strictEqual(result, true);
+		});
+
+		it('should throw error when datePeriod is null', () => {
+			const receivedDate = new Date('2024-01-01');
+			assert.throws(() => validateDateRangeIsAfterReceivedDate(null, receivedDate, label), {
+				message: 'Mock period not found'
+			});
+		});
+
+		it('should throw error when datePeriod is not an object', () => {
+			const receivedDate = new Date('2024-01-01');
+			assert.throws(() => validateDateRangeIsAfterReceivedDate('invalid', receivedDate, label), {
+				message: 'Mock period not found'
+			});
+		});
+
+		it('should throw error when start date is missing', () => {
+			const receivedDate = new Date('2024-01-01');
+			const datePeriod = { end: new Date('2024-06-01') };
+			assert.throws(() => validateDateRangeIsAfterReceivedDate(datePeriod, receivedDate, label), {
+				message: 'Mock start date not found'
+			});
+		});
+
+		it('should throw error when start date is not a Date', () => {
+			const receivedDate = new Date('2024-01-01');
+			const datePeriod = { start: 'not-a-date', end: new Date('2024-06-01') };
+			assert.throws(() => validateDateRangeIsAfterReceivedDate(datePeriod, receivedDate, label), {
+				message: 'Mock start date not found'
+			});
+		});
+
+		it('should throw error when end date is missing', () => {
+			const receivedDate = new Date('2024-01-01');
+			const datePeriod = { start: new Date('2024-03-01') };
+			assert.throws(() => validateDateRangeIsAfterReceivedDate(datePeriod, receivedDate, label), {
+				message: 'Mock end date not found'
+			});
+		});
+
+		it('should throw error when end date is not a Date', () => {
+			const receivedDate = new Date('2024-01-01');
+			const datePeriod = { start: new Date('2024-03-01'), end: 'not-a-date' };
+			assert.throws(() => validateDateRangeIsAfterReceivedDate(datePeriod, receivedDate, label), {
+				message: 'Mock end date not found'
+			});
+		});
+
+		it('should throw error when start date is before received date', () => {
+			const receivedDate = new Date('2024-01-15');
+			const datePeriod = {
+				start: new Date('2024-01-10'),
+				end: new Date('2024-06-01')
+			};
+			assert.throws(() => validateDateRangeIsAfterReceivedDate(datePeriod, receivedDate, label), {
+				message: 'Mock start date cannot be before case received date'
+			});
+		});
+
+		it('should throw error when end date is before received date', () => {
+			const receivedDate = new Date('2024-01-15');
+			const datePeriod = {
+				start: new Date('2024-02-01'),
+				end: new Date('2024-01-10')
+			};
+			assert.throws(() => validateDateRangeIsAfterReceivedDate(datePeriod, receivedDate, label), {
+				message: 'Mock end date cannot be before case received date'
+			});
+		});
+
+		it('should return true when both dates are after received date', () => {
+			const receivedDate = new Date('2024-01-01');
+			const datePeriod = {
+				start: new Date('2024-03-01'),
+				end: new Date('2024-06-01')
+			};
+			const result = validateDateRangeIsAfterReceivedDate(datePeriod, receivedDate, label);
+			assert.strictEqual(result, true);
+		});
+
+		it('should use the provided label in error messages', () => {
+			const receivedDate = new Date('2024-01-01');
+			const customLabel = 'Suspension';
+			assert.throws(() => validateDateRangeIsAfterReceivedDate(null, receivedDate, customLabel), {
+				message: 'Suspension period not found'
+			});
+		});
+	});
+
+	describe('validateDateIsAfterReceivedDate', () => {
+		const label = 'Expiry date';
+
+		it('should return true when receivedDate is null', () => {
+			const date = new Date('2024-06-01');
+			const result = validateDateIsAfterReceivedDate(date, null, label);
+			assert.strictEqual(result, true);
+		});
+
+		it('should return true when receivedDate is undefined', () => {
+			const date = new Date('2024-06-01');
+			const result = validateDateIsAfterReceivedDate(date, undefined, label);
+			assert.strictEqual(result, true);
+		});
+
+		it('should return true when receivedDate is not a Date', () => {
+			const date = new Date('2024-06-01');
+			const result = validateDateIsAfterReceivedDate(date, 'not-a-date', label);
+			assert.strictEqual(result, true);
+		});
+
+		it('should throw error when date is null', () => {
+			const receivedDate = new Date('2024-01-01');
+			assert.throws(() => validateDateIsAfterReceivedDate(null, receivedDate, label), {
+				message: 'Expiry date not found'
+			});
+		});
+
+		it('should throw error when date is undefined', () => {
+			const receivedDate = new Date('2024-01-01');
+			assert.throws(() => validateDateIsAfterReceivedDate(undefined, receivedDate, label), {
+				message: 'Expiry date not found'
+			});
+		});
+
+		it('should throw error when date is not a Date', () => {
+			const receivedDate = new Date('2024-01-01');
+			assert.throws(() => validateDateIsAfterReceivedDate('not-a-date', receivedDate, label), {
+				message: 'Expiry date not found'
+			});
+		});
+
+		it('should throw error when date is before received date', () => {
+			const receivedDate = new Date('2024-01-15');
+			const date = new Date('2024-01-10');
+			assert.throws(() => validateDateIsAfterReceivedDate(date, receivedDate, label), {
+				message: 'Expiry date cannot be before case received date'
+			});
+		});
+
+		it('should return true when date is after received date', () => {
+			const receivedDate = new Date('2024-01-01');
+			const date = new Date('2024-06-01');
+			const result = validateDateIsAfterReceivedDate(date, receivedDate, label);
+			assert.strictEqual(result, true);
+		});
+
+		it('should return true when date equals received date', () => {
+			const receivedDate = new Date('2024-01-15');
+			const date = new Date('2024-01-15');
+			const result = validateDateIsAfterReceivedDate(date, receivedDate, label);
+			assert.strictEqual(result, true);
+		});
+
+		it('should use the provided label in error messages', () => {
+			const receivedDate = new Date('2024-01-01');
+			const customLabel = 'Target decision date';
+			assert.throws(() => validateDateIsAfterReceivedDate(null, receivedDate, customLabel), {
+				message: 'Target decision date not found'
+			});
+		});
+
+		it('should use the provided label in before date error message', () => {
+			const receivedDate = new Date('2024-06-01');
+			const date = new Date('2024-01-01');
+			const customLabel = 'Decision must be issued by';
+			assert.throws(() => validateDateIsAfterReceivedDate(date, receivedDate, customLabel), {
+				message: 'Decision must be issued by cannot be before case received date'
+			});
 		});
 	});
 });

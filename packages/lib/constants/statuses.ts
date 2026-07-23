@@ -1,4 +1,4 @@
-import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
+import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 
 export const CLOSED_STATUSES = [
 	CASE_STATUS_ID.CLOSED_OPENED_IN_ERROR,

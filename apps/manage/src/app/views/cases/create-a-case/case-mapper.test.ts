@@ -1,8 +1,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { mapAnswersToCaseInput, resolveCaseTypeIds } from './case-mapper.ts';
-import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/status.ts';
-import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
+import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
+import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
 
 const getBaseAnswers = (): Record<string, unknown> => ({
 	name: 'Test Case',
@@ -173,6 +174,59 @@ describe('Case Mapper', () => {
 			const result = mapAnswersToCaseInput(answers, 'REF-008');
 
 			assert.deepStrictEqual(result.Authority, undefined);
+		});
+
+		it('should not create LinkedCases when hasLinkedCases is not yes', () => {
+			const answers = {
+				...getBaseAnswers(),
+				hasLinkedCases: BOOLEAN_OPTIONS.NO
+			};
+
+			const result = mapAnswersToCaseInput(answers, 'REF-009');
+
+			assert.strictEqual(result.LinkedCases, undefined);
+		});
+
+		it('should not create LinkedCases when this case is the lead case', () => {
+			const answers = {
+				...getBaseAnswers(),
+				hasLinkedCases: BOOLEAN_OPTIONS.YES,
+				isLeadCase: BOOLEAN_OPTIONS.YES
+			};
+
+			const result = mapAnswersToCaseInput(answers, 'REF-010');
+
+			assert.strictEqual(result.LinkedCases, undefined);
+		});
+
+		it('should create LinkedCase with lead reference when this case is not the lead', () => {
+			const answers = {
+				...getBaseAnswers(),
+				hasLinkedCases: BOOLEAN_OPTIONS.YES,
+				isLeadCase: BOOLEAN_OPTIONS.NO,
+				leadCaseReference: 'LEAD-001'
+			};
+
+			const result = mapAnswersToCaseInput(answers, 'REF-011');
+
+			assert.ok(result.LinkedCases?.create);
+			const linkedCases = result.LinkedCases.create as any[];
+			assert.strictEqual(linkedCases.length, 1);
+			assert.strictEqual(linkedCases[0].reference, 'LEAD-001');
+			assert.strictEqual(linkedCases[0].isLead, true);
+		});
+
+		it('should not create LinkedCases when leadCaseReference is missing', () => {
+			const answers = {
+				...getBaseAnswers(),
+				hasLinkedCases: BOOLEAN_OPTIONS.YES,
+				isLeadCase: BOOLEAN_OPTIONS.NO,
+				leadCaseReference: ''
+			};
+
+			const result = mapAnswersToCaseInput(answers, 'REF-012');
+
+			assert.strictEqual(result.LinkedCases, undefined);
 		});
 	});
 });

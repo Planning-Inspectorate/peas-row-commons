@@ -7,6 +7,7 @@ import type { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/bl
 import { randomUUID } from 'crypto';
 import type { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { escapeHtml } from '@pins/peas-row-commons-lib/util/strings.ts';
+import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
  * Controller for uploading a new document to Azure Blob,
@@ -16,7 +17,7 @@ import { escapeHtml } from '@pins/peas-row-commons-lib/util/strings.ts';
 export function uploadDocumentsController(service: ManageService) {
 	return async (req: Request, res: Response) => {
 		const { blobStore, logger, db } = service;
-		const { id, folderId } = req.params;
+		const { id, folderId } = getStringParams(req.params, ['id', 'folderId']);
 		const files = req.files as Express.Multer.File[];
 
 		const filesWithIds = files.map((file) => ({

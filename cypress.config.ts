@@ -1,8 +1,8 @@
 import { defineConfig } from 'cypress';
 import { setupNodeEvents } from './cypress/support/tasks.ts';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
+import { loadEnvFile } from 'node:process';
+// prettier-ignore
+try { loadEnvFile(); } catch {/* ignore errors*/}
 
 export default defineConfig({
 	e2e: {

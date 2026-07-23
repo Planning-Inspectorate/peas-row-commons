@@ -2,73 +2,95 @@ import type { ManageService } from '#service';
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { Request, Response, NextFunction, RequestHandler } from 'express';
+import { getOptionalStringParam, getStringParam, getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 
-type ValidationMode = 'create' | 'edit';
+type SetSessionDataFn = typeof addSessionData;
 
 /**
- * Validates that a folder that is being:
- * (a) created
- * (b) renamed
- * is valid based on a set of critera.
- * e.g. name is not already taken, doesn't
- * contain special characters.
- *
- * Functionality is almost the same but varies
- * slightly for creating vs renaming (mode)
+ * Validates that a folder being created has a valid name.
+ * The parentFolderId is optional (null means creating at root level).
  */
-export function buildValidateFolder(
+export function buildValidateFolderCreate(
 	service: ManageService,
-	mode: ValidationMode = 'create',
-	setSessionData = addSessionData
+	setSessionData: SetSessionDataFn = addSessionData
 ): RequestHandler {
 	const { db } = service;
 
 	return async (req: Request, res: Response, next: NextFunction) => {
-		const { folderId, id } = req.params;
+		const caseId = getStringParam(req.params, 'id');
+		const parentFolderId = getOptionalStringParam(req.params, 'folderId');
 		const folderName = sanitiseFolderName(req.body.folderName);
 
-		// Update the request body folderName to be the sanitised one for next function in middleware
-		req.body.folderName = folderName;
-
-		const errors: Record<string, { text: string; href: string }> = {};
-
 		const syntaxError = getSyntaxError(folderName);
-
 		if (syntaxError) {
-			errors.folderName = syntaxError;
-		} else {
-			try {
-				const duplicateError =
-					mode === 'create'
-						? await getDuplicateErrorsCreate(db, id, folderId, folderName)
-						: await getDuplicateErrorsRename(db, id, folderId, folderName);
-
-				if (duplicateError) {
-					errors.folderName = duplicateError;
-				}
-			} catch (error) {
-				return next(error);
-			}
+			return handleValidationError(req, res, setSessionData, caseId, folderName, syntaxError);
 		}
 
-		// If we have found some errors add it to the session so it can be displayed
-		// on reload.
-		if (Object.keys(errors).length > 0) {
-			setSessionData(
-				req,
-				id,
-				{
-					createFolderErrors: Object.values(errors),
-					erroredFolderName: folderName
-				},
-				'folders'
-			);
-
-			return res.redirect(req.originalUrl);
+		const duplicateError = await getDuplicateErrorsCreate(db, caseId, parentFolderId, folderName);
+		if (duplicateError) {
+			return handleValidationError(req, res, setSessionData, caseId, folderName, duplicateError);
 		}
 
+		req.body.folderName = folderName;
 		next();
 	};
+}
+
+/**
+ * Validates that a folder being renamed has a valid name.
+ * The folderId (folder being renamed) is required.
+ */
+export function buildValidateFolderRename(
+	service: ManageService,
+	setSessionData: SetSessionDataFn = addSessionData
+): RequestHandler {
+	const { db } = service;
+
+	return async (req: Request, res: Response, next: NextFunction) => {
+		const { id: caseId, folderId } = getStringParams(req.params, ['id', 'folderId']);
+		const folderName = sanitiseFolderName(req.body.folderName);
+
+		const syntaxError = getSyntaxError(folderName);
+		if (syntaxError) {
+			return handleValidationError(req, res, setSessionData, caseId, folderName, syntaxError);
+		}
+
+		try {
+			const duplicateError = await getDuplicateErrorsRename(db, caseId, folderId, folderName);
+			if (duplicateError) {
+				return handleValidationError(req, res, setSessionData, caseId, folderName, duplicateError);
+			}
+		} catch (err) {
+			return next(err);
+		}
+
+		req.body.folderName = folderName;
+		next();
+	};
+}
+
+/**
+ * Handles validation errors by storing them in session and redirecting.
+ */
+function handleValidationError(
+	req: Request,
+	res: Response,
+	setSessionData: SetSessionDataFn,
+	caseId: string,
+	folderName: string,
+	error: { text: string; href: string }
+): void {
+	setSessionData(
+		req,
+		caseId,
+		{
+			createFolderErrors: [error],
+			erroredFolderName: folderName
+		},
+		'folders'
+	);
+
+	res.redirect(req.originalUrl);
 }
 
 /**
@@ -110,13 +132,13 @@ export function getSyntaxError(folderName: string) {
 export async function getDuplicateErrorsCreate(
 	db: PrismaClient,
 	caseId: string,
-	parentId: string | undefined,
+	parentFolderId: string | null,
 	folderName: string
 ) {
 	const existingFolder = await db.folder.findFirst({
 		where: {
 			caseId: caseId,
-			parentFolderId: parentId ?? null,
+			parentFolderId: parentFolderId,
 			displayName: folderName,
 			deletedAt: null
 		}

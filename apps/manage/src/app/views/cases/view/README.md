@@ -29,7 +29,6 @@
 ## Remove and Save
 - Optional fields have a "Remove and save" button that clears the value.
 - The remove route (`/:section/:question/remove`) must be registered above the generic edit route to avoid being shadowed by Express route matching.
-- `guardEmptyRemove` middleware checks for date sub-fields (`_day`, `_month`, `_year`) to correctly identify date submissions as non-empty.
 - `clearAnswer` runs before the flattened field remap so nulled values flow through correctly.
 
 ## Question Definitions (question-utils.ts)

@@ -1,10 +1,10 @@
-import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
+import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
 import {
 	CASE_STATUSES,
 	PRIORITIES,
 	ADVERTISED_MODIFICATIONS,
 	INSPECTOR_BANDS
-} from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../config.ts';
 import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
 import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';

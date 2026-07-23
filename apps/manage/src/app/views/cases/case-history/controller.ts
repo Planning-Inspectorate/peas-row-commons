@@ -2,21 +2,19 @@ import type { ManageService } from '#service';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
-import { getEntraGroupMembers } from '#util/entra-groups.ts';
+import { getUserDisplayName, getUserDisplayNames } from '#util/entra-groups.ts';
 import { createCaseHistoryViewModel } from './view-model.ts';
 import { getPageData, getPaginationParams } from '../../pagination/pagination-utils.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
+import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 export function buildViewCaseHistory(service: ManageService): AsyncRequestHandler {
 	const { db, audit, logger, getEntraClient } = service;
 	const groupIds = service.entraGroupIds;
 
 	return async (req, res) => {
-		const { id } = req.params;
-
-		if (!id) {
-			throw new Error('id param required');
-		}
+		const id = getStringParam(req.params, 'id');
 
 		let caseRow;
 		try {
@@ -66,7 +64,9 @@ export function buildViewCaseHistory(service: ManageService): AsyncRequestHandle
 			uiItems: paginationItems
 		};
 
-		const groupMembers = await getEntraGroupMembers({
+		const userIds = events.map((event) => event.User?.idpUserId).filter(isDefined);
+
+		const { groupMembers, userMap } = await getUserDisplayNames(userIds, {
 			logger,
 			initClient: getEntraClient,
 			session: req.session,
@@ -75,18 +75,16 @@ export function buildViewCaseHistory(service: ManageService): AsyncRequestHandle
 
 		logger.info(
 			{
-				eventUserIds: events.map((e) => e.userId),
-				groupMemberIds: groupMembers.allUsers.map((m) => ({ id: m.id, displayName: m.displayName })),
-				sessionUserId: req?.session?.account?.localAccountId
+				eventCount: events.length,
+				uniqueUserIds: userIds.length,
+				groupMembersFound: groupMembers.allUsers.length
 			},
-			'user ID comparison'
+			'case history user lookup summary'
 		);
-
-		const userMap = new Map(groupMembers.allUsers.map((member) => [member.id, member.displayName]));
 
 		const eventsWithUserNames = events.map((event) => ({
 			...event,
-			userName: userMap.get(event.User?.idpUserId ?? '') ?? 'Unknown User'
+			userName: getUserDisplayName(userMap, event.User?.idpUserId)
 		}));
 
 		const rows = createCaseHistoryViewModel(eventsWithUserNames);

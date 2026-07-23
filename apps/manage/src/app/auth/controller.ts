@@ -15,7 +15,7 @@ import type { Logger } from 'pino';
  */
 export function buildStartMsalAuthentication(
 	authService: AuthService
-): RequestHandler<any, any, any, { redirect_to: string }> {
+): RequestHandler<any, any, any, { redirect_to?: string | string[] }> {
 	return async (request, response) => {
 		// A nonce is generated to identify the OIDC as originating from our
 		// application, and for this OIDC attempt only. The nonce is later returned as
@@ -24,10 +24,16 @@ export function buildStartMsalAuthentication(
 		// session. Note that this is not susceptible to a downgrade attack like PKCE
 		// because the verification is enforced locally and not in the auth server.
 		const nonce = randomUUID();
+		const redirectTo = request.query.redirect_to;
+		// reject invalid redirects requests, especially to other domains
+		if (Array.isArray(redirectTo) || (redirectTo && !isValidRedirectUri(redirectTo))) {
+			response.sendStatus(400);
+			return;
+		}
 		// The url from which the OpenID Connect flow was triggered by the
 		// application. Ultimately, we will forward the user to this route at the
 		// end of the authentication journey.
-		const postSigninRedirectUri = request.query.redirect_to || '/';
+		const postSigninRedirectUri = redirectTo || '/';
 
 		// Set the data that will exist throughout the OpenID Connect flow lifecycle.
 		// This will be consumed in phase 2 to verify the inbound redirect from the
@@ -40,6 +46,30 @@ export function buildStartMsalAuthentication(
 		// against MSAL using their PINS account.
 		response.redirect(await authService.getAuthCodeUrl({ nonce }, request.session.id));
 	};
+}
+
+/**
+ * Verify that a given URI is valid for the auth redirect
+ * This should only allow relative paths.
+ */
+function isValidRedirectUri(uri: string): boolean {
+	if (typeof uri !== 'string') {
+		return false;
+	}
+	// Only allow relative paths starting with /
+	if (!uri.startsWith('/')) {
+		return false;
+	}
+	// Only allow same-origin absolute-path references (RFC 3986); block protocol-relative URLs and backslashes
+	if (uri.startsWith('//') || uri.includes('\\')) {
+		return false;
+	}
+	const pathParts = uri.split('/');
+	// prevent any path traversal
+	if (pathParts.some((part) => part === '..' || part === '.')) {
+		return false;
+	}
+	return true;
 }
 
 /**
@@ -61,6 +91,11 @@ export function buildCompleteMsalAuthentication(
 	return async (request, response) => {
 		if (request.query.code) {
 			const { nonce, postSigninRedirectUri } = authSession.getAuthenticationData(request.session);
+			// double check redirect URI is safe after loading from session
+			if (!isValidRedirectUri(postSigninRedirectUri)) {
+				response.redirect('/unauthenticated');
+				return;
+			}
 
 			const authenticationResult = await authService.acquireTokenByCode({
 				code: request.query.code,

@@ -6,24 +6,26 @@ import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import { FilterGenerator, type FilterViewModel } from '@pins/peas-row-commons-lib/util/filter-generator.ts';
 import { createWhereClause, sanitiseSearchQuery } from '@pins/peas-row-commons-lib/util/search-queries.ts';
-import { CASE_TYPES } from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+import { CASE_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import type { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 
 import { formatInTimeZone } from 'date-fns-tz';
 import type { Request } from 'express';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
-import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 
 const FILTER_KEYS = {
 	AREA: 'area',
 	TYPE: 'type',
-	SUBTYPE: 'subType'
+	SUBTYPE: 'subType',
+	STATUS: 'status'
 };
 
 const FILTER_LABELS = {
 	AREA_SUFFIX: 'case work area',
 	TYPE_SUFFIX: 'case type',
-	SUBTYPE_SUFFIX: 'subtype'
+	SUBTYPE_SUFFIX: 'subtype',
+	STATUS_SUFFIX: 'status'
 };
 
 export function buildListCases(service: ManageService, FilterGeneratorClass = FilterGenerator): AsyncRequestHandler {
@@ -46,10 +48,10 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 
 		const query = generateQuery(db, skipSize, pageSize, whereClause);
 
-		let cases, totalCases, typeCountsGrouped, subTypeCountsGrouped;
+		let cases, totalCases, typeCountsGrouped, subTypeCountsGrouped, statusCountsGrouped;
 
 		try {
-			[cases, totalCases, typeCountsGrouped, subTypeCountsGrouped] = await Promise.all(query);
+			[cases, totalCases, typeCountsGrouped, subTypeCountsGrouped, statusCountsGrouped] = await Promise.all(query);
 		} catch (error: any) {
 			wrapPrismaError({
 				error,
@@ -59,13 +61,19 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			});
 		}
 
-		if (Number.isNaN(totalCases) || !cases || !typeCountsGrouped || !subTypeCountsGrouped) {
+		if (Number.isNaN(totalCases) || !cases || !typeCountsGrouped || !subTypeCountsGrouped || !statusCountsGrouped) {
 			return notFoundHandler(req, res);
 		}
 
-		const countMap: Record<string, number> = formatCountData(typeCountsGrouped, subTypeCountsGrouped);
+		const countMap: Record<string, number> = formatCountData(
+			typeCountsGrouped,
+			subTypeCountsGrouped,
+			statusCountsGrouped
+		);
 
-		const filters: FilterViewModel = filterGenerator.generateFilters(req.query, req.baseUrl, countMap);
+		const currentPath = req.originalUrl.split('?')[0];
+
+		const filters: FilterViewModel = filterGenerator.generateFilters(req.query, currentPath, countMap);
 
 		const caseViewModels = cases.map(caseToViewModel);
 
@@ -95,6 +103,7 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			currentPage: 'all-cases',
 			cases: caseViewModels,
 			currentUrl: req.originalUrl,
+			currentPath,
 			paginationParams,
 			filters,
 			searchValue: searchString
@@ -103,12 +112,12 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 }
 
 export function caseToViewModel(caseRow: CaseListFields): CaseListViewModel {
-	const viewModel = {
+	return {
 		...caseRow,
+		Status: caseRow.Status || { displayName: null },
 		receivedDate: formatInTimeZone(caseRow.receivedDate, 'Europe/London', 'dd MMM yyyy'),
 		receivedDateSortable: new Date(caseRow.receivedDate)?.getTime()
 	};
-	return viewModel;
 }
 
 type TypeGroup = Pick<Prisma.CaseGroupByOutputType, 'typeId'> & {
@@ -119,11 +128,19 @@ type SubTypeGroup = Pick<Prisma.CaseGroupByOutputType, 'subTypeId'> & {
 	_count: { _all: number };
 };
 
+type StatusGroup = Pick<Prisma.CaseGroupByOutputType, 'statusId'> & {
+	_count: { _all: number };
+};
+
 /**
- * Formats the type & subtype counts into the correct format for the filter
+ * Formats the type, subtype, and status counts into the correct format for the filter
  * generator, also formats casework area counts based on the data from 'type'.
  */
-export function formatCountData(typeCountsGrouped: TypeGroup[], subTypeCountsGrouped: SubTypeGroup[]) {
+export function formatCountData(
+	typeCountsGrouped: TypeGroup[],
+	subTypeCountsGrouped: SubTypeGroup[],
+	statusCountsGrouped: StatusGroup[]
+) {
 	const countMap: Record<string, number> = {};
 
 	for (const caseRow of typeCountsGrouped) {
@@ -133,6 +150,11 @@ export function formatCountData(typeCountsGrouped: TypeGroup[], subTypeCountsGro
 	for (const caseRow of subTypeCountsGrouped) {
 		if (!caseRow.subTypeId) continue;
 		countMap[caseRow.subTypeId] = caseRow._count._all;
+	}
+
+	for (const caseRow of statusCountsGrouped) {
+		if (!caseRow.statusId) continue;
+		countMap[caseRow.statusId] = caseRow._count._all;
 	}
 
 	// Case work area is not stored on case model like type and subtype so we
@@ -202,12 +224,20 @@ function generateQuery(db: PrismaClient, skipSize: number, pageSize: number, whe
 		db.case.count({
 			where: whereClause
 		}),
+		/**
+		 * Counts for each filter are currently not adjusted by the where clause.
+		 * They always show the total number of cases.
+		 */
 		db.case.groupBy({
 			by: ['typeId'],
 			_count: { _all: true }
 		}),
 		db.case.groupBy({
 			by: ['subTypeId'],
+			_count: { _all: true }
+		}),
+		db.case.groupBy({
+			by: ['statusId'],
 			_count: { _all: true }
 		})
 	] as const;
@@ -219,17 +249,16 @@ function generateQuery(db: PrismaClient, skipSize: number, pageSize: number, whe
  * Needed for maintaining filters across pagination.
  */
 export function getCurrentFiltersAndGenerateString(filterGenerator: FilterGenerator, req: Request) {
-	const [area, type, subType] = filterGenerator.getAllSelectedValues(req.query);
+	const [area, type, subType, status] = filterGenerator.getAllSelectedValues(req.query);
 
 	const currentFilters = {
 		area,
 		type,
-		subType
+		subType,
+		status
 	};
 
-	const filtersValue = createFilterValuesString(currentFilters);
-
-	return filtersValue;
+	return createFilterValuesString(currentFilters);
 }
 
 /**

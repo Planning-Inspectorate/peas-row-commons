@@ -11,26 +11,22 @@ interface SassOptions {
 	 * The root of the repository where `node_modules` can be found
 	 */
 	repoRoot: string;
-	/**
-	 * a file to update with the new css filename
-	 */
-	localsFile?: string;
 	mojRoot: string;
 }
 
 /**
  * Compile sass into a css file in the .static folder
- * Optionally, update a file which contains the css file name
+ * Creates a manifest json in the static folder with the hashed css filename
  *
  * @see https://sass-lang.com/documentation/js-api/#md:usage
  */
-async function compileSass({ staticDir, srcDir, repoRoot, localsFile, mojRoot }: SassOptions): Promise<void> {
+async function compileSass({ staticDir, srcDir, repoRoot, mojRoot }: SassOptions): Promise<void> {
 	const styleFile = path.join(srcDir, 'app', 'sass/style.scss');
 	const out = sass.compile(styleFile, {
 		// ensure scss can find the govuk-frontend folders
 		loadPaths: [repoRoot, mojRoot],
 		style: 'compressed',
-		// don't show depreciate warnings for govuk
+		// don't show deprecation warnings for govuk
 		// see https://frontend.design-system.service.gov.uk/importing-css-assets-and-javascript/#silence-deprecation-warnings-from-dependencies-in-dart-sass
 		quietDeps: true
 	});
@@ -43,15 +39,14 @@ async function compileSass({ staticDir, srcDir, repoRoot, localsFile, mojRoot }:
 	// write the css file
 	await fs.writeFile(outputPath, out.css);
 
-	if (localsFile) {
-		// update the given file with the new css filename
-		await replaceInFile(localsFile, [
-			{
-				replace: /'style(-[0-9a-f]{8})?\.css'/,
-				with: `'${filename}'`
-			}
-		]);
-	}
+	const manifest = {
+		'style.css': filename
+	};
+
+	const manifestPath = path.join(staticDir, 'manifest.json');
+	await fs.mkdir(path.dirname(manifestPath), { recursive: true });
+	await fs.writeFile(manifestPath, JSON.stringify(manifest, null, 2));
+
 	await deleteOldCssFiles({ staticDir, filename });
 }
 
@@ -62,11 +57,10 @@ async function compileSass({ staticDir, srcDir, repoRoot, localsFile, mojRoot }:
  * @param filename
  */
 async function deleteOldCssFiles({ staticDir, filename }: { staticDir: string; filename: string }) {
-	const files = await fs.readdir(staticDir);
-	const oldStyleFiles = files.filter(
-		(file) => file !== filename && file.endsWith('.css') && file.match(/^style(-[0-9a-f]{8})?\.css$/)
-	);
-	const deleteTasks = [];
+	const files: string[] = await fs.readdir(staticDir);
+	const stylePattern = /^style(-[0-9a-f]{8})?\.css$/;
+	const oldStyleFiles = files.filter((file) => file !== filename && file.endsWith('.css') && stylePattern.test(file));
+	const deleteTasks: Promise<void>[] = [];
 	for (const file of oldStyleFiles) {
 		deleteTasks.push(fs.unlink(path.join(staticDir, file)));
 	}
@@ -90,20 +84,17 @@ async function copyAssets({ staticDir, repoRoot, mojRoot }: AssetOptions): Promi
 	const fonts = path.join(repoRoot, 'node_modules/govuk-frontend/dist/govuk/assets/fonts');
 	const js = path.join(repoRoot, 'node_modules/govuk-frontend/dist/govuk/govuk-frontend.min.js');
 	const manifest = path.join(repoRoot, 'node_modules/govuk-frontend/dist/govuk/assets/manifest.json');
-	const rebrand = path.join(repoRoot, 'node_modules/govuk-frontend/dist/govuk/assets/rebrand');
 
 	const staticImages = path.join(staticDir, 'assets', 'images');
 	const staticFonts = path.join(staticDir, 'assets', 'fonts');
 	const staticJs = path.join(staticDir, 'assets', 'js', 'govuk-frontend.min.js');
 	const staticManifest = path.join(staticDir, 'assets', 'manifest.json');
-	const staticRebrand = path.join(staticDir, 'assets', 'rebrand');
 
 	// copy all images and fonts for govuk-frontend
 	await copyFolder(images, staticImages);
 	await copyFolder(fonts, staticFonts);
 	await copyFile(js, staticJs);
 	await copyFile(manifest, staticManifest);
-	await copyFolder(rebrand, staticRebrand);
 
 	const mojImages = path.join(mojRoot, 'node_modules/@ministryofjustice/frontend/moj/assets/images');
 	const mojJs = path.join(mojRoot, 'node_modules/@ministryofjustice/frontend/moj/moj-frontend.min.js');
@@ -137,31 +128,7 @@ interface BuildOptions {
 	srcDir: string;
 	repoRoot: string;
 	accessibleAutocompleteRoot?: string;
-	localsFile?: string;
 	mojRoot: string;
-}
-
-interface Replacement {
-	replace: string | RegExp;
-	with: string;
-}
-
-/**
- * Replace content in files and overwrite them
- *
- * @param file
- * @param replacements
- */
-async function replaceInFile(file: string, replacements: Replacement[]) {
-	let newContent = await fs.readFile(file, 'utf8');
-	for (const replacement of replacements) {
-		if (replacement.replace instanceof RegExp) {
-			newContent = newContent.replace(replacement.replace, replacement.with);
-		} else {
-			newContent = newContent.replaceAll(replacement.replace, replacement.with);
-		}
-	}
-	await fs.writeFile(file, newContent, 'utf8');
 }
 
 /**
@@ -172,13 +139,9 @@ export function runBuild({
 	srcDir,
 	repoRoot,
 	accessibleAutocompleteRoot,
-	localsFile,
 	mojRoot
 }: BuildOptions): Promise<void[]> {
-	const tasks = [
-		compileSass({ staticDir, srcDir, repoRoot, localsFile, mojRoot }),
-		copyAssets({ staticDir, repoRoot, mojRoot })
-	];
+	const tasks = [compileSass({ staticDir, srcDir, repoRoot, mojRoot }), copyAssets({ staticDir, repoRoot, mojRoot })];
 	if (accessibleAutocompleteRoot) {
 		tasks.push(copyAutocompleteAssets({ staticDir, root: accessibleAutocompleteRoot }));
 	}

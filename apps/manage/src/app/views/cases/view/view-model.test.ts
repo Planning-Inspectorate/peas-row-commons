@@ -11,30 +11,14 @@ import {
 	DECISION_TYPE_ID,
 	DECISION_MAKER_TYPE_ID,
 	PROCEDURES_ID
-} from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import type { CaseDecisionFields, CaseProcedureFields } from './types.ts';
+import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 
 describe('view-model', () => {
-	const groupMembers = {
-		caseOfficers: [
-			{
-				id: '123',
-				displayName: 'Oscar'
-			}
-		],
-		inspectors: [
-			{
-				id: '123',
-				displayName: 'Oscar'
-			}
-		],
-		allUsers: [
-			{
-				id: '123',
-				displayName: 'Oscar'
-			}
-		]
-	};
+	const userMap: Map<string, string> = new Map<string, string>();
+	userMap.set('123', 'Oscar');
+
 	describe('caseToViewModel', () => {
 		it('should flatten nested Dates and Costs objects into the root', () => {
 			const input = {
@@ -44,7 +28,7 @@ describe('view-model', () => {
 				Costs: { estimate: 500 }
 			};
 
-			const result: any = caseToViewModel(input as any, groupMembers);
+			const result: any = caseToViewModel(input as any, userMap);
 
 			assert.strictEqual(result.targetDate, '2024-12-25');
 			assert.strictEqual(result.estimate, 500);
@@ -60,7 +44,7 @@ describe('view-model', () => {
 				Costs: { id: 'BAD_COST_ID', estimate: 100 }
 			};
 
-			const result: any = caseToViewModel(input as any, groupMembers);
+			const result: any = caseToViewModel(input as any, userMap);
 
 			assert.strictEqual(result.id, 'MAIN_ID');
 			assert.strictEqual(result.targetDate, '2024-01-01');
@@ -75,7 +59,7 @@ describe('view-model', () => {
 				status: 'INTERIM'
 			};
 
-			const result: any = caseToViewModel(input as any, groupMembers);
+			const result: any = caseToViewModel(input as any, userMap);
 
 			assert.strictEqual(result.isUrgent, 'yes');
 			assert.strictEqual(result.isClosed, 'no');
@@ -90,7 +74,7 @@ describe('view-model', () => {
 				Type: { displayName: 'Rights of Way' }
 			};
 
-			const result = caseToViewModel(input as any, groupMembers);
+			const result = caseToViewModel(input as any, userMap);
 
 			assert.strictEqual(result.receivedDateDisplay, '15 Jan 2024');
 			assert.strictEqual(result.receivedDateSortable, input.receivedDate.getTime());
@@ -105,7 +89,7 @@ describe('view-model', () => {
 				}
 			};
 
-			const result: any = caseToViewModel(input as any, groupMembers);
+			const result: any = caseToViewModel(input as any, userMap);
 
 			assert.strictEqual(result.authorityId, '123');
 
@@ -125,7 +109,7 @@ describe('view-model', () => {
 				}
 			};
 
-			const result: any = caseToViewModel(input as any, groupMembers);
+			const result: any = caseToViewModel(input as any, userMap);
 
 			assert.ok(result.siteAddress);
 			assert.strictEqual(result.siteAddress.addressLine1, '1 High St');
@@ -144,7 +128,7 @@ describe('view-model', () => {
 				receivedDate: new Date()
 			};
 
-			const result: any = caseToViewModel(input as any, groupMembers);
+			const result: any = caseToViewModel(input as any, userMap);
 			assert.strictEqual(result.siteAddress, null);
 		});
 
@@ -158,7 +142,7 @@ describe('view-model', () => {
 				Inspectors: mockInspectors
 			};
 
-			const result: any = caseToViewModel(input as any, groupMembers);
+			const result: any = caseToViewModel(input as any, userMap);
 
 			assert.deepStrictEqual(result.inspectorDetails, mockInspectors);
 		});
@@ -172,7 +156,7 @@ describe('view-model', () => {
 				RelatedCases: mockRelations
 			};
 
-			const result: any = caseToViewModel(input as any, groupMembers);
+			const result: any = caseToViewModel(input as any, userMap);
 
 			assert.deepStrictEqual(result.relatedCaseDetails, mockOutcome);
 		});
@@ -186,7 +170,7 @@ describe('view-model', () => {
 				LinkedCases: mockRelations
 			};
 
-			const result: any = caseToViewModel(input as any, groupMembers);
+			const result: any = caseToViewModel(input as any, userMap);
 
 			assert.deepStrictEqual(result.linkedCaseDetails, mockOutcome);
 		});
@@ -222,7 +206,7 @@ describe('view-model', () => {
 				}
 			};
 
-			const result: any = caseToViewModel(input as any, groupMembers);
+			const result: any = caseToViewModel(input as any, userMap);
 
 			assert.ok(Array.isArray(result.outcomeDetails));
 			assert.strictEqual(result.outcomeDetails.length, 3);
@@ -245,7 +229,7 @@ describe('view-model', () => {
 				Outcome: null
 			};
 
-			const result: any = caseToViewModel(input as any, groupMembers);
+			const result: any = caseToViewModel(input as any, userMap);
 			assert.deepStrictEqual(result.outcomeDetails, undefined);
 		});
 	});
@@ -272,13 +256,13 @@ describe('view-model', () => {
 				}
 			];
 
-			const result = mapNotes(input as any, groupMembers, '123');
+			const result = mapNotes(input as any, userMap, '123');
 
 			assert.ok(result.caseNotes);
 			assert.strictEqual(result.caseNotes.length, 2);
 
 			assert.strictEqual(result.caseNotes[0].commentText, 'New note');
-			assert.strictEqual(result.caseNotes[0].userName, 'user_2');
+			assert.strictEqual(result.caseNotes[0].userName, UNKNOWN_USER);
 
 			assert.strictEqual(result.caseNotes[1].commentText, 'Old note');
 			assert.strictEqual(result.caseNotes[1].userName, 'Oscar');
@@ -290,7 +274,7 @@ describe('view-model', () => {
 
 		it('should handle an empty array of case notes', async () => {
 			const input: any[] = [];
-			const result = mapNotes(input, groupMembers, '123');
+			const result = mapNotes(input, userMap, '123');
 
 			assert.deepStrictEqual(result.caseNotes, []);
 		});
@@ -304,7 +288,7 @@ describe('view-model', () => {
 				{ createdAt: dateNew, comment: 'B', Author: { idpUserId: '2' } }
 			];
 
-			mapNotes(input as any, groupMembers, '123');
+			mapNotes(input as any, userMap, '123');
 
 			assert.strictEqual(input[0].createdAt, dateOld);
 			assert.strictEqual(input[1].createdAt, dateNew);
@@ -319,7 +303,7 @@ describe('view-model', () => {
 				}
 			];
 
-			const result = mapNotes(input as any, groupMembers, '123');
+			const result = mapNotes(input as any, userMap, '123');
 
 			assert.strictEqual(result.caseNotes[0].commentText, 'First line<br>Second line<br>Third line');
 		});
@@ -335,7 +319,7 @@ describe('view-model', () => {
 				}
 			];
 
-			const result = mapNotes(input as any, groupMembers, '123');
+			const result = mapNotes(input as any, userMap, '123');
 
 			assert.notStrictEqual(result.caseNotes[0].truncatedCommentText, massiveComment);
 
@@ -698,7 +682,7 @@ describe('view-model', () => {
 				]
 			};
 
-			const result: any = caseToViewModel(input as any, groupMembers);
+			const result: any = caseToViewModel(input as any, userMap);
 
 			assert.ok(Array.isArray(result.procedureDetails), 'procedureDetails should be an array');
 			assert.strictEqual(result.procedureDetails.length, 1);
@@ -713,7 +697,7 @@ describe('view-model', () => {
 				Procedures: []
 			};
 
-			const result: any = caseToViewModel(input as any, groupMembers);
+			const result: any = caseToViewModel(input as any, userMap);
 
 			assert.strictEqual(result.procedureDetails, undefined);
 		});
@@ -724,7 +708,7 @@ describe('view-model', () => {
 				receivedDate: new Date()
 			};
 
-			const result: any = caseToViewModel(input as any, groupMembers);
+			const result: any = caseToViewModel(input as any, userMap);
 
 			assert.strictEqual(result.procedureDetails, undefined);
 		});

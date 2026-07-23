@@ -1,0 +1,141 @@
+@use 'node_modules/govuk-frontend/dist/govuk/index' as govuk;
+@use 'icons';
+
+// Main Filter Container
+
+.pins-filter-container {
+	background-color: govuk.govuk-colour('white');
+	border: 1px solid govuk.$govuk-border-colour;
+}
+
+// Filter Header
+
+.pins-filter__header {
+	padding: govuk.govuk-spacing(3) govuk.govuk-spacing(4);
+	background-color: govuk.govuk-colour('mid-grey');
+}
+
+// Selected Filters Section
+
+.pins-filter__selected-section {
+	padding: govuk.govuk-spacing(4);
+	background-color: govuk.govuk-colour('light-grey');
+	border-bottom: 1px solid govuk.$govuk-border-colour;
+}
+
+.pins-filter__selected-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: govuk.govuk-spacing(3);
+}
+
+.pins-filter__selected-category {
+	margin-bottom: govuk.govuk-spacing(3);
+
+	&:last-child {
+		margin-bottom: 0;
+	}
+}
+
+.pins-filter__category-heading {
+	@include govuk.govuk-font($size: 16, $weight: bold);
+
+	margin-bottom: govuk.govuk-spacing(2);
+}
+
+.pins-filter__selected-items {
+	display: flex;
+	flex-direction: column;
+	gap: govuk.govuk-spacing(2);
+}
+
+// Filter Options Section
+.pins-apply-filter-top .govuk-button--full-width {
+	width: 100%;
+}
+
+.pins-filter__show-all-sections-button {
+	@include govuk.govuk-font($size: 16);
+}
+
+// Filter Accordion Customization
+
+.pins-filter-accordion {
+	border-top: 1px solid govuk.$govuk-border-colour;
+}
+
+// hide controls of show and hide all within filter accordion
+.pins-filter-accordion .govuk-accordion__controls {
+	display: none;
+}
+
+// accordion section styles
+.pins-filter-accordion .govuk-accordion__section {
+	padding: 0;
+	border-bottom: 1px solid govuk.$govuk-border-colour;
+}
+
+// Overriding accordion button styles
+.pins-filter-accordion .govuk-accordion__section-button {
+	@include govuk.govuk-font($size: 19);
+
+	position: relative;
+	display: flex;
+	align-items: center;
+	width: 100%;
+	padding: 15px 0 0 36px;
+	font-weight: normal;
+	color: govuk.$govuk-link-colour;
+	text-align: left;
+	text-decoration: none;
+	background: none;
+	border: none;
+
+	// Custom chevron icon
+	&::before {
+		position: absolute;
+		top: 50%;
+		left: 0;
+		flex-shrink: 0;
+		margin: 0;
+		border: none;
+		border-radius: 0;
+		transform-origin: center;
+		@include icons.chevron-icon;
+	}
+}
+
+// Animates the rotate of show and hide icon - uses icon state mixin
+.pins-filter-accordion .govuk-accordion__section--expanded .govuk-accordion__section-button::before {
+	@include icons.chevron-icon-expanded;
+}
+
+// makes the show and hide button text hidden
+.pins-filter-accordion .govuk-accordion__section-toggle,
+.pins-filter-accordion .govuk-accordion__section-toggle-text {
+	display: none;
+	visibility: hidden;
+}
+
+// Additional filter styles
+
+// adds padding to bottom of each filter section
+.pins-filter-accordion .govuk-accordion__section-content {
+	padding-bottom: 15px;
+}
+
+// adds a bottom margin to the last filter accordion section
+.pins-filter-accordion .govuk-accordion__section-content .govuk-checkboxes:not(:last-child) {
+	margin-bottom: govuk.govuk-spacing(6);
+}
+
+// removes duplicate border at the end of filters list
+.govuk-frontend-supported .pins-filter-accordion {
+	border-bottom: none;
+}
+
+// removes padding when icon is active/shown
+.pins-filter-accordion .govuk-accordion__section--expanded .govuk-accordion__section-button {
+	padding-bottom: 0;
+}

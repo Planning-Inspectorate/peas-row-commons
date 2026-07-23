@@ -9,7 +9,7 @@ export function buildValidateDeleteFolder(service: ManageService, setSessionData
 	return async (req: Request, res: Response, next: NextFunction) => {
 		const { folderId, id } = req.params;
 
-		if (!folderId) return next();
+		if (!id || !folderId || Array.isArray(id) || Array.isArray(folderId)) return next();
 
 		const errors: Record<string, { html: string; href: string }> = {};
 

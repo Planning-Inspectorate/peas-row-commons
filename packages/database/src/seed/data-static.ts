@@ -22,10 +22,10 @@ import {
 	ACTS,
 	SECTIONS,
 	CASE_STATUSES
-} from './static_data/index.ts';
-import { AUTHORITY_STATUSES } from './static_data/authority-status.ts';
+} from './static-data/index.ts';
+import { AUTHORITY_STATUSES } from './static-data/authority-status.ts';
 
-import { LEGACY_CONTACT_TYPES, LEGACY_SECTIONS } from './static_data/legacy/index.ts';
+import { LEGACY_CONTACT_TYPES, LEGACY_SECTIONS } from './static-data/legacy/index.ts';
 
 type ReferenceDataInput = {
 	id: string;

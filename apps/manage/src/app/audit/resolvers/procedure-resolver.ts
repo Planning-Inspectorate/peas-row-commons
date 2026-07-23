@@ -8,7 +8,7 @@ import {
 	INQUIRY_OR_CONFERENCES,
 	ADMIN_PROCEDURES,
 	SITE_VISITS
-} from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
 import {
 	formatAddress,

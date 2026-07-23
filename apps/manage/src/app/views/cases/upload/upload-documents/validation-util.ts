@@ -1,8 +1,11 @@
 import * as CFB from 'cfb';
 import { fileTypeFromBuffer } from 'file-type';
 import type { Logger } from 'pino';
-import { ALLOWED_EXTENSIONS_TEXT } from '../constants.ts';
+import { ALLOWED_EXTENSIONS_TEXT, FILE_NAME_MAX_LENGTH, FILE_NAMES_REGEX, MAX_FILE_SIZE_IN_MB } from '../constants.ts';
 import path from 'path';
+import { checkFileNameConflict } from './file-duplicate-validation.ts';
+import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { Request } from 'express';
 
 interface ValidationError {
 	text: string;
@@ -19,21 +22,13 @@ export async function validateUploadedFile(
 	logger: Logger,
 	allowedFileExtensions: string[],
 	allowedMimeTypes: string[],
-	maxFileSize: number
+	maxFileSize: number,
+	existingNameSet: Set<string>
 ): Promise<ValidationError[]> {
 	const { originalname, buffer } = file;
 
-	const basicErrors = validateBasicAttributes(file, maxFileSize);
+	const basicErrors = validateBasicAttributes(file, maxFileSize, existingNameSet, allowedMimeTypes);
 	if (basicErrors.length > 0) return basicErrors;
-
-	if (!allowedMimeTypes.includes(file.mimetype)) {
-		return [
-			{
-				text: `${originalname}: The attachment must be ${ALLOWED_EXTENSIONS_TEXT}`,
-				href: '#upload-form'
-			}
-		];
-	}
 
 	const declaredExt = path.extname(originalname).slice(1).toLowerCase();
 	if (['html', 'prj', 'gis', 'dbf', 'shp', 'shx'].includes(declaredExt)) {
@@ -59,17 +54,20 @@ export async function validateUploadedFile(
 	const spoofingErrors = validateFileSignature(file, fileTypeResult, allowedMimeTypes, allowedFileExtensions);
 	if (spoofingErrors.length > 0) return spoofingErrors;
 
-	const encryptionErrors = await validateEncryption(file, fileTypeResult, logger);
-
-	return encryptionErrors;
+	return await validateEncryption(file, fileTypeResult, logger);
 }
 
 /**
  * Checks for things like basic sizing, length, misleading characters etc.
  */
-function validateBasicAttributes(file: Express.Multer.File, maxFileSize: number): ValidationError[] {
+function validateBasicAttributes(
+	file: Express.Multer.File,
+	maxFileSize: number,
+	existingNameSet: Set<string>,
+	allowedMimeTypes: string[]
+): ValidationError[] {
 	const errors: ValidationError[] = [];
-	const { originalname, size } = file;
+	const { originalname, size, mimetype } = file;
 
 	if (typeof size !== 'number' || size <= 0) {
 		errors.push({
@@ -81,25 +79,35 @@ function validateBasicAttributes(file: Express.Multer.File, maxFileSize: number)
 
 	if (size > maxFileSize) {
 		errors.push({
-			text: `${originalname}: The attachment must be smaller than 250MB`,
+			text: `${originalname}: The attachment must be smaller than ${MAX_FILE_SIZE_IN_MB}MB`,
 			href: '#upload-form'
 		});
 	}
 
-	if (originalname.length > 255) {
+	if (originalname.length > FILE_NAME_MAX_LENGTH) {
 		errors.push({
-			text: `${originalname}: The attachment name exceeds the 255 character limit`,
+			text: `${originalname}: The attachment name exceeds the ${FILE_NAME_MAX_LENGTH} character limit`,
 			href: '#upload-form'
 		});
 	}
 
 	// Ensure the filename only contains allowed characters and no consecutive apostrophes
-	// Allowed: a-z, A-Z, 0-9, dot, hyphen, underscore, space, (), &, '
-	const validCharsRegex = /^(?!.*'')[a-zA-Z0-9.\-_ ()&']+$/;
-
-	if (!validCharsRegex.test(originalname)) {
+	if (!FILE_NAMES_REGEX.test(originalname)) {
 		errors.push({
 			text: `${originalname}: Filename contains special characters. Please remove these and try again.`,
+			href: '#upload-form'
+		});
+	}
+
+	// Check that the fileName is unique in the destination folder
+	const nameConflictError = checkFileNameConflict(originalname, existingNameSet);
+	if (nameConflictError) errors.push(nameConflictError);
+
+	// Check the file is an allowed filetype
+	// List is here: ../constants.ts => ALLOWED_MIME_TYPES
+	if (!allowedMimeTypes.includes(mimetype)) {
+		errors.push({
+			text: `${originalname}: The attachment must be ${ALLOWED_EXTENSIONS_TEXT}`,
 			href: '#upload-form'
 		});
 	}
@@ -108,7 +116,7 @@ function validateBasicAttributes(file: Express.Multer.File, maxFileSize: number)
 }
 
 /**
- * Cross references more unique files against expected layouts.
+ * Cross-references more unique files against expected layouts.
  * If they don't match we can error.
  */
 function validateSpecialFormats(file: Express.Multer.File, ext: string): ValidationError[] {
@@ -176,6 +184,7 @@ function validateFileSignature(
 	const isAllowedMime = new Set([...allowedMimeTypes, 'application/x-cfb']).has(mime);
 	const isAllowedExt = new Set([...allowedFileExtensions, 'cfb']).has(ext);
 
+	// Spoofs are when the file signature doesn't match the expected type from the mimetype and extension.
 	if (!isAllowedMime || !isAllowedExt) {
 		const declaredExt = mimetype.split('/')[1];
 		errors.push({
@@ -244,7 +253,7 @@ function isDocOrXlsEncrypted(buffer: Buffer, logger: Logger): boolean {
 }
 
 /**
- * Checks for FilePass which is what is used in Excel to determine a
+ * Checks for FilePass which is what is used in Excel to determine an
  * encryption algorithm
  */
 function hasFilePassRecord(buffer: Buffer): boolean {
@@ -253,7 +262,7 @@ function hasFilePassRecord(buffer: Buffer): boolean {
 		const recordType = buffer.readUInt16LE(offset);
 		const recordLength = buffer.readUInt16LE(offset + 2);
 
-		// This is FILEPASS
+		// This is FilePass
 		if (recordType === 0x002f) {
 			return true;
 		}
@@ -261,4 +270,31 @@ function hasFilePassRecord(buffer: Buffer): boolean {
 		offset += 4 + recordLength;
 	}
 	return false;
+}
+
+/**
+ * Returns true if the total size of all draft uploads
+ * in the current session (existing + newFiles)
+ * exceeds the provided totalUploadLimit
+ */
+export async function checkTotalSizeLimit(
+	db: PrismaClient,
+	req: Request,
+	caseId: string,
+	newFiles: Express.Multer.File[],
+	totalUploadLimit: number
+): Promise<boolean> {
+	const aggregate = await db.draftDocument.aggregate({
+		_sum: {
+			size: true
+		},
+		where: {
+			sessionKey: req.sessionID,
+			caseId: caseId
+		}
+	});
+
+	const currentTotal = Number(aggregate._sum.size || 0);
+	const newTotal = newFiles.reduce((sum, file) => sum + (file.size || 0), 0);
+	return currentTotal + newTotal > totalUploadLimit;
 }

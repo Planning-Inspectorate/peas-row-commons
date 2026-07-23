@@ -32,79 +32,86 @@ export function buildCaseName(journeyName: string): string {
 }
 
 /**
- * Generates a random string of a given length using:
- * - mostly lowercase letters
- * - some uppercase letters and numbers
- * - spaces and special characters
- * - max 2 special characters per string
- * - no adjacent special characters
- * - no matching bracket pairs like (test), [test], {test}, <test>
- * - spaces never at start/end
+ * Generates realistic text for validation testing:
+ * - mostly real words
+ * - occasionally inserts safe special-character words
+ * - always returns EXACT requested length
+ * - never starts or ends with a space
  */
 export function generateRandomString(length: number): string {
 	if (length <= 0) return '';
 
-	// Weighted toward lowercase by repeating lowercase chars
-	const lowercase = 'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz';
-	const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-	const numbers = '0123456789';
+	const words = [
+		'planning',
+		'application',
+		'case',
+		'related',
+		'linked',
+		'inspector',
+		'authority',
+		'decision',
+		'development',
+		'proposal',
+		'submission',
+		'reference',
+		'appeal',
+		'environmental',
+		'consultation',
+		'land',
+		'project',
+		'review',
+		'approval',
+		'condition',
+		'notice',
+		'assessment',
+		'committee',
+		'public',
+		'transport',
+		'rights',
+		'procedure',
+		'policy',
+		'evidence',
+		'objection',
+		'supporting',
+		'documentation'
+	];
 
-	const specials = '!@£$%^&*()-_=+[]{};:\'",.<>?/\\|';
-	const brackets = '()[]{}<>';
-
-	const alphaNumeric = lowercase + uppercase + numbers;
-
-	const getRandomChar = (chars: string): string => {
-		return chars.charAt(Math.floor(Math.random() * chars.length));
-	};
+	const specialWords = [
+		'case-ref',
+		'case_ref',
+		'section(2)',
+		'phase+1',
+		'cost-fees',
+		'priority!',
+		'policy?',
+		'approval:',
+		'review,',
+		'rights-way',
+		'notice250',
+		'stage-final'
+	];
 
 	let result = '';
-	let specialCount = 0;
-	let usedBracket = false;
 
-	for (let i = 0; i < length; i++) {
-		const isFirstOrLast = i === 0 || i === length - 1;
+	while (result.length < length) {
+		const word = Math.random() < 0.1 ? Cypress._.sample(specialWords)! : Cypress._.sample(words)!;
+		const separator = result.length === 0 ? '' : Cypress._.sample([' ', ' ', ' ', '. '])!;
+		const chunk = `${separator}${word}`;
+		const remaining = length - result.length;
 
-		const previousChar = result.charAt(result.length - 1);
-
-		const previousWasSpecial = specials.includes(previousChar);
-		const previousWasSpace = previousChar === ' ';
-
-		const canUseSpace = !isFirstOrLast && !previousWasSpace;
-		const canUseSpecial = !isFirstOrLast && specialCount < 2 && !previousWasSpecial;
-
-		const useSpecial = canUseSpecial && Math.random() < 0.08;
-		const useSpace = canUseSpace && !useSpecial && Math.random() < 0.12;
-
-		if (useSpecial) {
-			let availableSpecials = specials;
-
-			// Prevent paired bracket patterns
-			if (usedBracket) {
-				availableSpecials = availableSpecials
-					.split('')
-					.filter((char) => !brackets.includes(char))
-					.join('');
-			}
-
-			const char = getRandomChar(availableSpecials);
-
-			result += char;
-			specialCount++;
-
-			if (brackets.includes(char)) {
-				usedBracket = true;
-			}
-
-			continue;
+		if (chunk.length <= remaining) {
+			result += chunk;
+		} else {
+			result += chunk.substring(0, remaining);
 		}
+	}
 
-		if (useSpace) {
-			result += ' ';
-			continue;
-		}
+	if (/\s$/.test(result)) {
+		result = result.slice(0, -1) + Cypress._.sample('abcdefghijklmnopqrstuvwxyz'.split(''))!;
+	}
 
-		result += getRandomChar(alphaNumeric);
+	if (result.length !== length) {
+		throw new Error(`generateRandomString() returned ${result.length} characters instead of ${length}`);
 	}
 
 	return result;
@@ -228,7 +235,6 @@ export function generateEmail(): string {
 	const prefixes = ['test', 'info', 'contact', 'admin', 'hello', 'support', 'enquiries'];
 	const companies = ['solirius', 'test-company', 'planning-inspectorate', 'local-authority'];
 	const tlds = ['.com', '.co.uk', '.org', '.net', '.gov.uk'];
-
 	const separators = ['.', '_', '-', ''];
 
 	const first = Cypress._.sample(firstNames)!;
@@ -236,59 +242,85 @@ export function generateEmail(): string {
 	const separator = Cypress._.sample(separators)!;
 	const number = Cypress._.random(1, 9999);
 
-	let localPart = '';
+	const localPartGenerators = [
+		() => `${first}.${last}`,
+		() => `${first}${separator}${last}${number}`,
+		() => Cypress._.sample(prefixes)!,
+		() => `${first.charAt(0)}${last}`,
+		() => `${first}${number}`,
+		() => `${Cypress._.sample(prefixes)!}-${Cypress._.sample(companies)!}`
+	];
 
-	switch (Cypress._.random(0, 5)) {
-		case 0:
-			localPart = `${first}.${last}`;
-			break;
+	const domainGenerators = [
+		() => `example${Cypress._.sample(tlds)!}`,
+		() => `${Cypress._.sample(companies)!}${Cypress._.sample(tlds)!}`,
+		() => 'planning-inspectorate.gov.uk',
+		() => 'local-authority.gov.uk'
+	];
 
-		case 1:
-			localPart = `${first}${separator}${last}${number}`;
-			break;
+	const localPart = Cypress._.sample(localPartGenerators)!();
+	const domain = Cypress._.sample(domainGenerators)!();
 
-		case 2:
-			localPart = Cypress._.sample(prefixes)!;
-			break;
+	const email = `${localPart}@${domain}`;
 
-		case 3:
-			localPart = `${first.charAt(0)}${last}`;
-			break;
+	return email.length > 250 ? email.slice(0, 250) : email;
+}
 
-		case 4:
-			localPart = `${first}${number}`;
-			break;
+/**
+ * Generates a realistic linked/related case reference with high variation:
+ * - Mix of uppercase/lowercase formats
+ * - Multiple separator styles (/ - _ .)
+ * - Planning Inspectorate style references
+ * - Internal system style references
+ * - Optional prefixes and years
+ * - Randomised numeric suffixes
+ */
+export function generateCaseReference(type: 'related' | 'linked'): string {
+	const prefixes =
+		type === 'related'
+			? ['REL', 'related', 'RELATED', 'case', 'app', 'plan']
+			: ['LNK', 'linked', 'LINKED', 'case', 'ref', 'way'];
 
-		case 5:
-			localPart = `${Cypress._.sample(prefixes)!}-${Cypress._.sample(companies)!}`;
-			break;
-	}
+	const caseTypes = [
+		'WAY',
+		'way',
+		'CPO',
+		'cpo',
+		'ROW',
+		'row',
+		'COM',
+		'com',
+		'DRO',
+		'dro',
+		'APP',
+		'app',
+		'ENF',
+		'enf',
+		'PLAN',
+		'plan'
+	];
 
-	let domain = '';
+	const separators = ['/', '-', '_', '.', ''];
 
-	switch (Cypress._.random(0, 3)) {
-		case 0:
-			domain = `example${Cypress._.sample(tlds)!}`;
-			break;
+	const currentYear = new Date().getFullYear();
+	const year = String(Cypress._.random(currentYear - 5, currentYear + 5));
 
-		case 1:
-			domain = `${Cypress._.sample(companies)!}${Cypress._.sample(tlds)!}`;
-			break;
+	const suffixLength = Cypress._.random(3, 8);
+	const suffix = Cypress._.random(10 ** (suffixLength - 1), 10 ** suffixLength - 1);
 
-		case 2:
-			domain = `planning-inspectorate.gov.uk`;
-			break;
+	const prefix = Cypress._.sample(prefixes)!;
+	const caseType = Cypress._.sample(caseTypes)!;
+	const separator = Cypress._.sample(separators)!;
+	const randomNumber = Cypress._.random(1000, 9999);
 
-		case 3:
-			domain = `local-authority.gov.uk`;
-			break;
-	}
+	const formats = [
+		`${caseType}${separator}${year}${separator}${suffix}`,
+		`${prefix}${separator}${caseType}${separator}${randomNumber}`,
+		`${caseType}${separator}${prefix}${separator}${year}${separator}${suffix}`,
+		`${prefix}${separator}${caseType}${separator}${randomNumber}`,
+		`${prefix}${separator}${caseType}${separator}${year}${separator}${suffix}`,
+		`${caseType}${separator}${prefix}${separator}${randomNumber}`
+	];
 
-	let email = `${localPart}@${domain}`;
-	const MAX_LENGTH = 250;
-	if (email.length > MAX_LENGTH) {
-		email = email.slice(0, MAX_LENGTH);
-	}
-
-	return email;
+	return Cypress._.sample(formats)!;
 }

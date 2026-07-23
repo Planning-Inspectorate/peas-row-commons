@@ -97,40 +97,10 @@
             }) }}
         </div>
     </div>
-    <div class="govuk-grid-row">
-        <div class="govuk-grid-column-full">
-            {% if subFolders|length !== 0 %}
-                {% set subFoldersHtml %}
-                    <div class="pins-link-menu">
-                        {% for folder in subFolders %}
-                            <a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}" data-cy="subfolder-link-{{ folder.id }}">
-                                {{ folder.displayName }}
-                            </a>
-                        {% endfor %}
-                    </div>
-                {% endset %}
 
-                {{ govukAccordion({
-                    id: "sub-folders-accordion",
-                    classes: "hide-controls",
-                    hideAllSections: true,
-                    showSectionText: "Show subfolders list",
-                    hideSectionText: "Hide subfolders list",
-                    items: [
-                        {
-                            content: {
-                                html: subFoldersHtml
-                            }
-                        }
-                    ],
-                    attributes: { "data-cy": "subfolders-accordion" }
-                }) }}
-            {% endif %}
-        </div>
-    </div>
 
     <div class="govuk-grid-row">
-        <div class="case-folder-filter-column govuk-grid-column-two-thirds">
+        <div class="pins-case-folder-filter-column govuk-grid-column-two-thirds">
             <form method="GET" action="{{ currentPath }}">
                 {{ filterComponent(
                     filterData.checkboxGroups,
@@ -138,30 +108,60 @@
                 ) }}
             </form>
         </div>
-        
-        <div class="case-folder-table-column govuk-grid-column-two-thirds">
+
+        <div class="pins-case-folder-table-column govuk-grid-column-two-thirds">
             <div id="pagination" class="govuk-body">
                 <div class="govuk-grid-row">
                     <div class="govuk-grid-column-full">
-                        
+
                         <form action="{{ currentPath }}/move-files" method="POST">
                             {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
 
                             <input type="hidden" name="returnUrl" value="{{ currentUrl }}">
                             <input type="hidden" name="caseId" value="{{ caseId }}">
 
-                            <p class="govuk-body govuk-!-font-weight-bold">File actions</p>
-
                             <div class="govuk-!-margin-bottom-4">
-                                    <span class="govuk-body govuk-!-margin-bottom-0">
-                                        This folder contains {{ paginationParams.totalDocuments | default(0) }} file(s).
-                                    </span>
-                                
+
+                                {% if paginationParams.totalSubFolders > 0 %}
+                                    <p class="govuk-body govuk-!-margin-bottom-0">
+                                        This folder contains {{ paginationParams.subFoldersCount }} subfolders which contain {{ (paginationParams.totalDocumentsCount | default(0)) - (paginationParams.documentCount | default(0)) }} file(s) in total.
+                                    </p>
+
+                                    {% set subFoldersHtml %}
+                                        <ul class="govuk-list" data-cy="folder-list">
+                                        {% for folder in subFolders %}
+                                            <li class="govuk-!-margin-bottom-4"><a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}" data-cy="subfolder-link-{{ folder.id }}">
+                                                {{ folder.displayName }}
+                                            </a></li>
+                                        {% endfor %}
+                                        </ul>
+                                    {% endset %}
+
+                                    {{ govukAccordion({
+                                        id: "sub-folders-accordion",
+                                        classes: "pins-accordion-hide-controls",
+                                        hideAllSections: true,
+                                        showSectionText: "Show subfolders list",
+                                        hideSectionText: "Hide subfolders list",
+                                        items: [
+                                            {
+                                                content: {
+                                                html: subFoldersHtml
+                                            }
+                                            }
+                                        ],
+                                        attributes: { "data-cy": "subfolders-accordion" }
+                                    }) }}
+                                {% else %}
+                                    <p class="govuk-body govuk-!-margin-bottom-0">
+                                        This folder contains {{ paginationParams.documentCount | default(0) }} file(s).
+                                    </p>
+                                {% endif %}
                                 {% if documents|length !== 0 %}
-                                    <span class="govuk-body govuk-!-margin-bottom-0" data-cy="pagination-results-text">
+                                    <p class="govuk-body govuk-!-margin-bottom-0" data-cy="pagination-results-text">
                                         Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalFilteredDocuments > paginationParams.resultsEndNumber else paginationParams.totalFilteredDocuments }}</strong>
                                         of <strong>{{ paginationParams.totalFilteredDocuments }}</strong> files.
-                                    </span>
+                                    </p>
                                 {% endif %}
                             </div>
 
@@ -170,6 +170,7 @@
                                     {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalFilteredDocuments, paginationParams.pageNumber, paginationParams.searchValue, paginationParams.filtersValue) }}
                                 </div>
                             {% endif %}
+                            <p class="govuk-body govuk-!-font-weight-bold">File actions</p>
                             <div class="govuk-button-group govuk-!-margin-bottom-4">
                                 {{ govukButton({
                                     text: "Upload files",

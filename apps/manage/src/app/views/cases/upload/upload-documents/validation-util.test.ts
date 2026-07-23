@@ -1,8 +1,8 @@
 import { describe, it, mock } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateUploadedFile } from './validation-util.ts';
+import { checkTotalSizeLimit, validateUploadedFile } from './validation-util.ts';
 
-const createMockFile = (overrides = {}) => ({
+const createMockFile = (overrides: any = {}) => ({
 	fieldname: 'file',
 	originalname: 'test.pdf',
 	encoding: '7bit',
@@ -43,22 +43,38 @@ describe('validateUploadedFile', () => {
 		debug: mock.fn()
 	} as any;
 
-	const allowedMimeTypes = ['application/pdf', 'image/png', 'application/msword'];
-	const allowedExtensions = ['pdf', 'png', 'doc'];
+	const allowedMimeTypes = ['application/pdf', 'image/png', 'application/msword', 'text/plain'];
+	const allowedExtensions = ['pdf', 'png', 'doc', 'txt'];
 	const maxFileSize = 1024 * 1024; // 1MB
+	const mockReq = { sessionID: 'session-123' } as any;
+	const caseId = 'case-123';
+	const mockExistingNameSet = new Set(['doc.pdf']);
 
 	describe('Basic Attributes', () => {
 		it('should return error if file is empty (size 0)', async () => {
 			const file = createMockFile({ size: 0, buffer: Buffer.from('') });
-			const errors = await validateUploadedFile(file, logger, allowedExtensions, allowedMimeTypes, maxFileSize);
-
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				allowedExtensions,
+				allowedMimeTypes,
+				maxFileSize,
+				mockExistingNameSet
+			);
 			assert.strictEqual(errors.length, 1);
 			assert.match(errors[0].text, /empty/);
 		});
 
 		it('should return error if file exceeds max size', async () => {
 			const file = createMockFile({ size: maxFileSize + 1 });
-			const errors = await validateUploadedFile(file, logger, allowedExtensions, allowedMimeTypes, maxFileSize);
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				allowedExtensions,
+				allowedMimeTypes,
+				maxFileSize,
+				mockExistingNameSet
+			);
 
 			assert.strictEqual(errors.length, 1);
 			assert.match(errors[0].text, /must be smaller than/);
@@ -67,7 +83,14 @@ describe('validateUploadedFile', () => {
 		it('should return error if filename is too long', async () => {
 			const longName = 'a'.repeat(256) + '.pdf';
 			const file = createMockFile({ originalname: longName });
-			const errors = await validateUploadedFile(file, logger, allowedExtensions, allowedMimeTypes, maxFileSize);
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				allowedExtensions,
+				allowedMimeTypes,
+				maxFileSize,
+				mockExistingNameSet
+			);
 
 			assert.strictEqual(errors.length, 1);
 			assert.match(errors[0].text, /exceeds the 255 character limit/);
@@ -75,7 +98,14 @@ describe('validateUploadedFile', () => {
 
 		it('should return error if filename contains em-dash or en-dash', async () => {
 			const file = createMockFile({ originalname: 'file–name.pdf' });
-			const errors = await validateUploadedFile(file, logger, allowedExtensions, allowedMimeTypes, maxFileSize);
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				allowedExtensions,
+				allowedMimeTypes,
+				maxFileSize,
+				mockExistingNameSet
+			);
 
 			assert.strictEqual(errors.length, 1);
 			assert.match(errors[0].text, /special characters/);
@@ -83,15 +113,44 @@ describe('validateUploadedFile', () => {
 
 		it('should return error if filename contains two consecutive apostrophes', async () => {
 			const file = createMockFile({ originalname: "file''name.pdf" });
-			const errors = await validateUploadedFile(file, logger, allowedExtensions, allowedMimeTypes, maxFileSize);
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				allowedExtensions,
+				allowedMimeTypes,
+				maxFileSize,
+				mockExistingNameSet
+			);
 
 			assert.strictEqual(errors.length, 1);
 			assert.match(errors[0].text, /special characters/);
 		});
 
-		it('should not return error if filename contains other special characters (brackets, ampersand, one apostrophe, hyphen, underscroe', async () => {
+		it('should error if filename already exists', async () => {
+			const file = createMockFile({ originalname: 'doc.pdf' });
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				allowedExtensions,
+				allowedMimeTypes,
+				maxFileSize,
+				mockExistingNameSet
+			);
+
+			assert.strictEqual(errors.length, 1);
+			assert.match(errors[0].text, /doc.pdf: File with this name already exists in the folder/);
+		});
+
+		it('should not return error if filename contains other special characters (brackets, ampersand, one apostrophe, hyphen, underscore', async () => {
 			const file = createMockFile({ originalname: "file'_-&().name.pdf" });
-			const errors = await validateUploadedFile(file, logger, allowedExtensions, allowedMimeTypes, maxFileSize);
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				allowedExtensions,
+				allowedMimeTypes,
+				maxFileSize,
+				mockExistingNameSet
+			);
 
 			assert.strictEqual(errors.length, 0);
 		});
@@ -103,7 +162,14 @@ describe('validateUploadedFile', () => {
 				mimetype: 'application/x-bad',
 				originalname: 'test.bad'
 			});
-			const errors = await validateUploadedFile(file, logger, allowedExtensions, allowedMimeTypes, maxFileSize);
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				allowedExtensions,
+				allowedMimeTypes,
+				maxFileSize,
+				mockExistingNameSet
+			);
 
 			assert.strictEqual(errors.length, 1);
 			assert.match(errors[0].text, /must be/);
@@ -113,7 +179,14 @@ describe('validateUploadedFile', () => {
 			const file = createMockFile({
 				buffer: Buffer.from('just random text string that is not a file signature')
 			});
-			const errors = await validateUploadedFile(file, logger, allowedExtensions, allowedMimeTypes, maxFileSize);
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				allowedExtensions,
+				allowedMimeTypes,
+				maxFileSize,
+				mockExistingNameSet
+			);
 
 			assert.strictEqual(errors.length, 1);
 			assert.match(errors[0].text, /Could not determine file type/);
@@ -128,7 +201,14 @@ describe('validateUploadedFile', () => {
 				buffer: MAGIC_BYTES.ZIP
 			});
 
-			const errors = await validateUploadedFile(file, logger, allowedExtensions, allowedMimeTypes, maxFileSize);
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				allowedExtensions,
+				allowedMimeTypes,
+				maxFileSize,
+				mockExistingNameSet
+			);
 
 			assert.strictEqual(errors.length, 1);
 			assert.match(errors[0].text, /must not be a zip file/);
@@ -141,7 +221,14 @@ describe('validateUploadedFile', () => {
 				buffer: MAGIC_BYTES.EXE
 			});
 
-			const errors = await validateUploadedFile(file, logger, allowedExtensions, allowedMimeTypes, maxFileSize);
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				allowedExtensions,
+				allowedMimeTypes,
+				maxFileSize,
+				mockExistingNameSet
+			);
 
 			assert.strictEqual(errors.length, 1);
 			assert.match(errors[0].text, /File signature mismatch/);
@@ -154,7 +241,14 @@ describe('validateUploadedFile', () => {
 				buffer: MAGIC_BYTES.PNG
 			});
 
-			const errors = await validateUploadedFile(file, logger, allowedExtensions, allowedMimeTypes, maxFileSize);
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				allowedExtensions,
+				allowedMimeTypes,
+				maxFileSize,
+				mockExistingNameSet
+			);
 
 			assert.deepStrictEqual(errors, []);
 		});
@@ -169,7 +263,14 @@ describe('validateUploadedFile', () => {
 			});
 
 			// Allow html for this specific test
-			const errors = await validateUploadedFile(file, logger, ['html'], ['text/html'], maxFileSize);
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				['html'],
+				['text/html'],
+				maxFileSize,
+				mockExistingNameSet
+			);
 
 			assert.strictEqual(errors.length, 1);
 			assert.match(errors[0].text, /not a valid .html file/);
@@ -179,10 +280,17 @@ describe('validateUploadedFile', () => {
 			const file = createMockFile({
 				originalname: 'test.html',
 				mimetype: 'text/html',
-				buffer: Buffer.from('<!DOCTYPE html><html><body></body></html>')
+				buffer: Buffer.from('<!DOCTYPE html><html lang="en"><body></body></html>')
 			});
 
-			const errors = await validateUploadedFile(file, logger, ['html'], ['text/html'], maxFileSize);
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				['html'],
+				['text/html'],
+				maxFileSize,
+				mockExistingNameSet
+			);
 			assert.deepStrictEqual(errors, []);
 		});
 
@@ -193,9 +301,124 @@ describe('validateUploadedFile', () => {
 				buffer: Buffer.from('Invalid content')
 			});
 
-			const errors = await validateUploadedFile(file, logger, ['prj'], ['text/plain'], maxFileSize);
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				['prj'],
+				['text/plain'],
+				maxFileSize,
+				mockExistingNameSet
+			);
 			assert.strictEqual(errors.length, 1);
 			assert.match(errors[0].text, /not a valid .prj file/);
+		});
+	});
+
+	describe('File types', () => {
+		it('should allow for text files', async () => {
+			const file = createMockFile({ originalname: 'text.txt', mimetype: 'text/plain', buffer: Buffer.from([0]) });
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				allowedExtensions,
+				allowedMimeTypes,
+				maxFileSize,
+				mockExistingNameSet
+			);
+			assert.strictEqual(errors.length, 0);
+		});
+
+		it('should error on unknown file type', async () => {
+			const file = createMockFile({ originalname: 'file.pdf', buffer: Buffer.from([0]) });
+			const errors = await validateUploadedFile(
+				file,
+				logger,
+				allowedExtensions,
+				allowedMimeTypes,
+				maxFileSize,
+				mockExistingNameSet
+			);
+			assert.strictEqual(errors.length, 1);
+			assert.match(errors[0].text, /file.pdf: Could not determine file type from signature/);
+		});
+	});
+
+	describe('checkTotalSizeLimit', () => {
+		const LIMIT = 1000;
+
+		it('should return false (safe) if current DB size + new files < limit', async () => {
+			const mockDb = {
+				draftDocument: {
+					aggregate: mock.fn(() =>
+						Promise.resolve({
+							_sum: { size: 500 }
+						})
+					)
+				}
+			} as any;
+
+			const newFiles = [createMockFile({ size: 200 })]; // + 200 bytes = 700 total
+
+			const result = await checkTotalSizeLimit(mockDb, mockReq, caseId, newFiles, LIMIT);
+
+			assert.strictEqual(result, false); // 700 < 1000, so NOT over limit
+		});
+
+		it('should return true (over limit) if current DB size + new files > limit', async () => {
+			const mockDb = {
+				draftDocument: {
+					aggregate: mock.fn(() =>
+						Promise.resolve({
+							_sum: { size: 900 }
+						})
+					)
+				}
+			} as any;
+
+			const newFiles = [createMockFile({ size: 200 })]; // + 200 bytes = 1100 total
+
+			const result = await checkTotalSizeLimit(mockDb, mockReq, caseId, newFiles, LIMIT);
+
+			assert.strictEqual(result, true); // 1100 > 1000
+		});
+
+		it('should handle null aggregate (no files in DB) correctly', async () => {
+			const mockDb = {
+				draftDocument: {
+					aggregate: mock.fn(() =>
+						Promise.resolve({
+							_sum: { size: null }
+						})
+					)
+				}
+			} as any;
+
+			const newFiles = [createMockFile({ size: 500 })];
+
+			const result = await checkTotalSizeLimit(mockDb, mockReq, caseId, newFiles, LIMIT);
+
+			assert.strictEqual(result, false); // 0 + 500 < 1000
+		});
+
+		it('should sum up multiple new files correctly', async () => {
+			const mockDb = {
+				draftDocument: {
+					aggregate: mock.fn(() =>
+						Promise.resolve({
+							_sum: { size: 800 }
+						})
+					)
+				}
+			} as any;
+
+			const newFiles = [
+				createMockFile({ originalname: '1.pdf', size: 100 }),
+				createMockFile({ originalname: '2.pdf', size: 150 })
+			];
+
+			const result = await checkTotalSizeLimit(mockDb, mockReq, caseId, newFiles, LIMIT);
+
+			assert.strictEqual(result, true);
 		});
 	});
 });

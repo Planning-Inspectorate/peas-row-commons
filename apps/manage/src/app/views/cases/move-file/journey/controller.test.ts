@@ -1,7 +1,13 @@
 import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert';
-import { buildLoadCaseData, validateRequestState, moveFilesTransaction, buildSaveController } from './controller.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
+import {
+	buildLoadCaseData,
+	validateRequestState,
+	moveFilesTransaction,
+	buildSaveController,
+	buildListController
+} from './controller.ts';
 
 describe('Move Files Controller', () => {
 	let mockReq: any;
@@ -53,14 +59,11 @@ describe('Move Files Controller', () => {
 
 	describe('buildLoadCaseData', () => {
 		it('should throw if id is missing', async () => {
-			mockReq.params = {};
+			delete mockReq.params.id;
 			const handler = buildLoadCaseData(mockService);
 
-			await assert.rejects(() => handler(mockReq, mockRes, mockNext) as any, {
-				message: 'id is required'
-			});
+			await assert.rejects(() => handler(mockReq, mockRes, mockNext) as any, /id must be a single string value/);
 		});
-
 		it('should call next(error) if case is not found', async () => {
 			mockDb.case.findUnique.mock.mockImplementation(() => Promise.resolve(null));
 
@@ -179,10 +182,29 @@ describe('Move Files Controller', () => {
 		});
 	});
 
+	describe('buildListController', () => {
+		it('should render correctly', async () => {
+			mockReq.baseUrl = '/cases/case-123/case-folders/folder-1/folder-x/move-files/move';
+			const mockListFn = mock.fn<(req: any, res: any, template?: string, options?: any) => Promise<void>>(() =>
+				Promise.resolve()
+			);
+			const listController = buildListController(mockListFn);
+			await assert.doesNotReject(() => listController(mockReq, mockRes, mockNext) as any);
+		});
+	});
+
 	describe('buildSaveController', () => {
+		beforeEach(() => {
+			mockReq.params = {
+				...mockReq.params,
+				folderId: 'folder-123',
+				folderName: 'folder-name'
+			};
+		});
 		it('should successfully move files and redirect to the new folder url', async () => {
 			mockRes.locals.journeyResponse = { answers: { fileLocation: 'dest-folder-id' } };
 			mockReq.session.moveFilesIds = ['file-1'];
+			mockReq.params = { id: 'case-123', folderId: 'folder-1', folderName: 'folder-name' };
 
 			mockDb.document.findMany.mock.mockImplementation(() =>
 				Promise.resolve([{ id: 'file-1', fileName: 'report.pdf', Folder: { displayName: 'Old Folder' } }])
@@ -192,7 +214,8 @@ describe('Move Files Controller', () => {
 				Promise.resolve({
 					id: 'dest-folder-id',
 					caseId: 'case-123',
-					displayName: 'My New Folder'
+					displayName: 'My New Folder',
+					Documents: []
 				})
 			);
 
@@ -251,7 +274,8 @@ describe('Move Files Controller', () => {
 				Promise.resolve({
 					id: 'dest-folder-id',
 					caseId: 'case-123',
-					displayName: 'Destination Folder'
+					displayName: 'Destination Folder',
+					Documents: []
 				})
 			);
 
@@ -291,7 +315,8 @@ describe('Move Files Controller', () => {
 				Promise.resolve({
 					id: 'dest-folder-id',
 					caseId: 'case-123',
-					displayName: 'Target'
+					displayName: 'Target',
+					Documents: []
 				})
 			);
 
@@ -326,7 +351,8 @@ describe('Move Files Controller', () => {
 				Promise.resolve({
 					id: 'dest-folder-id',
 					caseId: 'case-123',
-					displayName: null
+					displayName: null,
+					Documents: []
 				})
 			);
 
@@ -359,7 +385,8 @@ describe('Move Files Controller', () => {
 				Promise.resolve({
 					id: 'dest-folder-id',
 					caseId: 'case-123',
-					displayName: 'Target'
+					displayName: 'Target',
+					Documents: []
 				})
 			);
 
@@ -369,6 +396,117 @@ describe('Move Files Controller', () => {
 			await handler(mockReq, mockRes, mockNext);
 
 			assert.strictEqual(recordedAudits.length, 0);
+		});
+
+		it('should throw if the destination folder cannot be found', async () => {
+			mockRes.locals.journeyResponse = { answers: { fileLocation: 'dest-folder-id' } };
+			mockReq.session = {
+				moveFilesIds: ['file-1'],
+				account: { localAccountId: 'user-999' }
+			};
+
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve([]));
+
+			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve(null));
+
+			mockDb.document.updateMany.mock.mockImplementation(() => Promise.resolve({ count: 0 }));
+
+			const handler = buildSaveController(mockService);
+			await assert.rejects(async () => {
+				await handler(mockReq, mockRes, mockNext);
+			}, /Target folder dest-folder-id not found/);
+		});
+
+		it('should throw if the destination folder caseId is different', async () => {
+			mockRes.locals.journeyResponse = { answers: { fileLocation: 'dest-folder-id' } };
+			mockReq.session = {
+				moveFilesIds: ['file-1'],
+				account: { localAccountId: 'user-999' }
+			};
+
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve([]));
+
+			mockDb.folder.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({
+					id: 'dest-folder-id',
+					caseId: 'case-456',
+					displayName: 'Target',
+					Documents: []
+				})
+			);
+
+			mockDb.document.updateMany.mock.mockImplementation(() => Promise.resolve({ count: 0 }));
+
+			const handler = buildSaveController(mockService);
+			await assert.rejects(async () => {
+				await handler(mockReq, mockRes, mockNext);
+			}, /Target folder does not belong to the current case/);
+		});
+
+		it('should add an error to the session and redirect to originalUrl if there is a fileName conflict', async () => {
+			mockRes.locals.journeyResponse = { answers: { fileLocation: 'dest-folder-id' } };
+			mockReq.session = {
+				moveFilesIds: ['file-1'],
+				account: { localAccountId: 'user-999' }
+			};
+
+			mockDb.document.findMany.mock.mockImplementation(() =>
+				Promise.resolve([
+					{
+						id: 'file-1',
+						fileName: 'doc.pdf'
+					}
+				])
+			);
+
+			mockDb.folder.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({
+					id: 'dest-folder-id',
+					caseId: 'case-123',
+					displayName: 'Target',
+					Documents: [
+						{
+							fileName: 'doc.pdf'
+						}
+					]
+				})
+			);
+
+			mockDb.document.updateMany.mock.mockImplementation(() => Promise.resolve({ count: 0 }));
+
+			const handler = buildSaveController(mockService);
+			await handler(mockReq, mockRes, mockNext);
+			assert.strictEqual(mockRes.redirect.mock.callCount(), 1);
+			assert.deepStrictEqual(mockReq.session['move-files'][mockReq.params.id].moveFileErrors, [
+				{
+					text: 'doc.pdf: File with this name already exists in the folder',
+					href: '#'
+				}
+			]);
+		});
+
+		it('should throw if id is missing', async () => {
+			delete mockReq.params.id;
+			const handler = buildSaveController(mockService);
+
+			await assert.rejects(() => handler(mockReq, mockRes, mockNext) as any, /id must be a single string value/);
+		});
+
+		it('should throw if folderId is missing', async () => {
+			delete mockReq.params.folderId;
+			const handler = buildSaveController(mockService);
+
+			await assert.rejects(() => handler(mockReq, mockRes, mockNext) as any, /folderId must be a single string value/);
+		});
+
+		it('should throw if folderName is missing', async () => {
+			delete mockReq.params.folderName;
+			const handler = buildSaveController(mockService);
+
+			await assert.rejects(
+				() => handler(mockReq, mockRes, mockNext) as any,
+				/folderName must be a single string value/
+			);
 		});
 	});
 });

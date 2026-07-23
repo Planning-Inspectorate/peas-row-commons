@@ -4,11 +4,10 @@
 {% from "govuk/components/button/macro.njk" import govukButton %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/tag/macro.njk" import govukTag %}
-{% from "views/layouts/components/filter.njk" import filterComponent %}
 {% from "views/layouts/components/search-bar.njk" import searchBar %}
+{% from "views/layouts/components/filter-accordion.njk" import filterAccordion %}
 
 {% import "views/pagination/pagination-options.njk" as paginationOptions %}
-
 
 {% block pageTitle %}
     Case list - All Cases - Manage a Case
@@ -17,12 +16,7 @@
 {% block pageContent %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-one-third">
-            <form method="GET" action="{{ currentPath }}">
-                {{ filterComponent(
-                    filters.checkboxGroups,
-                    filters.selectedCategories
-                ) }}
-            </form>
+            {{ filterAccordion(filters, currentPath, searchValue, cspNonce) }}
         </div>
         <div class="govuk-grid-column-two-thirds">
             <form id="search-bar-form" method="GET">
@@ -32,7 +26,7 @@
                             text: "Search cases"
                         },
                         hint: {
-                            text: "To find a specific case, search by reference, historical reference, case name, applicant, status or local authority."
+                            text: "To find a specific case, search by reference, historical reference, case name, applicant or local authority."
                         },
                         classes: "govuk-input govuk-input--width-30"
                     },
@@ -42,15 +36,15 @@
                     }
                 }, searchValue) }}
             </form>
-            <div id="pagination" class="govuk-body">
+            <div id="pagination">
                 <p class="govuk-body govuk-clearfix">
-                    <p class="govuk-body">
+                    <span>
                         Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalCases > paginationParams.resultsEndNumber else paginationParams.totalCases }}</strong>
                         of <strong>{{ paginationParams.totalCases }}</strong> results
-                    </p>
-                    <p class="pins-pagination-options">
+                    </span>
+                    <span class="pins-pagination-options">
                         {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalCases, paginationParams.pageNumber, searchValue, paginationParams.filtersValue) }}
-                    </p>
+                    </span>
                 </p>
 
                 {% if cases|length == 0 %}

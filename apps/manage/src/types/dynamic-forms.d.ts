@@ -1,7 +1,3 @@
-declare module '@planning-inspectorate/dynamic-forms/src/components/utils/question-has-answer.js' {
-	export function questionHasAnswer(response: any, question: any, expectedValue: any): boolean;
-}
-
 declare module '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js' {
 	export const BOOLEAN_OPTIONS: {
 		readonly YES: 'yes';
@@ -23,7 +19,7 @@ declare module '@planning-inspectorate/dynamic-forms/src/journey/journey-respons
 		referenceId: string;
 		journeyId: string;
 		answers: Record<string, Record<string, unknown>[]>;
-		LPACode?: string;
+		LPACode: string | undefined;
 
 		constructor(journeyId: string, referenceId: string, answers: Record<string, unknown> | null, lpaCode?: string);
 	}
@@ -200,17 +196,17 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 		pageTitle: string;
 		title: string;
 		question: string;
-		description?: string;
+		description: string | undefined;
 		viewFolder: string;
 		fieldName: string;
 		taskList: boolean;
 		validators: any[];
-		hint?: string;
+		hint: string | undefined;
 		showBackToListLink: boolean;
-		url?: string;
-		html?: string;
-		interfaceType?: string;
-		actionLink?: ActionLink;
+		url: string | undefined;
+		html: string | undefined;
+		interfaceType: string | undefined;
+		actionLink: ActionLink | undefined;
 
 		notStartedText: string;
 		continueButtonText: string;
@@ -219,13 +215,24 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 		addActionText: string;
 
 		details: { title: string; text: string };
-		autocomplete?: string;
+		autocomplete: string | undefined;
 		editable: boolean;
 		viewData: Record<string, unknown>;
 
+		/** Manage-list related members (present on the native Question type). */
+		_isInManageListSection: boolean;
+		get isManageListQuestion(): boolean;
+		get isInManageListSection(): boolean;
+		set isInManageListSection(value: boolean);
+		get bodyFieldNames(): string[];
+
+		answerForViewModel(answers: Record<string, any>, isPayload?: boolean): any;
+
+		addCustomDataToViewModel(viewModel: QuestionViewModel): void;
+
 		answerObjectFromJourneyResponse(
 			response: JourneyResponse,
-			options?: Record<string, unknown>
+			options?: PrepQuestionForRenderingOptions
 		): Record<string, unknown>;
 
 		shouldDisplay: (response?: JourneyResponse) => boolean;
@@ -245,7 +252,7 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 			req: Request,
 			sectionObj: Section,
 			journey: Journey,
-			manageListQuestion: Question
+			manageListQuestion?: import('../components/manage-list/question.js').default
 		): QuestionViewModel | undefined;
 
 		getDataToSave(req: Request, journeyResponse: JourneyResponse): Promise<{ answers: Record<string, unknown> }>;
@@ -308,20 +315,35 @@ declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/questions/create-questions.js' {
-	export function createQuestions(
-		definitions: any,
-		classes: any,
-		questionMethodOverrides?: any,
-		textOverrides?: any
-	): any;
+	import { Question, QuestionParameters } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+
+	export interface BaseQuestionProps extends Partial<QuestionParameters> {
+		type: string;
+	}
+
+	export type MethodOverride = (...args: any[]) => any;
+
+	export interface QuestionClass {
+		new (params: any, methodOverrides?: Record<string, MethodOverride>): Question;
+	}
+
+	export interface TextOverrides {
+		notStartedText?: string;
+		continueButtonText?: string;
+		changeActionText?: string;
+		answerActionText?: string;
+	}
+
+	export function createQuestions<T extends Record<string, BaseQuestionProps>>(
+		questionPropsRecord: T,
+		questionClasses: Record<string, QuestionClass>,
+		questionMethodOverrides: Record<string, Record<string, MethodOverride>>,
+		textOverrides?: TextOverrides
+	): { [K in keyof T]: Question };
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/questions/questions.js' {
 	export const questionClasses: any;
-}
-
-declare module '@planning-inspectorate/dynamic-forms' {
-	export const COMPONENT_TYPES: any;
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js' {
@@ -412,15 +434,6 @@ declare module '@planning-inspectorate/dynamic-forms/src/middleware/redirect-to-
 		journeyResponseKey?: string;
 		journeyKey?: string;
 	}): (req: any, res: any, next: any) => void;
-}
-
-declare module '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js' {
-	export class JourneyResponse {
-		referenceId: string;
-		journeyId: JourneyType;
-		answers: Record<string, unknown>;
-		constructor(journeyId: JourneyType, referenceId: string, answers: Record<string, unknown> | null);
-	}
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js' {

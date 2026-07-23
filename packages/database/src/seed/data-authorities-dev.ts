@@ -1,4 +1,4 @@
-import { AUTHORITY_STATUS_ID } from './static_data/ids/authority-status.ts';
+import { AUTHORITY_STATUS_ID } from './static-data/ids/authority-status.ts';
 import { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 
 export const AUTHORITIES: Prisma.AuthorityUncheckedCreateInput[] = [

@@ -1,7 +1,7 @@
 import { Router as createRouter } from 'express';
 import type { Handler, Request, IRouter } from 'express';
 import { buildGetJourney } from '@planning-inspectorate/dynamic-forms/src/middleware/build-get-journey.js';
-import { list, question, buildSave } from '@planning-inspectorate/dynamic-forms/src/controller.js';
+import { question, buildSave } from '@planning-inspectorate/dynamic-forms/src/controller.js';
 import { redirectToUnansweredQuestion } from '@planning-inspectorate/dynamic-forms/src/middleware/redirect-to-unanswered-question.js';
 import validate from '@planning-inspectorate/dynamic-forms/src/validator/validator.js';
 import { validationErrorHandler } from '@planning-inspectorate/dynamic-forms/src/validator/validation-error-handler.js';
@@ -13,7 +13,7 @@ import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { JOURNEY_ID, createJourney } from './journey.ts';
 import { getQuestions } from './questions.ts';
 import { ManageService } from '#service';
-import { buildLoadCaseData, buildSaveController } from './controller.ts';
+import { buildListController, buildLoadCaseData, buildSaveController } from './controller.ts';
 
 export function createRoutes(service: ManageService): IRouter {
 	const router = createRouter({ mergeParams: true });
@@ -65,11 +65,6 @@ function createMiddlewares(service: ManageService) {
 		buildGetJourneyResponseFromSession(JOURNEY_ID),
 		buildSaveController(service),
 		buildLoadCaseData(service),
-		(req: Request, res: Response) =>
-			list(req, res, '', {
-				backLinkUrl: `${req.baseUrl}/folder/file-location`,
-				pageHeading: 'Check details and update file location',
-				cancelUrl: req.baseUrl.split('/move-files')[0] // we want to go all the way back to the folder page
-			})
+		buildListController()
 	];
 }

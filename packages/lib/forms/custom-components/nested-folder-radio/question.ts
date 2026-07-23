@@ -1,6 +1,4 @@
-import { Question, type QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import { Question, type QuestionViewModel, type Section, type Journey } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
 
 export interface FlatFolder {

@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, mock } from 'node:test';
 import assert from 'node:assert';
-import { buildHandleMoveSelection, buildViewMoveFiles } from './controller.ts';
+import { buildHandleDuplicateFileNamesMiddleware, buildHandleMoveSelection, buildViewMoveFiles } from './controller.ts';
 
 describe('Move Selection Controller', () => {
 	let mockReq: any;
@@ -140,6 +140,53 @@ describe('Move Selection Controller', () => {
 
 			assert.strictEqual(mockRes.status.mock.callCount(), 1);
 			assert.strictEqual(mockRes.status.mock.calls[0].arguments[0], 404);
+		});
+	});
+
+	describe('buildHandleDuplicateFileNamesMiddleware', () => {
+		it('should copy errors in session data to res.locals and call next', async () => {
+			const mockNext = mock.fn(() => Promise.resolve());
+			mockRes.locals = {};
+			mockReq.session = {
+				'move-files': {
+					[mockReq.params.id]: {
+						moveFileErrors: [
+							{
+								text: 'doc.pdf: File with this name already exists in the folder',
+								href: '#upload-form'
+							}
+						]
+					}
+				}
+			};
+
+			const handler = buildHandleDuplicateFileNamesMiddleware();
+			await handler(mockReq, mockRes, mockNext);
+			assert.deepStrictEqual(mockRes.locals.errorSummary, [
+				{
+					text: 'doc.pdf: File with this name already exists in the folder',
+					href: '#upload-form'
+				}
+			]);
+			assert.strictEqual(mockNext.mock.callCount(), 1);
+		});
+		it('should not add errorSummary if no errors exist in session and call next', async () => {
+			const mockNext = mock.fn(() => Promise.resolve());
+			mockRes.locals = {};
+			mockReq.session = {
+				'move-files': {
+					[mockReq.params.id]: {
+						moveFileErrors: [
+							// empty array, no errors
+						]
+					}
+				}
+			};
+
+			const handler = buildHandleDuplicateFileNamesMiddleware();
+			await handler(mockReq, mockRes, mockNext);
+			assert.deepStrictEqual(mockRes.locals.errorSummary, undefined);
+			assert.strictEqual(mockNext.mock.callCount(), 1);
 		});
 	});
 });

@@ -42,6 +42,10 @@ resource "azurerm_cdn_frontdoor_custom_domain" "manage" {
 
   tls {
     certificate_type = "ManagedCertificate"
+
+    cipher_suite {
+      type = "TLS12_2023"
+    }
   }
 }
 
@@ -153,6 +157,25 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
     }
 
     override {
+      rule_group_name = "RCE"
+
+      rule {
+        # Remote Command Execution: Windows Command Injection
+        action  = "AnomalyScoring"
+        rule_id = "932115"
+        enabled = true
+
+        exclusion {
+          # 932115 false positive observed as:
+          # PostParamValue:comment = "START MODS PROCESS"
+          match_variable = "RequestBodyPostArgNames"
+          operator       = "Equals"
+          selector       = "comment"
+        }
+      }
+    }
+
+    override {
       rule_group_name = "SQLI"
       rule {
         action  = "AnomalyScoring"
@@ -162,8 +185,8 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
       rule {
         # SQL Injection Attack: SQL Operator Detected
         action  = "AnomalyScoring"
-        enabled = true
         rule_id = "942120"
+        enabled = true
 
         exclusion {
           # 942120 false positive observed as:
@@ -172,6 +195,14 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
           operator       = "Equals"
           selector       = "clientdata"
         }
+      }
+
+      rule {
+        # SQL Injection Attack
+        # 942400 false positive observed as:
+        # PostParamValue:comment = "There are over x reps of support and x reps of objection..."
+        action  = "Log"
+        rule_id = "942400"
       }
 
       rule {

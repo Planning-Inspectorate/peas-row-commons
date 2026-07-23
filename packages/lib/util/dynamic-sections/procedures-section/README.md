@@ -41,7 +41,6 @@
 ## Remove and Save
 - Detail fields have a "Remove and save" button that clears the value.
 - The remove route (`/:section/:question/remove`) must be registered **above** the generic edit route in Express to avoid being shadowed.
-- The `guardEmptyRemove` middleware checks for date sub- fields (`_day`, `_month`, `_year`) to avoid incorrectly treating date submissions as empty.
 - `clearAnswer` must run **before** the flattened field remap so that the nulled values are picked up by the remap and flow through to `handleProcedureDetails`.
 
 ## Inspector Display Logic

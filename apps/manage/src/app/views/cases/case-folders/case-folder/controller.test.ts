@@ -12,7 +12,8 @@ describe('buildViewCaseFolder', () => {
 	const mockDb = {
 		folder: { findUnique: mock.fn(), findMany: mock.fn() },
 		case: { findUnique: mock.fn() },
-		document: { findMany: mock.fn(), count: mock.fn() }
+		document: { findMany: mock.fn(), count: mock.fn() },
+		$queryRaw: mock.fn()
 	} as any;
 
 	const mockRes = () => {
@@ -72,7 +73,10 @@ describe('buildViewCaseFolder', () => {
 			const res = mockRes();
 			const next = mock.fn();
 
-			await assert.rejects(() => buildViewCaseFolder(service as any)(req, res, next), { message: 'id param required' });
+			await assert.rejects(
+				() => buildViewCaseFolder(service as any)(req, res, next),
+				/id must be a single string value/
+			);
 		});
 
 		it('should throw error if "folderId" param is missing', async () => {
@@ -80,9 +84,10 @@ describe('buildViewCaseFolder', () => {
 			const res = mockRes();
 			const next = mock.fn();
 
-			await assert.rejects(() => buildViewCaseFolder(service as any)(req, res, next), {
-				message: 'folderId param required'
-			});
+			await assert.rejects(
+				() => buildViewCaseFolder(service as any)(req, res, next),
+				/folderId must be a single string value/
+			);
 		});
 	});
 
@@ -102,13 +107,35 @@ describe('buildViewCaseFolder', () => {
 			};
 
 			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve(mockFolderData));
+			mockDb.$queryRaw.mock.mockImplementation(() => Promise.resolve([{ totalFolders: 2, totalDocuments: 15 }]));
 
 			await buildViewCaseFolder(service as any)(req, res, next);
 
-			assert.strictEqual(mockDb.folder.findUnique.mock.callCount(), 2);
-			assert.strictEqual(mockDb.case.findUnique.mock.callCount(), 1);
-			assert.strictEqual(mockDb.document.findMany.mock.callCount(), 2);
-			assert.strictEqual(mockDb.document.count.mock.callCount(), 2);
+			assert.strictEqual(
+				mockDb.folder.findUnique.mock.callCount(),
+				1,
+				'folder.findUnique: 1) fetch folder with children/parent'
+			);
+			assert.strictEqual(
+				mockDb.case.findUnique.mock.callCount(),
+				1,
+				'case.findUnique: fetch case reference, name, and status'
+			);
+			assert.strictEqual(
+				mockDb.document.findMany.mock.callCount(),
+				2,
+				'document.findMany: 1) paginated documents for display, 2) all docs to calculate filter counts'
+			);
+			assert.strictEqual(
+				mockDb.document.count.mock.callCount(),
+				2,
+				'document.count: 1) total matching current filter, 2) total documents in folder'
+			);
+			assert.strictEqual(
+				mockDb.$queryRaw.mock.callCount(),
+				1,
+				'$queryRaw: get recursive folder stats (total subfolders + documents)'
+			);
 
 			const dbArgs = mockDb.folder.findUnique.mock.calls[0].arguments[0];
 			assert.deepStrictEqual(dbArgs.where, { id: 'folder-456' });
@@ -121,7 +148,8 @@ describe('buildViewCaseFolder', () => {
 			assert.strictEqual(viewData.pageHeading, 'Case Name');
 			assert.strictEqual(viewData.folderName, 'My Folder');
 
-			assert.strictEqual(viewData.paginationParams.totalDocuments, 10);
+			assert.strictEqual(viewData.paginationParams.totalDocumentsCount, 15);
+			assert.strictEqual(viewData.paginationParams.subFoldersCount, 1);
 			assert.strictEqual(viewData.paginationParams.totalFilteredDocuments, 10);
 
 			assert.match(viewData.backLinkUrl, /parent-999/);
@@ -289,6 +317,23 @@ describe('buildViewCaseFolder', () => {
 
 			assert.strictEqual(result.length, 1);
 			assert.strictEqual(result[0].id, 'folder-2');
+		});
+
+		it('should use the passed caseId if one is passed', async () => {
+			const mockDb = {
+				folder: {
+					findMany: mock.fn(() =>
+						Promise.resolve([{ id: 'folder-1', displayName: 'Root Folder', parentFolderId: null }])
+					),
+					findUnique: mock.fn()
+				}
+			};
+			await getFolderPath(mockDb as any, 'folder-1', 'case-123');
+			assert.strictEqual(mockDb.folder.findUnique.mock.callCount(), 0);
+			assert.strictEqual(mockDb.folder.findMany.mock.callCount(), 1);
+			assert.deepStrictEqual((mockDb.folder.findMany.mock.calls as any[])[0].arguments[0].where, {
+				caseId: 'case-123'
+			});
 		});
 	});
 });

@@ -4,16 +4,18 @@ import { Prisma, PrismaClient } from '@pins/peas-row-commons-database/src/client
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import type { Logger } from 'pino';
 import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
-import { NOTE_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/note-type.ts';
+import { NOTE_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/note-type.ts';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import { mapNotes } from '../view/view-model.ts';
-import { getEntraGroupMembers } from '#util/entra-groups.ts';
+import { buildUserDisplayNameMap, getEntraGroupMembers } from '#util/entra-groups.ts';
+import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler {
 	const { db, logger, audit } = service;
 
 	return async (req, res) => {
-		const { id } = req.params;
+		const id = getStringParam(req.params, 'id');
 		const { comment } = req.body;
 		const userId = req?.session?.account?.localAccountId;
 
@@ -24,7 +26,7 @@ export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler
 		await audit.record({
 			caseId: id,
 			action: AUDIT_ACTIONS.CASE_NOTE_ADDED,
-			userId: req?.session?.account?.localAccountId,
+			userId,
 			metadata: {
 				caseNote: comment
 			}
@@ -76,7 +78,7 @@ async function createCaseNote(id: string, comment: string, authorId: string, db:
 			wrapPrismaError({
 				error,
 				logger,
-				message: 'creating a case not',
+				message: 'creating a case note',
 				logParams: { id }
 			});
 		}
@@ -88,11 +90,7 @@ export function buildViewCaseNotes(service: ManageService): AsyncRequestHandler 
 	const groupIds = service.entraGroupIds;
 
 	return async (req, res) => {
-		const id = req.params.id;
-
-		if (!id) {
-			throw new Error('id param required');
-		}
+		const id = getStringParam(req.params, 'id');
 
 		let caseRow;
 		try {
@@ -135,7 +133,15 @@ export function buildViewCaseNotes(service: ManageService): AsyncRequestHandler 
 			groupIds
 		});
 
-		const notes = mapNotes(caseRow.Notes, groupMembers, caseRow.id);
+		const userIds = caseRow.Notes.map((caseNote) => caseNote.Author.idpUserId).filter(isDefined);
+
+		const userMap = await buildUserDisplayNameMap(groupMembers, userIds, {
+			logger,
+			initClient: getEntraClient,
+			session: req.session
+		});
+
+		const notes = mapNotes(caseRow.Notes, userMap, caseRow.id);
 
 		return res.render('views/cases/case-notes/view.njk', {
 			pageHeading: 'Case notes',

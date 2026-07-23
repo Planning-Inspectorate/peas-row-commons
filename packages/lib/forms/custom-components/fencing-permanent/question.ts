@@ -1,4 +1,4 @@
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import type { Journey } from '@planning-inspectorate/dynamic-forms';
 import ConditionalOptionsQuestion from '../conditional-text-input/question.ts';
 
 export default class FencingPermanentQuestion extends ConditionalOptionsQuestion {

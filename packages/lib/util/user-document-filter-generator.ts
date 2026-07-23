@@ -1,3 +1,5 @@
+import type { ParsedQs } from 'qs';
+
 export interface FilterItem {
 	value: string;
 	text: string;
@@ -54,7 +56,7 @@ export class DocumentFilterGenerator {
 	/**
 	 * Entry function used for starting the process of creating the various components needed.
 	 */
-	public generateFilters(query: Record<string, unknown>, baseUrl: string, counts: CountMap): FilterViewModel {
+	public generateFilters(query: ParsedQs, baseUrl: string, counts: CountMap): FilterViewModel {
 		const selectedReadStatuses = this.getSelectedValues(query, DOCUMENT_FILTER_KEYS.READ);
 		const selectedFlagStatuses = this.getSelectedValues(query, DOCUMENT_FILTER_KEYS.FLAG);
 
@@ -79,9 +81,9 @@ export class DocumentFilterGenerator {
 	/**
 	 * Finds what was selected in the query parameters.
 	 */
-	private getSelectedValues(query: Record<string, any>, key: string): string[] {
+	private getSelectedValues(query: ParsedQs, key: string): string[] {
 		const val = query[key];
-		if (Array.isArray(val)) return val;
+		if (Array.isArray(val)) return val.filter((v): v is string => typeof v === 'string' && v !== '');
 		if (typeof val === 'string' && val) return [val];
 		return [];
 	}
@@ -139,7 +141,7 @@ export class DocumentFilterGenerator {
 	 * checkboxes below. With the X button to remove them and refresh the page.
 	 */
 	private createSelectedCategories(
-		query: Record<string, unknown>,
+		query: ParsedQs,
 		baseUrl: string,
 		selectedRead: string[],
 		selectedFlagged: string[]
@@ -168,7 +170,7 @@ export class DocumentFilterGenerator {
 	 * without the current value.
 	 */
 	private buildClearLink(
-		query: Record<string, any>,
+		query: ParsedQs,
 		baseUrl: string,
 		paramKey: string,
 		valueToRemove: string
@@ -200,12 +202,7 @@ export class DocumentFilterGenerator {
 	 * then we need to make sure we search for (a) a row for that document with read = true but also search for a LACK of row, as both indicate
 	 * a read status of true, and vice versa. Hence why we have `some:` and `none:` in the queries
 	 */
-	public createPrismaDocumentWhere(
-		query: Record<string, unknown>,
-		userId: string,
-		defaultIsRead: boolean,
-		defaultIsFlagged: boolean
-	) {
+	public createPrismaDocumentWhere(query: ParsedQs, userId: string, defaultIsRead: boolean, defaultIsFlagged: boolean) {
 		const wantsRead = this.getSelectedValues(query, DOCUMENT_FILTER_KEYS.READ).includes(DOCUMENT_FILTER_VALUES.READ);
 		const wantsUnread = this.getSelectedValues(query, DOCUMENT_FILTER_KEYS.READ).includes(
 			DOCUMENT_FILTER_VALUES.UNREAD
@@ -259,7 +256,7 @@ export class DocumentFilterGenerator {
 		return AND.length > 0 ? { AND } : {};
 	}
 
-	public createCurrentlySelectedFilterValues(query: Record<string, unknown>) {
+	public createCurrentlySelectedFilterValues(query: ParsedQs) {
 		const readStatus = this.getSelectedValues(query, DOCUMENT_FILTER_KEYS.READ);
 		const flaggedStatus = this.getSelectedValues(query, DOCUMENT_FILTER_KEYS.FLAG);
 

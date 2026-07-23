@@ -82,7 +82,7 @@ export const rightsOfWayJourneys = [
 		tags: ['regression']
 	},
 	{
-		name: 'Rights of Way > Common Land > Inclosure : obsolescent functions',
+		name: 'Rights of Way > Common Land > Inclosure: obsolescent functions',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'inclosureObsolescent',
@@ -146,7 +146,7 @@ export const rightsOfWayJourneys = [
 		tags: ['regression']
 	},
 	{
-		name: 'Rights of Way > Common Land > Works on Common Land (National Trust)',
+		name: 'Rights of Way > Common Land > Common Land (NT)',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'commonLand',
 		commonLandSubtype: 'worksCommonLandNt',
@@ -154,7 +154,7 @@ export const rightsOfWayJourneys = [
 		tags: ['regression']
 	},
 	{
-		name: 'Rights of Way > Rights of Way > Dispensation for Serving Notice HA80',
+		name: 'Rights of Way > Rights of Way > Dispensation for SN HA80',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'dispensationHa80',
@@ -162,7 +162,7 @@ export const rightsOfWayJourneys = [
 		tags: ['regression']
 	},
 	{
-		name: 'Rights of Way > Rights of Way > Dispensation for Serving Notice TCPA90',
+		name: 'Rights of Way > Rights of Way > Dispensation for SN TCPA90',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'dispensationTcpa90',
@@ -170,7 +170,7 @@ export const rightsOfWayJourneys = [
 		tags: ['regression']
 	},
 	{
-		name: 'Rights of Way > Rights of Way > Dispensation for Serving Notice WCA81',
+		name: 'Rights of Way > Rights of Way > Dispensation for SN WCA81',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'dispensationWca81',
@@ -178,7 +178,7 @@ export const rightsOfWayJourneys = [
 		tags: ['regression']
 	},
 	{
-		name: 'Rights of Way > Rights of Way > Opposed Definitive Map Modification Order (DMMO)',
+		name: 'Rights of Way > Rights of Way > Opposed (DMMO)',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'opposedDmmo',
@@ -186,7 +186,7 @@ export const rightsOfWayJourneys = [
 		tags: ['smoke', 'regression']
 	},
 	{
-		name: 'Rights of Way > Rights of Way > Opposed Public Path Order (PPO) HA80',
+		name: 'Rights of Way > Rights of Way > Opposed (PPO) HA80',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'opposedPpoHa80',
@@ -194,7 +194,7 @@ export const rightsOfWayJourneys = [
 		tags: ['regression']
 	},
 	{
-		name: 'Rights of Way > Rights of Way > Opposed Public Path Order (PPO) TCPA90',
+		name: 'Rights of Way > Rights of Way > Opposed (PPO) TCPA90',
 		caseworkArea: 'rightsOfWay',
 		caseType: 'rightsOfWay',
 		rightsOfWaySubtype: 'opposedPpoTcpa90',

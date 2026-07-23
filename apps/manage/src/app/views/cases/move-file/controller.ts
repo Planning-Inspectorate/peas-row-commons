@@ -1,7 +1,9 @@
 import type { ManageService } from '#service';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
-import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
-import type { RequestHandler } from 'express';
+import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
+import type { ValidationError } from '../upload/upload-documents/validation-middleware.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
  * Controller used for the POST request when a user sends files to move,
@@ -12,7 +14,7 @@ import type { RequestHandler } from 'express';
 export function buildHandleMoveSelection(): RequestHandler {
 	return async (req, res) => {
 		const { selectedFiles } = req.body;
-		const { id } = req.params;
+		const id = getStringParam(req.params, 'id');
 
 		// If no files, just refresh and show the error.
 		if (!selectedFiles) {
@@ -34,9 +36,7 @@ export function buildHandleMoveSelection(): RequestHandler {
 			return res.redirect(returnUrl);
 		}
 
-		const fileIds = Array.isArray(selectedFiles) ? selectedFiles : [selectedFiles];
-
-		req.session.moveFilesIds = fileIds;
+		req.session.moveFilesIds = Array.isArray(selectedFiles) ? selectedFiles : [selectedFiles];
 
 		return res.redirect(req.baseUrl);
 	};
@@ -79,5 +79,23 @@ export function buildViewMoveFiles(service: ManageService): RequestHandler {
 			backLinkUrl: returnUrl,
 			currentUrl: req.originalUrl
 		});
+	};
+}
+
+/**
+ * Middleware to get moveFile errors from session to pass errors to view model
+ */
+export function buildHandleDuplicateFileNamesMiddleware() {
+	return async (req: Request, res: Response, next: NextFunction) => {
+		const id = getStringParam(req.params, 'id');
+
+		const sessionErrors = readSessionData(req, id, 'moveFileErrors', [], 'move-files');
+		const errorsToDisplay: ValidationError[] =
+			Array.isArray(sessionErrors) && sessionErrors.length > 0 ? sessionErrors : [];
+		clearSessionData(req, id, 'moveFileErrors', 'move-files');
+
+		if (errorsToDisplay.length === 0) return next();
+		res.locals.errorSummary = errorsToDisplay;
+		return next();
 	};
 }

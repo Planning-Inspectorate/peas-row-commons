@@ -1,25 +1,22 @@
 import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js';
 import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-import { questionHasAnswer } from '@planning-inspectorate/dynamic-forms/src/components/utils/question-has-answer.js';
-import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
-import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/index.ts';
+import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import { questionHasAnswer, whenQuestionHasAnswer } from '@planning-inspectorate/dynamic-forms';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
+import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { ProcedureSectionBuilder } from '@pins/peas-row-commons-lib/util/dynamic-sections/procedures-section/procedure-section-builder.ts';
 
 /**
  * Build the manage list section that defines the "add procedure" flow.
  */
-export function buildProcedureManageList(questions: Record<string, unknown>): ManageListSection {
+export function buildProcedureManageList(questions: Record<string, Question>): ManageListSection {
 	return new ManageListSection()
 		.addQuestion(questions.procedureType)
 		.addQuestion(questions.procedureAdminType)
-		.withCondition((response: JourneyResponse) =>
-			questionHasAnswer(response, questions.procedureType, PROCEDURES_ID.ADMIN_IN_HOUSE)
-		)
+		.withCondition(whenQuestionHasAnswer(questions.procedureType, PROCEDURES_ID.ADMIN_IN_HOUSE))
 		.addQuestion(questions.procedureSiteVisitType)
-		.withCondition((response: JourneyResponse) =>
-			questionHasAnswer(response, questions.procedureType, PROCEDURES_ID.SITE_VISIT)
-		)
+		.withCondition(whenQuestionHasAnswer(questions.procedureType, PROCEDURES_ID.SITE_VISIT))
 		.addQuestion(questions.procedureInspector)
 		.withCondition((response: JourneyResponse) => {
 			/**
@@ -60,16 +57,14 @@ export function buildDynamicProcedureSections(
 /**
  * Build the "all questions" manage list section used by ProcedureSectionBuilder.
  */
-export function buildProcedureAllQuestionsSection(questions: Record<string, unknown>): ManageListSection {
+export function buildProcedureAllQuestionsSection(questions: Record<string, Question>): ManageListSection {
 	return (
 		new ManageListSection()
 			// Create-flow fields
 			.addQuestion(questions.procedureType)
 			.addQuestion(questions.procedureStatus)
 			.addQuestion(questions.procedureAdminType)
-			.withCondition((response: JourneyResponse) =>
-				questionHasAnswer(response, questions.procedureType, PROCEDURES_ID.ADMIN_IN_HOUSE)
-			)
+			.withCondition(whenQuestionHasAnswer(questions.procedureType, PROCEDURES_ID.ADMIN_IN_HOUSE))
 			.addQuestion(questions.procedureInspector)
 			.withCondition((response: JourneyResponse) => {
 				const isAdmin = questionHasAnswer(response, questions.procedureType, PROCEDURES_ID.ADMIN_IN_HOUSE);
@@ -81,9 +76,7 @@ export function buildProcedureAllQuestionsSection(questions: Record<string, unkn
 				return questionHasAnswer(response, questions.procedureAdminType, ADMIN_PROCEDURES_ID.INSPECTOR);
 			})
 			.addQuestion(questions.procedureSiteVisitType)
-			.withCondition((response: JourneyResponse) =>
-				questionHasAnswer(response, questions.procedureType, PROCEDURES_ID.SITE_VISIT)
-			)
+			.withCondition(whenQuestionHasAnswer(questions.procedureType, PROCEDURES_ID.SITE_VISIT))
 			.addQuestion(questions.procedureSiteVisitTypeDetail)
 			.withCondition(
 				(response: JourneyResponse) => !questionHasAnswer(response, questions.procedureType, PROCEDURES_ID.SITE_VISIT)

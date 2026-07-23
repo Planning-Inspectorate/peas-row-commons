@@ -1,11 +1,11 @@
-import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
+import { COMPONENT_TYPES, CrossQuestionValidator } from '@planning-inspectorate/dynamic-forms';
 import BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
 import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
 import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
 import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js';
 import NumericValidator from '@planning-inspectorate/dynamic-forms/src/validator/numeric-validator.js';
 import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
-import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/procedures.ts';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
 import CustomDatePeriodValidator from '@pins/peas-row-commons-lib/validators/custom-date-period-validator.ts';
 
 import {
@@ -27,25 +27,26 @@ import {
 	OBJECTOR_STATUSES,
 	CONTACT_TYPES,
 	DECISION_MAKER_TYPES
-} from '@pins/peas-row-commons-database/src/seed/static_data/index.ts';
+} from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
+import type { UserMap } from './types.ts';
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
-import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/outcome.ts';
+import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/outcome.ts';
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
 import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/validator.ts';
-import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/decision-maker-type.ts';
+import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
 import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-components/optional-date-component/validator.ts';
-import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
-import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/act-sections.ts';
+import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
 import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../../config.ts';
 import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
 import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
 import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { LEGACY_CONTACT_TYPES } from '@pins/peas-row-commons-database/src/seed/static_data/legacy/contact-types.ts';
-import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static_data/legacy/act-sections.ts';
-import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/admin-procedure-type.ts';
+import { LEGACY_CONTACT_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/legacy/contact-types.ts';
+import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/legacy/act-sections.ts';
+import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/admin-procedure-type.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
 import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
 import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
@@ -128,9 +129,13 @@ interface DateQuestionProps {
 	url?: string;
 	isDateTime?: boolean;
 	/**
-	 * Needed when we want dates to be optional.
+	 * Replaces DateValidator entirely. Needed when we want dates to be optional.
 	 */
 	overrideValidator?: typeof BaseValidator;
+	/**
+	 * Additional validators to merge with DateValidator (or overrideValidator if set).
+	 */
+	validators?: InstanceType<typeof BaseValidator>[];
 }
 
 export function dateQuestion({
@@ -142,7 +147,8 @@ export function dateQuestion({
 	question,
 	url,
 	isDateTime = false,
-	overrideValidator
+	overrideValidator,
+	validators = []
 }: DateQuestionProps) {
 	if (!title) {
 		title = camelCaseToSentenceCase(fieldName);
@@ -155,7 +161,7 @@ export function dateQuestion({
 		hint: hint,
 		fieldName: fieldName,
 		url: url || camelCaseToKebabCase(fieldName),
-		validators: [overrideValidator ? new overrideValidator(title) : new DateValidator(title)],
+		validators: [overrideValidator ? new overrideValidator(title) : new DateValidator(title), ...validators],
 		editable: editable,
 		viewData
 	};
@@ -196,7 +202,14 @@ export const DATE_QUESTIONS = {
 					formaction: 'start-date/remove'
 				}
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) => validateDateIsAfterReceivedDate(date, receivedDate, 'Start date')
+			})
+		]
 	}),
 	objectionPeriodEndsDate: dateQuestion({
 		fieldName: 'objectionPeriodEndsDate',
@@ -211,7 +224,15 @@ export const DATE_QUESTIONS = {
 					formaction: 'objection-period-end-date/remove'
 				}
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Objection period end date')
+			})
+		]
 	}),
 	expectedSubmissionDate: dateQuestion({
 		fieldName: 'expectedSubmissionDate',
@@ -240,7 +261,15 @@ export const DATE_QUESTIONS = {
 					formaction: 'date-decision-must-be-issued-by/remove'
 				}
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date decision must be issued by / expiry date')
+			})
+		]
 	}),
 	partiesDecisionNotificationDeadlineDate: dateQuestion({
 		fieldName: 'partiesDecisionNotificationDeadlineDate',
@@ -255,7 +284,15 @@ export const DATE_QUESTIONS = {
 					formaction: 'date-parties-must-be-notified-decision/remove'
 				}
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date to notify parties of decision')
+			})
+		]
 	}),
 	targetDecisionDate: dateQuestion({
 		fieldName: 'targetDecisionDate',
@@ -270,7 +307,15 @@ export const DATE_QUESTIONS = {
 					formaction: 'target-decision-date/remove'
 				}
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Target decision date')
+			})
+		]
 	}),
 	proposedModificationsDate: dateQuestion({
 		fieldName: 'proposedModificationsDate',
@@ -285,7 +330,15 @@ export const DATE_QUESTIONS = {
 					formaction: 'date-proposed-modifications-advertised/remove'
 				}
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date proposed modifications advertised')
+			})
+		]
 	})
 };
 
@@ -480,7 +533,13 @@ export const CASE_DETAILS_QUESTIONS = {
 				true, // endDateAfterStartDate
 				true, // endOptional
 				'Abeyance start date must be before the abeyance end date' // error message
-			)
+			),
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (abeyancePeriod, receivedDate) =>
+					validateDateRangeIsAfterReceivedDate(abeyancePeriod, receivedDate, 'Abeyance')
+			})
 		],
 		labels: { start: 'Start', end: 'End' },
 		hintStart: 'For example, 27 3 2007',
@@ -828,7 +887,15 @@ export const TEAM_QUESTIONS = {
 		viewData: {
 			tableHeader: 'Date appointed',
 			continueButtonText: 'Continue'
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date inspector appointed')
+			})
+		]
 	})
 };
 
@@ -839,7 +906,7 @@ export const TEAM_QUESTIONS = {
 export function createTeamQuestions(
 	teamQuestions: typeof TEAM_QUESTIONS,
 	groupMembers: EntraGroupMembers,
-	allUsers: Prisma.UserGetPayload<{ select: { id: true; idpUserId: true; legacyId: true } }>[]
+	userMap: UserMap
 ) {
 	const caseOfficers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
 	caseOfficers.unshift({ text: '', value: '' });
@@ -847,17 +914,19 @@ export function createTeamQuestions(
 	const inspectors = groupMembers.inspectors.map(referenceDataToRadioOptions);
 	inspectors.unshift({ text: '', value: '' });
 
+	const legacyOptions = getAndSortLegacyUsers(userMap);
+
 	return {
 		...teamQuestions,
 		caseOfficer: {
 			...teamQuestions.caseOfficer,
 			options: caseOfficers,
-			legacyOptions: allUsers.map((user) => ({ text: user.idpUserId, value: user.idpUserId }))
+			legacyOptions
 		},
 		inspector: {
 			...teamQuestions.inspector,
 			options: inspectors,
-			legacyOptions: allUsers.map((user) => ({ text: user.idpUserId, value: user.idpUserId }))
+			legacyOptions
 		}
 	};
 }
@@ -986,7 +1055,14 @@ export const OUTCOME_QUESTIONS = {
 		hint: 'Date of the decision, proposal, report or recommendation. For example 27 3 2007.',
 		viewData: {
 			continueButtonText: 'Continue'
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) => validateDateIsAfterReceivedDate(date, receivedDate, 'Outcome date')
+			})
+		]
 	}),
 	decisionReceivedDate: dateQuestion({
 		fieldName: 'decisionReceivedDate',
@@ -996,7 +1072,15 @@ export const OUTCOME_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			continueButtonText: 'Continue'
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Outcome received date')
+			})
+		]
 	}),
 	partiesNotifiedDate: dateQuestion({
 		fieldName: 'partiesNotifiedDate',
@@ -1010,7 +1094,15 @@ export const OUTCOME_QUESTIONS = {
 					formaction: 'parties-notified-date/remove'
 				}
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Parties notified of outcome')
+			})
+		]
 	}),
 	orderDecisionDispatchDate: dateQuestion({
 		fieldName: 'orderDecisionDispatchDate',
@@ -1024,7 +1116,15 @@ export const OUTCOME_QUESTIONS = {
 					formaction: 'order-decision-dispatch-date/remove'
 				}
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Order decision dispatch')
+			})
+		]
 	}),
 	sealedOrderReturnedDate: dateQuestion({
 		fieldName: 'sealedOrderReturnedDate',
@@ -1038,7 +1138,15 @@ export const OUTCOME_QUESTIONS = {
 					formaction: 'sealed-order-returned-date/remove'
 				}
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Sealed order returned')
+			})
+		]
 	}),
 	decisionPublishedDate: dateQuestion({
 		fieldName: 'decisionPublishedDate',
@@ -1052,7 +1160,15 @@ export const OUTCOME_QUESTIONS = {
 					formaction: 'decision-published-date/remove'
 				}
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Decision published')
+			})
+		]
 	})
 };
 
@@ -1411,7 +1527,15 @@ export const PROCEDURE_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'site-visit-date/remove' }]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Site visit date')
+			})
+		]
 	}),
 
 	// --- Hearing fields ---
@@ -1423,7 +1547,15 @@ export const PROCEDURE_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'target-hearing-date/remove' }]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Target hearing date')
+			})
+		]
 	}),
 	procedurePartiesNotifiedOfHearingDate: dateQuestion({
 		fieldName: 'partiesNotifiedOfHearingDate',
@@ -1435,7 +1567,15 @@ export const PROCEDURE_QUESTIONS = {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'party-notified-hearing-date/remove' }
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date parties must be notified of hearing')
+			})
+		]
 	}),
 	procedureEarliestHearingDate: dateQuestion({
 		fieldName: 'earliestHearingDate',
@@ -1447,7 +1587,15 @@ export const PROCEDURE_QUESTIONS = {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'earliest-potential-hearing-date/remove' }
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Earliest potential hearing date')
+			})
+		]
 	}),
 	procedureConfirmedHearingDate: dateQuestion({
 		fieldName: 'confirmedHearingDate',
@@ -1458,7 +1606,15 @@ export const PROCEDURE_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'confirmed-hearing-date/remove' }]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Confirmed hearing date')
+			})
+		]
 	}),
 	procedureHearingFormat: {
 		type: COMPONENT_TYPES.RADIO,
@@ -1490,7 +1646,15 @@ export const PROCEDURE_QUESTIONS = {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'date-notified-of-hearing-date/remove' }
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date parties notified of hearing date')
+			})
+		]
 	}),
 	procedureHearingVenueNotificationDate: dateQuestion({
 		fieldName: 'hearingVenueNotificationDate',
@@ -1502,7 +1666,15 @@ export const PROCEDURE_QUESTIONS = {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'date-notified-of-hearing-venue/remove' }
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date parties notified of hearing venue')
+			})
+		]
 	}),
 	procedureHearingClosedDate: dateQuestion({
 		fieldName: 'hearingClosedDate',
@@ -1512,7 +1684,15 @@ export const PROCEDURE_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'date-hearing-closed/remove' }]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date hearing closed')
+			})
+		]
 	}),
 	procedureHearingPreparationTime: {
 		type: COMPONENT_TYPES.NUMBER,
@@ -1588,7 +1768,15 @@ export const PROCEDURE_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'target-inquiry-date/remove' }]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Inquiry target date')
+			})
+		]
 	}),
 	procedurePartiesNotifiedOfInquiryDate: dateQuestion({
 		fieldName: 'partiesNotifiedOfInquiryDate',
@@ -1600,7 +1788,15 @@ export const PROCEDURE_QUESTIONS = {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'party-notified-inquiry-date/remove' }
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date parties must be notified of inquiry')
+			})
+		]
 	}),
 	procedureEarliestInquiryDate: dateQuestion({
 		fieldName: 'earliestInquiryDate',
@@ -1612,7 +1808,15 @@ export const PROCEDURE_QUESTIONS = {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'earliest-potential-inquiry-date/remove' }
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Earliest potential inquiry date')
+			})
+		]
 	}),
 	procedureConfirmedInquiryDate: dateQuestion({
 		fieldName: 'confirmedInquiryDate',
@@ -1622,7 +1826,15 @@ export const PROCEDURE_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'inquiry-date-confirmed/remove' }]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Confirmed inquiry date')
+			})
+		]
 	}),
 	procedureInquiryFormat: {
 		type: COMPONENT_TYPES.RADIO,
@@ -1654,7 +1866,15 @@ export const PROCEDURE_QUESTIONS = {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'date-notified-of-inquiry-date/remove' }
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date parties notified of inquiry date')
+			})
+		]
 	}),
 	procedureInquiryVenueNotificationDate: dateQuestion({
 		fieldName: 'inquiryVenueNotificationDate',
@@ -1666,7 +1886,15 @@ export const PROCEDURE_QUESTIONS = {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'date-notified-of-inquiry-venue/remove' }
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date parties notified of inquiry venue')
+			})
+		]
 	}),
 	procedureInquiryClosedDate: dateQuestion({
 		fieldName: 'inquiryClosedDate',
@@ -1676,7 +1904,15 @@ export const PROCEDURE_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'date-inquiry-closed/remove' }]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date inquiry closed')
+			})
+		]
 	}),
 	procedureInquiryPreparationTime: {
 		type: COMPONENT_TYPES.NUMBER,
@@ -1752,7 +1988,15 @@ export const PROCEDURE_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'proofs-received-date/remove' }]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Proofs of evidence received')
+			})
+		]
 	}),
 	procedureStatementsReceivedDate: dateQuestion({
 		fieldName: 'statementsOfCaseReceivedDate',
@@ -1762,7 +2006,15 @@ export const PROCEDURE_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'statements-received-date/remove' }]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Statements of case received')
+			})
+		]
 	}),
 	procedureCaseOfficerVerificationDate: dateQuestion({
 		fieldName: 'caseOfficerVerificationDate',
@@ -1775,7 +2027,15 @@ export const PROCEDURE_QUESTIONS = {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'case-officer-verification-case/remove' }
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Case officer verification date')
+			})
+		]
 	}),
 
 	// --- Pre-inquiry / Conference fields (shared by inquiry & hearing) ---
@@ -1802,7 +2062,15 @@ export const PROCEDURE_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'pre-inquiry-meeting-date/remove' }]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Pre inquiry meeting date')
+			})
+		]
 	}),
 	procedurePreInquiryFormat: {
 		type: COMPONENT_TYPES.RADIO,
@@ -1827,7 +2095,15 @@ export const PROCEDURE_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'pre-inquiry-note-sent/remove' }]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Pre inquiry meeting note sent')
+			})
+		]
 	}),
 	procedureCmcDate: dateQuestion({
 		fieldName: 'conferenceDate',
@@ -1838,7 +2114,15 @@ export const PROCEDURE_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'cmc-date/remove' }]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Case management conference date')
+			})
+		]
 	}),
 	procedureCmcFormat: {
 		type: COMPONENT_TYPES.RADIO,
@@ -1875,7 +2159,15 @@ export const PROCEDURE_QUESTIONS = {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'case-management-conference-note-sent/remove' }
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Case management conference note sent')
+			})
+		]
 	}),
 
 	// --- Admin-only fields ---
@@ -1887,7 +2179,14 @@ export const PROCEDURE_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'in-house-date/remove' }]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) => validateDateIsAfterReceivedDate(date, receivedDate, 'In house date')
+			})
+		]
 	}),
 
 	// --- Written reps-only fields ---
@@ -1901,7 +2200,15 @@ export const PROCEDURE_QUESTIONS = {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'date-offer-written-representations/remove' }
 			]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Date offer for written representations')
+			})
+		]
 	}),
 
 	procedureDeadlineForConsent: dateQuestion({
@@ -1913,7 +2220,15 @@ export const PROCEDURE_QUESTIONS = {
 		overrideValidator: OptionalDateValidator,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'deadline-consent/remove' }]
-		}
+		},
+		validators: [
+			new CrossQuestionValidator({
+				dependencyFieldName: 'receivedDate',
+				useBodyValuesForCurrent: true,
+				validationFunction: (date, receivedDate) =>
+					validateDateIsAfterReceivedDate(date, receivedDate, 'Deadline for consent')
+			})
+		]
 	})
 };
 
@@ -1924,12 +2239,13 @@ export function createProcedureDetailQuestions(
 	procedureQuestions: typeof PROCEDURE_QUESTIONS,
 	groupMembers: EntraGroupMembers,
 	inspectors: Record<string, unknown>[],
-	allUsers: Prisma.UserGetPayload<{ select: { id: true; idpUserId: true; legacyId: true } }>[]
+	userMap: UserMap
 ) {
 	const inspectorIds = inspectors?.map((inspector) => inspector.inspectorId);
 	const relevantInspectors = [...groupMembers.inspectors].filter((member) => inspectorIds.includes(member.id));
 	const inspectorOptions: RadioOption[] = relevantInspectors.map(referenceDataToRadioOptions);
-	const legacyOptions = allUsers.map((user) => ({ text: user.idpUserId, value: user.idpUserId }));
+	const legacyOptions = getAndSortLegacyUsers(userMap);
+
 	/**
 	 * Add "Not allocated yet" as a fallback option, separated by a divider.
 	 */
@@ -1976,4 +2292,66 @@ const FIELD_DISPLAY_NAMES: Record<string, string> = Object.fromEntries(
  */
 export function getFieldDisplayNames(fieldNames: string[]): string {
 	return fieldNames.map((field) => FIELD_DISPLAY_NAMES[field] ?? field).join(', ');
+}
+
+/**
+ * Takes a userMap and creates a sorted array of users
+ * and prepends an empty option for legacy radio questions that require it.
+ */
+function getAndSortLegacyUsers(userMap: UserMap) {
+	return [
+		{ text: '', value: '' },
+		...[...userMap.entries()]
+			.sort((a, b) => a[1].localeCompare(b[1]))
+			.map(([idpUserId, displayName]) => ({
+				text: displayName || idpUserId,
+				value: idpUserId
+			}))
+	];
+}
+
+export function validateDateRangeIsAfterReceivedDate(datePeriod: unknown, receivedDate: unknown, label: string) {
+	// Don't validate against received date if it doesn't exist
+	if (!receivedDate || !(receivedDate instanceof Date)) {
+		return true;
+	}
+
+	if (!datePeriod || typeof datePeriod !== 'object') {
+		throw new Error(`${label} period not found`);
+	}
+
+	if (!('start' in datePeriod) || !(datePeriod.start instanceof Date)) {
+		throw new Error(`${label} start date not found`);
+	}
+
+	if (!('end' in datePeriod) || !(datePeriod.end instanceof Date)) {
+		throw new Error(`${label} end date not found`);
+	}
+
+	if (datePeriod.start < receivedDate) {
+		throw new Error(`${label} start date cannot be before case received date`);
+	}
+
+	if (datePeriod.end < receivedDate) {
+		throw new Error(`${label} end date cannot be before case received date`);
+	}
+
+	return true;
+}
+
+export function validateDateIsAfterReceivedDate(date: unknown, receivedDate: unknown, label: string) {
+	// Don't validate against received date if it doesn't exist
+	if (!receivedDate || !(receivedDate instanceof Date)) {
+		return true;
+	}
+
+	if (!date || !(date instanceof Date)) {
+		throw new Error(`${label} not found`);
+	}
+
+	if (date < receivedDate) {
+		throw new Error(`${label} cannot be before case received date`);
+	}
+
+	return true;
 }

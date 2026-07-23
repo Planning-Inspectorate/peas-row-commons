@@ -1,5 +1,5 @@
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static_data/ids/contact-type.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { mapAddressDbToViewModel, mapAddressViewModelToDb } from './address.ts';
 import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
@@ -7,16 +7,7 @@ import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/v
 import AtLeastOneFieldValidator from '../forms/custom-components/multi-field-input/validator.ts';
 import { CUSTOM_COMPONENTS } from '../forms/custom-components/index.ts';
 import type { AddressItem, ContactMappingConfig } from './types.ts';
-
-export interface PersonConfig {
-	section: string;
-	db: string;
-	url: string;
-	label: string;
-	hintPrefix?: string;
-	orgNameLabel?: string;
-	viewData?: Record<string, unknown>;
-}
+import type { BaseQuestionProps } from '@planning-inspectorate/dynamic-forms/src/questions/create-questions.js';
 
 /**
  * Maps objectors DB data to view model.
@@ -176,10 +167,27 @@ function buildContactUpsert(
 	};
 }
 
+export interface PersonConfig<S extends string = string> {
+	section: S;
+	db: string;
+	url: string;
+	label: string;
+	hintPrefix?: string;
+	orgNameLabel?: string;
+	viewData?: Record<string, unknown>;
+}
+
+// TODO HRP-606 use specific question props types once dynamic-forms is updated
+type PersonQuestions<S extends string> = { [K in `${S}Name`]: BaseQuestionProps & Record<string, unknown> } & {
+	[K in `${S}Address`]: BaseQuestionProps & Record<string, unknown>;
+} & {
+	[K in `${S}ContactDetails`]: BaseQuestionProps & Record<string, unknown>;
+};
+
 /**
  * Boilerplate for creating a "contact" question in questions.ts
  */
-export const createPersonQuestions = ({
+export const createPersonQuestions = <S extends string>({
 	section,
 	db,
 	url,
@@ -187,7 +195,7 @@ export const createPersonQuestions = ({
 	orgNameLabel,
 	hintPrefix,
 	viewData = {}
-}: PersonConfig) => {
+}: PersonConfig<S>): PersonQuestions<S> => {
 	const labelLower = label.toLowerCase();
 
 	return {
@@ -277,5 +285,6 @@ export const createPersonQuestions = ({
 				})
 			]
 		}
-	};
+		// Assertion still required here for TypeScript due to computed property names
+	} as PersonQuestions<S>;
 };

@@ -1,18 +1,78 @@
-import { list } from '@planning-inspectorate/dynamic-forms/src/controller.js';
+import { list, JourneyResponse, clearDataFromSession } from '@planning-inspectorate/dynamic-forms';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import { caseToViewModel } from './view-model.ts';
 import { createJourney, JOURNEY_ID } from './journey.ts';
-import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import { isValidUuidFormat } from '@pins/peas-row-commons-lib/util/uuid.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { ManageService } from '#service';
 import type { Request, Response, NextFunction } from 'express';
 import { getQuestions } from './questions.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
-import { getEntraGroupMembers } from '#util/entra-groups.ts';
-import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
-import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import { buildUserDisplayNameMap, getEntraGroupMembers } from '#util/entra-groups.ts';
+import type { Section } from '@planning-inspectorate/dynamic-forms';
 import { hasAnyContacts } from '../contacts-download/index.ts';
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
+import { getOptionalStringParams, getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+
+const caseToViewInclude = {
+	SiteAddress: true,
+	SubType: true,
+	Type: true,
+	Dates: true,
+	Costs: true,
+	Abeyance: true,
+	Notes: {
+		take: 4,
+		orderBy: { createdAt: 'desc' },
+		include: {
+			Author: true,
+			NoteType: true
+		}
+	},
+	Authority: true,
+	Outcome: {
+		include: {
+			CaseDecisions: {
+				orderBy: { createdDate: 'asc' },
+				include: {
+					DecisionMaker: true,
+					DecisionMakerType: true,
+					DecisionType: true
+				}
+			}
+		}
+	},
+	Procedures: {
+		orderBy: { createdDate: 'asc' },
+		include: {
+			HearingVenue: true,
+			InquiryVenue: true,
+			ConferenceVenue: true,
+			Inspector: true
+		}
+	},
+	Inspectors: {
+		include: {
+			Inspector: true
+		}
+	},
+	Contacts: {
+		include: {
+			Address: true
+		}
+	},
+	RelatedCases: true,
+	LinkedCases: true,
+	CaseOfficer: true,
+	_count: {
+		select: {
+			Notes: true
+		}
+	}
+} satisfies Prisma.CaseInclude;
+
+type CaseToView = Prisma.CaseGetPayload<{ include: typeof caseToViewInclude }>;
 
 export function buildViewCaseDetails(): AsyncRequestHandler {
 	return async (req, res) => {
@@ -23,11 +83,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 
 		const firstVisit = req?.query?.firstVisit;
 
-		const id = req.params.id;
-
-		if (!id) {
-			throw new Error('id param required');
-		}
+		const id = getStringParam(req.params, 'id');
 
 		const caseUpdated = readSessionData(req, id, 'updated', { section: '' });
 
@@ -70,11 +126,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 }
 
 export function validateIdFormat(req: Request, res: Response, next: NextFunction) {
-	const id = req.params.id;
-
-	if (!id) {
-		throw new Error('id param required');
-	}
+	const id = getStringParam(req.params, 'id');
 
 	if (!isValidUuidFormat(id)) {
 		return notFoundHandler(req, res);
@@ -88,76 +140,15 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 	const groupIds = service.entraGroupIds;
 
 	return async (req, res, next) => {
-		const { id, section, manageListQuestion } = req.params;
-
-		if (!id) {
-			throw new Error('id param required');
-		}
+		const id = getStringParam(req.params, 'id');
+		const { section, manageListQuestion } = getOptionalStringParams(req.params, ['section', 'manageListQuestion']);
 
 		logger.info({ id }, 'view case');
 
-		const [caseToView, allUsers] = await db.$transaction([
-			db.case.findUnique({
-				where: { id },
-				include: {
-					SiteAddress: true,
-					SubType: true,
-					Type: true,
-					Dates: true,
-					Costs: true,
-					Abeyance: true,
-					Notes: {
-						take: 4,
-						orderBy: { createdAt: 'desc' },
-						include: {
-							Author: true,
-							NoteType: true
-						}
-					},
-					Authority: true,
-					Outcome: {
-						include: {
-							CaseDecisions: {
-								orderBy: { createdDate: 'asc' },
-								include: {
-									DecisionMaker: true,
-									DecisionMakerType: true,
-									DecisionType: true
-								}
-							}
-						}
-					},
-					Procedures: {
-						orderBy: { createdDate: 'asc' },
-						include: {
-							HearingVenue: true,
-							InquiryVenue: true,
-							ConferenceVenue: true,
-							Inspector: true
-						}
-					},
-					Inspectors: {
-						include: {
-							Inspector: true
-						}
-					},
-					Contacts: {
-						include: {
-							Address: true
-						}
-					},
-					RelatedCases: true,
-					LinkedCases: true,
-					CaseOfficer: true,
-					_count: {
-						select: {
-							Notes: true
-						}
-					}
-				}
-			}),
-			db.user.findMany() // Find all users in app so far, needed for legacy users which aren't in IDP
-		]);
+		const caseToView = await db.case.findUnique({
+			where: { id },
+			include: caseToViewInclude
+		});
 
 		if (caseToView === null) {
 			return notFoundHandler(req, res);
@@ -170,15 +161,23 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 			groupIds
 		});
 
-		const lastModified = await service.audit.getLastModifiedInfo(id, groupMembers);
+		const userIds = getCaseUsers(caseToView);
 
-		const answers = caseToViewModel(caseToView, groupMembers);
+		const userMap = await buildUserDisplayNameMap(groupMembers, userIds, {
+			logger,
+			initClient: getEntraClient,
+			session: req.session
+		});
+
+		const lastModified = await service.audit.getLastModifiedInfo(id, userMap);
+
+		const answers = caseToViewModel(caseToView, userMap);
 
 		const removedIds = (req.session.removedListItems || []) as string[];
 
 		const finalAnswers = combineSessionAndDbData(res, answers, removedIds);
 
-		const questions = getQuestions(groupMembers, allUsers, answers);
+		const questions = getQuestions(groupMembers, answers, userMap);
 
 		// put these on locals for the list controller
 		res.locals.originalAnswers = { ...answers };
@@ -286,18 +285,38 @@ function clearAllSessionData(req: Request, res: Response, id: string) {
 }
 
 /**
- * Takes a section name and builds the html around it so we can anchor to
- * the correct section after successful update.
+ * Builds a success banner
+ *
+ * Takes an optional section name and builds the HTML around it so we can anchor to
+ * the correct section after successful update if defined.
  *
  * Replaces spaces with hyphens for consistency in URL
  */
-function buildSuccessHtml(section: string) {
+function buildSuccessHtml(section?: string | undefined) {
+	if (!section) {
+		return `
+		<p class="govuk-notification-banner__heading">
+      		Case has been updated.
+    </p>
+	`;
+	}
 	const safeAnchorId = section.toLowerCase().replace(/\s+/g, '-');
 
 	return `
 		<p class="govuk-notification-banner__heading">
       		Case has been updated.
 			<a class="govuk-notification-banner__link" href="#${safeAnchorId}">Return to section</a>
-    	</p>
+    </p>
 	`;
+}
+
+function getCaseUsers(caseToView: CaseToView): string[] {
+	const userIds = [
+		caseToView.CaseOfficer?.idpUserId,
+		...(caseToView.Procedures ?? []).map((procedure) => procedure.Inspector?.idpUserId),
+		...(caseToView.Outcome?.CaseDecisions ?? []).map((decision) => decision.DecisionMaker?.idpUserId),
+		...(caseToView.Notes ?? []).map((note) => note.Author?.idpUserId)
+	];
+
+	return [...new Set(userIds.filter(isDefined))];
 }

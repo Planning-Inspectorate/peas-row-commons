@@ -13,7 +13,7 @@ import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { FolderBreadcrumb } from '../types.ts';
-import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
+import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms';
 import { JOURNEY_ID } from '../../move-file/journey/journey.ts';
 import {
 	DocumentFilterGenerator,
@@ -21,6 +21,8 @@ import {
 } from '@pins/peas-row-commons-lib/util/user-document-filter-generator.ts';
 import { determineDefaultStatuses } from '@pins/peas-row-commons-lib/util/user-document-status.ts';
 import { CLOSED_STATUSES } from '@pins/peas-row-commons-lib/constants/statuses.ts';
+import { getFolderStats } from '@pins/peas-row-commons-database/util/folder.ts';
+import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 
 export function buildViewCaseFolder(
 	service: ManageService,
@@ -30,22 +32,12 @@ export function buildViewCaseFolder(
 	const filterGenerator = new FilterGenerator();
 
 	return async (req, res, next) => {
-		const id = req.params.id;
-		const folderId = req.params.folderId;
+		const { id, folderId } = getStringParams(req.params, ['id', 'folderId']);
+
 		const userId = req?.session?.account?.localAccountId;
-
-		if (!id) {
-			throw new Error('id param required');
-		}
-
-		if (!folderId) {
-			throw new Error('folderId param required');
-		}
-
 		if (!userId) {
 			throw new Error('userId required for folder documents');
 		}
-
 		const [folderUpdated, folderCreated, folderDeleted, folderRenamed, filesMoved, filesDeleted, errorSummary] =
 			readAndClearSessionData(req);
 
@@ -80,41 +72,48 @@ export function buildViewCaseFolder(
 				deletedAt: null
 			};
 
-			const [folderData, paginatedDocuments, totalFilteredDocuments, allDocumentStatuses, allDocumentsCount] =
-				await Promise.all([
-					db.folder.findUnique({
-						where: { id: folderId },
-						include: {
-							ChildFolders: { where: { caseId: id, deletedAt: null } },
-							ParentFolder: { select: { id: true, displayName: true } }
+			const [
+				folderData,
+				paginatedDocuments,
+				totalFilteredDocuments,
+				allDocumentStatuses,
+				folderDocumentsCount,
+				allDocumentsAndSubFoldersCount
+			] = await Promise.all([
+				db.folder.findUnique({
+					where: { id: folderId },
+					include: {
+						ChildFolders: { where: { caseId: id, deletedAt: null } },
+						ParentFolder: { select: { id: true, displayName: true } }
+					}
+				}),
+				db.document.findMany({
+					where: { ...baseDocumentWhere, ...dynamicDocumentWhere },
+					skip: skipSize,
+					take: pageSize,
+					include: {
+						Folder: true,
+						UserDocuments: { where: { User: { idpUserId: userId } } }
+					},
+					orderBy: { uploadedDate: 'desc' }
+				}),
+				db.document.count({
+					where: { ...baseDocumentWhere, ...dynamicDocumentWhere }
+				}),
+				db.document.findMany({
+					where: baseDocumentWhere,
+					select: {
+						UserDocuments: {
+							where: { User: { idpUserId: userId } },
+							select: { readStatus: true, flaggedStatus: true }
 						}
-					}),
-					db.document.findMany({
-						where: { ...baseDocumentWhere, ...dynamicDocumentWhere },
-						skip: skipSize,
-						take: pageSize,
-						include: {
-							Folder: true,
-							UserDocuments: { where: { User: { idpUserId: userId } } }
-						},
-						orderBy: { uploadedDate: 'desc' }
-					}),
-					db.document.count({
-						where: { ...baseDocumentWhere, ...dynamicDocumentWhere }
-					}),
-					db.document.findMany({
-						where: baseDocumentWhere,
-						select: {
-							UserDocuments: {
-								where: { User: { idpUserId: userId } },
-								select: { readStatus: true, flaggedStatus: true }
-							}
-						}
-					}),
-					db.document.count({
-						where: baseDocumentWhere
-					})
-				]);
+					}
+				}),
+				db.document.count({
+					where: baseDocumentWhere
+				}),
+				getFolderStats(db, folderId)
+			]);
 
 			if (!folderData) {
 				return notFoundHandler(req, res);
@@ -125,7 +124,7 @@ export function buildViewCaseFolder(
 			const currentPath = req.originalUrl.split('?')[0];
 			const filterViewModel = filterGenerator.generateFilters(req.query, currentPath, counts);
 
-			const folderPath = await getFolderPath(db, folderId);
+			const folderPath = await getFolderPath(db, id, folderId);
 			const breadcrumbItems = buildBreadcrumbItems(id, folderPath);
 
 			const { totalPages, resultsStartNumber, resultsEndNumber } = getPageData(
@@ -142,7 +141,10 @@ export function buildViewCaseFolder(
 				resultsStartNumber,
 				resultsEndNumber,
 				totalFilteredDocuments,
-				totalDocuments: allDocumentsCount,
+				totalDocumentsCount: allDocumentsAndSubFoldersCount.totalDocuments,
+				totalSubFolders: allDocumentsAndSubFoldersCount.totalFolders,
+				subFoldersCount: createFoldersViewModel(folderData.ChildFolders).length,
+				documentCount: folderDocumentsCount,
 				uiItems: getPaginationModel(req, totalPages, pageNumber),
 				filtersValue: filterGenerator.createCurrentlySelectedFilterValues(req.query)
 			};
@@ -202,16 +204,20 @@ export function buildViewCaseFolder(
  * Fetches the folder path (ancestry chain) from current folder up to root.
  * Returns folders in order from root to current folder.
  */
-export async function getFolderPath(db: PrismaClient, folderId: string): Promise<FolderBreadcrumb[]> {
-	const currentFolder = await db.folder.findUnique({
-		where: { id: folderId },
-		select: { caseId: true }
-	});
+export async function getFolderPath(db: PrismaClient, folderId: string, caseId?: string): Promise<FolderBreadcrumb[]> {
+	const resolvedCaseId =
+		caseId ??
+		(
+			await db.folder.findUnique({
+				where: { id: folderId },
+				select: { caseId: true }
+			})
+		)?.caseId;
 
-	if (!currentFolder?.caseId) return [];
+	if (!resolvedCaseId) return [];
 
 	const allFolders = await db.folder.findMany({
-		where: { caseId: currentFolder.caseId },
+		where: { caseId: caseId },
 		select: {
 			id: true,
 			displayName: true,
@@ -246,7 +252,7 @@ export async function getFolderPath(db: PrismaClient, folderId: string): Promise
  * to a folder, so we use its own id, same with renaming and moving files.
  */
 function readAndClearSessionData(req: Request) {
-	const { id, folderId } = req.params;
+	const { id, folderId } = getStringParams(req.params, ['id', 'folderId']);
 
 	const folderUpdated = readSessionData(req, folderId, 'updated', false, 'folder');
 	const folderRenamed = readSessionData(req, folderId, 'renamed', false, 'folder');

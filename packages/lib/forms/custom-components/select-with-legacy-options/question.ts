@@ -17,7 +17,6 @@ import SelectQuestion from '@planning-inspectorate/dynamic-forms/src/components/
  * allow any new cases to change their act to this.
  */
 export default class LegacySelectQuestion extends SelectQuestion {
-	html?: string;
 	label?: string;
 	legend?: string;
 	legacyOptions: Option[];

@@ -29,3 +29,8 @@ services:
       --location /data
       --blobHost 0.0.0.0
       --skipApiVersionCheck
+  redis:
+    image: redis:7-alpine
+    container_name: mpesc-redis
+    ports:
+      - '6379:6379'

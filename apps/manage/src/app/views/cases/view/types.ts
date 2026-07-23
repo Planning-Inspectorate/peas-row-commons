@@ -75,3 +75,7 @@ export type Inspector = {
 export type CaseUpdated = {
 	section: string;
 };
+/**
+ * A map of user IDs to display names, used to avoid multiple lookups for the same user when rendering lists of items with associated users (e.g. case history events).
+ */
+export type UserMap = Map<string, string>;
