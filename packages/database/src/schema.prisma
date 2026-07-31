@@ -49,6 +49,7 @@ model Case {
   location                 String?
   caseOfficerId            String?                       @db.UniqueIdentifier
   CaseOfficer              User?                         @relation("caseOfficer", fields: [caseOfficerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  /// TODO HRP-545 remove old linked cases structure
   linkedCases              String?
   Dates                    CaseDates?
   /// Physical location of real-world files
@@ -91,8 +92,13 @@ model Case {
   Contacts                 Contact[]
   /// Related Cases to this case
   RelatedCases             RelatedCase[]
+  /// TODO HRP-545 remove old linked cases structure
   /// Cases linked to this case
   LinkedCases              LinkedCase[]
+  /// Cases where this case is the parent
+  ChildRelationships       CaseRelationship[]            @relation("ParentCase")
+  /// Cases where this case is the child (one level only - child cases cannot have children)
+  ParentRelationship       CaseRelationship?             @relation("ChildCase")
   /// User read statuses for this case's files
   UserDocuments            UserDocument[]
 }
@@ -616,12 +622,24 @@ model RelatedCase {
   Case      Case    @relation(fields: [caseId], references: [id])
 }
 
+/// TODO HRP-545 remove old linked cases structure
 model LinkedCase {
   id        String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   reference String?
   isLead    Boolean @default(false)
   caseId    String  @db.UniqueIdentifier
   Case      Case    @relation(fields: [caseId], references: [id])
+}
+
+/// Join table for parent-child case relationships (one level only - child cases cannot have children)
+model CaseRelationship {
+  id           String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  parentCaseId String @db.UniqueIdentifier
+  ParentCase   Case   @relation("ParentCase", fields: [parentCaseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  childCaseId  String @unique @db.UniqueIdentifier
+  ChildCase    Case   @relation("ChildCase", fields: [childCaseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([parentCaseId])
 }
 
 /// Authority represents the authority responsible for the case, e.g. local council
