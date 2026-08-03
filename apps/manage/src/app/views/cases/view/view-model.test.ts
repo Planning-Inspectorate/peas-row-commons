@@ -147,9 +147,17 @@ describe('view-model', () => {
 			assert.deepStrictEqual(result.inspectorDetails, mockInspectors);
 		});
 
-		it('should pass through Related Case data to relatedCaseDetails', () => {
-			const mockRelations = [{ reference: 'DRO/123', id: 1 }];
-			const mockOutcome = [{ relatedCaseReference: 'DRO/123', id: 1 }];
+		it('should pass through Related Case data to relatedCaseDetails sorted alphanumerically', () => {
+			const mockRelations = [
+				{ reference: 'DRO/10', id: 3 },
+				{ reference: 'DRO/2', id: 2 },
+				{ reference: 'DRO/1', id: 1 }
+			];
+			const mockOutcome = [
+				{ relatedCaseReference: 'DRO/1', id: 1 },
+				{ relatedCaseReference: 'DRO/2', id: 2 },
+				{ relatedCaseReference: 'DRO/10', id: 3 }
+			];
 			const input = {
 				id: '123',
 				receivedDate: new Date(),
@@ -161,9 +169,17 @@ describe('view-model', () => {
 			assert.deepStrictEqual(result.relatedCaseDetails, mockOutcome);
 		});
 
-		it('should pass through Linked Case data to linkedCaseDetails', () => {
-			const mockRelations = [{ reference: 'DRO/123', isLead: true, id: 1 }];
-			const mockOutcome = [{ linkedCaseReference: 'DRO/123', linkedCaseIsLead: 'yes', id: 1 }];
+		it('should pass through Linked Case data to linkedCaseDetails sorted with lead cases first, then alphanumerically', () => {
+			const mockRelations = [
+				{ reference: 'DRO/10', isLead: false, id: 3 },
+				{ reference: 'DRO/2', isLead: true, id: 2 },
+				{ reference: 'DRO/1', isLead: false, id: 1 }
+			];
+			const mockOutcome = [
+				{ linkedCaseReference: 'DRO/2', linkedCaseIsLead: 'yes', id: 2 },
+				{ linkedCaseReference: 'DRO/1', linkedCaseIsLead: 'no', id: 1 },
+				{ linkedCaseReference: 'DRO/10', linkedCaseIsLead: 'no', id: 3 }
+			];
 			const input = {
 				id: '123',
 				receivedDate: new Date(),

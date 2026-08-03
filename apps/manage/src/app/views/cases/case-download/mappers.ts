@@ -26,6 +26,7 @@ import { getUniqueProcedureFields } from '@pins/peas-row-commons-lib/util/dynami
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
 import { formatAddress, formatDate, formatDateTime } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
 import { getUserDisplayName } from '#util/entra-groups.ts';
+import { sortLinkedCases, sortRelatedCases } from '@pins/peas-row-commons-lib/util/case-sorting.ts';
 
 /**
  * Maps a Prisma Address record to the simplified PDF address format.
@@ -322,11 +323,11 @@ export function mapCaseDetailsData(
 			}
 		: undefined;
 
-	const relatedCases = (caseData.RelatedCases ?? [])
+	const relatedCases = sortRelatedCases(caseData.RelatedCases ?? [])
 		.map((rc) => rc.reference)
 		.filter((ref): ref is string => ref !== null && ref !== undefined);
 
-	const linkedCases = (caseData.LinkedCases ?? []).map((lc) => ({
+	const linkedCases = sortLinkedCases(caseData.LinkedCases ?? []).map((lc) => ({
 		reference: lc.reference ?? GENERAL_CONSTANTS.NOT_APPLICABLE,
 		isLead: lc.isLead
 	}));

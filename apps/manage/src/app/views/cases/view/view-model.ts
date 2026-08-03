@@ -17,6 +17,7 @@ import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-d
 import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/legacy/act-sections.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
 import { getUserDisplayName } from '#util/entra-groups.ts';
+import { sortLinkedCases, sortRelatedCases } from '@pins/peas-row-commons-lib/util/case-sorting.ts';
 
 function formatValue(value: any) {
 	if (typeof value === 'boolean') {
@@ -183,7 +184,7 @@ export function caseToViewModel(caseRow: CaseListFields, userMap: UserMap) {
 	}
 
 	if (caseRow.RelatedCases?.length) {
-		mergedData.relatedCaseDetails = caseRow.RelatedCases.map((relatedCase) => ({
+		mergedData.relatedCaseDetails = sortRelatedCases(caseRow.RelatedCases).map((relatedCase) => ({
 			id: relatedCase.id,
 			relatedCaseReference: relatedCase.reference
 		}));
@@ -191,7 +192,7 @@ export function caseToViewModel(caseRow: CaseListFields, userMap: UserMap) {
 	}
 
 	if (caseRow.LinkedCases?.length) {
-		mergedData.linkedCaseDetails = caseRow.LinkedCases.map((linkedCase) => ({
+		mergedData.linkedCaseDetails = sortLinkedCases(caseRow.LinkedCases).map((linkedCase) => ({
 			id: linkedCase.id,
 			linkedCaseReference: linkedCase.reference,
 			linkedCaseIsLead: formatValue(linkedCase.isLead)
