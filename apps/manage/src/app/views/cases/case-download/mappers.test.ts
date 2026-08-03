@@ -430,31 +430,39 @@ describe('mappers', () => {
 			assert.strictEqual(result.costs, undefined);
 		});
 
-		it('should map related cases as string array', () => {
+		it('should map related cases as string array sorted alphanumerically', () => {
 			const caseData = createBaseCaseData({
-				RelatedCases: [{ reference: 'REL-001' }, { reference: 'REL-002' }, { reference: null }]
+				RelatedCases: [
+					{ reference: 'REL-010' },
+					{ reference: 'REL-002' },
+					{ reference: 'REL-001' },
+					{ reference: null }
+				]
 			});
 
 			const result = mapCaseDetailsData(caseData as any, undefined, new Map());
 
-			assert.deepStrictEqual(result.relatedCases, ['REL-001', 'REL-002']);
+			assert.deepStrictEqual(result.relatedCases, ['REL-001', 'REL-002', 'REL-010']);
 		});
 
-		it('should map linked cases with lead flag', () => {
+		it('should map linked cases with lead cases first, then alphanumerically', () => {
 			const caseData = createBaseCaseData({
 				LinkedCases: [
-					{ reference: 'LINK-001', isLead: true },
-					{ reference: 'LINK-002', isLead: false },
+					{ reference: 'LINK-010', isLead: false },
+					{ reference: 'LINK-001', isLead: false },
+					{ reference: 'LINK-002', isLead: true },
 					{ reference: null, isLead: false }
 				]
 			});
 
 			const result = mapCaseDetailsData(caseData as any, undefined, new Map());
 
-			assert.strictEqual(result.linkedCases.length, 3);
-			assert.strictEqual(result.linkedCases[0].reference, 'LINK-001');
+			assert.strictEqual(result.linkedCases.length, 4);
+			assert.strictEqual(result.linkedCases[0].reference, 'LINK-002');
 			assert.strictEqual(result.linkedCases[0].isLead, true);
-			assert.strictEqual(result.linkedCases[2].reference, 'N/A');
+			assert.strictEqual(result.linkedCases[1].reference, 'N/A');
+			assert.strictEqual(result.linkedCases[2].reference, 'LINK-001');
+			assert.strictEqual(result.linkedCases[3].reference, 'LINK-010');
 		});
 
 		it('should map document info fields', () => {
