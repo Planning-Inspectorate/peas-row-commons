@@ -2,6 +2,14 @@
  * Utility functions for sorting case-related data.
  */
 
+/**
+ * Compares two references alphanumerically.
+ * Uses numeric collation so that 'CASE/2' comes before 'CASE/10'.
+ */
+function compareReferences(a?: string | null, b?: string | null): number {
+	return (a ?? '').localeCompare(b ?? '', undefined, { numeric: true });
+}
+
 interface LinkedCaseSortable {
 	reference?: string | null;
 	isLead: boolean;
@@ -19,11 +27,7 @@ export function sortLinkedCases<T extends LinkedCaseSortable>(cases: T[]): T[] {
 			return a.isLead ? -1 : 1;
 		}
 
-		const aRef = a.reference ?? '';
-		const bRef = b.reference ?? '';
-
-		// Then alphanumeric by reference
-		return aRef.localeCompare(bRef, undefined, { numeric: true });
+		return compareReferences(a.reference, b.reference);
 	});
 }
 
@@ -37,11 +41,5 @@ interface RelatedCaseSortable {
  * Uses numeric collation so that 'CASE/2' comes before 'CASE/10'.
  */
 export function sortRelatedCases<T extends RelatedCaseSortable>(cases: T[]): T[] {
-	return [...cases].sort((a, b) => {
-		const aRef = a.reference ?? '';
-		const bRef = b.reference ?? '';
-
-		// Then alphanumeric by reference
-		return aRef.localeCompare(bRef, undefined, { numeric: true });
-	});
+	return [...cases].sort((a, b) => compareReferences(a.reference, b.reference));
 }
