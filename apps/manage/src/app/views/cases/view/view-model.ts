@@ -322,12 +322,14 @@ export const mapNotes = (unmappedCaseNotes: Omit<CaseNoteFields, 'Case'>[], user
 		caseNotes: caseNotes.map((caseNote) => {
 			const userName = getUserDisplayName(userMap, caseNote.Author.idpUserId);
 			return {
+				id: caseNote.id,
 				date: dateISOStringToDisplayDate(caseNote.createdAt),
 				dayOfWeek: getDayFromISODate(caseNote.createdAt),
 				time: dateISOStringToDisplayTime12hr(caseNote.createdAt),
 				commentText: nl2br(caseNote.comment),
 				truncatedCommentText: nl2br(truncateComment(caseNote.comment, `/cases/${caseId}/case-notes`)),
-				userName
+				userName,
+				changedDate: caseNote.updatedAt ? dateISOStringToDisplayDate(caseNote.updatedAt) : null
 			};
 		})
 	};

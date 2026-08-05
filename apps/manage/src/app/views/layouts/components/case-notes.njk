@@ -28,9 +28,16 @@
 				<p class="govuk-body govuk-!-margin-bottom-1 govuk-!-text-break-word">
 					{{ caseNote.truncatedCommentText | safe }}
 				</p>
-				<p class="govuk-hint govuk-!-margin-bottom-6">
-					{{ [caseNote.time, ' on ', caseNote.dayOfWeek, ' ', caseNote.date, ' by ', caseNote.userName] | join }}
+				<p class="govuk-hint govuk-!-margin-bottom-2">
+					{{ [caseNote.time, ' on ', caseNote.dayOfWeek, ' ', caseNote.date, ' by ', caseNote.userName] | join }}{% if caseNote.changedDate %} (Changed {{ caseNote.changedDate }}){% endif %}
 				</p>
+				<ul class="govuk-list govuk-list--inline govuk-!-margin-bottom-6">
+					<li>
+						<a class="govuk-link govuk-link--no-visited-state" href="{{ params.currentUrl }}/case-notes/{{ caseNote.id }}/edit" data-cy="change-note-link-{{ loop.index0 }}">
+							Change<span class="govuk-visually-hidden"> case note by {{ caseNote.userName }}</span>
+						</a>
+					</li>
+				</ul>
 				<hr class="govuk-section-break govuk-section-break--l govuk-section-break--visible">
 			</section>
 		{%- endfor -%}
