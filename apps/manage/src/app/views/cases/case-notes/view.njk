@@ -22,9 +22,14 @@
             {% else %}
                 {% set tableRows = [] %}
                 {% for note in caseNotes %}
+                    {% set changeHtml %}
+                        <a class="govuk-link govuk-link--no-visited-state" href="{{ currentUrl }}/{{ note.id }}/edit" data-cy="change-note-link-{{ loop.index0 }}">
+                            Change<span class="govuk-visually-hidden"> case note by {{ note.userName }}</span>
+                        </a>
+                    {% endset %}
                     {% set tableRows = (tableRows.push([
                         {
-                            html: note.date + "<br>" + note.time,
+                            html: note.date + "<br>" + note.time + ("" if not note.changedDate else "<br>(Changed " + note.changedDate + ")"),
                             attributes: { "data-cy": "note-date-" + loop.index0 }
                         },
                         {
@@ -35,6 +40,10 @@
                         {
                             text: note.userName,
                             attributes: { "data-cy": "note-user-" + loop.index0 }
+                        },
+                        {
+                            html: changeHtml,
+                            attributes: { "data-cy": "note-actions-" + loop.index0 }
                         }
                     ]), tableRows) %}
                 {% endfor %}
@@ -46,7 +55,8 @@
                     head: [
                         { text: "Date and time", classes: "govuk-!-width-one-quarter" },
                         { text: "Details" },
-                        { text: "User", classes: "govuk-!-width-one-quarter" }
+                        { text: "User", classes: "govuk-!-width-one-quarter" },
+                        { text: "Actions" }
                     ],
                     rows: tableRows
                 }) }}
