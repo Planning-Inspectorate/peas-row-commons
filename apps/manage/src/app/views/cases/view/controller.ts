@@ -85,7 +85,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 
 		const id = getStringParam(req.params, 'id');
 
-		const caseUpdated = readSessionData(req, id, 'updated', { section: '' });
+		const caseUpdated = readSessionData(req, id, 'updated', { section: '', message: '' });
 
 		clearAllSessionData(req, res, id);
 
@@ -99,6 +99,8 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 				: undefined;
 
 		const sectionName = matchedSection?.name || '';
+		const customMessage = typeof caseUpdated === 'object' ? caseUpdated.message : '';
+		const hasUpdate = !!sectionName || !!customMessage;
 
 		const hasContacts = hasAnyContacts(res.locals?.journeyResponse?.answers ?? {});
 
@@ -111,8 +113,8 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 			baseUrl,
 			backLinkUrl: res.locals.backLinkUrl || '/cases',
 			caseUpdatedParams: {
-				updated: !!sectionName,
-				html: sectionName ? buildSuccessHtml(sectionName) : ''
+				updated: hasUpdate,
+				html: hasUpdate ? buildSuccessHtml(sectionName, customMessage) : ''
 			},
 			hasContacts,
 			currentUrl: req.originalUrl,
@@ -292,11 +294,13 @@ function clearAllSessionData(req: Request, res: Response, id: string) {
  *
  * Replaces spaces with hyphens for consistency in URL
  */
-function buildSuccessHtml(section?: string | undefined) {
+export function buildSuccessHtml(section?: string | undefined, customMessage?: string) {
+	const message = customMessage || 'Case has been updated.';
+
 	if (!section) {
 		return `
 		<p class="govuk-notification-banner__heading">
-      		Case has been updated.
+			${message}
     </p>
 	`;
 	}
@@ -304,7 +308,7 @@ function buildSuccessHtml(section?: string | undefined) {
 
 	return `
 		<p class="govuk-notification-banner__heading">
-      		Case has been updated.
+			${message}
 			<a class="govuk-notification-banner__link" href="#${safeAnchorId}">Return to section</a>
     </p>
 	`;

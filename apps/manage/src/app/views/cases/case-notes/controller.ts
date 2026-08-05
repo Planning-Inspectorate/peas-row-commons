@@ -11,6 +11,7 @@ import { buildUserDisplayNameMap, getEntraGroupMembers } from '#util/entra-group
 import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
+import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 
 /**
  * Preloads case and note data for edit routes, populating res.locals.
@@ -270,6 +271,9 @@ export function buildUpdateCaseNote(service: ManageService): AsyncRequestHandler
 		});
 
 		logger.info({ caseId, noteId }, 'case note updated');
+
+		// Set success message for case details page
+		addSessionData(req, caseId, { updated: { message: 'Case note changed' } });
 
 		// Return back to case view page
 		res.redirect(`/cases/${caseId}`);
