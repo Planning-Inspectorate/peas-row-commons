@@ -344,6 +344,36 @@ describe('view-model', () => {
 
 			assert.ok(result.caseNotes[0].truncatedCommentText.includes('...'));
 		});
+
+		it('should return changedDate when updatedAt is set', async () => {
+			const input = [
+				{
+					createdAt: new Date('2024-01-01T10:00:00.000Z'),
+					updatedAt: new Date('2024-06-15T14:30:00.000Z'),
+					comment: 'Edited note',
+					Author: { idpUserId: '123' }
+				}
+			];
+
+			const result = mapNotes(input as any, userMap, '123');
+
+			assert.strictEqual(result.caseNotes[0].changedDate, '15 June 2024');
+		});
+
+		it('should return null changedDate when updatedAt is not set', async () => {
+			const input = [
+				{
+					createdAt: new Date('2024-01-01T10:00:00.000Z'),
+					updatedAt: null,
+					comment: 'Original note',
+					Author: { idpUserId: '123' }
+				}
+			];
+
+			const result = mapNotes(input as any, userMap, '123');
+
+			assert.strictEqual(result.caseNotes[0].changedDate, null);
+		});
 	});
 
 	describe('mapAndSortDecisions', () => {

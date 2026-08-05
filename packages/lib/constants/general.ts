@@ -1,3 +1,4 @@
 export const GENERAL_CONSTANTS = {
-	NOT_APPLICABLE: 'N/A'
+	NOT_APPLICABLE: 'N/A',
+	CASE_NOTE_MAX_LENGTH: 500
 } as const;

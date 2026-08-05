@@ -251,6 +251,7 @@ model CaseNote {
   /// Comment length is 500 in UI, but 4000 in Horizon, so we have to support those old notes
   comment      String    @db.NVarChar(4000)
   createdAt    DateTime  @default(now())
+  updatedAt    DateTime?
   authorId     String    @db.UniqueIdentifier
   Author       User      @relation("author", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   caseId       String    @db.UniqueIdentifier
