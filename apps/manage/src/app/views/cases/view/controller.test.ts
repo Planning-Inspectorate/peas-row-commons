@@ -4,7 +4,8 @@ import {
 	buildViewCaseDetails,
 	validateIdFormat,
 	buildGetJourneyMiddleware,
-	combineSessionAndDbData
+	combineSessionAndDbData,
+	buildSuccessHtml
 } from './controller.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 
@@ -302,6 +303,67 @@ describe('Case Controller', () => {
 			assert.strictEqual(result.brandNewField, 'Brand New Value');
 			assert.strictEqual(Array.isArray(result.newArrayField), true);
 			assert.strictEqual(result.newArrayField[0].label, 'New Array Item');
+		});
+	});
+
+	describe('buildSuccessHtml', () => {
+		it('should return default message without anchor when no section or customMessage provided', () => {
+			const result = buildSuccessHtml();
+
+			assert.ok(result.includes('Case has been updated.'), 'Should contain default message');
+			assert.ok(result.includes('govuk-notification-banner__heading'), 'Should have correct CSS class');
+			assert.ok(!result.includes('<a'), 'Should not contain anchor tag');
+			assert.ok(!result.includes('Return to section'), 'Should not contain return link text');
+		});
+
+		it('should return default message with anchor when only section is provided', () => {
+			const result = buildSuccessHtml('Site Details');
+
+			assert.ok(result.includes('Case has been updated.'), 'Should contain default message');
+			assert.ok(result.includes('govuk-notification-banner__heading'), 'Should have correct CSS class');
+			assert.ok(result.includes('<a'), 'Should contain anchor tag');
+			assert.ok(result.includes('href="#site-details"'), 'Should have anchor with hyphenated section id');
+			assert.ok(result.includes('Return to section'), 'Should contain return link text');
+			assert.ok(result.includes('govuk-notification-banner__link'), 'Should have link CSS class');
+		});
+
+		it('should return custom message without anchor when only customMessage is provided', () => {
+			const result = buildSuccessHtml(undefined, 'Case note changed');
+
+			assert.ok(result.includes('Case note changed'), 'Should contain custom message');
+			assert.ok(!result.includes('Case has been updated.'), 'Should not contain default message');
+			assert.ok(result.includes('govuk-notification-banner__heading'), 'Should have correct CSS class');
+			assert.ok(!result.includes('<a'), 'Should not contain anchor tag');
+			assert.ok(!result.includes('Return to section'), 'Should not contain return link text');
+		});
+
+		it('should return custom message with anchor when both section and customMessage are provided', () => {
+			const result = buildSuccessHtml('Case Notes', 'Case note changed');
+
+			assert.ok(result.includes('Case note changed'), 'Should contain custom message');
+			assert.ok(!result.includes('Case has been updated.'), 'Should not contain default message');
+			assert.ok(result.includes('<a'), 'Should contain anchor tag');
+			assert.ok(result.includes('href="#case-notes"'), 'Should have anchor with hyphenated section id');
+			assert.ok(result.includes('Return to section'), 'Should contain return link text');
+		});
+
+		it('should handle empty string section same as undefined', () => {
+			const result = buildSuccessHtml('', 'Custom update message');
+
+			assert.ok(result.includes('Custom update message'), 'Should contain custom message');
+			assert.ok(!result.includes('<a'), 'Should not contain anchor tag for empty section');
+		});
+
+		it('should convert section name with multiple spaces to hyphenated anchor', () => {
+			const result = buildSuccessHtml('Site   Address   Details');
+
+			assert.ok(result.includes('href="#site-address-details"'), 'Should collapse multiple spaces to single hyphen');
+		});
+
+		it('should convert section name to lowercase in anchor', () => {
+			const result = buildSuccessHtml('UPPER CASE Section');
+
+			assert.ok(result.includes('href="#upper-case-section"'), 'Should convert to lowercase');
 		});
 	});
 });

@@ -1,6 +1,12 @@
 import { describe, it, mock, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
-import { buildPreloadCaseNoteData, buildViewEditCaseNote, buildUpdateCaseNote } from './controller.ts';
+import {
+	buildPreloadCaseNoteData,
+	buildViewEditCaseNote,
+	buildUpdateCaseNote,
+	buildCreateCaseNote,
+	buildViewCaseNotes
+} from './controller.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
 
@@ -9,11 +15,13 @@ describe('Case Notes Controller', () => {
 		caseNote: {
 			findUnique: mock.fn() as any,
 			update: mock.fn() as any,
-			updateMany: mock.fn() as any
+			updateMany: mock.fn() as any,
+			create: mock.fn() as any
 		},
 		case: {
 			findUnique: mock.fn() as any
-		}
+		},
+		$transaction: mock.fn() as any
 	});
 
 	const createMockAudit = () => ({
@@ -495,6 +503,379 @@ describe('Case Notes Controller', () => {
 			);
 
 			assert.strictEqual(audit.record.mock.callCount(), 0, 'Audit should not be recorded');
+		});
+	});
+
+	describe('buildCreateCaseNote', () => {
+		it('should throw if id param is missing', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			const handler = buildCreateCaseNote(mockService);
+			const req = { params: {}, body: { comment: 'New comment' }, session: {} };
+			const res = newMockRes();
+
+			await assert.rejects(() => handler(req as any, res as any, mockNext), /id must be a single string value/);
+		});
+
+		it('should create case note via transaction and redirect to case view', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			// Mock transaction to execute the callback
+			mockDb.$transaction.mock.mockImplementationOnce(async (callback: any) => {
+				const $tx = {
+					case: {
+						findUnique: mock.fn(() => Promise.resolve({ id: 'case-123' }))
+					},
+					caseNote: {
+						create: mock.fn(() => Promise.resolve({ id: 'new-note-1' }))
+					}
+				};
+				return callback($tx);
+			});
+
+			const handler = buildCreateCaseNote(mockService);
+			const req = {
+				params: { id: 'case-123' },
+				body: { comment: 'New case note' },
+				baseUrl: '/cases/case-123/case-notes',
+				session: { account: { localAccountId: 'user-789' } }
+			};
+			const res = newMockRes();
+
+			await handler(req as any, res as any, mockNext);
+
+			assert.strictEqual(mockDb.$transaction.mock.callCount(), 1);
+			assert.strictEqual(res.redirect.mock.callCount(), 1);
+			assert.deepStrictEqual(res.redirect.mock.calls[0].arguments, ['/cases/case-123']);
+		});
+
+		it('should record audit with CASE_NOTE_ADDED action', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			mockDb.$transaction.mock.mockImplementationOnce(async (callback: any) => {
+				const $tx = {
+					case: {
+						findUnique: mock.fn(() => Promise.resolve({ id: 'case-123' }))
+					},
+					caseNote: {
+						create: mock.fn(() => Promise.resolve({ id: 'new-note-1' }))
+					}
+				};
+				return callback($tx);
+			});
+
+			const handler = buildCreateCaseNote(mockService);
+			const req = {
+				params: { id: 'case-123' },
+				body: { comment: 'Audited note' },
+				baseUrl: '/cases/case-123/case-notes',
+				session: { account: { localAccountId: 'user-789' } }
+			};
+			const res = newMockRes();
+
+			await handler(req as any, res as any, mockNext);
+
+			assert.strictEqual(audit.record.mock.callCount(), 1);
+			const auditCall = audit.record.mock.calls[0];
+			const auditArgs = auditCall.arguments[0] as any;
+
+			assert.strictEqual(auditArgs.caseId, 'case-123');
+			assert.strictEqual(auditArgs.action, AUDIT_ACTIONS.CASE_NOTE_ADDED);
+			assert.strictEqual(auditArgs.userId, 'user-789');
+			assert.deepStrictEqual(auditArgs.metadata, { caseNote: 'Audited note' });
+		});
+
+		it('should log info messages for creation', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			mockDb.$transaction.mock.mockImplementationOnce(async (callback: any) => {
+				const $tx = {
+					case: {
+						findUnique: mock.fn(() => Promise.resolve({ id: 'case-123' }))
+					},
+					caseNote: {
+						create: mock.fn(() => Promise.resolve({ id: 'new-note-1' }))
+					}
+				};
+				return callback($tx);
+			});
+
+			const handler = buildCreateCaseNote(mockService);
+			const req = {
+				params: { id: 'case-123' },
+				body: { comment: 'Log test note' },
+				baseUrl: '/cases/case-123/case-notes',
+				session: { account: { localAccountId: 'user-789' } }
+			};
+			const res = newMockRes();
+
+			await handler(req as any, res as any, mockNext);
+
+			assert.strictEqual(logger.info.mock.callCount(), 2);
+
+			const firstInfoCall = logger.info.mock.calls[0];
+			assert.deepStrictEqual(firstInfoCall.arguments[0], { comment: 'Log test note' });
+			assert.strictEqual(firstInfoCall.arguments[1], 'case note creation');
+
+			const secondInfoCall = logger.info.mock.calls[1];
+			assert.deepStrictEqual(secondInfoCall.arguments[0], { id: 'case-123' });
+			assert.strictEqual(secondInfoCall.arguments[1], 'case note created');
+		});
+
+		it('should throw error when case is not found in transaction', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			mockDb.$transaction.mock.mockImplementationOnce(async (callback: any) => {
+				const $tx = {
+					case: {
+						findUnique: mock.fn(() => Promise.resolve(null)) // Case not found
+					},
+					caseNote: {
+						create: mock.fn()
+					}
+				};
+				return callback($tx);
+			});
+
+			const handler = buildCreateCaseNote(mockService);
+			const req = {
+				params: { id: 'nonexistent-case' },
+				body: { comment: 'New note' },
+				baseUrl: '/cases/nonexistent-case/case-notes',
+				session: { account: { localAccountId: 'user-789' } }
+			};
+			const res = newMockRes();
+
+			await assert.rejects(() => handler(req as any, res as any, mockNext), /Case not found/);
+
+			assert.strictEqual(audit.record.mock.callCount(), 0, 'Audit should not be recorded');
+		});
+
+		it('should handle undefined userId from session', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			mockDb.$transaction.mock.mockImplementationOnce(async (callback: any) => {
+				const $tx = {
+					case: {
+						findUnique: mock.fn(() => Promise.resolve({ id: 'case-123' }))
+					},
+					caseNote: {
+						create: mock.fn(() => Promise.resolve({ id: 'new-note-1' }))
+					}
+				};
+				return callback($tx);
+			});
+
+			const handler = buildCreateCaseNote(mockService);
+			const req = {
+				params: { id: 'case-123' },
+				body: { comment: 'Note without user' },
+				baseUrl: '/cases/case-123/case-notes',
+				session: {} // No account/localAccountId
+			};
+			const res = newMockRes();
+
+			await handler(req as any, res as any, mockNext);
+
+			const auditCall = audit.record.mock.calls[0];
+			assert.strictEqual((auditCall.arguments[0] as any).userId, undefined);
+		});
+
+		it('should properly strip /case-notes from baseUrl to get viewCaseUrl', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			mockDb.$transaction.mock.mockImplementationOnce(async (callback: any) => {
+				const $tx = {
+					case: {
+						findUnique: mock.fn(() => Promise.resolve({ id: 'case-abc' }))
+					},
+					caseNote: {
+						create: mock.fn(() => Promise.resolve({ id: 'new-note-1' }))
+					}
+				};
+				return callback($tx);
+			});
+
+			const handler = buildCreateCaseNote(mockService);
+			const req = {
+				params: { id: 'case-abc' },
+				body: { comment: 'Test redirect URL' },
+				baseUrl: '/cases/case-abc/case-notes/',
+				session: { account: { localAccountId: 'user-789' } }
+			};
+			const res = newMockRes();
+
+			await handler(req as any, res as any, mockNext);
+
+			assert.strictEqual(res.redirect.mock.callCount(), 1);
+			assert.deepStrictEqual(res.redirect.mock.calls[0].arguments, ['/cases/case-abc']);
+		});
+	});
+
+	describe('buildViewCaseNotes', () => {
+		const createMockService = (dbOverrides = {}) => {
+			const mockDb = {
+				case: {
+					findUnique: mock.fn() as any
+				},
+				...dbOverrides
+			};
+			return {
+				db: mockDb,
+				logger: mockLogger(),
+				entraGroupIds: {
+					allUsers: 'group-all',
+					inspectors: 'group-insp',
+					caseOfficers: 'group-co'
+				},
+				getEntraClient: () => ({
+					listAllGroupMembers: mock.fn(() =>
+						Promise.resolve([
+							{ id: 'user-1', displayName: 'Test User One' },
+							{ id: 'user-2', displayName: 'Test User Two' }
+						])
+					)
+				})
+			} as any;
+		};
+
+		it('should throw if id param is missing', async () => {
+			const mockService = createMockService();
+			const handler = buildViewCaseNotes(mockService);
+			const req = { params: {}, session: {} };
+			const res = newMockRes();
+
+			await assert.rejects(() => handler(req as any, res as any, mockNext), /id must be a single string value/);
+		});
+
+		it('should return 404 when case is not found', async () => {
+			const mockService = createMockService();
+			mockService.db.case.findUnique.mock.mockImplementationOnce(() => Promise.resolve(null));
+
+			const handler = buildViewCaseNotes(mockService);
+			const req = {
+				params: { id: 'nonexistent-case' },
+				session: {}
+			};
+			const res = newMockRes();
+
+			await handler(req as any, res as any, mockNext);
+
+			assert.strictEqual(res.render.mock.callCount(), 1);
+			const renderCall = res.render.mock.calls[0];
+			assert.strictEqual(renderCall.arguments[0], 'views/layouts/error', 'Should render error page for 404');
+		});
+
+		it('should render case notes view with correct data', async () => {
+			const mockService = createMockService();
+			const mockCaseRow = {
+				id: 'case-123',
+				name: 'Test Case',
+				reference: 'REF-001',
+				Notes: [
+					{
+						id: 'note-1',
+						comment: 'First note',
+						createdAt: new Date('2026-01-15T10:00:00Z'),
+						Author: { idpUserId: 'user-1' },
+						NoteType: { id: 'case-note', name: 'Case Note' }
+					},
+					{
+						id: 'note-2',
+						comment: 'Second note',
+						createdAt: new Date('2026-01-14T09:00:00Z'),
+						Author: { idpUserId: 'user-2' },
+						NoteType: { id: 'case-note', name: 'Case Note' }
+					}
+				]
+			};
+			mockService.db.case.findUnique.mock.mockImplementationOnce(() => Promise.resolve(mockCaseRow));
+
+			const handler = buildViewCaseNotes(mockService);
+			const req = {
+				params: { id: 'case-123' },
+				originalUrl: '/cases/case-123/case-notes',
+				session: {}
+			};
+			const res = newMockRes();
+
+			await handler(req as any, res as any, mockNext);
+
+			assert.strictEqual(res.render.mock.callCount(), 1);
+			const renderCall = res.render.mock.calls[0];
+
+			assert.strictEqual(renderCall.arguments[0], 'views/cases/case-notes/view.njk');
+
+			const renderData = renderCall.arguments[1];
+			assert.strictEqual(renderData.pageHeading, 'Case notes');
+			assert.strictEqual(renderData.reference, 'REF-001');
+			assert.strictEqual(renderData.backLinkUrl, '/cases/case-123');
+			assert.strictEqual(renderData.backLinkText, 'Back to case details');
+			assert.strictEqual(renderData.currentUrl, '/cases/case-123/case-notes');
+		});
+
+		it('should handle case with no notes', async () => {
+			const mockService = createMockService();
+			const mockCaseRow = {
+				id: 'case-123',
+				name: 'Empty Case',
+				reference: 'REF-002',
+				Notes: []
+			};
+			mockService.db.case.findUnique.mock.mockImplementationOnce(() => Promise.resolve(mockCaseRow));
+
+			const handler = buildViewCaseNotes(mockService);
+			const req = {
+				params: { id: 'case-123' },
+				originalUrl: '/cases/case-123/case-notes',
+				session: {}
+			};
+			const res = newMockRes();
+
+			await handler(req as any, res as any, mockNext);
+
+			assert.strictEqual(res.render.mock.callCount(), 1);
+			const renderCall = res.render.mock.calls[0];
+			assert.strictEqual(renderCall.arguments[0], 'views/cases/case-notes/view.njk');
+		});
+
+		it('should rethrow database errors after logging (wrapPrismaError behavior)', async () => {
+			const mockService = createMockService();
+			const dbError = new Error('Database connection failed');
+			mockService.db.case.findUnique.mock.mockImplementationOnce(() => Promise.reject(dbError));
+
+			const handler = buildViewCaseNotes(mockService);
+			const req = {
+				params: { id: 'case-123' },
+				originalUrl: '/cases/case-123/case-notes',
+				session: {}
+			};
+			const res = newMockRes();
+
+			await assert.rejects(() => handler(req as any, res as any, mockNext), /Database connection failed/);
+
+			assert.strictEqual(res.render.mock.callCount(), 0, 'Should not render view when DB error occurs');
 		});
 	});
 });
