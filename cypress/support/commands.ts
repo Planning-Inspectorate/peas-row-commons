@@ -1,4 +1,4 @@
-import { Cookie } from 'playwright-core';
+import type { Cookie } from 'playwright-core';
 
 /**
  * Sets an auth cookie on the app window before the page loads.

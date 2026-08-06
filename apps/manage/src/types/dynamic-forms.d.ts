@@ -26,11 +26,11 @@ declare module '@planning-inspectorate/dynamic-forms/src/journey/journey-respons
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/questions/options-question.js' {
-	import { Question, QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-	import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-	import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
-	import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-	import { Request } from 'express';
+	import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+	import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+	import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+	import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+	import type { Request } from 'express';
 
 	export interface ConditionalConfig {
 		question: string;
@@ -88,7 +88,7 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/options-quest
 
 declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js' {
 	import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-	import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+	import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 	export default class ManageListQuestion extends Question {
 		constructor(params: any);
 		get section(): Section;
@@ -127,10 +127,10 @@ declare module '@planning-inspectorate/dynamic-forms/src/components/radio/questi
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' {
-	import { Request, Response } from 'express';
-	import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-	import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
-	import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+	import type { Request, Response } from 'express';
+	import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+	import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+	import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 
 	export interface ActionLink {
 		href: string;
@@ -252,6 +252,7 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 			req: Request,
 			sectionObj: Section,
 			journey: Journey,
+			// eslint-disable-next-line @typescript-eslint/consistent-type-imports
 			manageListQuestion?: import('../components/manage-list/question.js').default
 		): QuestionViewModel | undefined;
 
@@ -291,7 +292,7 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/section.js' {
-	import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+	import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 	export class Section {
 		constructor(name: string, id: string);
 		questions: Question[];
@@ -315,7 +316,7 @@ declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/questions/create-questions.js' {
-	import { Question, QuestionParameters } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+	import type { Question, QuestionParameters } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 
 	export interface BaseQuestionProps extends Partial<QuestionParameters> {
 		type: string;

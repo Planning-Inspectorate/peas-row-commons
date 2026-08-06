@@ -12,7 +12,7 @@ import {
 import { JOURNEY_ID, createJourney } from './journey.ts';
 import { getQuestions } from './questions.ts';
 import { buildSaveController, buildSuccessController } from './save.ts';
-import { ManageService } from '#service';
+import type { ManageService } from '#service';
 import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { buildGetJourneyMiddleware } from './controller.ts';
 import { bounceRemoveCancellation } from '@pins/peas-row-commons-lib/middleware/manage-list/track-removes.ts';

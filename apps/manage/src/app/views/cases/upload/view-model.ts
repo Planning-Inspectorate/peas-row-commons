@@ -1,4 +1,4 @@
-import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { formatBytes } from '@pins/peas-row-commons-lib/util/upload.ts';
 
 const SUCCESS_ICON_HTML = `

@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
-import { createAnswers, CaseAnswers } from 'cypress/types/answers.ts';
+import type { CaseAnswers } from 'cypress/types/answers.ts';
+import { createAnswers } from 'cypress/types/answers.ts';
 
 import AnswersUtility from 'cypress/page-utilities/answers.utility.ts';
 import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';

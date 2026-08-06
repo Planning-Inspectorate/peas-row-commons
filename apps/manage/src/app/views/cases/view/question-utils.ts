@@ -1,5 +1,5 @@
 import { COMPONENT_TYPES, CrossQuestionValidator } from '@planning-inspectorate/dynamic-forms';
-import BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
+import type BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
 import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
 import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
 import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js';
@@ -35,7 +35,7 @@ import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static-data
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
 import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/validator.ts';
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
-import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-components/optional-date-component/validator.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
@@ -43,7 +43,7 @@ import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-da
 import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../../config.ts';
 import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
 import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
-import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { LEGACY_CONTACT_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/legacy/contact-types.ts';
 import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/legacy/act-sections.ts';
 import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/admin-procedure-type.ts';

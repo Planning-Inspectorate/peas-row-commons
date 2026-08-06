@@ -1,5 +1,5 @@
 import RadioQuestion from '@planning-inspectorate/dynamic-forms/src/components/radio/question.js';
-import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 import type {
 	Option,
 	OptionsQuestionParams

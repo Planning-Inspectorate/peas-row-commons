@@ -1,4 +1,4 @@
-import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { kebabToCamel } from './questions-utils.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';

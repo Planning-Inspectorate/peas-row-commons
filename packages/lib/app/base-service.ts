@@ -5,7 +5,7 @@ import type { BaseConfig } from './config-types.d.ts';
 import type { Logger } from 'pino';
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { RedisClient } from '../redis/redis-client.ts';
-import { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
+import type { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
 import { initBlobStore } from '@pins/peas-row-commons-lib/blob-store/index.ts';
 
 /**

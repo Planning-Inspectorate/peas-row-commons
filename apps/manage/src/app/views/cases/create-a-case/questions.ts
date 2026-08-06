@@ -36,7 +36,7 @@ import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.t
 import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../../config.ts';
 import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
 import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
-import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
 
 export function getQuestions(groupMembers: EntraGroupMembers) {

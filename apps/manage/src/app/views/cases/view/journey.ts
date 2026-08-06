@@ -2,8 +2,8 @@ import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journe
 import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js';
 import type { Request } from 'express';
-import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import { buildOutcomeManageList, buildDynamicOutcomeSections } from './journeys/outcome-journey.ts';
 import {
 	buildProcedureManageList,

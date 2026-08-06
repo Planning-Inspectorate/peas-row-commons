@@ -1,11 +1,11 @@
-import { ManageService } from '#service';
+import type { ManageService } from '#service';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
-import {
-	type Case,
-	type LinkedCase,
+import type {
 	Prisma,
 	PrismaClient,
-	type RelatedCase
+	Case,
+	LinkedCase,
+	RelatedCase
 } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { getRelationForField } from '@pins/peas-row-commons-lib/util/schema-map.ts';
 

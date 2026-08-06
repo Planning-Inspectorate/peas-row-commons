@@ -4,7 +4,7 @@ import type { Question } from '@planning-inspectorate/dynamic-forms/src/question
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import { DECISION_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/decision-type.ts';
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
-import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 
 /**
  * Dynamically generated sections based on number of Outcome(s).

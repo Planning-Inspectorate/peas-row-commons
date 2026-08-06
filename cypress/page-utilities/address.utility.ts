@@ -1,4 +1,4 @@
-import { UkAddress } from 'cypress/types/standard.ts';
+import type { UkAddress } from 'cypress/types/standard.ts';
 import { generateUkAddress } from './generate.utility.ts';
 
 type AddressFieldKey = 'address-line-1' | 'address-line-2' | 'address-town' | 'address-county' | 'address-postcode';

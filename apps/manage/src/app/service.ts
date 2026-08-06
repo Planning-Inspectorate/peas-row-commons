@@ -5,7 +5,7 @@ import { MapCache } from '@pins/peas-row-commons-lib/util/map-cache.ts';
 import { type InitEntraClient } from '@pins/peas-row-commons-lib/graph/types.ts';
 import { initBlobStore } from '@pins/peas-row-commons-lib/blob-store/index.ts';
 import { initLogger } from '@pins/peas-row-commons-lib/util/logger.ts';
-import { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
+import type { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
 import { buildAuditService, type AuditService } from './audit/index.ts';
 import { ZipArchive } from 'archiver';
 import type { Archiver, ArchiverOptions } from 'archiver';

@@ -1,4 +1,4 @@
-import { CachedEntraClient } from './cached-entra-client.ts';
+import type { CachedEntraClient } from './cached-entra-client.ts';
 import type { Session } from 'express-session';
 
 export interface GroupMember {

@@ -1,4 +1,4 @@
-import { CLOSED_STATUSES } from '../constants/statuses.ts';
+import type { CLOSED_STATUSES } from '../constants/statuses.ts';
 
 export type ContactMappingConfig = {
 	sourceKey: string;
