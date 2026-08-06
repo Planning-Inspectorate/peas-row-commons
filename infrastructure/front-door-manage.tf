@@ -220,6 +220,9 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
         }
       }
 
+      # SQLI
+      # Due to using prisma on DB queries, false positives can be ignore for:
+      # the comment, myselfComment, submitterComment, _csrf and healthAndSafetyIssue fields
       exclusion {
         match_variable = "RequestBodyPostArgNames"
         operator       = "Equals"
