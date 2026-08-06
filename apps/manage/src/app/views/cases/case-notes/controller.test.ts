@@ -303,7 +303,7 @@ describe('Case Notes Controller', () => {
 			assert.strictEqual(updateArgs.data.updatedAt.getTime(), frozenTime);
 		});
 
-		it('should record audit with CASE_NOTE_EDITED action and correct metadata', async () => {
+		it('should record audit with CASE_NOTE_UPDATED action and correct metadata', async () => {
 			const mockDb = createMockDb();
 			const logger = mockLogger();
 			const audit = createMockAudit();
@@ -317,7 +317,7 @@ describe('Case Notes Controller', () => {
 				body: { comment: 'Audit test comment' },
 				session: { account: { localAccountId: 'user-789' } }
 			};
-			const res = newMockRes({ caseNote: { id: 'note-456', caseId: 'case-123' } });
+			const res = newMockRes({ caseNote: { id: 'note-456', caseId: 'case-123', comment: 'Original comment' } });
 
 			await handler(req as any, res as any, mockNext);
 
@@ -326,9 +326,9 @@ describe('Case Notes Controller', () => {
 			const auditArgs = auditCall.arguments[0] as any;
 
 			assert.strictEqual(auditArgs.caseId, 'case-123');
-			assert.strictEqual(auditArgs.action, AUDIT_ACTIONS.CASE_NOTE_EDITED);
+			assert.strictEqual(auditArgs.action, AUDIT_ACTIONS.CASE_NOTE_UPDATED);
 			assert.strictEqual(auditArgs.userId, 'user-789');
-			assert.deepStrictEqual(auditArgs.metadata, { caseNote: 'Audit test comment' });
+			assert.deepStrictEqual(auditArgs.metadata, { oldValue: 'Original comment', newValue: 'Audit test comment' });
 		});
 
 		it('should redirect to case view page after successful update', async () => {
