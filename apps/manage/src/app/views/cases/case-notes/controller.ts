@@ -14,7 +14,7 @@ import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 
 /**
- * Preloads case and note data for edit routes, populating res.locals.
+ * Preloads case and note data for edit and delete routes, populating res.locals.
  * Used by both GET and POST handlers for /:noteId/edit.
  */
 export function buildPreloadCaseNoteData(service: ManageService): AsyncRequestHandler {
@@ -223,6 +223,9 @@ export function buildViewEditCaseNote(): AsyncRequestHandler {
 	};
 }
 
+/**
+ * Handles updating a case note in the database.
+ */
 export function buildUpdateCaseNote(service: ManageService): AsyncRequestHandler {
 	const { db, logger, audit } = service;
 
@@ -275,6 +278,79 @@ export function buildUpdateCaseNote(service: ManageService): AsyncRequestHandler
 
 		// Set success message for case details page
 		addSessionData(req, caseId, { updated: { message: 'Case note changed' } });
+
+		// Return back to case view page
+		res.redirect(`/cases/${caseId}`);
+	};
+}
+
+/**
+ * Renders a page for confirming deletion of a case note
+ */
+export function buildViewDeleteCaseNote(): AsyncRequestHandler {
+	return async (req, res) => {
+		const caseId = getStringParam(req.params, 'id');
+		const { reference, caseNote } = res.locals;
+		return res.render('ui/templates/remove-confirmation.njk', {
+			layoutTemplate: 'views/layouts/main.njk',
+			pageHeading: 'Remove note',
+			reference,
+			backLinkUrl: `/cases/${caseId}`,
+			backLinkText: 'Back to case details',
+			currentUrl: req.originalUrl,
+			itemName: 'case note',
+			itemContent: caseNote.comment
+		});
+	};
+}
+
+/**
+ * Handles deleting a case note from the database.
+ */
+export function buildDeleteCaseNote(service: ManageService): AsyncRequestHandler {
+	const { db, logger, audit } = service;
+
+	return async (req, res) => {
+		const caseId = getStringParam(req.params, 'id');
+		const noteId = getStringParam(req.params, 'noteId');
+		const userId = req?.session?.account?.localAccountId;
+
+		// Defence in depth: validate case ownership even though middleware already checked
+		const { caseNote } = res.locals;
+		if (!caseNote || caseNote.caseId !== caseId) {
+			return notFoundHandler(req, res);
+		}
+
+		logger.info({ noteId, caseId }, 'case note delete');
+
+		try {
+			await db.caseNote.delete({
+				where: { id: noteId }
+			});
+		} catch (error: unknown) {
+			if (error instanceof Error) {
+				wrapPrismaError({
+					error,
+					logger,
+					message: 'deleting case note',
+					logParams: { caseId, noteId }
+				});
+			}
+		}
+
+		await audit.record({
+			caseId,
+			action: AUDIT_ACTIONS.CASE_NOTE_DELETED,
+			userId,
+			metadata: {
+				caseNote: caseNote.comment
+			}
+		});
+
+		logger.info({ caseId, noteId }, 'case note deleted');
+
+		// Set success message for case details page
+		addSessionData(req, caseId, { updated: { message: 'Case note removed' } });
 
 		// Return back to case view page
 		res.redirect(`/cases/${caseId}`);

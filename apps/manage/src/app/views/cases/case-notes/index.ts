@@ -6,7 +6,9 @@ import {
 	buildViewCaseNotes,
 	buildViewEditCaseNote,
 	buildUpdateCaseNote,
-	buildPreloadCaseNoteData
+	buildPreloadCaseNoteData,
+	buildViewDeleteCaseNote,
+	buildDeleteCaseNote
 } from './controller.ts';
 import { validateIdFormat, validateNoteIdFormat } from '@pins/peas-row-commons-lib/middleware/validate-params.ts';
 import { buildValidateCaseNotesMiddleware } from './validation-middleware.ts';
@@ -21,7 +23,9 @@ export function createRoutes(service: ManageService): IRouter {
 		validateCaseNotesMiddleware,
 		preloadCaseNoteData,
 		viewEditCaseNote,
-		updateCaseNote
+		updateCaseNote,
+		viewDeleteCaseNote,
+		deleteCaseNote
 	] = createMiddlewares(service);
 
 	router
@@ -46,6 +50,11 @@ export function createRoutes(service: ManageService): IRouter {
 			updateCaseNote
 		);
 
+	router
+		.route('/:noteId/delete')
+		.get(validateIdFormat, validateNoteIdFormat, asyncHandler(preloadCaseNoteData), viewDeleteCaseNote)
+		.post(validateIdFormat, validateNoteIdFormat, asyncHandler(preloadCaseNoteData), deleteCaseNote);
+
 	return router;
 }
 
@@ -59,6 +68,8 @@ function createMiddlewares(service: ManageService) {
 		buildValidateCaseNotesMiddleware(),
 		buildPreloadCaseNoteData(service),
 		buildViewEditCaseNote(),
-		buildUpdateCaseNote(service)
+		buildUpdateCaseNote(service),
+		buildViewDeleteCaseNote(),
+		buildDeleteCaseNote(service)
 	];
 }
