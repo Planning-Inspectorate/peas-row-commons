@@ -237,7 +237,7 @@ async function streamDocumentToResponse(
 		downloadStream.pipe(res);
 	} catch (error) {
 		logger.error({ error, blobName }, `Error initiating download for: ${blobName}`);
-		throw new Error('Failed to download file from blob store');
+		throw new Error('Failed to download file from blob store', { cause: error });
 	}
 }
 
