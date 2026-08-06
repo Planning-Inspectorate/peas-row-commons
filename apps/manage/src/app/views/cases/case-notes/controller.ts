@@ -263,10 +263,11 @@ export function buildUpdateCaseNote(service: ManageService): AsyncRequestHandler
 
 		await audit.record({
 			caseId,
-			action: AUDIT_ACTIONS.CASE_NOTE_EDITED,
+			action: AUDIT_ACTIONS.CASE_NOTE_UPDATED,
 			userId,
 			metadata: {
-				caseNote: comment
+				oldValue: caseNote.comment,
+				newValue: comment
 			}
 		});
 
