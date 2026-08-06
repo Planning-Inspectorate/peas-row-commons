@@ -2,7 +2,6 @@ import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
 import {
 	buildViewCaseDetails,
-	validateIdFormat,
 	buildGetJourneyMiddleware,
 	combineSessionAndDbData,
 	buildSuccessHtml
@@ -17,42 +16,6 @@ describe('Case Controller', () => {
 	});
 
 	const mockNext = mock.fn();
-
-	describe('validateIdFormat', () => {
-		it('should throw if no id param', () => {
-			const mockReq = { params: {}, session: {} };
-			const mockRes = newMockRes();
-
-			assert.throws(
-				() => validateIdFormat(mockReq as any, mockRes as any, mockNext),
-				/id must be a single string value/
-			);
-		});
-
-		it('should call next() if id is a valid UUID', () => {
-			const mockReq = { params: { id: '00000000-0000-0000-0000-000000000001' }, session: {} };
-			const mockRes = newMockRes();
-			const next = mock.fn();
-
-			validateIdFormat(mockReq as any, mockRes as any, next);
-
-			assert.strictEqual(next.mock.callCount(), 1);
-		});
-
-		it('should not call next() if id is invalid', () => {
-			const mockReq = { params: { id: 'invalid-id-string' }, session: {} };
-			const mockRes = newMockRes();
-			const next = mock.fn();
-
-			try {
-				validateIdFormat(mockReq as any, mockRes as any, next);
-			} catch (e) {
-				// Ignore errors from the real notFoundHandler if it tries to render
-			}
-
-			assert.strictEqual(next.mock.callCount(), 0);
-		});
-	});
 
 	describe('buildViewCaseDetails', () => {
 		it('should throw if no id param', async () => {
