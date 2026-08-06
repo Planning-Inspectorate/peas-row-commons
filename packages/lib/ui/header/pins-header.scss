@@ -35,14 +35,10 @@ header.govuk-header.pins-header {
 	border-bottom: none;
 
 	.govuk-service-navigation__item {
-		color: govuk.govuk-colour('black');
+		border-color: govuk.govuk-colour('black');
 	}
 
-	.govuk-service-navigation__link {
-		color: govuk.govuk-colour('black');
-		border-bottom-color: govuk.govuk-colour('black');
-	}
-
+	.govuk-service-navigation__link,
 	.govuk-service-navigation__link:hover {
 		color: govuk.govuk-colour('black');
 	}
