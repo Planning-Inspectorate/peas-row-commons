@@ -2,10 +2,9 @@ import { list, JourneyResponse, clearDataFromSession } from '@planning-inspector
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import { caseToViewModel } from './view-model.ts';
 import { createJourney, JOURNEY_ID } from './journey.ts';
-import { isValidUuidFormat } from '@pins/peas-row-commons-lib/util/uuid.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { ManageService } from '#service';
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 import { getQuestions } from './questions.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { buildUserDisplayNameMap, getEntraGroupMembers } from '#util/entra-groups.ts';
@@ -14,6 +13,7 @@ import { hasAnyContacts } from '../contacts-download/index.ts';
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
 import { getOptionalStringParams, getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import { escapeHtml } from '@pins/peas-row-commons-lib/util/strings.ts';
 
 const caseToViewInclude = {
 	SiteAddress: true,
@@ -85,7 +85,7 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 
 		const id = getStringParam(req.params, 'id');
 
-		const caseUpdated = readSessionData(req, id, 'updated', { section: '' });
+		const caseUpdated = readSessionData(req, id, 'updated', { section: '', message: '' });
 
 		clearAllSessionData(req, res, id);
 
@@ -99,6 +99,8 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 				: undefined;
 
 		const sectionName = matchedSection?.name || '';
+		const customMessage = typeof caseUpdated === 'object' ? caseUpdated.message : '';
+		const hasUpdate = !!sectionName || !!customMessage;
 
 		const hasContacts = hasAnyContacts(res.locals?.journeyResponse?.answers ?? {});
 
@@ -111,11 +113,10 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 			baseUrl,
 			backLinkUrl: res.locals.backLinkUrl || '/cases',
 			caseUpdatedParams: {
-				updated: !!sectionName,
-				html: sectionName ? buildSuccessHtml(sectionName) : ''
+				updated: hasUpdate,
+				html: hasUpdate ? buildSuccessHtml(sectionName, customMessage) : ''
 			},
 			hasContacts,
-			currentUrl: req.originalUrl,
 			lastModifiedDate,
 			lastModifiedBy: res.locals.lastModified?.by || null,
 			closedDate: res.locals.lastModified?.closedDate || null,
@@ -123,16 +124,6 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 			expandSectionList: firstVisit === 'true'
 		});
 	};
-}
-
-export function validateIdFormat(req: Request, res: Response, next: NextFunction) {
-	const id = getStringParam(req.params, 'id');
-
-	if (!isValidUuidFormat(id)) {
-		return notFoundHandler(req, res);
-	}
-
-	next();
 }
 
 export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestHandler {
@@ -207,7 +198,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
  *
  * - You have added 3 inspectors
  * - You want to change inspector 2's name
- * - Previosly: doing so will show UI with the original 3 (as it is pulling the data from DB)
+ * - Previously: doing so will show UI with the original 3 (as it is pulling the data from DB)
  * - Now: it will correctly show 3 inspectors with 2's name changed
  */
 export function combineSessionAndDbData(res: Response, answers: Record<string, unknown>, removedIds: string[] = []) {
@@ -292,11 +283,13 @@ function clearAllSessionData(req: Request, res: Response, id: string) {
  *
  * Replaces spaces with hyphens for consistency in URL
  */
-function buildSuccessHtml(section?: string | undefined) {
+export function buildSuccessHtml(section?: string | undefined, customMessage?: string) {
+	const message = escapeHtml(customMessage || 'Case has been updated.');
+
 	if (!section) {
 		return `
 		<p class="govuk-notification-banner__heading">
-      		Case has been updated.
+			${message}
     </p>
 	`;
 	}
@@ -304,7 +297,7 @@ function buildSuccessHtml(section?: string | undefined) {
 
 	return `
 		<p class="govuk-notification-banner__heading">
-      		Case has been updated.
+			${message}
 			<a class="govuk-notification-banner__link" href="#${safeAnchorId}">Return to section</a>
     </p>
 	`;

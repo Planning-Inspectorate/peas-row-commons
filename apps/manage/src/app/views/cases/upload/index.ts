@@ -1,6 +1,6 @@
 import { Router as createRouter } from 'express';
 import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
-import { validateIdFormat } from '../view/controller.ts';
+import { validateIdFormat } from '@pins/peas-row-commons-lib/middleware/validate-params.ts';
 import type { ManageService } from '#service';
 import { buildUploadToFolderView } from './controller.ts';
 import multer from 'multer';

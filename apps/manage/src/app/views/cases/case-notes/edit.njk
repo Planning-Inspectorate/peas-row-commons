@@ -1,0 +1,67 @@
+{% extends "views/layouts/main.njk" %}
+
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/character-count/macro.njk" import govukCharacterCount %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
+
+{% set title = reference + " - Change note" %}
+
+{% block pageTitle %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+
+            {% if errors and errors | length %}
+                {{ govukErrorSummary({
+                    titleText: "There is a problem",
+                    errorList: errors
+                }) }}
+            {% endif %}
+
+            <h2 class="govuk-caption-l" data-cy="page-caption">
+                {{ reference }}
+            </h2>
+            <h1 class="govuk-heading-l govuk-!-margin-bottom-3" data-cy="page-heading">
+                {{ pageHeading }}
+            </h1>
+
+            {{ govukWarningText({
+                text: "You should only change minor parts of the note such as typos.",
+                iconFallbackText: "Warning"
+            }) }}
+
+            <form method="POST" novalidate="novalidate" action="{{ currentUrl }}">
+                {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
+
+                {{ govukCharacterCount({
+                    name: "comment",
+                    id: "comment",
+                    maxlength: characterLimit if characterLimit else 500,
+                    rows: 5,
+                    value: comment,
+                    errorMessage: { text: errorMessage } if errorMessage
+                }) }}
+
+                <div class="govuk-button-group">
+                    {{ govukButton({
+                        text: "Save changes",
+                        type: "submit",
+                        preventDoubleClick: true,
+                        attributes: { "data-cy": "button-save" }
+                    }) }}
+                </div>
+
+                <p class="govuk-body">
+                    <a class="govuk-link govuk-link--no-visited-state" href="{{ backLinkUrl }}" data-cy="cancel-link">
+                        Cancel
+                    </a>
+                </p>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+

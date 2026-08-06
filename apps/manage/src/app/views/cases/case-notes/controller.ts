@@ -10,6 +10,54 @@ import { mapNotes } from '../view/view-model.ts';
 import { buildUserDisplayNameMap, getEntraGroupMembers } from '#util/entra-groups.ts';
 import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
+import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+
+/**
+ * Preloads case and note data for edit and delete routes, populating res.locals.
+ * Used by both GET and POST handlers for /:noteId/edit.
+ */
+export function buildPreloadCaseNoteData(service: ManageService): AsyncRequestHandler {
+	const { db, logger } = service;
+
+	return async (req, res, next) => {
+		const caseId = getStringParam(req.params, 'id');
+		const noteId = getStringParam(req.params, 'noteId');
+
+		let caseNote;
+		let caseRow;
+		try {
+			[caseNote, caseRow] = await Promise.all([
+				db.caseNote.findUnique({
+					where: { id: noteId },
+					include: { Author: true }
+				}),
+				db.case.findUnique({
+					select: { id: true, reference: true },
+					where: { id: caseId }
+				})
+			]);
+		} catch (error: unknown) {
+			if (error instanceof Error) {
+				wrapPrismaError({
+					error,
+					logger,
+					message: 'preloading case note data',
+					logParams: { caseId, noteId }
+				});
+			}
+		}
+
+		if (!caseNote || !caseRow || caseNote.caseId !== caseId) {
+			return notFoundHandler(req, res);
+		}
+
+		res.locals.reference = caseRow.reference;
+		res.locals.caseNote = caseNote;
+
+		if (next) next();
+	};
+}
 
 export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler {
 	const { db, logger, audit } = service;
@@ -151,5 +199,160 @@ export function buildViewCaseNotes(service: ManageService): AsyncRequestHandler 
 			currentUrl: req.originalUrl,
 			...notes
 		});
+	};
+}
+
+/**
+ * Renders the edit case note page.
+ * Expects res.locals.reference and res.locals.caseNote to be populated by buildPreloadCaseNoteData middleware.
+ */
+export function buildViewEditCaseNote(): AsyncRequestHandler {
+	return async (req, res) => {
+		const caseId = getStringParam(req.params, 'id');
+		const { reference, caseNote } = res.locals;
+
+		return res.render('views/cases/case-notes/edit.njk', {
+			pageHeading: 'Change note',
+			reference,
+			backLinkUrl: `/cases/${caseId}`,
+			backLinkText: 'Back to case details',
+			currentUrl: req.originalUrl,
+			comment: req.body?.comment ?? caseNote.comment,
+			characterLimit: GENERAL_CONSTANTS.CASE_NOTE_MAX_LENGTH
+		});
+	};
+}
+
+/**
+ * Handles updating a case note in the database.
+ */
+export function buildUpdateCaseNote(service: ManageService): AsyncRequestHandler {
+	const { db, logger, audit } = service;
+
+	return async (req, res) => {
+		const caseId = getStringParam(req.params, 'id');
+		const noteId = getStringParam(req.params, 'noteId');
+		const { comment } = req.body;
+		const userId = req?.session?.account?.localAccountId;
+
+		// Defence in depth: validate case ownership even though middleware already checked
+		const { caseNote } = res.locals;
+		if (!caseNote || caseNote.caseId !== caseId) {
+			return notFoundHandler(req, res);
+		}
+
+		logger.info({ noteId, caseId }, 'case note update');
+
+		try {
+			// Use updateMany with compound where to enforce case ownership at database level
+			const result = await db.caseNote.updateMany({
+				where: { id: noteId, caseId },
+				data: { comment, updatedAt: new Date() }
+			});
+
+			if (result.count !== 1) {
+				throw new Error(`Expected 1 row to be updated, but ${result.count} rows were affected`);
+			}
+		} catch (error: unknown) {
+			if (error instanceof Error) {
+				wrapPrismaError({
+					error,
+					logger,
+					message: 'updating case note',
+					logParams: { caseId, noteId }
+				});
+			}
+		}
+
+		await audit.record({
+			caseId,
+			action: AUDIT_ACTIONS.CASE_NOTE_UPDATED,
+			userId,
+			metadata: {
+				oldValue: caseNote.comment,
+				newValue: comment
+			}
+		});
+
+		logger.info({ caseId, noteId }, 'case note updated');
+
+		// Set success message for case details page
+		addSessionData(req, caseId, { updated: { message: 'Case note changed' } });
+
+		// Return back to case view page
+		res.redirect(`/cases/${caseId}`);
+	};
+}
+
+/**
+ * Renders a page for confirming deletion of a case note
+ */
+export function buildViewDeleteCaseNote(): AsyncRequestHandler {
+	return async (req, res) => {
+		const caseId = getStringParam(req.params, 'id');
+		const { reference, caseNote } = res.locals;
+		return res.render('ui/templates/remove-confirmation.njk', {
+			layoutTemplate: 'views/layouts/main.njk',
+			pageHeading: 'Remove note',
+			reference,
+			backLinkUrl: `/cases/${caseId}`,
+			backLinkText: 'Back to case details',
+			currentUrl: req.originalUrl,
+			itemName: 'case note',
+			itemContent: caseNote.comment
+		});
+	};
+}
+
+/**
+ * Handles deleting a case note from the database.
+ */
+export function buildDeleteCaseNote(service: ManageService): AsyncRequestHandler {
+	const { db, logger, audit } = service;
+
+	return async (req, res) => {
+		const caseId = getStringParam(req.params, 'id');
+		const noteId = getStringParam(req.params, 'noteId');
+		const userId = req?.session?.account?.localAccountId;
+
+		// Defence in depth: validate case ownership even though middleware already checked
+		const { caseNote } = res.locals;
+		if (!caseNote || caseNote.caseId !== caseId) {
+			return notFoundHandler(req, res);
+		}
+
+		logger.info({ noteId, caseId }, 'case note delete');
+
+		try {
+			await db.caseNote.delete({
+				where: { id: noteId }
+			});
+		} catch (error: unknown) {
+			if (error instanceof Error) {
+				wrapPrismaError({
+					error,
+					logger,
+					message: 'deleting case note',
+					logParams: { caseId, noteId }
+				});
+			}
+		}
+
+		await audit.record({
+			caseId,
+			action: AUDIT_ACTIONS.CASE_NOTE_DELETED,
+			userId,
+			metadata: {
+				caseNote: caseNote.comment
+			}
+		});
+
+		logger.info({ caseId, noteId }, 'case note deleted');
+
+		// Set success message for case details page
+		addSessionData(req, caseId, { updated: { message: 'Case note removed' } });
+
+		// Return back to case view page
+		res.redirect(`/cases/${caseId}`);
 	};
 }

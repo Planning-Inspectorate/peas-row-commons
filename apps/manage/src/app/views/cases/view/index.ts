@@ -8,7 +8,8 @@ import {
 	buildGetJourneyResponseFromSession,
 	saveDataToSession
 } from '@planning-inspectorate/dynamic-forms';
-import { buildGetJourneyMiddleware, buildViewCaseDetails, validateIdFormat } from './controller.ts';
+import { buildGetJourneyMiddleware, buildViewCaseDetails } from './controller.ts';
+import { validateIdFormat } from '@pins/peas-row-commons-lib/middleware/validate-params.ts';
 import { buildUpdateCase } from './update-case.ts';
 import { ManageService } from '#service';
 import { createRoutes as createCaseNotesRoutes } from '../case-notes/index.ts';
