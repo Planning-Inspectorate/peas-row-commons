@@ -305,6 +305,14 @@ declare module '@planning-inspectorate/dynamic-forms/src/section.js' {
 	}
 }
 
+declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js' {
+	export const MANAGE_LIST_ACTIONS = {
+		ADD: 'add',
+		EDIT: 'edit',
+		REMOVE: 'remove'
+	};
+}
+
 declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js' {
 	export class ManageListSection {
 		constructor();
