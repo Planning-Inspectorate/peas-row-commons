@@ -1,4 +1,4 @@
-import { ManageService } from '#service';
+import type { ManageService } from '#service';
 import type { Request, RequestHandler, Response } from 'express';
 import { buildFolderTree } from '../../case-folders/folder-utils.ts';
 import { JOURNEY_ID } from './journey.ts';

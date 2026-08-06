@@ -4,7 +4,7 @@ import { caseToViewModel } from './view-model.ts';
 import { createJourney, JOURNEY_ID } from './journey.ts';
 import { isValidUuidFormat } from '@pins/peas-row-commons-lib/util/uuid.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
-import { ManageService } from '#service';
+import type { ManageService } from '#service';
 import type { Request, Response, NextFunction } from 'express';
 import { getQuestions } from './questions.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';

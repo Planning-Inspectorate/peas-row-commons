@@ -1,4 +1,5 @@
-import { createAnswers, CaseAnswers } from 'cypress/types/answers.ts';
+import type { CaseAnswers } from 'cypress/types/answers.ts';
+import { createAnswers } from 'cypress/types/answers.ts';
 
 import AnswersUtility from 'cypress/page-utilities/answers.utility.ts';
 import CasesListPage from 'cypress/page-objects/case-list.page.ts';

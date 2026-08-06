@@ -1,6 +1,6 @@
 import { Client } from '@microsoft/microsoft-graph-client';
 import { EntraClient } from './entra.ts';
-import { MapCache } from '../util/map-cache.ts';
+import type { MapCache } from '../util/map-cache.ts';
 import { type InitEntraClient } from './types.ts';
 import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 

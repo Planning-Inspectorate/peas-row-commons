@@ -1,7 +1,7 @@
 import { formatBytes } from '@pins/peas-row-commons-lib/util/upload.ts';
 import { formatInTimeZone } from 'date-fns-tz';
-import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import { determineDefaultStatuses } from '@pins/peas-row-commons-lib/util/user-document-status.ts';
 import { CLOSED_STATUSES } from '@pins/peas-row-commons-lib/constants/statuses.ts';

@@ -10,7 +10,7 @@ import {
 } from '@planning-inspectorate/dynamic-forms';
 import { buildGetJourneyMiddleware, buildViewCaseDetails, validateIdFormat } from './controller.ts';
 import { buildUpdateCase } from './update-case.ts';
-import { ManageService } from '#service';
+import type { ManageService } from '#service';
 import { createRoutes as createCaseNotesRoutes } from '../case-notes/index.ts';
 
 import { createRoutes as createCaseDocumentsRoutes } from '../case-folders/index.ts';

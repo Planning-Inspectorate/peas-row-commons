@@ -1,4 +1,4 @@
-import { ManageService } from '#service';
+import type { ManageService } from '#service';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 

@@ -1,6 +1,6 @@
 import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js';
-import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import { questionHasAnswer, whenQuestionHasAnswer } from '@planning-inspectorate/dynamic-forms';
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';

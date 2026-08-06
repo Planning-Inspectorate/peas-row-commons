@@ -12,7 +12,7 @@ import {
 import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { JOURNEY_ID, createJourney } from './journey.ts';
 import { getQuestions } from './questions.ts';
-import { ManageService } from '#service';
+import type { ManageService } from '#service';
 import { buildListController, buildLoadCaseData, buildSaveController } from './controller.ts';
 
 export function createRoutes(service: ManageService): IRouter {

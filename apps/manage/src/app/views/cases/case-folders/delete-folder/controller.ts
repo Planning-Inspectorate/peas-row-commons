@@ -1,5 +1,5 @@
 import type { ManageService } from '#service';
-import { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';

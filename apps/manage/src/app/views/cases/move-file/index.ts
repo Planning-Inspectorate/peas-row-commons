@@ -1,7 +1,7 @@
 import { Router as createRouter } from 'express';
 import type { IRouter } from 'express';
 import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
-import { ManageService } from '#service';
+import type { ManageService } from '#service';
 import { buildHandleDuplicateFileNamesMiddleware, buildHandleMoveSelection, buildViewMoveFiles } from './controller.ts';
 
 import { createRoutes as createMoveJourneyRoutes } from './journey/index.ts';

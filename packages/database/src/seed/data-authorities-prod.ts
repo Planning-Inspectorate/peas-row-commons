@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { PrismaClient, Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import PROD_AUTHORITIES from './data-authorities-prod-list.json' with { type: 'json' };
 
 export const AUTHORITIES: Prisma.AuthorityUncheckedCreateInput[] = PROD_AUTHORITIES;

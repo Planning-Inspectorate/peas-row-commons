@@ -1,6 +1,6 @@
-import { ManageService } from '#service';
+import type { ManageService } from '#service';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
-import { Prisma, PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { Prisma, PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import type { Logger } from 'pino';
 import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
