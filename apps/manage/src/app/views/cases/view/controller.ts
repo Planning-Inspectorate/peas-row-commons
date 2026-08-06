@@ -14,6 +14,7 @@ import { hasAnyContacts } from '../contacts-download/index.ts';
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
 import { getOptionalStringParams, getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import { escapeHtml } from '@pins/peas-row-commons-lib/util/strings.ts';
 
 const caseToViewInclude = {
 	SiteAddress: true,
@@ -117,7 +118,6 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 				html: hasUpdate ? buildSuccessHtml(sectionName, customMessage) : ''
 			},
 			hasContacts,
-			currentUrl: req.originalUrl,
 			lastModifiedDate,
 			lastModifiedBy: res.locals.lastModified?.by || null,
 			closedDate: res.locals.lastModified?.closedDate || null,
@@ -295,7 +295,7 @@ function clearAllSessionData(req: Request, res: Response, id: string) {
  * Replaces spaces with hyphens for consistency in URL
  */
 export function buildSuccessHtml(section?: string | undefined, customMessage?: string) {
-	const message = customMessage || 'Case has been updated.';
+	const message = escapeHtml(customMessage || 'Case has been updated.');
 
 	if (!section) {
 		return `

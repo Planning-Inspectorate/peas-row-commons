@@ -2,7 +2,7 @@
 {%- from "govuk/components/character-count/macro.njk" import govukCharacterCount -%}
 
 {%- macro caseNotes(params) -%}
-	<form method="POST" novalidate="novalidate" action="{{ params.currentUrl }}/case-notes">
+	<form method="POST" novalidate="novalidate" action="{{ params.baseUrl }}/case-notes">
 		<div class="govuk-grid-row">
 			<div class="govuk-grid-column-full">
 				{{ govukCharacterCount({
@@ -33,7 +33,7 @@
 				</p>
 				<ul class="govuk-list govuk-list--inline govuk-!-margin-bottom-6">
 					<li>
-						<a class="govuk-link govuk-link--no-visited-state" href="{{ params.currentUrl }}/case-notes/{{ caseNote.id }}/edit" data-cy="change-note-link-{{ loop.index0 }}">
+						<a class="govuk-link govuk-link--no-visited-state" href="{{ params.baseUrl }}/case-notes/{{ caseNote.id }}/edit" data-cy="change-note-link-{{ loop.index0 }}">
 							Change<span class="govuk-visually-hidden"> case note by {{ caseNote.userName }}</span>
 						</a>
 					</li>
@@ -45,7 +45,7 @@
 	{# 4 is the maximum number currently allowed #}
 	{% if (params.totalNotes > params.max) %}
 		<p class="govuk-body govuk-!-text-align-centre">
-			<a class="govuk-link govuk-link--no-visited-state" href="{{ params.currentUrl }}/case-notes" data-cy="show-all-notes-link">
+			<a class="govuk-link govuk-link--no-visited-state" href="{{ params.baseUrl }}/case-notes" data-cy="show-all-notes-link">
 				Show all notes
 			</a>
 		</p>
