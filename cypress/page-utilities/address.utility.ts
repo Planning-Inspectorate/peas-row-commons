@@ -4,12 +4,7 @@ import { generateUkAddress } from './generate.utility.ts';
 type AddressFieldKey = 'address-line-1' | 'address-line-2' | 'address-town' | 'address-county' | 'address-postcode';
 
 type AddressErrorType =
-	| 'line1TooLong'
-	| 'line2TooLong'
-	| 'townTooLong'
-	| 'countyTooLong'
-	| 'postcodeLength'
-	| 'invalidPostcodeFormat';
+	'line1TooLong' | 'line2TooLong' | 'townTooLong' | 'countyTooLong' | 'postcodeLength' | 'invalidPostcodeFormat';
 
 type AddressErrorConfig = {
 	message: string;
