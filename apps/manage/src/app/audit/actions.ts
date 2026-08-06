@@ -35,7 +35,7 @@ export const AUDIT_ACTIONS = {
 
 	// Case notes
 	CASE_NOTE_ADDED: 'CASE_NOTE_ADDED',
-	CASE_NOTE_EDITED: 'CASE_NOTE_EDITED',
+	CASE_NOTE_UPDATED: 'CASE_NOTE_UPDATED',
 
 	// Related cases
 	RELATED_CASE_ADDED: 'RELATED_CASE_ADDED',
@@ -131,7 +131,7 @@ export const AUDIT_TEMPLATES: Record<AuditAction, string> = {
 
 	// Case notes
 	[AUDIT_ACTIONS.CASE_NOTE_ADDED]: 'Case note added:\n{caseNote}',
-	[AUDIT_ACTIONS.CASE_NOTE_EDITED]: 'Case note edited:\n{caseNote}',
+	[AUDIT_ACTIONS.CASE_NOTE_UPDATED]: 'Case note was updated from {oldValue} to {newValue}',
 
 	// Related cases
 	[AUDIT_ACTIONS.RELATED_CASE_ADDED]: '{reference} was added to related cases.',
