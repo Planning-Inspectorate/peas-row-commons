@@ -20,6 +20,7 @@ export const caseListSelect = {
 	},
 	SiteAddress: true,
 	Notes: {
+		where: { deletedAt: null },
 		include: {
 			Author: true,
 			NoteType: true

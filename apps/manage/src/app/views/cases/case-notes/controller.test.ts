@@ -5,7 +5,9 @@ import {
 	buildViewEditCaseNote,
 	buildUpdateCaseNote,
 	buildCreateCaseNote,
-	buildViewCaseNotes
+	buildViewCaseNotes,
+	buildViewDeleteCaseNote,
+	buildDeleteCaseNote
 } from './controller.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
@@ -13,6 +15,7 @@ import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
 describe('Case Notes Controller', () => {
 	const createMockDb = () => ({
 		caseNote: {
+			findFirst: mock.fn() as any,
 			findUnique: mock.fn() as any,
 			update: mock.fn() as any,
 			updateMany: mock.fn() as any,
@@ -67,7 +70,7 @@ describe('Case Notes Controller', () => {
 			const logger = mockLogger();
 			const mockService = { db: mockDb, logger } as any;
 
-			mockDb.caseNote.findUnique.mock.mockImplementationOnce(() => Promise.resolve(null));
+			mockDb.caseNote.findFirst.mock.mockImplementationOnce(() => Promise.resolve(null));
 			mockDb.case.findUnique.mock.mockImplementationOnce(() =>
 				Promise.resolve({ id: 'case-123', reference: 'REF-001' })
 			);
@@ -93,7 +96,7 @@ describe('Case Notes Controller', () => {
 			const logger = mockLogger();
 			const mockService = { db: mockDb, logger } as any;
 
-			mockDb.caseNote.findUnique.mock.mockImplementationOnce(() =>
+			mockDb.caseNote.findFirst.mock.mockImplementationOnce(() =>
 				Promise.resolve({ id: 'note-456', caseId: 'case-123', comment: 'Test note', Author: {} })
 			);
 			mockDb.case.findUnique.mock.mockImplementationOnce(() => Promise.resolve(null));
@@ -119,7 +122,7 @@ describe('Case Notes Controller', () => {
 			const mockService = { db: mockDb, logger } as any;
 
 			// Note belongs to a different case
-			mockDb.caseNote.findUnique.mock.mockImplementationOnce(() =>
+			mockDb.caseNote.findFirst.mock.mockImplementationOnce(() =>
 				Promise.resolve({
 					id: 'note-456',
 					caseId: 'different-case-id', // Note belongs to different case
@@ -159,7 +162,7 @@ describe('Case Notes Controller', () => {
 			};
 			const mockCase = { id: 'case-123', reference: 'REF-001' };
 
-			mockDb.caseNote.findUnique.mock.mockImplementationOnce(() => Promise.resolve(mockCaseNote));
+			mockDb.caseNote.findFirst.mock.mockImplementationOnce(() => Promise.resolve(mockCaseNote));
 			mockDb.case.findUnique.mock.mockImplementationOnce(() => Promise.resolve(mockCase));
 
 			const handler = buildPreloadCaseNoteData(mockService);
@@ -876,6 +879,271 @@ describe('Case Notes Controller', () => {
 			await assert.rejects(() => handler(req as any, res as any, mockNext), /Database connection failed/);
 
 			assert.strictEqual(res.render.mock.callCount(), 0, 'Should not render view when DB error occurs');
+		});
+	});
+
+	describe('buildViewDeleteCaseNote', () => {
+		it('should throw if id param is missing', async () => {
+			const handler = buildViewDeleteCaseNote();
+			const req = { params: {}, session: {} };
+			const res = newMockRes({ reference: 'REF-001', caseNote: { comment: 'Test' } });
+
+			await assert.rejects(() => handler(req as any, res as any, mockNext), /id must be a single string value/);
+		});
+
+		it('should render delete confirmation page with correct data from res.locals', async () => {
+			const handler = buildViewDeleteCaseNote();
+			const req = {
+				params: { id: 'case-123', noteId: 'note-456' },
+				originalUrl: '/cases/case-123/case-notes/note-456/delete',
+				session: {}
+			};
+			const res = newMockRes({
+				reference: 'REF-001',
+				caseNote: { id: 'note-456', caseId: 'case-123', comment: 'Note to delete' }
+			});
+
+			await handler(req as any, res as any, mockNext);
+
+			assert.strictEqual(res.render.mock.callCount(), 1);
+			const renderCall = res.render.mock.calls[0];
+			assert.strictEqual(renderCall.arguments[0], 'ui/templates/remove-confirmation.njk');
+			assert.strictEqual(renderCall.arguments[1].layoutTemplate, 'views/layouts/main.njk');
+			assert.strictEqual(renderCall.arguments[1].pageHeading, 'Remove note');
+			assert.strictEqual(renderCall.arguments[1].reference, 'REF-001');
+			assert.strictEqual(renderCall.arguments[1].backLinkUrl, '/cases/case-123');
+			assert.strictEqual(renderCall.arguments[1].backLinkText, 'Back to case details');
+			assert.strictEqual(renderCall.arguments[1].itemName, 'case note');
+			assert.strictEqual(renderCall.arguments[1].itemContent, 'Note to delete');
+		});
+	});
+
+	describe('buildDeleteCaseNote', () => {
+		it('should throw if id param is missing', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			const handler = buildDeleteCaseNote(mockService);
+			const req = { params: {}, session: {} };
+			const res = newMockRes({ caseNote: { id: 'note-456', caseId: 'case-123', comment: 'Test' } });
+
+			await assert.rejects(() => handler(req as any, res as any, mockNext), /id must be a single string value/);
+		});
+
+		it('should throw if noteId param is missing', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			const handler = buildDeleteCaseNote(mockService);
+			const req = { params: { id: 'case-123' }, session: {} };
+			const res = newMockRes({ caseNote: { id: 'note-456', caseId: 'case-123', comment: 'Test' } });
+
+			await assert.rejects(() => handler(req as any, res as any, mockNext), /noteId must be a single string value/);
+		});
+
+		it('should soft-delete case note and record audit with CASE_NOTE_DELETED action', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			mockDb.caseNote.updateMany.mock.mockImplementationOnce(() => Promise.resolve({ count: 1 }));
+
+			const handler = buildDeleteCaseNote(mockService);
+			const req = {
+				params: { id: 'case-123', noteId: 'note-456' },
+				session: { account: { localAccountId: 'user-789' } }
+			};
+			const res = newMockRes({ caseNote: { id: 'note-456', caseId: 'case-123', comment: 'Deleted note content' } });
+
+			await handler(req as any, res as any, mockNext);
+
+			assert.strictEqual(mockDb.caseNote.updateMany.mock.callCount(), 1);
+			const updateCall = mockDb.caseNote.updateMany.mock.calls[0];
+			const updateArgs = updateCall.arguments[0];
+
+			assert.deepStrictEqual(updateArgs.where, { id: 'note-456', caseId: 'case-123', deletedAt: null });
+			assert.ok(updateArgs.data.deletedAt instanceof Date, 'deletedAt should be a Date');
+
+			assert.strictEqual(audit.record.mock.callCount(), 1);
+			const auditCall = audit.record.mock.calls[0];
+			const auditArgs = auditCall.arguments[0] as any;
+
+			assert.strictEqual(auditArgs.caseId, 'case-123');
+			assert.strictEqual(auditArgs.action, AUDIT_ACTIONS.CASE_NOTE_DELETED);
+			assert.strictEqual(auditArgs.userId, 'user-789');
+			assert.deepStrictEqual(auditArgs.metadata, { caseNote: 'Deleted note content' });
+		});
+
+		it('should redirect to case view page after successful delete', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			mockDb.caseNote.updateMany.mock.mockImplementationOnce(() => Promise.resolve({ count: 1 }));
+
+			const handler = buildDeleteCaseNote(mockService);
+			const req = {
+				params: { id: 'case-123', noteId: 'note-456' },
+				session: { account: { localAccountId: 'user-789' } }
+			};
+			const res = newMockRes({ caseNote: { id: 'note-456', caseId: 'case-123', comment: 'Test note' } });
+
+			await handler(req as any, res as any, mockNext);
+
+			assert.strictEqual(res.redirect.mock.callCount(), 1);
+			assert.deepStrictEqual(res.redirect.mock.calls[0].arguments, ['/cases/case-123']);
+		});
+
+		it('should log info messages before and after delete', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			mockDb.caseNote.updateMany.mock.mockImplementationOnce(() => Promise.resolve({ count: 1 }));
+
+			const handler = buildDeleteCaseNote(mockService);
+			const req = {
+				params: { id: 'case-123', noteId: 'note-456' },
+				session: { account: { localAccountId: 'user-789' } }
+			};
+			const res = newMockRes({ caseNote: { id: 'note-456', caseId: 'case-123', comment: 'Test note' } });
+
+			await handler(req as any, res as any, mockNext);
+
+			assert.strictEqual(logger.info.mock.callCount(), 2);
+
+			const firstInfoCall = logger.info.mock.calls[0];
+			assert.deepStrictEqual(firstInfoCall.arguments[0], { noteId: 'note-456', caseId: 'case-123' });
+			assert.strictEqual(firstInfoCall.arguments[1], 'case note delete');
+
+			const secondInfoCall = logger.info.mock.calls[1];
+			assert.deepStrictEqual(secondInfoCall.arguments[0], { caseId: 'case-123', noteId: 'note-456' });
+			assert.strictEqual(secondInfoCall.arguments[1], 'case note deleted');
+		});
+
+		it('should return 404 when note does not belong to the case (defence in depth)', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			const handler = buildDeleteCaseNote(mockService);
+			const req = {
+				params: { id: 'case-123', noteId: 'note-456' },
+				session: { account: { localAccountId: 'user-789' } }
+			};
+			// Note belongs to a different case
+			const res = newMockRes({ caseNote: { id: 'note-456', caseId: 'different-case-id', comment: 'Test' } });
+
+			await handler(req as any, res as any, mockNext);
+
+			// notFoundHandler renders views/layouts/error
+			assert.strictEqual(res.render.mock.callCount(), 1);
+			const renderCall = res.render.mock.calls[0];
+			assert.strictEqual(renderCall.arguments[0], 'views/layouts/error', 'Should render error page');
+
+			// Should not attempt to soft-delete or audit
+			assert.strictEqual(mockDb.caseNote.updateMany.mock.callCount(), 0, 'Should not call updateMany');
+			assert.strictEqual(audit.record.mock.callCount(), 0, 'Should not record audit');
+		});
+
+		it('should return 404 when caseNote is missing from res.locals', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			const handler = buildDeleteCaseNote(mockService);
+			const req = {
+				params: { id: 'case-123', noteId: 'note-456' },
+				session: { account: { localAccountId: 'user-789' } }
+			};
+			// No caseNote in res.locals
+			const res = newMockRes({});
+
+			await handler(req as any, res as any, mockNext);
+
+			// notFoundHandler renders a 404 page
+			assert.strictEqual(res.render.mock.callCount(), 1);
+
+			// Should not attempt to soft-delete or audit
+			assert.strictEqual(mockDb.caseNote.updateMany.mock.callCount(), 0, 'Should not call updateMany');
+			assert.strictEqual(audit.record.mock.callCount(), 0, 'Should not record audit');
+		});
+
+		it('should rethrow database errors after logging (wrapPrismaError behavior)', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			const dbError = new Error('Database connection failed');
+			mockDb.caseNote.updateMany.mock.mockImplementationOnce(() => Promise.reject(dbError));
+
+			const handler = buildDeleteCaseNote(mockService);
+			const req = {
+				params: { id: 'case-123', noteId: 'note-456' },
+				session: { account: { localAccountId: 'user-789' } }
+			};
+			const res = newMockRes({ caseNote: { id: 'note-456', caseId: 'case-123', comment: 'Test note' } });
+
+			// wrapPrismaError rethrows all errors, so this should reject
+			await assert.rejects(() => handler(req as any, res as any, mockNext), /Database connection failed/);
+
+			assert.strictEqual(audit.record.mock.callCount(), 0, 'Audit should not be recorded since error was thrown');
+			assert.strictEqual(res.redirect.mock.callCount(), 0, 'Redirect should not happen since error was thrown');
+		});
+
+		it('should handle undefined userId from session', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			mockDb.caseNote.updateMany.mock.mockImplementationOnce(() => Promise.resolve({ count: 1 }));
+
+			const handler = buildDeleteCaseNote(mockService);
+			const req = {
+				params: { id: 'case-123', noteId: 'note-456' },
+				session: {} // No account/localAccountId
+			};
+			const res = newMockRes({ caseNote: { id: 'note-456', caseId: 'case-123', comment: 'Test note' } });
+
+			await handler(req as any, res as any, mockNext);
+
+			const auditCall = audit.record.mock.calls[0];
+			assert.strictEqual((auditCall.arguments[0] as any).userId, undefined);
+		});
+
+		it('should throw error when updateMany affects 0 rows', async () => {
+			const mockDb = createMockDb();
+			const logger = mockLogger();
+			const audit = createMockAudit();
+			const mockService = { db: mockDb, logger, audit } as any;
+
+			// No rows affected (could indicate tampering or race condition)
+			mockDb.caseNote.updateMany.mock.mockImplementationOnce(() => Promise.resolve({ count: 0 }));
+
+			const handler = buildDeleteCaseNote(mockService);
+			const req = {
+				params: { id: 'case-123', noteId: 'note-456' },
+				session: { account: { localAccountId: 'user-789' } }
+			};
+			const res = newMockRes({ caseNote: { id: 'note-456', caseId: 'case-123', comment: 'Test note' } });
+
+			await assert.rejects(
+				() => handler(req as any, res as any, mockNext),
+				/Expected 1 row to be soft-deleted, but 0 rows were affected/
+			);
+
+			assert.strictEqual(audit.record.mock.callCount(), 0, 'Audit should not be recorded');
 		});
 	});
 });

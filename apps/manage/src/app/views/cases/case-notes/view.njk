@@ -22,10 +22,19 @@
             {% else %}
                 {% set tableRows = [] %}
                 {% for note in caseNotes %}
-                    {% set changeHtml %}
-                        <a class="govuk-link govuk-link--no-visited-state" href="{{ currentUrl }}/{{ note.id }}/edit" data-cy="change-note-link-{{ loop.index0 }}">
-                            Change<span class="govuk-visually-hidden"> case note by {{ note.userName }}</span>
-                        </a>
+                    {% set actionHtml %}
+                        <ul class="govuk-list">
+                            <li>
+                                <a class="govuk-link govuk-link--no-visited-state" href="{{ currentUrl }}/{{ note.id }}/edit" data-cy="change-note-link-{{ loop.index0 }}">
+                                    Change<span class="govuk-visually-hidden"> case note by {{ note.userName }}</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="govuk-link govuk-link--no-visited-state" href="{{ currentUrl }}/{{ note.id }}/delete" data-cy="remove-note-link-{{ loop.index0 }}">
+                                    Remove<span class="govuk-visually-hidden"> case note by {{ note.userName }}</span>
+                                </a>
+                            </li>
+                        </ul>
                     {% endset %}
                     {% set tableRows = (tableRows.push([
                         {
@@ -42,7 +51,7 @@
                             attributes: { "data-cy": "note-user-" + loop.index0 }
                         },
                         {
-                            html: changeHtml,
+                            html: actionHtml,
                             attributes: { "data-cy": "note-actions-" + loop.index0 }
                         }
                     ]), tableRows) %}
