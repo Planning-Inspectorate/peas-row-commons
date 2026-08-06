@@ -2,10 +2,9 @@ import { list, JourneyResponse, clearDataFromSession } from '@planning-inspector
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import { caseToViewModel } from './view-model.ts';
 import { createJourney, JOURNEY_ID } from './journey.ts';
-import { isValidUuidFormat } from '@pins/peas-row-commons-lib/util/uuid.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import type { ManageService } from '#service';
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 import { getQuestions } from './questions.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { buildUserDisplayNameMap, getEntraGroupMembers } from '#util/entra-groups.ts';
@@ -127,16 +126,6 @@ export function buildViewCaseDetails(): AsyncRequestHandler {
 	};
 }
 
-export function validateIdFormat(req: Request, res: Response, next: NextFunction) {
-	const id = getStringParam(req.params, 'id');
-
-	if (!isValidUuidFormat(id)) {
-		return notFoundHandler(req, res);
-	}
-
-	next();
-}
-
 export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestHandler {
 	const { db, logger, getEntraClient } = service;
 	const groupIds = service.entraGroupIds;
@@ -209,7 +198,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
  *
  * - You have added 3 inspectors
  * - You want to change inspector 2's name
- * - Previosly: doing so will show UI with the original 3 (as it is pulling the data from DB)
+ * - Previously: doing so will show UI with the original 3 (as it is pulling the data from DB)
  * - Now: it will correctly show 3 inspectors with 2's name changed
  */
 export function combineSessionAndDbData(res: Response, answers: Record<string, unknown>, removedIds: string[] = []) {

@@ -8,7 +8,7 @@ import {
 	buildUpdateCaseNote,
 	buildPreloadCaseNoteData
 } from './controller.ts';
-import { validateIdFormat } from '../view/controller.ts';
+import { validateIdFormat, validateNoteIdFormat } from '@pins/peas-row-commons-lib/middleware/validate-params.ts';
 import { buildValidateCaseNotesMiddleware } from './validation-middleware.ts';
 import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 
@@ -35,10 +35,16 @@ export function createRoutes(service: ManageService): IRouter {
 		.route('/:noteId/edit')
 		// Gets the edit case note page
 		// preloadCaseNoteData fetches case reference and note, populating res.locals
-		.get(validateIdFormat, asyncHandler(preloadCaseNoteData), viewEditCaseNote)
+		.get(validateIdFormat, validateNoteIdFormat, asyncHandler(preloadCaseNoteData), viewEditCaseNote)
 		// Updates a single case note
 		// preloadCaseNoteData ensures res.locals.reference is available for validation error rendering
-		.post(validateIdFormat, asyncHandler(preloadCaseNoteData), validateCaseNotesMiddleware, updateCaseNote);
+		.post(
+			validateIdFormat,
+			validateNoteIdFormat,
+			asyncHandler(preloadCaseNoteData),
+			validateCaseNotesMiddleware,
+			updateCaseNote
+		);
 
 	return router;
 }
