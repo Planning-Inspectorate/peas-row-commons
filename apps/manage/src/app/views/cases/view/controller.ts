@@ -23,6 +23,7 @@ const caseToViewInclude = {
 	Costs: true,
 	Abeyance: true,
 	Notes: {
+		where: { deletedAt: null },
 		take: 4,
 		orderBy: { createdAt: 'desc' },
 		include: {
@@ -67,7 +68,7 @@ const caseToViewInclude = {
 	CaseOfficer: true,
 	_count: {
 		select: {
-			Notes: true
+			Notes: { where: { deletedAt: null } }
 		}
 	}
 } satisfies Prisma.CaseInclude;

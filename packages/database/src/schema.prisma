@@ -252,6 +252,7 @@ model CaseNote {
   comment      String    @db.NVarChar(4000)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime?
+  deletedAt    DateTime?
   authorId     String    @db.UniqueIdentifier
   Author       User      @relation("author", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   caseId       String    @db.UniqueIdentifier

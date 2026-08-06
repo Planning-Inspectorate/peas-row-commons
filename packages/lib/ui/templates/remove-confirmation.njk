@@ -1,0 +1,44 @@
+{% extends layoutTemplate %}
+
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% set title = reference + " - Remove " + itemName %}
+
+{% block pageTitle %}
+    {{ title }}
+{% endblock %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <form action="" method="post" novalidate>
+                {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
+                <h2 class="govuk-caption-l" data-cy="page-caption">
+                    {{ reference }}
+                </h2>
+                <h1 class="govuk-heading-l" data-cy="page-heading">{{ pageHeading if pageHeading else ["Remove ", itemName] | join }}</h1>
+                <p class="govuk-body" id="remove-description">{{ removalPrompt if removalPrompt else ["Are you sure you want to remove this ", itemName, "?"] | join }}</p>
+
+                <div class="govuk-inset-text">
+                    <p class="govuk-body">{{ itemContent }}</p>
+                </div>
+
+                <div class="govuk-button-group">
+                    {{ govukButton({
+                        text: confirmRemoveButtonText if confirmRemoveButtonText else ["Remove ", itemName ] | join,
+                        type: "submit",
+                        classes: "govuk-button--warning",
+                        attributes: { "data-cy":"button-save-and-continue"}
+                    }) }}
+                    <a
+                            href="{{ backLinkUrl }}"
+                            class="govuk-button govuk-button--secondary"
+                            data-cy="button-back"
+                            aria-describedby="remove-description"
+                    >Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
