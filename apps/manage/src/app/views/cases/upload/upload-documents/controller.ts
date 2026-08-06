@@ -67,7 +67,7 @@ async function uploadFilesToStorage(
 			await blobStore?.uploadStream(Readable.from(item.file.buffer), item.file.mimetype, item.blobName);
 		} catch (error) {
 			logger.error({ error }, `Error uploading file: ${item.blobName}`);
-			throw new Error(`Failed to upload file`);
+			throw new Error(`Failed to upload file`, { cause: error });
 		}
 	}
 }
