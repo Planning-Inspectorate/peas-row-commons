@@ -133,111 +133,194 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
     }
   }
 
+  #############################################################################
+  # MANAGED RULES - Microsoft Default Rule Set
+  #############################################################################
+
   managed_rule {
     type    = "Microsoft_DefaultRuleSet"
     version = "2.1"
     action  = "Block"
 
+    #--------------------------------------------------------------------------
+    # General (200xxx)
+    #--------------------------------------------------------------------------
     override {
-      rule_group_name = "PROTOCOL-ATTACK"
+      rule_group_name = "General"
+
+      # General: Failed to parse request body (5PL1)
       rule {
-        action  = "AnomalyScoring"
-        rule_id = "921110"
+        rule_id = "200002"
+        action  = "Log"
       }
-      exclusion {
-        match_variable = "RequestBodyPostArgNames"
-        operator       = "Equals"
-        selector       = "files"
-      }
-      exclusion {
-        match_variable = "RequestBodyPostArgNames"
-        operator       = "Equals"
-        selector       = "_csrf"
+
+      # General: Multipart request body failed strict validation (5PL1)
+      rule {
+        rule_id = "200003"
+        action  = "Log"
       }
     }
 
+    #--------------------------------------------------------------------------
+    # PROTOCOL-ATTACK (921xxx)
+    #--------------------------------------------------------------------------
+    override {
+      rule_group_name = "PROTOCOL-ATTACK"
+
+      # PROTOCOL-ATTACK: HTTP Request Smuggling Attack (5PL1)
+      rule {
+        rule_id = "921110"
+        action  = "AnomalyScoring"
+
+        exclusion {
+          match_variable = "RequestBodyPostArgNames"
+          operator       = "Equals"
+          selector       = "_csrf"
+        }
+        exclusion {
+          match_variable = "RequestBodyPostArgNames"
+          operator       = "Equals"
+          selector       = "files"
+        }
+      }
+    }
+
+    #--------------------------------------------------------------------------
+    # RCE - Remote Command Execution (932xxx)
+    #--------------------------------------------------------------------------
     override {
       rule_group_name = "RCE"
 
+      # Remote Command Execution: Windows Command Injection (5PL1)
       rule {
-        # Remote Command Execution: Windows Command Injection
-        action  = "AnomalyScoring"
         rule_id = "932115"
+        action  = "AnomalyScoring"
         enabled = true
 
         exclusion {
-          # 932115 false positive observed as:
-          # PostParamValue:comment = "START MODS PROCESS"
           match_variable = "RequestBodyPostArgNames"
           operator       = "Equals"
           selector       = "comment"
+          # False positive: PostParamValue:comment = "START MODS PROCESS"
         }
       }
     }
 
+    #--------------------------------------------------------------------------
+    # PHP (933xxx)
+    #--------------------------------------------------------------------------
+    override {
+      rule_group_name = "PHP"
+
+      # PHP Injection Attack: Variable Function Call Found (5PL1)
+      rule {
+        rule_id = "933210"
+        action  = "Log"
+        enabled = true
+        # False positive: PostParamValue:name = "Council (Upgrade ..."
+      }
+    }
+
+    #--------------------------------------------------------------------------
+    # SQLI - SQL Injection (942xxx)
+    #--------------------------------------------------------------------------
     override {
       rule_group_name = "SQLI"
+      # https://learn.microsoft.com/en-us/azure/web-application-firewall/ag/application-gateway-crs-rulegroups-rules?tabs=drs22%2Cowasp32#fine-tuning-guidance-for-drs-21
+
+      # SQL Injection Attack: Common Injection Testing Detected (3PL2)
       rule {
+        rule_id = "942110"
         action  = "AnomalyScoring"
-        rule_id = "942390"
+        enabled = false
+        # Replaced by MSTIC rule 99031001
       }
 
+      # SQL Injection Attack: SQL Operator Detected (5PL2)
       rule {
-        # SQL Injection Attack: SQL Operator Detected
-        action  = "AnomalyScoring"
         rule_id = "942120"
+        action  = "AnomalyScoring"
         enabled = true
 
         exclusion {
-          # 942120 false positive observed as:
-          # QueryParamValue:clientdata = "e|||microsoftonline.com|none"
           match_variable = "QueryStringArgNames"
           operator       = "Equals"
           selector       = "clientdata"
+          # False positive: QueryParamValue:clientdata = "e|||microsoftonline.com|none"
         }
       }
-
+      # SQL Injection Attack (5PL2)
       rule {
-        # SQL Injection Attack
-        # 942400 false positive observed as:
-        # PostParamValue:comment = "There are over x reps of support and x reps of objection..."
-        action  = "Log"
-        rule_id = "942400"
+        rule_id = "942150"
+        action  = "AnomalyScoring"
+        enabled = false
+        # Replaced by MSTIC rule 99031003
       }
 
+      # Detects basic SQL authentication bypass attempts 2/3 (5PL2)
       rule {
-        # SQL Injection Attack: Detects MySQL comments, conditions and ch(a)r injections
+        rule_id = "942260"
         action  = "AnomalyScoring"
+        enabled = false
+        # Replaced by MSTIC rule 99031004
+      }
+
+      # 
+
+      rule {
         rule_id = "942300"
+        action  = "AnomalyScoring"
         enabled = true
+        # Detects MySQL comments, conditions and ch(a)r injections
 
         exclusion {
-          # 942300 false positive observed as:
-          # PostParamValue:name = "Appeal(s) ..."
           match_variable = "RequestBodyPostArgNames"
           operator       = "Equals"
           selector       = "name"
+          # False positive: PostParamValue:name = "Appeal(s) ..."
         }
       }
 
-      # SQLI
+      rule {
+        rule_id = "942400"
+        action  = "Log"
+        # SQL Injection Attack
+        # False positive: PostParamValue:comment = "There are over x reps of support and x reps of objection..."
+      }
+
+      rule {
+        rule_id = "942430"
+        action  = "AnomalyScoring"
+        enabled = false
+        # Restricted SQL Character Anomaly Detection (args): # of special characters exceeded (12)
+        # Triggers too many false positives
+      }
+
+      rule {
+        rule_id = "942440"
+        action  = "AnomalyScoring"
+        enabled = false
+        # SQL Comment Sequence Detected
+        # Replaced by MSTIC rule 99031002
+      }
+
+      rule {
+        rule_id = "942450"
+        action  = "AnomalyScoring"
+        enabled = true
+        # SQL Hex Encoding Attack: Detects SQL Injection attempts using hex encoding
+
+        exclusion {
+          match_variable = "RequestCookieNames"
+          operator       = "Equals"
+          selector       = "connect.sid"
+          # False positive: PostParamValue:connect.sid = "...0XDA..."
+        }
+      }
+
+      # Group-level exclusions (alphabetical by selector)
       # Due to using prisma on DB queries, false positives can be ignore for:
-      # the comment, myselfComment, submitterComment, _csrf and healthAndSafetyIssue fields
-      exclusion {
-        match_variable = "RequestBodyPostArgNames"
-        operator       = "Equals"
-        selector       = "comment"
-      }
-      exclusion {
-        match_variable = "RequestBodyPostArgNames"
-        operator       = "Equals"
-        selector       = "myselfComment"
-      }
-      exclusion {
-        match_variable = "RequestBodyPostArgNames"
-        operator       = "Equals"
-        selector       = "submitterComment"
-      }
+      # the _csrf, healthAndSafetyIssue, myselfComment, submitterComment fields
       exclusion {
         match_variable = "RequestBodyPostArgNames"
         operator       = "Equals"
@@ -248,29 +331,15 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
         operator       = "Equals"
         selector       = "healthAndSafetyIssue"
       }
-    }
-
-    override {
-      rule_group_name = "PHP"
-      rule {
-        # PHP Injection Attack: Variable Function Call Found
-        # False positive observed as:
-        # PostParamValue:name = "Council (Upgrade ..."
-        action  = "Log"
-        enabled = true
-        rule_id = "933210"
+      exclusion {
+        match_variable = "RequestBodyPostArgNames"
+        operator       = "Equals"
+        selector       = "myselfComment"
       }
-    }
-
-    override {
-      rule_group_name = "General"
-      rule {
-        action  = "Log"
-        rule_id = "200002"
-      }
-      rule {
-        action  = "Log"
-        rule_id = "200003"
+      exclusion {
+        match_variable = "RequestBodyPostArgNames"
+        operator       = "Equals"
+        selector       = "submitterComment"
       }
     }
   }
