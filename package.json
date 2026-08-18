@@ -77,14 +77,14 @@
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.19.0",
     "@types/multer": "^2.2.0",
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.2.0",
     "@types/nunjucks": "^3.2.6",
     "@types/prompts": "^2.4.9",
     "@typescript/native": "npm:typescript@^7.0.2",
     "adm-zip": "^0.6.0",
     "cookie-parser": "^1.4.7",
-    "cypress": "^15.19.0",
-    "eslint": "^10.8.0",
+    "cypress": "^15.20.1",
+    "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
@@ -101,9 +101,9 @@
     "stylelint-config-standard-scss": "^17.0.0",
     "stylelint-order": "^8.1.1",
     "stylelint-scss": "^7.2.0",
-    "tsx": "^4.23.5",
+    "tsx": "^4.23.12",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "typescript-eslint": "^8.66.0"
+    "typescript-eslint": "^8.67.0"
   },
   "lint-staged": {
     "*.{js,ts}": [
