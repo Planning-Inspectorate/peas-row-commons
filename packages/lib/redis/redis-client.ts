@@ -30,7 +30,6 @@ export class RedisClient {
 		const redisParams = parseRedisConnectionString(connString);
 
 		this.client = createClient({
-			// @ts-expect-error - doesn't seem to match the types but we've always used this config!
 			socket: {
 				host: redisParams.host,
 				port: redisParams.port,

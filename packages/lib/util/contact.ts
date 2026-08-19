@@ -1,13 +1,15 @@
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { mapAddressDbToViewModel, mapAddressViewModelToDb } from './address.ts';
-import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
-import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
-import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
+import {
+	COMPONENT_TYPES,
+	AddressValidator,
+	MultiFieldInputValidator,
+	type BaseQuestionProps
+} from '@planning-inspectorate/dynamic-forms';
 import AtLeastOneFieldValidator from '../forms/custom-components/multi-field-input/validator.ts';
 import { CUSTOM_COMPONENTS } from '../forms/custom-components/index.ts';
 import type { AddressItem, ContactMappingConfig } from './types.ts';
-import type { BaseQuestionProps } from '@planning-inspectorate/dynamic-forms/src/questions/create-questions.js';
 
 /**
  * Maps objectors DB data to view model.

@@ -1,5 +1,5 @@
 import { Router as createRouter } from 'express';
-import type { Handler, Request, IRouter } from 'express';
+import type { Request, IRouter } from 'express';
 import { buildGetJourney } from '@planning-inspectorate/dynamic-forms/src/middleware/build-get-journey.js';
 import { question, buildSave } from '@planning-inspectorate/dynamic-forms/src/controller.js';
 import { redirectToUnansweredQuestion } from '@planning-inspectorate/dynamic-forms/src/middleware/redirect-to-unanswered-question.js';
@@ -14,6 +14,7 @@ import { JOURNEY_ID, createJourney } from './journey.ts';
 import { getQuestions } from './questions.ts';
 import type { ManageService } from '#service';
 import { buildListController, buildLoadCaseData, buildSaveController } from './controller.ts';
+import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms';
 
 export function createRoutes(service: ManageService): IRouter {
 	const router = createRouter({ mergeParams: true });
@@ -57,7 +58,7 @@ export function createRoutes(service: ManageService): IRouter {
  */
 function createMiddlewares(service: ManageService) {
 	return [
-		buildGetJourney((req: Request & { folderStructure: Record<string, any> }, journeyResponse: Handler) => {
+		buildGetJourney((req: Request & { folderStructure: Record<string, any> }, journeyResponse: JourneyResponse) => {
 			const folderStructure = req.folderStructure;
 			const questions = getQuestions(folderStructure);
 			return createJourney(JOURNEY_ID, questions, journeyResponse, req);

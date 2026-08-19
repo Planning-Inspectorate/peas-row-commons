@@ -1,5 +1,5 @@
 import { Router as createRouter } from 'express';
-import type { Handler, Request, IRouter } from 'express';
+import type { Request, IRouter } from 'express';
 import { buildGetJourney } from '@planning-inspectorate/dynamic-forms/src/middleware/build-get-journey.js';
 import { list, question, buildSave } from '@planning-inspectorate/dynamic-forms/src/controller.js';
 import { redirectToUnansweredQuestion } from '@planning-inspectorate/dynamic-forms/src/middleware/redirect-to-unanswered-question.js';
@@ -17,6 +17,7 @@ import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { buildGetJourneyMiddleware } from './controller.ts';
 import { bounceRemoveCancellation } from '@pins/peas-row-commons-lib/middleware/manage-list/track-removes.ts';
 import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
+import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms';
 
 export function createNewCaseRoutes(service: ManageService): IRouter {
 	const router = createRouter({ mergeParams: true });
@@ -24,12 +25,14 @@ export function createNewCaseRoutes(service: ManageService): IRouter {
 
 	const getJourneyResponse = buildGetJourneyResponseFromSession(JOURNEY_ID);
 
-	const getJourney = buildGetJourney((req: Request & { groupMembers: EntraGroupMembers }, journeyResponse: Handler) => {
-		const groupMembers = req.groupMembers; // Stored on request object because we do not have access to the response object.
-		const questions = getQuestions(groupMembers);
+	const getJourney = buildGetJourney(
+		(req: Request & { groupMembers: EntraGroupMembers }, journeyResponse: JourneyResponse) => {
+			const groupMembers = req.groupMembers; // Stored on request object because we do not have access to the response object.
+			const questions = getQuestions(groupMembers);
 
-		return createJourney(JOURNEY_ID, questions, journeyResponse, req);
-	});
+			return createJourney(JOURNEY_ID, questions, journeyResponse, req);
+		}
+	);
 
 	const saveController = buildSaveController(service);
 	const successController = buildSuccessController();
