@@ -479,7 +479,7 @@ describe('Delete File Controllers', () => {
 
 			assert.strictEqual(viewPath, 'views/cases/case-folders/case-folder/delete-file/confirmation.njk');
 			assert.deepStrictEqual(viewData.documents, []);
-			assert.strictEqual(viewData.pageHeading, 'Delete files');
+			assert.strictEqual(viewData.pageHeading, 'No files selected to delete');
 			assert.strictEqual(res.locals.errorSummary[0].text, 'Failed to delete documents, please try again.');
 		});
 	});

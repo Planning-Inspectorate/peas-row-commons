@@ -5,6 +5,7 @@ import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
 import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { Document } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import { getCountHeading } from '@pins/peas-row-commons-lib/util/file-count-headings.ts';
 
 /**
  * Extracts document IDs from the request body.
@@ -62,7 +63,11 @@ function renderConfirmationView(
 	const basePath = req.originalUrl.split('/documents/')[0];
 	const documents = Array.isArray(context?.documents) ? context.documents : [];
 	const fileCount = documents.length;
-	const pageHeading = getDeleteHeading(fileCount);
+	const pageHeading = getCountHeading(fileCount, {
+		zeroFiles: 'No files selected to delete',
+		oneFile: 'Delete 1 file',
+		multipleFiles: (n) => `Delete ${n} files`
+	});
 
 	return res.render('views/cases/case-folders/case-folder/delete-file/confirmation.njk', {
 		pageHeading,
@@ -217,12 +222,4 @@ export function buildRemoveFileFromSelection(service: ManageService) {
 			throw error;
 		}
 	};
-}
-
-/**
- * Returns the appropriate heading for the delete confirmation page based on the number of files.
- */
-function getDeleteHeading(fileCount: number): string {
-	if (fileCount === 0) return 'Delete files';
-	return fileCount === 1 ? 'Delete 1 file' : `Delete ${fileCount} files`;
 }

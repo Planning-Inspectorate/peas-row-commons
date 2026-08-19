@@ -4,6 +4,7 @@ import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-ro
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import type { ValidationError } from '../upload/upload-documents/validation-middleware.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import { getCountHeading } from '@pins/peas-row-commons-lib/util/file-count-headings.ts';
 
 /**
  * Controller used for the POST request when a user sends files to move,
@@ -13,11 +14,20 @@ import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
  */
 export function buildHandleMoveSelection(): RequestHandler {
 	return async (req, res) => {
-		const { selectedFiles } = req.body;
 		const id = getStringParam(req.params, 'id');
+		const returnUrl = req.baseUrl.replace(/\/move-files\/?$/, '');
 
-		// If no files, just refresh and show the error.
-		if (!selectedFiles) {
+		const rawSelectedFiles = req.body?.selectedFiles;
+		const selectedFiles = Array.isArray(rawSelectedFiles)
+			? rawSelectedFiles
+			: rawSelectedFiles
+				? [rawSelectedFiles]
+				: [];
+
+		const moveFile = typeof req.body?.moveFile === 'string' ? req.body.moveFile : undefined;
+		const updatedFiles = moveFile ? selectedFiles.filter((fileId: string) => fileId !== moveFile) : selectedFiles;
+
+		if (!updatedFiles.length) {
 			addSessionData(
 				req,
 				id,
@@ -31,12 +41,10 @@ export function buildHandleMoveSelection(): RequestHandler {
 				},
 				'folder'
 			);
-
-			const returnUrl = req.baseUrl.replace(/\/move-files\/?$/, '');
 			return res.redirect(returnUrl);
 		}
 
-		req.session.moveFilesIds = Array.isArray(selectedFiles) ? selectedFiles : [selectedFiles];
+		req.session.moveFilesIds = updatedFiles;
 
 		return res.redirect(req.baseUrl);
 	};
@@ -71,10 +79,16 @@ export function buildViewMoveFiles(service: ManageService): RequestHandler {
 
 		if (!documents) return notFoundHandler(req, res);
 
+		const fileCount = documents.length;
+		const pageHeading = getCountHeading(fileCount, {
+			zeroFiles: 'No files selected to move',
+			oneFile: 'Move 1 file',
+			multipleFiles: (n) => `Move ${n} files`
+		});
 		const returnUrl = req.baseUrl.replace(/\/move-files\/?$/, '');
 
 		return res.render('views/cases/move-file/view.njk', {
-			pageHeading: documents.length > 1 ? 'Move files' : 'Move file',
+			pageHeading,
 			documents,
 			backLinkUrl: returnUrl,
 			currentUrl: req.originalUrl

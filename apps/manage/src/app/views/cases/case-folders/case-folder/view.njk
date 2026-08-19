@@ -33,10 +33,12 @@
             attributes: { "data-cy": "notification-folder-created" }
         }) }}
     {% endif %}
-    {% if folderUpdates.filesMoved %}
+    {% set moveCount = folderUpdates.filesMoved | int %}
+    {% if moveCount > 0 %}
+        {% set filesMoveText = moveCount + " selected file" + ("s" if moveCount != 1 else "") + " moved" %}
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
-            text: "Selected file(s) moved to " + folderName + " folder",
+            text: filesMoveText,
             type: "success",
             attributes: { "data-cy": "notification-files-moved" }
         }) }}

@@ -11,21 +11,23 @@
 {% block content %}
     <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
-
             <h1 class="govuk-heading-l" data-cy="page-heading">{{ pageHeading }}</h1>
 
-            {{ moveTable(documents) }}
+            <form method="POST" action="{{ currentUrl }}" data-cy="move-files-selection-form">
+                {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
 
-            {% for doc in documents %}
-                <input type="hidden" name="documentsToMove[]" value="{{ doc.id }}">
-            {% endfor %}
+                {% for doc in documents %}
+                    <input type="hidden" name="selectedFiles" value="{{ doc.id }}">
+                {% endfor %}
+
+                {{ moveTable(documents) }}
+            </form>
 
             {{ govukButton({
                 text: "Move selected",
                 href: currentUrl + "/move",
                 attributes: { "data-cy": "move-selected-btn" }
             }) }}
-
         </div>
 
         <div class="govuk-grid-column-two-thirds">
@@ -38,20 +40,31 @@
 
 {% macro moveTable(docRows) %}
     {% set docs = [] %}
+    {% set multipleFiles = docRows | length > 1 %}
 
     {% for doc in docRows %}
+        {% set actionHtml %}
+            {% if multipleFiles %}
+                <button type="submit" name="moveFile" value="{{ doc.id }}" class="govuk-button-as-link">
+                    <span class="govuk-visually-hidden">Remove {{ doc.fileName }} from list</span>
+                    <span aria-hidden="true">Remove</span>
+                </button>
+            {% endif %}
+        {% endset %}
+
+        {% set fileNameHtml %}
+            <span data-cy="file-name-{{ doc.id }}">{{ doc.fileName }}</span>
+        {% endset %}
+
         {% set docs = (docs.push([
-            {
-                html: "<span data-cy='file-name-" + doc.id + "'>" + doc.fileName + "</span>"
-            }
+            { html: fileNameHtml },
+            { html: actionHtml }
         ]), docs) %}
     {% endfor %}
 
     {% set headers = [
-        {
-            text: 'File name',
-            classes: "govuk-!-width-full"
-        }
+        { text: "File name", classes: "govuk-!-width-three-quarters" },
+        { text: "Action", classes: "govuk-!-width-one-quarter" }
     ] %}
 
     {{ govukTable({
