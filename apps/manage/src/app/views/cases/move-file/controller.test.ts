@@ -112,7 +112,7 @@ describe('Move Selection Controller', () => {
 
 			const [view, data] = mockRes.render.mock.calls[0].arguments;
 			assert.strictEqual(view, 'views/cases/move-file/view.njk');
-			assert.strictEqual(data.pageHeading, 'Move files');
+			assert.strictEqual(data.pageHeading, 'Move 2 files');
 			assert.strictEqual(data.documents, mockDocs);
 			assert.strictEqual(data.backLinkUrl, '/cases/123/folder/456');
 		});
@@ -127,7 +127,24 @@ describe('Move Selection Controller', () => {
 			await handler(mockReq, mockRes, () => {});
 
 			const data = mockRes.render.mock.calls[0].arguments[1];
-			assert.strictEqual(data.pageHeading, 'Move file');
+			assert.strictEqual(data.pageHeading, 'Move 1 file');
+		});
+
+		it('should change page heading to multiple if more than one file', async () => {
+			mockReq.session.moveFilesIds = ['file-1', 'file-2', 'file-3'];
+
+			const mockDocs = [
+				{ id: 'file-1', fileName: 'test1.pdf' },
+				{ id: 'file-2', fileName: 'test2.pdf' },
+				{ id: 'file-3', fileName: 'test3.pdf' }
+			];
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve(mockDocs));
+
+			const handler = buildViewMoveFiles(mockService);
+			await handler(mockReq, mockRes, () => {});
+
+			const data = mockRes.render.mock.calls[0].arguments[1];
+			assert.strictEqual(data.pageHeading, 'Move 3 files');
 		});
 
 		it('should call notFoundHandler (implicit return) if DB returns null', async () => {

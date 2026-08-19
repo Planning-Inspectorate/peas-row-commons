@@ -212,8 +212,7 @@ export function buildSaveController({ db, logger, audit }: ManageService): Reque
 			await audit.recordMany(auditEntries);
 
 			// Will show the success banner once we have redirected to the new folder page.
-			addSessionData(req, destinationFolderId, { filesMoved: true }, 'folder');
-
+			addSessionData(req, destinationFolderId, { filesMoved: fileIds.length }, 'folder');
 			delete req.session.moveFilesIds;
 		} catch (error: any) {
 			wrapPrismaError({
