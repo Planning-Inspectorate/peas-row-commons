@@ -1,6 +1,4 @@
-import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import { Section, type Question, type JourneyResponse } from '@planning-inspectorate/dynamic-forms';
 
 /**
  * Class for dynamically generating sections based on a manage list section parameter.
@@ -40,7 +38,11 @@ export class DynamicSectionBuilder {
 	}
 
 	protected getItems(journeyResponse: JourneyResponse): Record<string, unknown>[] {
-		return journeyResponse?.answers?.[this.listFieldName] || [];
+		const items = journeyResponse?.answers?.[this.listFieldName];
+		if (Array.isArray(items)) {
+			return items as Record<string, unknown>[];
+		}
+		return [];
 	}
 
 	/**

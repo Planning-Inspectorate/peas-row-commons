@@ -12,6 +12,18 @@ export interface FolderNode extends FlatFolder {
 	children: FolderNode[];
 }
 
+interface NestedFolderPreppedQuestion {
+	value: string | null;
+	question: string;
+	fieldName: string;
+	pageTitle: string;
+	description?: string;
+	html?: string;
+	hint?: string;
+	folderList: FolderNode[];
+	selectedPath: string[] | null;
+}
+
 export default class NestedFolderQuestion extends Question {
 	folderStructure: FolderNode[];
 
@@ -60,13 +72,18 @@ export default class NestedFolderQuestion extends Question {
 		section: Section,
 		journey: Journey,
 		customViewData: Record<string, unknown>,
-		payload?: Record<string, any>
-	): QuestionViewModel {
+		payload?: Record<string, unknown>
+	): QuestionViewModel<NestedFolderPreppedQuestion> {
 		const answer = payload ? payload[this.fieldName] : journey.response.answers[this.fieldName];
 
-		const selectedPath = this.findPath(this.folderStructure, answer);
+		const selectedPath = this.findPath(this.folderStructure, answer as string);
 
-		const viewModel = super.prepQuestionForRendering(section, journey, customViewData, payload);
+		const viewModel = super.prepQuestionForRendering(
+			section,
+			journey,
+			customViewData,
+			payload
+		) as QuestionViewModel<NestedFolderPreppedQuestion>;
 
 		viewModel.question.folderList = this.folderStructure || [];
 		viewModel.question.selectedPath = selectedPath;

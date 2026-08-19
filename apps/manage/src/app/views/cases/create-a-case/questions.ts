@@ -1,10 +1,13 @@
-import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js';
-import ConditionalRequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/conditional-required-validator.js';
-import { createQuestions } from '@planning-inspectorate/dynamic-forms/src/questions/create-questions.js';
-import { questionClasses } from '@planning-inspectorate/dynamic-forms/src/questions/questions.js';
-import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
-import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
-import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
+import {
+	createQuestions,
+	questionClasses,
+	RequiredValidator,
+	ConditionalRequiredValidator,
+	AddressValidator,
+	DateValidator,
+	StringValidator,
+	COMPONENT_TYPES
+} from '@planning-inspectorate/dynamic-forms';
 import { CASEWORK_AREAS } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { AUTHORITY_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/authority-status.ts';
 import {
@@ -20,7 +23,6 @@ import {
 	RIGHTS_OF_WAY_SUBTYPES,
 	WAYLEAVES_SUBTYPES
 } from '@pins/peas-row-commons-database/src/seed/static-data/subtypes.ts';
-import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
 import {
 	referenceDataToRadioOptions,
 	SUB_TYPE_ERROR,

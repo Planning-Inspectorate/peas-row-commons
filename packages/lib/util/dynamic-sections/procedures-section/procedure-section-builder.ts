@@ -1,7 +1,5 @@
 import { DynamicSectionBuilder } from '../dynamic-section-builder.ts';
-import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import { Section, type Question, type JourneyResponse } from '@planning-inspectorate/dynamic-forms';
 import { PROCEDURES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { PROCEDURE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';

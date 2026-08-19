@@ -1,10 +1,7 @@
 import { DynamicSectionBuilder } from '../dynamic-section-builder.ts';
-import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import { Section, type Question, type JourneyResponse, type Journey } from '@planning-inspectorate/dynamic-forms';
 import { DECISION_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/decision-type.ts';
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 
 /**
  * Dynamically generated sections based on number of Outcome(s).
@@ -101,7 +98,7 @@ export class OutcomeSectionBuilder extends DynamicSectionBuilder {
 					response: { answers: item },
 					getCurrentQuestionUrl: () => '',
 					answers: item
-				} as Journey;
+				} as unknown as Journey;
 				const formatted = question.formatAnswerForSummary('', mockJourney, item[fieldName]);
 				return `${role}<br>${formatted[0]?.value || ''}`;
 			}

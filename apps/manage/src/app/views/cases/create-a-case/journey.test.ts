@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert';
 import { createJourney } from './journey.ts';
-import type { Handler, Request } from 'express';
+import type { Request } from 'express';
 
-import { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import { JourneyResponse } from '@planning-inspectorate/dynamic-forms';
 import { getQuestions, type CreateCaseQuestions } from './questions.ts';
 
 describe('create-a-case journey', () => {
@@ -15,7 +15,7 @@ describe('create-a-case journey', () => {
 	});
 	it('should throw error when used with wrong router structure', () => {
 		assert.throws(() =>
-			createJourney('create-a-case', {} as CreateCaseQuestions, {} as Handler, { baseUrl: '/wrong' } as Request)
+			createJourney('create-a-case', {} as CreateCaseQuestions, {} as JourneyResponse, { baseUrl: '/wrong' } as Request)
 		);
 	});
 

@@ -1,15 +1,23 @@
-import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
-import type { Handler, Request } from 'express';
-import { whenQuestionHasAnswer } from '@planning-inspectorate/dynamic-forms';
+import {
+	Section,
+	Journey,
+	ManageListSection,
+	BOOLEAN_OPTIONS,
+	whenQuestionHasAnswer,
+	type JourneyResponse
+} from '@planning-inspectorate/dynamic-forms';
+import type { Request } from 'express';
 import { CASEWORK_AREAS_ID, CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
-import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js';
-import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
 import type { CreateCaseQuestions } from './questions.ts';
 
 export const JOURNEY_ID = 'create-a-case';
 
-export function createJourney(documentTypeId: string, questions: CreateCaseQuestions, response: Handler, req: Request) {
+export function createJourney(
+	documentTypeId: string,
+	questions: CreateCaseQuestions,
+	response: JourneyResponse,
+	req: Request
+) {
 	if (!req.baseUrl.endsWith('/' + documentTypeId)) {
 		throw new Error(`not a valid request for the ${documentTypeId} journey`);
 	}

@@ -179,7 +179,7 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 		html?: string;
 		hint?: string;
 		interfaceType?: string;
-		shouldDisplay?: (response?: JourneyResponse) => boolean;
+		shouldDisplay?: (response: JourneyResponse) => boolean;
 		autocomplete?: string;
 		editable?: boolean;
 		actionLink?: ActionLink;
@@ -235,7 +235,7 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 			options?: PrepQuestionForRenderingOptions
 		): Record<string, unknown>;
 
-		shouldDisplay: (response?: JourneyResponse) => boolean;
+		shouldDisplay: (response: JourneyResponse) => boolean;
 
 		constructor(params: QuestionParameters, methodOverrides?: Record<string, any>);
 

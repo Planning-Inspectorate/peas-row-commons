@@ -1,11 +1,12 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { createJourney } from './journey.ts';
-import type { Handler, Request } from 'express';
+import { type JourneyResponse } from '@planning-inspectorate/dynamic-forms';
+import type { Request } from 'express';
 
 describe('move files journey', () => {
 	it('should throw error when used with wrong router structure', () => {
-		assert.throws(() => createJourney('move', {}, {} as Handler, { baseUrl: '/wrong' } as Request));
+		assert.throws(() => createJourney('move', {}, {} as JourneyResponse, { baseUrl: '/wrong' } as Request));
 	});
 
 	it('should create a journey with correct section and back link', () => {

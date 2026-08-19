@@ -1,8 +1,11 @@
-import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-import { questionHasAnswer, whenQuestionHasAnswer } from '@planning-inspectorate/dynamic-forms';
+import {
+	ManageListSection,
+	questionHasAnswer,
+	whenQuestionHasAnswer,
+	type JourneyResponse,
+	type Section,
+	type Question
+} from '@planning-inspectorate/dynamic-forms';
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
 import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { ProcedureSectionBuilder } from '@pins/peas-row-commons-lib/util/dynamic-sections/procedures-section/procedure-section-builder.ts';
@@ -50,7 +53,7 @@ export function buildDynamicProcedureSections(
 	procedureAllQuestionsSection: ManageListSection,
 	response: JourneyResponse
 ): Section[] {
-	const procedureBuilder = new ProcedureSectionBuilder(procedureAllQuestionsSection as Section);
+	const procedureBuilder = new ProcedureSectionBuilder(procedureAllQuestionsSection);
 	return procedureBuilder.build(response);
 }
 
