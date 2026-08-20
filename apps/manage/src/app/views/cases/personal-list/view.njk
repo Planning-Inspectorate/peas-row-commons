@@ -3,7 +3,7 @@
 {% from "govuk/components/details/macro.njk" import govukDetails %}
 {% from "govuk/components/select/macro.njk" import govukSelect %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
-
+{% from "govuk/components/pagination/macro.njk" import govukPagination %}
 {% set title = "Cases - Personal List" %}
 
 {% block pageTitle %}
@@ -105,70 +105,116 @@
                     html: filterHtml,
                     attributes: { "data-cy": "filters-details" }
                 }) }}
-
                 {% if cases | length !== 0 %}
-                    
-                    {% set caseRows = [] %}
-                    {% for case in cases %}
 
-                        {% set inspectorsHtml %}
-                            {% if case.mappedInspectors and case.mappedInspectors.length > 0 %}
-                                <ul class="govuk-list govuk-!-margin-bottom-0">
-                                    {% for insp in case.mappedInspectors %}
-                                        <li>{{ insp.displayName }}</li>
-                                    {% endfor %}
-                                </ul>
-                            {% else %}
-                                <span class="govuk-hint govuk-!-margin-bottom-0">Unassigned</span>
-                            {% endif %}
-                        {% endset %}
+                    {% set currentStatus = statusParams.currentStatus %}
+                    {% set paginationBaseQuery = "?itemsPerPage=" %}
+                    {% if selectedUserId %}
+                        {% set paginationSuffix = "&userId=" + selectedUserId %}
+                    {% else %}
+                        {% set paginationSuffix = "" %}
+                    {% endif %}
+                    {% if currentStatus and currentStatus !== "all" %}
+                        {% set paginationSuffix = paginationSuffix + "&status=" + currentStatus %}
+                    {% endif %}
 
-                        {% set caseRows = (caseRows.push([
-                            {
-                                html: "<a class='govuk-link govuk-link--no-visited-state' target='_blank' href='/cases/" +  case.id +"'>" + case.reference + "</a>",
-                                attributes: { "data-cy": "case-reference-" + loop.index0, "data-sort-value": case.reference }
-                            },
-                            {
-                                text: case.name
-                            },
-                            {
-                                text: case.caseOfficerName or "Unassigned",
-                                attributes: { "data-cy": "case-officer-" + loop.index0 },
-                                classes: "govuk-hint" if not case.caseOfficerName
-                            },
-                            {
-                                html: inspectorsHtml,
-                                attributes: { "data-cy": "case-inspectors-" + loop.index0 }
-                            },
-                            {
-                                text: case.receivedDate,
-                                attributes: {
+                    <div id="pagination">
+                        <p class="govuk-body govuk-clearfix">
+                            <span>
+                                Showing <strong>{{ paginationParams.resultsStartNumber }}</strong>
+                                to
+                                <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalCases > paginationParams.resultsEndNumber else paginationParams.totalCases }}</strong>
+                                of <strong>{{ paginationParams.totalCases }}</strong> results
+                            </span>
+                            <span class="pins-pagination-options">
+                                <span><strong>Results per page</strong></span>&nbsp;&nbsp;&nbsp;&nbsp;
+                                {% for size in [25, 50, 100] %}
+                                    {% if size == paginationParams.selectedItemsPerPage %}
+                                        <span class="govuk-body">{{ size }}</span>
+                                    {% else %}
+                                        <a
+                                                class="govuk-link--no-visited-state"
+                                                href="{{ paginationBaseQuery + size + paginationSuffix }}"
+                                                data-pagination="{{ size }}"
+                                        >
+                                            {{ size }}
+                                        </a>
+                                    {% endif %}
+                                    {% if not loop.last %}&nbsp;&nbsp;|&nbsp;&nbsp;{% endif %}
+                                {% endfor %}
+                            </span>
+                        </p>
+
+                        {% set caseRows = [] %}
+                        {% for case in cases %}
+
+                            {% set inspectorsHtml %}
+                                {% if case.mappedInspectors and case.mappedInspectors.length > 0 %}
+                                    <ul class="govuk-list govuk-!-margin-bottom-0">
+                                        {% for insp in case.mappedInspectors %}
+                                            <li>{{ insp.displayName }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <span class="govuk-hint govuk-!-margin-bottom-0">Unassigned</span>
+                                {% endif %}
+                            {% endset %}
+
+                            {% set caseReferenceLink %}
+                                <a class='govuk-link govuk-link--no-visited-state' target='_blank' href='/cases/{{ case.id }}'>{{ case.reference }}</a>
+                            {% endset %}
+
+                            {% set caseRows = (caseRows.push([
+                                {
+                                    html: caseReferenceLink,
+                                    attributes: { "data-cy": "case-reference-" + loop.index0, "data-sort-value": case.reference }
+                                },
+                                {
+                                    text: case.name
+                                },
+                                {
+                                    text: case.caseOfficerName or "Unassigned",
+                                    attributes: { "data-cy": "case-officer-" + loop.index0 },
+                                    classes: "govuk-hint" if not case.caseOfficerName
+                                },
+                                {
+                                    html: inspectorsHtml,
+                                    attributes: { "data-cy": "case-inspectors-" + loop.index0 }
+                                },
+                                {
+                                    text: case.receivedDate,
+                                    attributes: {
                                     "data-sort-value": case.receivedDateSortable
                                 }
-                            },
-                            {
-                                text: case.Status.displayName | default("Unknown"),
-                                attributes: { "data-cy": "case-status-" + loop.index0 }
-                            }
-                        ]), caseRows) %}
-                    {% endfor %}
+                                },
+                                {
+                                    text: case.Status.displayName | default("Unknown"),
+                                    attributes: { "data-cy": "case-status-" + loop.index0 }
+                                }
+                            ]), caseRows) %}
+                        {% endfor %}
 
-                    {{ govukTable({
-                        attributes: {
-                            "data-cy": "assigned-to-me-table",
-                            "data-module": "moj-sortable-table"
-                        },
-                        head: [
-                            { text: "Reference", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } },
-                            { text: "Case name", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } },
-                            { text: "Case officer", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } },
-                            { text: "Inspector", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } },
-                            { text: "Received", classes: "pins-width-one-sixth", attributes: { "aria-sort": "descending" } },
-                            { text: "Status", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } }
-                        ],
-                        rows: caseRows
-                    }) }}
-                
+                        {{ govukTable({
+                            attributes: {
+                                "data-cy": "assigned-to-me-table",
+                                "data-module": "moj-sortable-table"
+                            },
+                            head: [
+                                { text: "Reference", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } },
+                                { text: "Case name", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } },
+                                { text: "Case officer", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } },
+                                { text: "Inspector", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } },
+                                { text: "Received", classes: "pins-width-one-sixth", attributes: { "aria-sort": "descending" } },
+                                { text: "Status", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } }
+                            ],
+                            rows: caseRows
+                        }) }}
+
+                        {% if paginationParams.uiItems.items.length > 1 %}
+                            {{ govukPagination(paginationParams.uiItems) }}
+                        {% endif %}
+                    </div>
+
                 {% else %}
                     <p class="govuk-body" data-cy="no-cases-filtered-text">
                         No cases were found.
