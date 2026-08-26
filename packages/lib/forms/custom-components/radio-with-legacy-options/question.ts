@@ -1,10 +1,9 @@
+import escape from 'escape-html';
 import RadioQuestion from '@planning-inspectorate/dynamic-forms/src/components/radio/question.js';
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 import type {
 	Option,
 	OptionsQuestionParams
 } from '@planning-inspectorate/dynamic-forms/src/questions/options-question.js';
-import OptionsQuestion from '@planning-inspectorate/dynamic-forms/src/questions/options-question.js';
 
 /**
  * A radio question that has `options` the same as a regular radio
@@ -35,31 +34,31 @@ export default class LegacyRadioQuestion extends RadioQuestion {
 	}
 
 	/**
-	 * Similar functionality to parent function, but importantly runs new `getOptionByValue` which combines this.options
-	 * with this.legacyOptions to allow the value to be presented on the summary but not on the select page.
-	 *
-	 * "super"s past the parent straight to the grandparent to avoid this getting overwritten
+	 * Mirrors the parent `RadioQuestion.formatAnswer`, but resolves options via `getOptionByValue`
+	 * so that legacy (non-selectable) options can still be displayed correctly on the summary page.
 	 */
-	formatAnswerForSummary(sectionSegment: string, journey: Journey, answer: Record<string, unknown> | string) {
-		if (typeof answer === 'object' && answer?.conditional) {
-			const selectedOption = this.getOptionByValue(answer.value as string);
-			const conditionalAnswerText = selectedOption?.conditional?.label
-				? `${selectedOption.conditional.label} ${answer.conditional}`
-				: answer.conditional;
-			const formattedAnswer = [selectedOption?.text, conditionalAnswerText].join('\n');
-			return OptionsQuestion.prototype.formatAnswerForSummary.call(
-				this,
-				sectionSegment,
-				journey,
-				formattedAnswer,
-				false
-			);
-		} else if (answer && typeof answer === 'string') {
-			const selectedOption = this.getOptionByValue(answer);
-			const selectedText = selectedOption?.text || '';
-			return OptionsQuestion.prototype.formatAnswerForSummary.call(this, sectionSegment, journey, selectedText, false);
+	formatAnswer(answer: unknown): string {
+		if (answer === null || answer === undefined || answer === '') {
+			return this.notStartedText;
 		}
-		return super.formatAnswerForSummary(sectionSegment, journey, answer);
+
+		// Handle simple string answers
+		if (typeof answer !== 'object' || (answer as { value?: string }).value === undefined) {
+			const option = this.getOptionByValue(answer as string);
+			return escape(option?.text ?? '');
+		}
+
+		// Handle object answers with conditional fields
+		const answerObj = answer as { value: string; conditional?: Record<string, string> };
+		const option = this.getOptionByValue(answerObj.value);
+		const optionText = escape(option?.text ?? '');
+
+		const conditionalValue = answerObj.conditional?.[answerObj.value];
+		if (conditionalValue && option) {
+			const label = option.conditional?.label ? `${escape(option.conditional.label)} ` : '';
+			return `${optionText}<br>${label}${escape(conditionalValue)}`;
+		}
+		return optionText;
 	}
 
 	/**

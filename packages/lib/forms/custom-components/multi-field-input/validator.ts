@@ -25,6 +25,10 @@ export default class AtLeastOneFieldValidator extends BaseValidator {
 		this.errorMessage = errorMessage || 'Please complete at least one field';
 	}
 
+	isRequired() {
+		return this.fields.length > 0;
+	}
+
 	validate(questionObj: Question) {
 		return [
 			body(questionObj.fieldName).custom((_, { req }) => {
