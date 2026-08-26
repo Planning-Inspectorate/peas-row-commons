@@ -1,9 +1,7 @@
-import DateTimeQuestion from '@planning-inspectorate/dynamic-forms/src/components/date-time/question.js';
+import { DateTimeQuestion } from '@planning-inspectorate/dynamic-forms';
 import { parseDateInput, formatDateForDisplay } from '@planning-inspectorate/dynamic-forms/src/lib/date-utils.js';
-import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import type { Section, Journey, QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
-import type { QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import { safeConvertTo24Hour } from '@pins/peas-row-commons-lib/util/dates.ts';
 import { formatInTimeZone } from 'date-fns-tz';
 
@@ -27,11 +25,11 @@ export default class OptionalTimeDateTimeInput extends DateTimeQuestion {
 		const savedAnswer = journey.response.answers[this.fieldName];
 
 		if (savedAnswer) {
-			const date = new Date(savedAnswer);
+			const date = new Date(savedAnswer as string | number | Date);
 			const isMidnight = this.isMidnight(date);
 
 			if (isMidnight && viewModel.question?.value) {
-				const valueObj = viewModel.question.value;
+				const valueObj = viewModel.question.value as Record<string, string>;
 				valueObj[`${this.fieldName}_hour`] = '';
 				valueObj[`${this.fieldName}_minutes`] = '';
 				valueObj[`${this.fieldName}_period`] = '';
@@ -73,29 +71,19 @@ export default class OptionalTimeDateTimeInput extends DateTimeQuestion {
 	 * Same functionality as parent, expect it doesn't show the date if it is set
 	 * to Midnight, as this can be assumed to be equivalent to "no time".
 	 */
-	override formatAnswerForSummary(sectionSegment: string, journey: Journey, answer: string | null) {
-		if (!answer) return super.formatAnswerForSummary(sectionSegment, journey, answer);
+	override formatAnswer(answer: unknown): string {
+		if (!answer) return this.notStartedText;
 
-		const date = new Date(answer);
+		const date = new Date(answer as string | number | Date);
 		const isMidnight = this.isMidnight(date);
 
-		let displayValue: string;
-
 		if (isMidnight) {
-			displayValue = formatDateForDisplay(date, { format: this.dateFormat });
-		} else {
-			const formattedDate = formatDateForDisplay(date, { format: this.dateFormat });
-			const formattedTime = formatDateForDisplay(date, { format: this.timeFormat });
-			displayValue = `${formattedDate}<br>${formattedTime.toLowerCase()}`;
+			return formatDateForDisplay(date, { format: this.dateFormat });
 		}
 
-		return [
-			{
-				key: this.title,
-				value: displayValue,
-				action: this.getAction(sectionSegment, journey, answer)
-			}
-		];
+		const formattedDate = formatDateForDisplay(date, { format: this.dateFormat });
+		const formattedTime = formatDateForDisplay(date, { format: this.timeFormat });
+		return `${formattedDate}<br>${formattedTime.toLowerCase()}`;
 	}
 
 	/**
