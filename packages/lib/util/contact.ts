@@ -1,15 +1,12 @@
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { mapAddressDbToViewModel, mapAddressViewModelToDb } from './address.ts';
-import {
-	COMPONENT_TYPES,
-	AddressValidator,
-	MultiFieldInputValidator,
-	type BaseQuestionProps
-} from '@planning-inspectorate/dynamic-forms';
+import { COMPONENT_TYPES, AddressValidator, MultiFieldInputValidator } from '@planning-inspectorate/dynamic-forms';
 import AtLeastOneFieldValidator from '../forms/custom-components/multi-field-input/validator.ts';
 import { CUSTOM_COMPONENTS } from '../forms/custom-components/index.ts';
 import type { AddressItem, ContactMappingConfig } from './types.ts';
+import type { MultiFieldInputQuestionProps } from '@planning-inspectorate/dynamic-forms';
+import type { AddressWithIdQuestionProps } from '../forms/custom-components/address-with-id/question.ts';
 
 /**
  * Maps objectors DB data to view model.
@@ -179,12 +176,13 @@ export interface PersonConfig<S extends string = string> {
 	viewData?: Record<string, unknown>;
 }
 
-// TODO HRP-606 use specific question props types once dynamic-forms is updated
-type PersonQuestions<S extends string> = { [K in `${S}Name`]: BaseQuestionProps & Record<string, unknown> } & {
-	[K in `${S}Address`]: BaseQuestionProps & Record<string, unknown>;
-} & {
-	[K in `${S}ContactDetails`]: BaseQuestionProps & Record<string, unknown>;
-};
+/**
+ * Builds a single-key object while preserving the literal key type,
+ * so it can be safely spread into a mapped type like `PersonQuestions<S>`.
+ */
+function makeKeyed<K extends string, T>(key: K, value: T): { [P in K]: T } {
+	return { [key]: value } as { [P in K]: T };
+}
 
 /**
  * Boilerplate for creating a "contact" question in questions.ts
@@ -197,96 +195,101 @@ export const createPersonQuestions = <S extends string>({
 	orgNameLabel,
 	hintPrefix,
 	viewData = {}
-}: PersonConfig<S>): PersonQuestions<S> => {
+}: PersonConfig<S>) => {
 	const labelLower = label.toLowerCase();
 
+	const nameQuestion = {
+		type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
+		title: label,
+		question: `Who is the ${labelLower}?`,
+		fieldName: `${section}Name`,
+		url: `${url}-name`,
+		html: 'views/layouts/person-hint.njk',
+		viewData: {
+			...viewData,
+			tableHeader: 'Name',
+			hintPrefix: hintPrefix || null,
+			orgNameLabel: orgNameLabel || `${label} company name`
+		},
+		inputFields: [
+			{ fieldName: `${db}FirstName`, label: 'First name' },
+			{ fieldName: `${db}LastName`, label: 'Last name' },
+			{ fieldName: `${db}OrgName`, label: orgNameLabel || `${label} company name` }
+		],
+		validators: [
+			new AtLeastOneFieldValidator({
+				fields: [`${db}FirstName`, `${db}LastName`, `${db}OrgName`],
+				errorMessage: 'Add at least one of First name, Last name or Company or organisation name'
+			}),
+			new MultiFieldInputValidator({
+				fields: [
+					{
+						fieldName: `${db}FirstName`,
+						required: false,
+						errorMessage: `Enter ${labelLower} first name`,
+						maxLength: { maxLength: 250, maxLengthMessage: `${label} first name must be less than 250 characters` }
+					},
+					{
+						fieldName: `${db}LastName`,
+						required: false,
+						errorMessage: `Enter ${labelLower} last name`,
+						maxLength: { maxLength: 250, maxLengthMessage: `${label} last name must be less than 250 characters` }
+					},
+					{
+						fieldName: `${db}OrgName`,
+						required: false,
+						maxLength: {
+							maxLength: 250,
+							maxLengthMessage: 'Company or organisation name must be less than 250 characters'
+						}
+					}
+				]
+			})
+		]
+	} satisfies MultiFieldInputQuestionProps;
+
+	const addressQuestion = {
+		type: CUSTOM_COMPONENTS.ADDRESS_WITH_ID,
+		title: `${label} address details`,
+		question: `${label} address details (optional)`,
+		fieldName: `${db}Address`,
+		url: `${url}-address`,
+		validators: [new AddressValidator()],
+		viewData: { ...viewData, tableHeader: 'Address' }
+	} satisfies AddressWithIdQuestionProps;
+
+	const contactDetailsQuestion = {
+		type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
+		title: `${label === 'Contact' ? 'Contact details' : label + ' contact details'}`,
+		question: `${label === 'Contact' ? 'What are the contact details?' : label + ' contact details'} (optional)`,
+		fieldName: `${section}Details`,
+		url: `${url}-contact-details`,
+		viewData: { ...viewData, tableHeader: 'Contact' },
+		inputFields: [
+			{ fieldName: `${db}Email`, label: 'Email address' },
+			{ fieldName: `${db}TelephoneNumber`, label: 'Phone number' }
+		],
+		validators: [
+			new MultiFieldInputValidator({
+				fields: [
+					{
+						fieldName: `${db}Email`,
+						required: false,
+						maxLength: { maxLength: 250, maxLengthMessage: `${label} email must be less than 250 characters` }
+					},
+					{
+						fieldName: `${db}TelephoneNumber`,
+						required: false,
+						maxLength: { maxLength: 15, maxLengthMessage: `${label} phone number must be less than 15 characters` }
+					}
+				]
+			})
+		]
+	} satisfies MultiFieldInputQuestionProps;
+
 	return {
-		[`${section}Name`]: {
-			type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
-			title: label,
-			question: `Who is the ${labelLower}?`,
-			fieldName: `${section}Name`,
-			url: `${url}-name`,
-			html: 'views/layouts/person-hint.njk',
-			viewData: {
-				...viewData,
-				tableHeader: 'Name',
-				hintPrefix: hintPrefix || null,
-				orgNameLabel: orgNameLabel || `${label} company name`
-			},
-			inputFields: [
-				{ fieldName: `${db}FirstName`, label: 'First name' },
-				{ fieldName: `${db}LastName`, label: 'Last name' },
-				{ fieldName: `${db}OrgName`, label: orgNameLabel || `${label} company name` }
-			],
-			validators: [
-				new AtLeastOneFieldValidator({
-					fields: [`${db}FirstName`, `${db}LastName`, `${db}OrgName`],
-					errorMessage: 'Add at least one of First name, Last name or Company or organisation name'
-				}),
-				new MultiFieldInputValidator({
-					fields: [
-						{
-							fieldName: `${db}FirstName`,
-							required: false,
-							errorMessage: `Enter ${labelLower} first name`,
-							maxLength: { maxLength: 250, maxLengthMessage: `${label} first name must be less than 250 characters` }
-						},
-						{
-							fieldName: `${db}LastName`,
-							required: false,
-							errorMessage: `Enter ${labelLower} last name`,
-							maxLength: { maxLength: 250, maxLengthMessage: `${label} last name must be less than 250 characters` }
-						},
-						{
-							fieldName: `${db}OrgName`,
-							required: false,
-							maxLength: {
-								maxLength: 250,
-								maxLengthMessage: 'Company or organisation name must be less than 250 characters'
-							}
-						}
-					]
-				})
-			]
-		},
-		[`${section}Address`]: {
-			type: CUSTOM_COMPONENTS.ADDRESS_WITH_ID,
-			title: `${label} address details`,
-			question: `${label} address details (optional)`,
-			fieldName: `${db}Address`,
-			url: `${url}-address`,
-			validators: [new AddressValidator()],
-			viewData: { ...viewData, tableHeader: 'Address' }
-		},
-		[`${section}ContactDetails`]: {
-			type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
-			title: `${label === 'Contact' ? 'Contact details' : label + ' contact details'}`,
-			question: `${label === 'Contact' ? 'What are the contact details?' : label + ' contact details'} (optional)`,
-			fieldName: `${section}Details`,
-			url: `${url}-contact-details`,
-			viewData: { ...viewData, tableHeader: 'Contact' },
-			inputFields: [
-				{ fieldName: `${db}Email`, label: 'Email address' },
-				{ fieldName: `${db}TelephoneNumber`, label: 'Phone number' }
-			],
-			validators: [
-				new MultiFieldInputValidator({
-					fields: [
-						{
-							fieldName: `${db}Email`,
-							required: false,
-							maxLength: { maxLength: 250, maxLengthMessage: `${label} email must be less than 250 characters` }
-						},
-						{
-							fieldName: `${db}TelephoneNumber`,
-							required: false,
-							maxLength: { maxLength: 15, maxLengthMessage: `${label} phone number must be less than 15 characters` }
-						}
-					]
-				})
-			]
-		}
-		// Assertion still required here for TypeScript due to computed property names
-	} as PersonQuestions<S>;
+		...makeKeyed(`${section}Name` as const, nameQuestion),
+		...makeKeyed(`${section}Address` as const, addressQuestion),
+		...makeKeyed(`${section}ContactDetails` as const, contactDetailsQuestion)
+	};
 };

@@ -1,6 +1,10 @@
 import { AddressQuestion } from '@planning-inspectorate/dynamic-forms';
-import type { JourneyResponse, QuestionParameters } from '@planning-inspectorate/dynamic-forms';
+import type { JourneyResponse, SiteAddressQuestionParams } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
+
+export type AddressWithIdQuestionProps = SiteAddressQuestionParams & {
+	type: 'address-with-id';
+};
 
 /**
  * An address input that has a hidden ID field that gets populated
@@ -10,7 +14,7 @@ import type { Request } from 'express';
  */
 export default class AddressWithIdQuestion extends AddressQuestion {
 	viewFolder: string;
-	constructor(params: QuestionParameters) {
+	constructor(params: SiteAddressQuestionParams) {
 		super(params);
 		this.viewFolder = 'custom-components/address-with-id';
 	}
