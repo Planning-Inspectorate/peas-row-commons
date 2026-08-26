@@ -1,9 +1,8 @@
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import escape from 'escape-html';
 import type {
 	Option,
 	OptionsQuestionParams
 } from '@planning-inspectorate/dynamic-forms/src/questions/options-question.js';
-import OptionsQuestion from '@planning-inspectorate/dynamic-forms/src/questions/options-question.js';
 import SelectQuestion from '@planning-inspectorate/dynamic-forms/src/components/select/question.js';
 
 /**
@@ -37,16 +36,14 @@ export default class LegacySelectQuestion extends SelectQuestion {
 	/**
 	 * Similar functionality to parent function, but importantly runs new `getOptionByValue` which combines this.options
 	 * with this.legacyOptions to allow the value to be presented on the summary but not on the select page.
-	 *
-	 * "super"s past the parent straight to the grandparent to avoid this getting overwritten
 	 */
-	formatAnswerForSummary(sectionSegment: string, journey: Journey, answer: Record<string, unknown> | string) {
-		if (answer) {
-			const selectedOption = this.getOptionByValue(answer as string);
-			const selectedText = selectedOption?.text || '';
-			return OptionsQuestion.prototype.formatAnswerForSummary.call(this, sectionSegment, journey, selectedText, false);
+	formatAnswer(answer: unknown): string {
+		if (answer === null || answer === undefined || answer === '') {
+			return this.notStartedText;
 		}
-		return OptionsQuestion.prototype.formatAnswerForSummary.call(this, sectionSegment, journey, answer);
+
+		const selectedOption = this.getOptionByValue(answer as string);
+		return escape(selectedOption?.text ?? '');
 	}
 
 	/**

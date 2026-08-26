@@ -1,5 +1,5 @@
 import { DynamicSectionBuilder } from '../dynamic-section-builder.ts';
-import { Section, type Question, type JourneyResponse, type Journey } from '@planning-inspectorate/dynamic-forms';
+import { Section, type Question, type JourneyResponse } from '@planning-inspectorate/dynamic-forms';
 import { DECISION_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/decision-type.ts';
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
 
@@ -87,20 +87,15 @@ export class OutcomeSectionBuilder extends DynamicSectionBuilder {
 	 * Officer
 	 * <name> <- derived from officer input
 	 *
-	 * Secreatory of State
+	 * Secretary of State
 	 */
 	private formatOriginator(item: Record<string, unknown>): string {
 		const getFormattedName = (role: string, fieldName: string): string => {
 			const question = this.manageListSection.questions?.find((q) => q.fieldName === fieldName);
 
 			if (question && item[fieldName]) {
-				const mockJourney = {
-					response: { answers: item },
-					getCurrentQuestionUrl: () => '',
-					answers: item
-				} as unknown as Journey;
-				const formatted = question.formatAnswerForSummary('', mockJourney, item[fieldName]);
-				return `${role}<br>${formatted[0]?.value || ''}`;
+				const formatted = question.formatAnswer(item[fieldName]);
+				return `${role}<br>${formatted || ''}`;
 			}
 
 			return role;

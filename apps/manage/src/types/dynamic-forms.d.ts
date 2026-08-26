@@ -273,6 +273,8 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 
 		format(answer: any): any;
 
+		formatAnswer(answer: any): any;
+
 		isRequired(): boolean;
 
 		fieldIsRequired(inputField: string): boolean;

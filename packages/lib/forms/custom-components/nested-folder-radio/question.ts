@@ -76,8 +76,7 @@ export default class NestedFolderQuestion extends Question {
 	): QuestionViewModel<NestedFolderPreppedQuestion> {
 		const answer = payload ? payload[this.fieldName] : journey.response.answers[this.fieldName];
 
-		const selectedPath = this.findPath(this.folderStructure, answer as string);
-
+		const selectedPath = typeof answer === 'string' && answer ? this.findPath(this.folderStructure, answer) : null;
 		const viewModel = super.prepQuestionForRendering(
 			section,
 			journey,
