@@ -32,10 +32,7 @@ describe('Optional Time Date Time Input', () => {
 
 		mockSection = {};
 
-		// @ts-expect-error - due to class not having a constructor but using parent's.
 		question = new OptionalTimeDateTimeInput(questionParams);
-
-		question.getAction = () => ({ href: '#', text: 'Change' });
 	});
 
 	describe('getDataToSave', () => {
@@ -73,15 +70,15 @@ describe('Optional Time Date Time Input', () => {
 		});
 	});
 
-	describe('formatAnswerForSummary', () => {
+	describe('formatAnswer', () => {
 		it('should return date only if time is midnight', () => {
 			const midnightDate = new Date('2023-12-25T00:00:00.000Z');
 			const dateStr = midnightDate.toISOString();
 
-			const result = question.formatAnswerForSummary('segment', mockJourney, dateStr);
+			const result = question.formatAnswer(dateStr);
 
-			assert.ok(result[0].value.includes('25/12/2023'));
-			assert.ok(!result[0].value.includes('00:00'));
+			assert.ok(result.includes('25/12/2023'));
+			assert.ok(!result.includes('00:00'));
 		});
 
 		it('should correctly identify midnight during British Summer Time (BST)', () => {
@@ -89,21 +86,29 @@ describe('Optional Time Date Time Input', () => {
 			const bstMidnightDate = new Date('2023-08-14T23:00:00.000Z');
 			const dateStr = bstMidnightDate.toISOString();
 
-			const result = question.formatAnswerForSummary('segment', mockJourney, dateStr);
+			const result = question.formatAnswer(dateStr);
 
-			assert.ok(result[0].value.includes('15/08/2023'));
-			assert.ok(!result[0].value.includes('23:00'));
-			assert.ok(!result[0].value.includes('00:00'));
+			assert.ok(result.includes('15/08/2023'));
+			assert.ok(!result.includes('23:00'));
+			assert.ok(!result.includes('00:00'));
 		});
 
 		it('should return date and time if time is not midnight', () => {
 			const noonDate = new Date('2023-12-25T12:00:00.000Z');
 			const dateStr = noonDate.toISOString();
 
-			const result = question.formatAnswerForSummary('segment', mockJourney, dateStr);
+			const result = question.formatAnswer(dateStr);
 
-			assert.ok(result[0].value.includes('25/12/2023'));
-			assert.ok(result[0].value.includes('12:00'));
+			assert.ok(result.includes('25/12/2023'));
+			assert.ok(result.includes('12:00'));
+		});
+
+		it('should return notStartedText if answer is falsy', () => {
+			question.notStartedText = 'Not started';
+
+			const result = question.formatAnswer(null);
+
+			assert.strictEqual(result, 'Not started');
 		});
 	});
 
