@@ -181,7 +181,33 @@ describe('TableManageListQuestion', () => {
 		});
 	});
 
-	describe('formatAnswerForSummary()', () => {
+	describe('formatAnswer()', () => {
+		it('should return notStartedText when answer is an empty array', () => {
+			tableQuestion.notStartedText = 'Not started yet';
+
+			const result = tableQuestion.formatAnswer([]);
+
+			assert.strictEqual(result, 'Not started yet');
+		});
+
+		it('should return notStartedText when answer is null', () => {
+			tableQuestion.notStartedText = 'No items added';
+
+			const result = tableQuestion.formatAnswer(null);
+
+			assert.strictEqual(result, 'No items added');
+		});
+
+		it('should return the item count when showAnswersInSummary is false', () => {
+			tableQuestion.showAnswersInSummary = false;
+
+			const result = tableQuestion.formatAnswer([{ id: 'uuid-1' }, { id: 'uuid-2' }]);
+
+			assert.strictEqual(result, '2 Test Table');
+		});
+	});
+
+	describe('formatAnswerForSummary() (inherited)', () => {
 		it('should return notStartedText when answer is an empty array', () => {
 			const mockJourney = {
 				getCurrentQuestionUrl: () => '/current-url'

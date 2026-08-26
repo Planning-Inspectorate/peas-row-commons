@@ -96,11 +96,9 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	private createRows(viewModel: QuestionViewModel): TableRowCell[][] {
 		const answers = viewModel.question.value || [];
 
-		const rows = answers.map((item: Record<string, any>) => {
+		return answers.map((item: Record<string, any>) => {
 			return this.createRow(viewModel, item);
 		});
-
-		return rows;
 	}
 
 	/**
@@ -187,7 +185,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 					</li>
 				`;
 
-		const actionsHtml = `
+		return `
             <ul class="govuk-summary-list__actions-list">
                 <li class="govuk-summary-list__actions-list-item">
                     <a class="govuk-link" href="${changeUrl}">
@@ -196,44 +194,31 @@ export default class TableManageListQuestion extends ManageListQuestion {
                 </li>
 				${removeHtml}
             </ul>`;
-
-		return actionsHtml;
 	}
 	/**
 	 * Overrides parent. Behaves in a very similar way but as unique functionality for passing in a
 	 * limit into the nunjucks, allowing for a UI toggle to hide and show items.
 	 */
-	formatAnswerForSummary(sectionSegment: string, journey: Journey, answer: Record<string, unknown>[] | null) {
+	override formatAnswer(answer: Record<string, unknown>[] | null): string {
 		const notStartedText = this.notStartedText || 'Not started';
-
-		let formattedAnswer = notStartedText;
 
 		if (answer && Array.isArray(answer) && answer.length) {
 			if (this.showAnswersInSummary) {
 				const answers = answer.map((a) => this.formatItemAnswers(a));
 				const uniqueId = `list-${Math.floor(Math.random() * 100000)}`;
 
-				formattedAnswer = nunjucks.render('custom-components/manage-list-table/answer-summary-list.njk', {
+				return nunjucks.render('custom-components/manage-list-table/answer-summary-list.njk', {
 					answers,
 					limit: this.summaryLimit,
 					uniqueId,
 					enableToggle: answers.length > this.summaryLimit
 				});
-			} else {
-				formattedAnswer = `${answer.length} ${this.title}`;
 			}
+
+			return `${answer.length} ${this.title}`;
 		}
 
-		const action = this.getAction(sectionSegment, journey, answer);
-		const key = this.title ?? this.question;
-
-		return [
-			{
-				key: key,
-				value: formattedAnswer,
-				action: action
-			}
-		];
+		return notStartedText;
 	}
 
 	/**
