@@ -212,9 +212,31 @@ export const createPersonQuestions = <S extends string>({
 			orgNameLabel: orgNameLabel || `${label} company name`
 		},
 		inputFields: [
-			{ fieldName: `${db}FirstName`, label: 'First name' },
-			{ fieldName: `${db}LastName`, label: 'Last name' },
-			{ fieldName: `${db}OrgName`, label: orgNameLabel || `${label} company name` }
+			{
+				fieldName: `${db}FirstName`,
+				label: 'First name',
+				formatSummaryValue: ({ formattedAnswer }) => {
+					return `<strong>${formattedAnswer}</strong>`;
+				}
+			},
+			{
+				fieldName: `${db}LastName`,
+				label: 'Last name',
+				formatSummaryValue: ({ formattedAnswer }) => {
+					return `<strong>${formattedAnswer}</strong>`;
+				}
+			},
+			{
+				fieldName: `${db}OrgName`,
+				label: orgNameLabel || `${label} company name`,
+				formatSummaryValue: ({ formattedAnswer, journey }) => {
+					const firstName = journey.response.answers[`${db}FirstName`];
+					const lastName = journey.response.answers[`${db}LastName`];
+					const hasName = Boolean(String(firstName ?? '').trim()) || Boolean(String(lastName ?? '').trim());
+
+					return hasName ? `<br>${formattedAnswer}` : formattedAnswer;
+				}
+			}
 		],
 		validators: [
 			new AtLeastOneFieldValidator({
