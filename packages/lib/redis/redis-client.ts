@@ -29,12 +29,12 @@ export class RedisClient {
 
 		const redisParams = parseRedisConnectionString(connString);
 
+		const socket = redisParams.ssl
+			? { host: redisParams.host, port: redisParams.port, tls: true as const }
+			: { host: redisParams.host, port: redisParams.port };
+
 		this.client = createClient({
-			socket: {
-				host: redisParams.host,
-				port: redisParams.port,
-				tls: redisParams.ssl
-			},
+			socket,
 			password: redisParams.password,
 			// send a ping every 5 minutes to prevent idle timeout (10mins in Azure)
 			// https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/cache-best-practices-connection#idle-timeout
