@@ -47,14 +47,12 @@ export class OutcomeSectionBuilder extends DynamicSectionBuilder {
 				const originatorQuestion = this.cloneQuestion(q, index);
 				originatorQuestion.title = 'Originator';
 
-				originatorQuestion.formatAnswerForSummary = () => {
-					return [
-						{
-							key: 'Originator',
-							value: this.formatOriginator(item)
-						}
-					];
-				};
+				/**
+				 * Only override formatAnswer (the value) — this "Originator" question
+				 * combines data from multiple fields (decisionMakerTypeId + inspector/officer
+				 * ids), so it can't just resolve a single field's option text.
+				 */
+				originatorQuestion.formatAnswer = () => this.formatOriginator(item);
 
 				section.addQuestion(originatorQuestion);
 				return;
