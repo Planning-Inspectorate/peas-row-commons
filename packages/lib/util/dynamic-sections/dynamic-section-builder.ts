@@ -108,19 +108,94 @@ export class DynamicSectionBuilder {
 	/**
 	 * Deep clones a question instance while preserving its prototype methods, whilst giving it
 	 * a new unique fieldName, making it ineditable and giving it no url (as it is not editable url is not important).
+npm	 *
+	 * NOTE: this returns a Proxy, not a plain object copy. dynamic-forms' `Question` (and many of
+	 * its subclasses, e.g. `RadioQuestion`, `SelectQuestion`, `ManageListQuestion`,
+	 * `ConditionalOptionsQuestion`) rely on native JS private class fields/methods (`#field`).
+	 * Private fields/methods are only initialised on an object when it is actually constructed via
+	 * `new SomeClass(...)` - a plain `Object.create()`/`Object.assign()` clone never gets that
+	 * "brand", so calling any inherited method that touches a private field/method on such a clone
+	 * throws `TypeError: Receiver must be an instance of class Question`.
+	 *
+	 * Instead, the returned Proxy:
+	 * - returns the overridden values directly for the overridden keys (fieldName/editable/url/shouldDisplay)
+	 * - delegates every other property/method to the REAL, correctly-branded `question` instance,
+	 *   temporarily patching the overridden (non-function) properties onto it for the duration of
+	 *   each (synchronous) method call, so methods that read `this.fieldName` etc. see the cloned
+	 *   value while still having full access to their private fields/methods.
 	 */
 	protected cloneQuestion(question: Question, index: number): Question {
 		const flatFieldName = this.getFlatFieldName(index, question.fieldName);
 
-		const clonedQuestion = Object.assign(Object.create(Object.getPrototypeOf(question)), question, {
+		return DynamicSectionBuilder.createQuestionProxy(question, {
 			fieldName: flatFieldName,
 			editable: false,
-			url: ''
+			url: '',
+			shouldDisplay: () => true
 		});
+	}
 
-		// We can hardcode this because we have returned out earlier if it evaluated to false.
-		clonedQuestion.shouldDisplay = () => true;
+	/**
+	 * Builds a Proxy over `question` that presents `initialOverrides` for property reads, whilst
+	 * always invoking methods against the real `question` instance so private fields/methods keep
+	 * working. See {@link DynamicSectionBuilder.cloneQuestion} for the full rationale.
+	 */
+	protected static createQuestionProxy(question: Question, initialOverrides: Record<string, unknown>): Question {
+		const target = question as unknown as Record<string, unknown>;
+		// Values returned directly when read - bypasses the real target entirely.
+		const overrides: Record<string, unknown> = { ...initialOverrides };
+		// Keys of `overrides` (data properties AND function replacements) that get temporarily
+		// patched onto the real `target` object for the duration of any delegated method call, so
+		// methods relying on `this.<key>` (including other methods calling `this.someOverriddenFn()`
+		// internally) see the overridden value whilst still being invoked with `this` bound to the
+		// real, branded object.
+		const patchKeys = new Set(Object.keys(initialOverrides));
 
-		return clonedQuestion;
+		return new Proxy(question, {
+			get(_targetObj, prop) {
+				if (typeof prop === 'string' && Object.prototype.hasOwnProperty.call(overrides, prop)) {
+					return overrides[prop];
+				}
+
+				const value = Reflect.get(target, prop, target);
+
+				if (typeof value !== 'function') {
+					return value;
+				}
+
+				return function (...args: unknown[]) {
+					const saved: Record<string, unknown> = {};
+					const hadOwn = new Set<string>();
+
+					for (const key of patchKeys) {
+						if (Object.prototype.hasOwnProperty.call(target, key)) {
+							hadOwn.add(key);
+						}
+						saved[key] = target[key];
+						target[key] = overrides[key];
+					}
+
+					try {
+						return value.apply(target, args);
+					} finally {
+						for (const key of patchKeys) {
+							if (hadOwn.has(key)) {
+								target[key] = saved[key];
+							} else {
+								delete target[key];
+							}
+						}
+					}
+				};
+			},
+			set(_targetObj, prop, value) {
+				if (typeof prop === 'string') {
+					overrides[prop] = value;
+					patchKeys.add(prop);
+					return true;
+				}
+				return Reflect.set(target, prop, value);
+			}
+		}) as unknown as Question;
 	}
 }
