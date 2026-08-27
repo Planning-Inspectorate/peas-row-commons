@@ -188,68 +188,40 @@ export class ProcedureSectionBuilder extends DynamicSectionBuilder {
 	}
 
 	/**
-	 * Override cloneQuestion to handle two issues with the base Object.assign cloning:
+	 * Override cloneQuestion to fix up detail field action links: the base Question.getAction()
+	 * builds hrefs from `this.fieldName`, but cloned questions have their fieldName flattened
+	 * (e.g. `procedureDetails_0_siteVisitDate`) for unique local-answer resolution, which no longer
+	 * matches a routable question segment. We fix this by overriding getAction() to substitute the
+	 * original `url` slug instead.
 	 *
-	 * 1. Private class fields (#field) are bound to the original instance and cannot
-	 *    be accessed via cloned objects — we shadow the getters with own-properties.
-	 *
-	 * 2. Detail field action links need correct URLs — the original formatAnswerForSummary
-	 *    generates hrefs using the original fieldName, but cloned questions need URLs
-	 *    based on the section segment and url slug.
+	 * Private class field access is already handled correctly by the base class's Proxy-based
+	 * cloneQuestion (see DynamicSectionBuilder.cloneQuestion), so we build on top of that clone
+	 * here rather than cloning again ourselves via Object.create.
 	 */
 	protected override cloneQuestion(question: Question, index: number): Question {
-		const flatFieldName = this.getFlatFieldName(index, question.fieldName);
-
-		// Use the original instance as prototype so all methods delegate naturally
-		const cloned = Object.create(question) as Question;
-
-		cloned.fieldName = flatFieldName;
-		cloned.editable = false;
-		cloned.url = '';
-		cloned.shouldDisplay = () => true;
-
-		// Shadow private-field-backed getters to avoid "Cannot read private member" errors.
-		// These cloned questions are never manage list questions, so both default to false.
-		Object.defineProperty(cloned, 'isInManageListSection', {
-			get: () => false,
-			set: () => {},
-			configurable: true,
-			enumerable: true
-		});
-
-		Object.defineProperty(cloned, 'isManageListQuestion', {
-			get: () => false,
-			configurable: true,
-			enumerable: true
-		});
+		const cloned = super.cloneQuestion(question, index);
 
 		/**
-		 * Delegate to the original instance (preserving private field access for
-		 * subclasses like DateTimeQuestion), then patch action hrefs to use
-		 * the correct section segment and url slug.
+		 * Delegate to the base clone's getAction (which safely preserves private field access,
+		 * and reads `cloned.editable`/`cloned.url` correctly), then patch the resulting href to
+		 * use the section segment + original url slug rather than the flattened fieldName.
 		 */
-		cloned.formatAnswerForSummary = (
-			sectionSegment: string,
-			journey: Parameters<Question['formatAnswerForSummary']>[1],
-			answer: unknown
-		): ReturnType<Question['formatAnswerForSummary']> => {
-			const rows = question.formatAnswerForSummary(sectionSegment, journey, answer);
+		const baseGetAction = cloned.getAction.bind(cloned);
 
-			for (const row of rows) {
-				if (!cloned.editable) {
-					// Create-flow fields: remove the action link entirely
-					delete row.action;
-				} else if (cloned.url && row.action && 'href' in row.action) {
-					// Detail fields: fix the href to use the correct section/url
-					const getUrl = (journey as unknown as Record<string, unknown>)['getCurrentQuestionUrl'] as (
-						section: string,
-						question: string
-					) => string;
-					row.action.href = getUrl(sectionSegment, cloned.url);
-				}
+		cloned.getAction = (
+			sectionSegment: string,
+			journey: Parameters<Question['getAction']>[1],
+			answer: unknown
+		): ReturnType<Question['getAction']> => {
+			const action = baseGetAction(sectionSegment, journey, answer);
+
+			if (!action || Array.isArray(action) || !cloned.url) {
+				return action;
 			}
 
-			return rows;
+			const getUrl = journey['getCurrentQuestionUrl'];
+
+			return { ...action, href: getUrl(sectionSegment, cloned.url) };
 		};
 
 		return cloned;

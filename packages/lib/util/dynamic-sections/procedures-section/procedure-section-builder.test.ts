@@ -13,13 +13,17 @@ interface MockResponse {
 class MockQuestion {
 	fieldName: string;
 	title: string;
+	question: string;
 	editable?: boolean;
 	url?: string;
+	changeActionText = 'Change';
+	answerActionText = 'Answer';
 	displayCondition: (res: MockResponse) => boolean;
 
 	constructor(fieldName: string, displayCondition = (_param: MockResponse) => true) {
 		this.fieldName = fieldName;
 		this.title = fieldName;
+		this.question = fieldName;
 		this.displayCondition = displayCondition;
 	}
 
@@ -27,8 +31,34 @@ class MockQuestion {
 		return this.displayCondition(response);
 	}
 
-	formatAnswerForSummary(_segment: string, _journey: unknown, answer: unknown): { key?: string; value: unknown }[] {
-		return [{ value: `MockFormatted: ${String(answer)}` }];
+	formatAnswer(answer: unknown): string {
+		return `MockFormatted: ${String(answer)}`;
+	}
+
+	getAction(
+		sectionSegment: string,
+		_journey: unknown,
+		answer: unknown
+	): { href: string; text: string; visuallyHiddenText: string } | undefined {
+		if (!this.editable) {
+			return undefined;
+		}
+		const isAnswerProvided = answer !== null && answer !== undefined && answer !== '';
+		return {
+			href: `${sectionSegment}/${this.fieldName}`,
+			text: isAnswerProvided ? this.changeActionText : this.answerActionText,
+			visuallyHiddenText: this.question
+		};
+	}
+
+	formatAnswerForSummary(
+		sectionSegment: string,
+		journey: unknown,
+		answer: unknown
+	): { key?: string; value: unknown; action?: unknown }[] {
+		const value = this.formatAnswer(answer);
+		const action = this.getAction(sectionSegment, journey, answer);
+		return action ? [{ key: this.title, value, action }] : [{ key: this.title, value }];
 	}
 }
 
@@ -62,6 +92,11 @@ describe('ProcedureSectionBuilder', () => {
 		mockManageListSection.addQuestion(new MockQuestion('inspectorId'));
 		mockManageListSection.addQuestion(new MockQuestion('siteVisitDate'));
 		mockManageListSection.addQuestion(new MockQuestion('siteVisitTypeId'));
+
+		// url slugs, distinct from fieldName, as set on real dynamic-forms questions
+		mockManageListSection.questions.forEach((q) => {
+			q.url = `${q.fieldName}-url`;
+		});
 	});
 
 	describe('Section Title Generation', () => {
@@ -252,6 +287,40 @@ describe('ProcedureSectionBuilder', () => {
 			const adminQuestion = sections[0].questions.find((q) => q.fieldName.endsWith('adminProcedureType'));
 
 			assert.strictEqual(adminQuestion, undefined, 'Admin type should not display for hearing procedure');
+		});
+	});
+
+	describe('Action Link Behaviour', () => {
+		const mockJourney = { getCurrentQuestionUrl: (segment: string, url: string) => `/${segment}/${url}` };
+
+		it('should return no action link for non-editable create-flow fields', () => {
+			mockJourneyResponse.answers.procedureDetails = [
+				{ procedureTypeId: PROCEDURES_ID.HEARING, procedureStatusId: 'active' }
+			];
+
+			const builder = new ProcedureSectionBuilder(mockManageListSection as unknown as Section);
+			const sections = builder.build(mockJourneyResponse as unknown as JourneyResponse) as unknown as MockSection[];
+
+			const typeQuestion = sections[0].questions.find((q) => q.fieldName.endsWith('procedureTypeId'));
+
+			assert.strictEqual(typeQuestion?.getAction('procedure-1', mockJourney, 'some-value'), undefined);
+		});
+
+		it('should build the action href from the original url slug (not the flattened fieldName) for editable detail fields', () => {
+			mockJourneyResponse.answers.procedureDetails = [
+				{ procedureTypeId: PROCEDURES_ID.HEARING, procedureStatusId: 'active' }
+			];
+
+			const builder = new ProcedureSectionBuilder(mockManageListSection as unknown as Section);
+			const sections = builder.build(mockJourneyResponse as unknown as JourneyResponse) as unknown as MockSection[];
+
+			const siteVisitDateQuestion = sections[0].questions.find((q) => q.fieldName.endsWith('siteVisitDate'));
+
+			const action = siteVisitDateQuestion?.getAction('procedure-1', mockJourney, 'some-value') as {
+				href: string;
+			};
+
+			assert.strictEqual(action?.href, '/procedure-1/siteVisitDate-url');
 		});
 	});
 });

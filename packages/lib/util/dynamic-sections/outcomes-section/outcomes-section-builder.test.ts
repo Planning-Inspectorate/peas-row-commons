@@ -27,8 +27,33 @@ class MockQuestion {
 		return this.displayCondition(response);
 	}
 
-	formatAnswerForSummary(segment: string, journey: unknown, answer: unknown): { key?: string; value: unknown }[] {
-		return [{ value: `MockFormatted: ${String(answer)}` }];
+	formatAnswer(answer: unknown): string {
+		return `MockFormatted: ${String(answer)}`;
+	}
+
+	/**
+	 * Mirrors the real base Question.getAction(): no action link when not editable.
+	 * Base cloneQuestion() always sets editable=false on clones, so this always
+	 * returns undefined here — matching production behaviour.
+	 */
+	getAction(): { href: string; text: string; visuallyHiddenText: string } | undefined {
+		return this.editable ? { href: `/${this.url}`, text: 'Change', visuallyHiddenText: this.title } : undefined;
+	}
+
+	/**
+	 * Mirrors the real base Question.formatAnswerForSummary(): composes key/value/action
+	 * from formatAnswer()/getAction(), omitting the action key entirely when absent
+	 * (real dynamic-forms always includes it, even as undefined, but omitting keeps
+	 * these test assertions concise).
+	 */
+	formatAnswerForSummary(
+		sectionSegment: string,
+		journey: unknown,
+		answer: unknown
+	): { key?: string; value: unknown; action?: unknown }[] {
+		const value = this.formatAnswer(answer);
+		const action = this.getAction();
+		return action ? [{ key: this.title, value, action }] : [{ key: this.title, value }];
 	}
 }
 
