@@ -1,9 +1,10 @@
 import TableManageListQuestion from '../question.ts';
 import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
-import type { TableHeadCell, TableManageListQuestionParameters, TableRowCell } from '../types.ts';
-import type { Question, QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type { TableHeadCell, TableManageListQuestionView, TableRowCell } from '../types.ts';
+import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import type { ManageListQuestionParams, QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
 
 export interface TableColumn {
 	header: string;
@@ -16,8 +17,7 @@ export interface TableColumn {
 	sortType?: 'date' | 'string' | 'number';
 }
 
-export interface DefinedColumnsTableParams {
-	[key: string]: any;
+export interface DefinedColumnsTableParams extends ManageListQuestionParams {
 	columns: TableColumn[];
 }
 
@@ -32,7 +32,7 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 	columns: TableColumn[];
 
 	constructor(params: DefinedColumnsTableParams) {
-		super(params as TableManageListQuestionParameters);
+		super(params);
 		this.columns = params.columns;
 	}
 
@@ -58,7 +58,10 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 	/**
 	 * Creates each row.
 	 */
-	override createRow(viewModel: QuestionViewModel, item: Record<string, any>): TableRowCell[] {
+	override createRow(
+		viewModel: QuestionViewModel<TableManageListQuestionView>,
+		item: Record<string, any>
+	): TableRowCell[] {
 		const cells = this.columns.map((col) => {
 			const linkedQuestion = this.section?.questions?.find((q: Question) => q.fieldName === col.fieldName);
 

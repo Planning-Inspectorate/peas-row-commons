@@ -1,9 +1,11 @@
 import escape from 'escape-html';
-import type {
-	Option,
-	OptionsQuestionParams
-} from '@planning-inspectorate/dynamic-forms/src/questions/options-question.js';
-import SelectQuestion from '@planning-inspectorate/dynamic-forms/src/components/select/question.js';
+import { SelectQuestion } from '@planning-inspectorate/dynamic-forms';
+import type { SelectableOption, SelectQuestionParams } from '@planning-inspectorate/dynamic-forms';
+
+export type LegacySelectQuestionParams = SelectQuestionParams & {
+	legacyOptions: SelectableOption[];
+	viewFolder?: string;
+};
 
 /**
  * A select question that has `options` the same as a regular select
@@ -16,15 +18,14 @@ import SelectQuestion from '@planning-inspectorate/dynamic-forms/src/components/
  * allow any new cases to change their act to this.
  */
 export default class LegacySelectQuestion extends SelectQuestion {
-	label?: string;
-	legend?: string;
-	legacyOptions: Option[];
+	legacyOptions: SelectableOption[];
 
-	constructor(params: OptionsQuestionParams) {
-		super({
+	constructor(params: LegacySelectQuestionParams) {
+		const superParams = {
 			...params,
 			viewFolder: !params.viewFolder ? 'select' : params.viewFolder
-		});
+		};
+		super(superParams);
 
 		this.html = params.html;
 		this.label = params.label;

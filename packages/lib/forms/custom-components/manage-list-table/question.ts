@@ -1,11 +1,17 @@
 import ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
-import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
-import type { TableHeadCell, TableManageListQuestionParameters, TableRowCell } from './types.ts';
+import { DateQuestion } from '@planning-inspectorate/dynamic-forms';
+import type {
+	TableHeadCell,
+	TableManageListQuestionParameters,
+	TableRowCell,
+	TableManageListQuestionView
+} from './types.ts';
 import nunjucks from 'nunjucks';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
-import type { Question, QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type { QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
 
 export default class TableManageListQuestion extends ManageListQuestion {
@@ -61,7 +67,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	/**
 	 * Override to prepare table data (heads and rows)
 	 */
-	override addCustomDataToViewModel(viewModel: QuestionViewModel): void {
+	override addCustomDataToViewModel(viewModel: QuestionViewModel<TableManageListQuestionView>): void {
 		if (!this.section) {
 			throw new Error('Section not set for TableManageListQuestion');
 		}
@@ -84,7 +90,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	 * instantiation of the classes so that each one can have
 	 * its own button text.
 	 */
-	private addButtonText(viewModel: QuestionViewModel): void {
+	private addButtonText(viewModel: QuestionViewModel<TableManageListQuestionView>): void {
 		viewModel.continueButtonText = this.viewData.continueOnly ? 'Continue' : 'Save and continue';
 		viewModel.addMoreButtonText = 'Add details';
 		viewModel.cancelButtonText = 'Cancel';
@@ -93,10 +99,10 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	/**
 	 * Creates the table rows
 	 */
-	private createRows(viewModel: QuestionViewModel): TableRowCell[][] {
+	private createRows(viewModel: QuestionViewModel<TableManageListQuestionView>): TableRowCell[][] {
 		const answers = viewModel.question.value || [];
 
-		return answers.map((item: Record<string, any>) => {
+		return answers.map((item) => {
 			return this.createRow(viewModel, item);
 		});
 	}
@@ -104,7 +110,10 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	/**
 	 * Creates the table row based on the questions asked
 	 */
-	protected createRow(viewModel: QuestionViewModel, item: Record<string, any>): TableRowCell[] {
+	protected createRow(
+		viewModel: QuestionViewModel<TableManageListQuestionView>,
+		item: Record<string, unknown>
+	): TableRowCell[] {
 		const cells = this.section?.questions.map((question: Question) => {
 			return this.createCell(question, item);
 		});
@@ -135,7 +144,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 		return headers;
 	}
 
-	createCell(question: Question, item: Record<string, any>): TableRowCell {
+	createCell(question: Question, item: Record<string, unknown>): TableRowCell {
 		const mockJourney = {
 			response: { answers: item },
 			getCurrentQuestionUrl: () => '',
@@ -166,8 +175,12 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	 * Generates the HTML for the cell on the RHS that contains the two buttons
 	 * for changing and removing.
 	 */
-	generateActionsHtml(viewModel: QuestionViewModel, item: Record<string, any>): string {
-		const originalUrlTrimmed = viewModel.util.trimTrailingSlash(viewModel.originalUrl);
+	generateActionsHtml(
+		viewModel: QuestionViewModel<TableManageListQuestionView>,
+		item: Record<string, unknown>
+	): string {
+		const originalUrlTrimmed =
+			typeof viewModel.originalUrl === 'string' ? viewModel.util.trimTrailingSlash(viewModel.originalUrl) : '';
 
 		const firstQuestionUrl = viewModel.question.firstQuestionUrl;
 		const changeUrl = `${originalUrlTrimmed}/edit/${item.id}/${firstQuestionUrl}`;

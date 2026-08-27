@@ -1,5 +1,4 @@
-import { DateTimeQuestion } from '@planning-inspectorate/dynamic-forms';
-import { parseDateInput, formatDateForDisplay } from '@planning-inspectorate/dynamic-forms/src/lib/date-utils.js';
+import { DateTimeQuestion, parseDateInput, formatDateForDisplay } from '@planning-inspectorate/dynamic-forms';
 import type { Section, Journey, QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
 import { safeConvertTo24Hour } from '@pins/peas-row-commons-lib/util/dates.ts';

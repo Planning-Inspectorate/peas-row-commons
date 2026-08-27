@@ -1,6 +1,5 @@
-import AddressQuestion from '@planning-inspectorate/dynamic-forms/src/components/address/question.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import type { QuestionParameters } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import { AddressQuestion } from '@planning-inspectorate/dynamic-forms';
+import type { JourneyResponse, QuestionParameters } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
 
 /**

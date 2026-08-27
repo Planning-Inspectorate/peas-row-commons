@@ -1,33 +1,31 @@
-import OptionsQuestion from '@planning-inspectorate/dynamic-forms/src/questions/options-question.js';
-import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import { OptionsQuestion } from '@planning-inspectorate/dynamic-forms';
+import type {
+	Section,
+	Journey,
+	QuestionViewModel,
+	SelectableOption,
+	PrepQuestionForRenderingOptions,
+	CommonQuestionParams
+} from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
-import type { QuestionViewModel } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 
-interface ConditionalConfig {
-	question: string;
-	fieldName: string;
+type NarrowedConditional = Omit<NonNullable<SelectableOption['conditional']>, 'type'> & {
 	type?: 'textarea' | 'text';
-}
+};
 
-interface OptionWithCondition {
-	text: string;
-	value: string;
-	hint?: { text: string };
-	attributes?: Record<string, string>;
-	conditional?: ConditionalConfig;
-}
+/**
+ * Author-facing option shape: same as the library's `SelectableOption`, but with a
+ * simplified `conditional` config (author only needs to provide `question` + `fieldName`,
+ * `type` defaults to 'textarea'). This is transformed into a real `SelectableOption` in the
+ * constructor before being passed to the base `OptionsQuestion`.
+ */
+type OptionWithCondition = Omit<SelectableOption, 'conditional'> & {
+	conditional?: NarrowedConditional;
+};
 
-interface ConditionalOptionsQuestionParams {
-	title: string;
-	question: string;
-	fieldName: string;
+type ConditionalOptionsQuestionParams = CommonQuestionParams & {
 	options: OptionWithCondition[];
-	url?: string;
-	hint?: string;
-	validators?: any[];
-	editable?: boolean;
-}
+};
 
 /**
  * Custom class for handling the use of nested conditional text inputs inside
@@ -39,42 +37,32 @@ interface ConditionalOptionsQuestionParams {
 export default class ConditionalOptionsQuestion extends OptionsQuestion {
 	conditionalMapping: Record<string, string>;
 
-	constructor({
-		title,
-		question,
-		fieldName,
-		url,
-		hint,
-		validators,
-		options,
-		editable
-	}: ConditionalOptionsQuestionParams) {
-		const processedOptions = options.map((option) => {
-			if (option.conditional) {
-				return {
-					...option,
-					conditional: {
-						type: option.conditional.type || 'textarea',
-						fieldName: `${option.value}_text`,
-						question: option.conditional.question,
-						value: option.value,
-						inputClasses: 'govuk-!-width-one-half'
-					}
-				};
+	constructor({ options, ...params }: ConditionalOptionsQuestionParams) {
+		const processedOptions = options.map((option): SelectableOption => {
+			const { conditional, ...restOption } = option;
+
+			if (!conditional) {
+				return restOption;
 			}
-			return option;
+
+			return {
+				...restOption,
+				conditional: {
+					type: conditional.type || 'textarea',
+					fieldName: `${option.value}_text`,
+					question: conditional.question,
+					value: option.value,
+					inputClasses: 'govuk-!-width-one-half'
+				}
+			};
 		});
 
 		super({
-			title,
+			// default but allow overrides
+			capitaliseAnswer: false,
+			...params,
 			viewFolder: 'custom-components/conditional-text-input',
-			fieldName,
-			url,
-			question,
-			validators,
-			options: processedOptions,
-			hint,
-			editable
+			options: processedOptions
 		});
 
 		this.conditionalMapping = options.reduce(
@@ -96,8 +84,8 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 		section: Section,
 		journey: Journey,
 		customViewData: Record<string, unknown>,
-		payload?: Record<string, any>,
-		options?: Record<string, unknown>
+		payload: Record<string, any> | undefined,
+		options: PrepQuestionForRenderingOptions
 	): QuestionViewModel {
 		const answers = this.answerObjectFromJourneyResponse(journey.response, options);
 
@@ -129,8 +117,7 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 
 			// Prepare text to be saved if selected
 			if (mainValue === optionValue) {
-				const conditionalToSave = textValue || null;
-				responseToSave.answers[targetDbName] = conditionalToSave;
+				responseToSave.answers[targetDbName] = textValue || null;
 			} else {
 				// Make sure to set any other options answers to null to avoid
 				// DB having 2+ different text fields in columns
@@ -165,7 +152,7 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 			}
 		}
 
-		return super.formatAnswerForSummary(sectionSegment, journey, displayText, false);
+		return super.formatAnswerForSummary(sectionSegment, journey, displayText);
 	}
 
 	/**
