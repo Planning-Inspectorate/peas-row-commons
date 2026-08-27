@@ -1,9 +1,11 @@
 import escape from 'escape-html';
-import RadioQuestion from '@planning-inspectorate/dynamic-forms/src/components/radio/question.js';
-import type {
-	Option,
-	OptionsQuestionParams
-} from '@planning-inspectorate/dynamic-forms/src/questions/options-question.js';
+import { RadioQuestion } from '@planning-inspectorate/dynamic-forms';
+import type { SelectableOption, RadioQuestionParams } from '@planning-inspectorate/dynamic-forms';
+
+export type LegacyRadioQuestionParams = RadioQuestionParams & {
+	viewFolder?: string;
+	legacyOptions: SelectableOption[];
+};
 
 /**
  * A radio question that has `options` the same as a regular radio
@@ -16,15 +18,14 @@ import type {
  * allow any new cases to change their subtype to this.
  */
 export default class LegacyRadioQuestion extends RadioQuestion {
-	label?: string;
-	legend?: string;
-	legacyOptions: Option[];
+	legacyOptions: SelectableOption[];
 
-	constructor(params: OptionsQuestionParams) {
-		super({
+	constructor(params: LegacyRadioQuestionParams) {
+		const superParams = {
 			...params,
 			viewFolder: !params.viewFolder ? 'radio' : params.viewFolder
-		});
+		};
+		super(superParams);
 
 		this.html = params.html;
 		this.label = params.label;

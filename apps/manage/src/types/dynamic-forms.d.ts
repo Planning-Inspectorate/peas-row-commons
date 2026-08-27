@@ -117,15 +117,6 @@ declare module '@planning-inspectorate/dynamic-forms/src/components/select/quest
 	}
 }
 
-declare module '@planning-inspectorate/dynamic-forms/src/components/radio/question.js' {
-	import type { QuestionParameters } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-	import type OptionsQuestion from '@planning-inspectorate/dynamic-forms/src/questions/options-question.js';
-
-	export default class RadioQuestion extends OptionsQuestion {
-		constructor(params: QuestionParameters);
-	}
-}
-
 declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' {
 	import type { Request, Response } from 'express';
 	import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
@@ -136,35 +127,6 @@ declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' 
 		href: string;
 		text: string;
 		visuallyHiddenText?: string;
-	}
-
-	export interface PreppedQuestion {
-		value: any;
-		question: string;
-		fieldName: string;
-		pageTitle: string;
-		description?: string;
-		html?: string;
-		hint?: string;
-		interfaceType?: string;
-		autocomplete?: string;
-		[key: string]: any;
-	}
-
-	export interface QuestionViewModel {
-		question: PreppedQuestion;
-		layoutTemplate: string;
-		pageCaption?: string;
-		navigation: string[];
-		backLink: string;
-		showBackToListLink: boolean;
-		listLink: string;
-		journeyTitle: string;
-		payload?: any;
-		continueButtonText: string;
-		errors?: Record<string, any>;
-		errorSummary?: any[];
-		[key: string]: any;
 	}
 
 	export interface QuestionParameters {
@@ -448,7 +410,7 @@ declare module '@planning-inspectorate/dynamic-forms/src/middleware/redirect-to-
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js' {
-	import RadioQuestion from '@planning-inspectorate/dynamic-forms/src/components/radio/question.js';
+	import { RadioQuestion } from '@planning-inspectorate/dynamic-forms';
 	export default class BooleanQuestion extends RadioQuestion {}
 	export function booleanToYesNoValue(value: any): any;
 }

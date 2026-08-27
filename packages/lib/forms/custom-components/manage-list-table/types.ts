@@ -1,4 +1,4 @@
-import type { Journey } from '@planning-inspectorate/dynamic-forms';
+import type { BaseQuestionViewData, ManageListQuestionParams } from '@planning-inspectorate/dynamic-forms';
 
 export interface TableHeadCell {
 	text?: string;
@@ -20,41 +20,14 @@ export interface TableRowCell {
 	attributes?: Record<string, any>;
 }
 
-export interface TableManageListQuestionParameters {
-	titleSingular?: string;
-	showManageListQuestions?: boolean;
-	showAnswersInSummary?: boolean;
+export type TableManageListQuestionParameters = ManageListQuestionParams & {
 	summaryLimit?: number;
 	hideRemoveOnLastItem?: boolean;
-}
+};
 
-export interface PreppedQuestion {
-	value: Record<string, any>;
-	question: string;
-	fieldName: string;
-	pageTitle: string;
-	description?: string;
-	html?: string;
+export interface TableManageListQuestionView extends BaseQuestionViewData {
+	value: Record<string, unknown>[];
 	firstQuestionUrl?: string;
-	shouldDisplay?: (params: { answers: Record<string, any> }) => boolean;
-	formatAnswerForSummary: (
-		sectionSegment: string,
-		journey: Journey,
-		answer: any
-	) => Array<{ key: string; value: string; action?: any }>;
 	tableHead?: TableHeadCell[];
 	tableRows?: TableRowCell[][];
-}
-
-export interface QuestionViewModel extends Record<string, any> {
-	question: PreppedQuestion;
-	layoutTemplate: string;
-	pageCaption: string;
-	continueButtonText?: string;
-	backLink: string;
-	showBackToListLink: boolean;
-	listLink: string;
-	util: {
-		trimTrailingSlash: (url: string) => string;
-	};
 }
