@@ -1,3 +1,4 @@
+import escape from 'escape-html';
 import { OptionsQuestion } from '@planning-inspectorate/dynamic-forms';
 import type {
 	Section,
@@ -129,30 +130,54 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 	}
 
 	/**
-	 * Formats answer in the same way that a 'radio' option might, using the
-	 * text value and not the key capitalised.
-	 *
-	 * Additionally, will display any conditional text if added too.
+	 * Looks up any journey-stored conditional text for the selected answer and combines
+	 * it with the raw value into the `{ value, conditional }` shape that `formatAnswer`
+	 * knows how to render.
 	 */
 	override formatAnswerForSummary(sectionSegment: string, journey: Journey, answer: string | null) {
 		if (!answer) {
 			return super.formatAnswerForSummary(sectionSegment, journey, answer);
 		}
 
-		const selectedOption = this.options.find((option) => option.value === answer);
-		let displayText = selectedOption?.text || answer;
-
 		const conditionalDbName = this.conditionalMapping[answer];
+		const conditionalText = conditionalDbName ? this.setConditionalText(conditionalDbName, journey) : undefined;
 
-		if (conditionalDbName) {
-			const conditionalText = this.setConditionalText(conditionalDbName, journey);
+		const hasConditionalText = typeof conditionalText === 'string' && conditionalText.trim() !== '';
 
-			if (typeof conditionalText === 'string' && conditionalText.trim() !== '') {
-				displayText = `${displayText}\n${conditionalText.trim()}`;
-			}
+		const answerForFormatting = hasConditionalText
+			? { value: answer, conditional: { [answer]: (conditionalText as string).trim() } }
+			: answer;
+
+		return super.formatAnswerForSummary(sectionSegment, journey, answerForFormatting);
+	}
+
+	/**
+	 * Formats the answer in the same way `RadioQuestion` does, handling the
+	 * `{ value, conditional }` object shape (conditional text keyed by the selected value).
+	 *
+	 * Any conditional text is HTML-escaped and joined with a `<br>` tag.
+	 */
+	override formatAnswer(answer: unknown): string {
+		if (answer === null || answer === undefined || answer === '') {
+			return this.notStartedText;
 		}
 
-		return super.formatAnswerForSummary(sectionSegment, journey, displayText);
+		// Handle simple string answers - delegate to OptionsQuestion.formatAnswer
+		if (typeof answer !== 'object' || (answer as { value?: string }).value === undefined) {
+			return super.formatAnswer(answer);
+		}
+
+		// Handle `{ value, conditional }` answers built by formatAnswerForSummary
+		const answerObj = answer as { value: string; conditional?: Record<string, string> };
+		const selectedOption = this.options.find((option) => option.value === answerObj.value);
+		const optionText = escape(selectedOption?.text ?? answerObj.value);
+
+		const conditionalValue = answerObj.conditional?.[answerObj.value];
+		if (conditionalValue) {
+			return `${optionText}<br>${escape(conditionalValue)}`;
+		}
+
+		return optionText;
 	}
 
 	/**

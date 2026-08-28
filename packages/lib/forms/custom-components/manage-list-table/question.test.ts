@@ -207,8 +207,8 @@ describe('TableManageListQuestion', () => {
 		});
 	});
 
-	describe('formatAnswerForSummary() (inherited)', () => {
-		it('should return notStartedText when answer is an empty array', () => {
+	describe('formatAnswerForSummary()', () => {
+		it('should return notStartedText as the value when answer is an empty array', () => {
 			const mockJourney = {
 				getCurrentQuestionUrl: () => '/current-url'
 			} as unknown as Journey;
@@ -217,10 +217,11 @@ describe('TableManageListQuestion', () => {
 			const result = tableQuestion.formatAnswerForSummary('segment', mockJourney, []);
 
 			assert.strictEqual(result.length, 1);
+			assert.strictEqual(result[0].key, tableQuestion.title);
 			assert.strictEqual(result[0].value, 'Not started yet');
 		});
 
-		it('should return notStartedText when answer is null', () => {
+		it('should return notStartedText as the value when answer is null', () => {
 			const mockJourney = {
 				getCurrentQuestionUrl: () => '/current-url'
 			} as unknown as Journey;
@@ -230,6 +231,38 @@ describe('TableManageListQuestion', () => {
 
 			assert.strictEqual(result.length, 1);
 			assert.strictEqual(result[0].value, 'No items added');
+		});
+
+		it('should use this.formatAnswer() for the value (item count when showAnswersInSummary is false)', () => {
+			const mockJourney = {
+				getCurrentQuestionUrl: () => '/current-url'
+			} as unknown as Journey;
+
+			tableQuestion.showAnswersInSummary = false;
+
+			const answer = [
+				{ id: 'uuid-1', name: 'John Doe' },
+				{ id: 'uuid-2', name: 'Jane Doe' }
+			];
+
+			const result = tableQuestion.formatAnswerForSummary('segment', mockJourney, answer);
+
+			assert.strictEqual(result.length, 1);
+			assert.strictEqual(result[0].value, tableQuestion.formatAnswer(answer));
+			assert.strictEqual(result[0].value, '2 Test Table');
+		});
+
+		it('should use this.getAction() for the action', () => {
+			const mockJourney = {
+				getCurrentQuestionUrl: () => '/current-url'
+			} as unknown as Journey;
+
+			const answer = [{ id: 'uuid-1' }];
+			const expectedAction = tableQuestion.getAction('segment', mockJourney, answer);
+
+			const result = tableQuestion.formatAnswerForSummary('segment', mockJourney, answer);
+
+			assert.deepStrictEqual(result[0].action, expectedAction);
 		});
 	});
 

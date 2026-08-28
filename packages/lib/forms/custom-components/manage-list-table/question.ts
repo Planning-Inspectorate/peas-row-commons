@@ -10,7 +10,7 @@ import nunjucks from 'nunjucks';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type { Question, SummaryListItem } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import type { QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
 
@@ -232,6 +232,24 @@ export default class TableManageListQuestion extends ManageListQuestion {
 		}
 
 		return notStartedText;
+	}
+
+	/**
+	 * Parent does not call formatAnswer, so call again here
+	 * TODO - update dynamic-forms and deprecate this before this is merged
+	 */
+	override formatAnswerForSummary(
+		sectionSegment: string,
+		journey: Journey,
+		answer: Record<string, unknown>[] | null
+	): SummaryListItem[] {
+		return [
+			{
+				key: this.title,
+				value: this.formatAnswer(answer),
+				action: this.getAction(sectionSegment, journey, answer)
+			}
+		];
 	}
 
 	/**
