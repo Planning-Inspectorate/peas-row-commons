@@ -42,7 +42,7 @@
     "@azure/storage-blob": "^12.33.0",
     "@eslint/js": "^10.0.1",
     "@ministryofjustice/frontend": "^10.0.1",
-    "@planning-inspectorate/dynamic-forms": "^3.18.0",
+    "@planning-inspectorate/dynamic-forms": "^3.19.1",
     "@prisma/adapter-mssql": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "accessible-autocomplete": "^3.0.1",
