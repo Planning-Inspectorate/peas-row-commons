@@ -265,8 +265,6 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
         # Replaced by MSTIC rule 99031004
       }
 
-      # 
-
       rule {
         rule_id = "942300"
         action  = "AnomalyScoring"
@@ -321,6 +319,11 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
       # Group-level exclusions (alphabetical by selector)
       # Due to using prisma on DB queries, false positives can be ignore for:
       # the _csrf, healthAndSafetyIssue, myselfComment, submitterComment fields
+      exclusion {
+        match_variable = "RequestBodyPostArgNames"
+        operator       = "Equals"
+        selector       = "name"
+      }
       exclusion {
         match_variable = "RequestBodyPostArgNames"
         operator       = "Equals"
