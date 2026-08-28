@@ -123,4 +123,85 @@ describe('Conditional Options Question', () => {
 			assert.strictEqual(result.answers['yes_details_db_field'], null);
 		});
 	});
+
+	describe('formatAnswer', () => {
+		it('should return notStartedText for a falsy answer', () => {
+			const question = new ConditionalOptionsQuestion(questionParams as any);
+			assert.strictEqual(question.formatAnswer(null), question.notStartedText);
+			assert.strictEqual(question.formatAnswer(''), question.notStartedText);
+		});
+
+		it('should return the escaped option text for a plain string answer with no conditional', () => {
+			const question = new ConditionalOptionsQuestion(questionParams as any);
+			assert.strictEqual(question.formatAnswer('no'), 'No');
+		});
+
+		it('should join option text and conditional text with a <br> for a { value, conditional } answer', () => {
+			const question = new ConditionalOptionsQuestion(questionParams as any);
+
+			const result = question.formatAnswer({
+				value: 'yes',
+				conditional: { yes: 'Some detail text' }
+			});
+
+			assert.strictEqual(result, 'Yes<br>Some detail text');
+		});
+
+		it('should HTML-escape unsafe conditional text', () => {
+			const question = new ConditionalOptionsQuestion(questionParams as any);
+
+			const result = question.formatAnswer({
+				value: 'yes',
+				conditional: { yes: '<script>alert("x")</script>' }
+			});
+
+			assert.strictEqual(result, 'Yes<br>&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;');
+		});
+
+		it('should not add a <br> if there is no conditional text for the selected value', () => {
+			const question = new ConditionalOptionsQuestion(questionParams as any);
+
+			const result = question.formatAnswer({ value: 'yes', conditional: {} });
+
+			assert.strictEqual(result, 'Yes');
+		});
+	});
+
+	describe('formatAnswerForSummary', () => {
+		it('should render a plain answer with no conditional as just the option text', () => {
+			const question = new ConditionalOptionsQuestion(questionParams as any);
+			question.getAction = () => ({ href: '#', text: 'Change' });
+
+			const result = question.formatAnswerForSummary('segment', mockJourney, 'no');
+
+			assert.strictEqual(result[0].value, 'No');
+		});
+
+		it('should combine the option text and journey-stored conditional text with a <br>, not a raw newline', () => {
+			const question = new ConditionalOptionsQuestion(questionParams as any);
+			question.getAction = () => ({ href: '#', text: 'Change' });
+
+			mockJourney.response.answers = {
+				yes_details_db_field: 'My detail text'
+			};
+
+			const result = question.formatAnswerForSummary('segment', mockJourney, 'yes');
+
+			assert.strictEqual(result[0].value, 'Yes<br>My detail text');
+			assert.ok(!result[0].value.includes('\n'));
+		});
+
+		it('should ignore whitespace-only conditional text', () => {
+			const question = new ConditionalOptionsQuestion(questionParams as any);
+			question.getAction = () => ({ href: '#', text: 'Change' });
+
+			mockJourney.response.answers = {
+				yes_details_db_field: '   '
+			};
+
+			const result = question.formatAnswerForSummary('segment', mockJourney, 'yes');
+
+			assert.strictEqual(result[0].value, 'Yes');
+		});
+	});
 });

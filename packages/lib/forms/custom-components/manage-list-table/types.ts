@@ -1,4 +1,4 @@
-import type { BaseQuestionViewData, ManageListQuestionParams } from '@planning-inspectorate/dynamic-forms';
+import type { ManageListQuestionParams } from '@planning-inspectorate/dynamic-forms';
 
 export interface TableHeadCell {
 	text?: string;
@@ -25,8 +25,11 @@ export type TableManageListQuestionParameters = ManageListQuestionParams & {
 	hideRemoveOnLastItem?: boolean;
 };
 
-export interface TableManageListQuestionView extends BaseQuestionViewData {
+export interface TableManageListQuestionView {
 	value: Record<string, unknown>[];
+	question: string;
+	fieldName: string;
+	pageTitle: string;
 	firstQuestionUrl?: string;
 	tableHead?: TableHeadCell[];
 	tableRows?: TableRowCell[][];
