@@ -6,12 +6,16 @@ import { Section, type Question, type JourneyResponse } from '@planning-inspecto
  * Based on that manage list will create 1 section per item, attempting to adhere
  * to the display conditions (e.g. .withCondition() function calls etc.) of the section.
  *
- * To use this class you can either instantiate it whereveer you need it and call .build()
+ * To use this class you can either instantiate it wherever you need it and call .build()
  * to generate the sections if you want to show exactly the questions you asked.
  *
  * Or, if you want to show slightly different data, or present the data in a combined way, then
  * you will need to extend this class and overwrite buildSection() but will still reuse pretty much
- * all the functions. An example is the OutcomeSectionBuilder
+ * all the functions. An example is the OutcomeSectionBuilder.
+ *
+ * TODO HRP-652 reconsider this entire functionality as it goes against dynamic forms design patterns.
+ * The user is presented with a list of uneditable questions that are not actually questions, but just a way to display
+ * data. It is not clear to the user how they can edit the data. Also this code is hard to understand and maintain.
  */
 export class DynamicSectionBuilder {
 	protected listFieldName: string;
@@ -108,7 +112,7 @@ export class DynamicSectionBuilder {
 	/**
 	 * Deep clones a question instance while preserving its prototype methods, whilst giving it
 	 * a new unique fieldName, making it ineditable and giving it no url (as it is not editable url is not important).
-npm	 *
+	 *
 	 * NOTE: this returns a Proxy, not a plain object copy. dynamic-forms' `Question` (and many of
 	 * its subclasses, e.g. `RadioQuestion`, `SelectQuestion`, `ManageListQuestion`,
 	 * `ConditionalOptionsQuestion`) rely on native JS private class fields/methods (`#field`).
@@ -151,22 +155,29 @@ npm	 *
 		// real, branded object.
 		const patchKeys = new Set(Object.keys(initialOverrides));
 
+		// Proxy is a wrapper for the target question instance, so that we can override some properties
 		return new Proxy(question, {
+			// Intercepts property reads, returning the override if present, otherwise delegating to the real target.
 			get(_targetObj, prop) {
+				// If the property is a string and exists in the overrides, return the override value
 				if (typeof prop === 'string' && Object.prototype.hasOwnProperty.call(overrides, prop)) {
 					return overrides[prop];
 				}
 
+				// Otherwise, delegate to the real target.
 				const value = Reflect.get(target, prop, target);
 
+				// If the value is not a function, return it directly.
 				if (typeof value !== 'function') {
 					return value;
 				}
 
+				// If the value is a function, return a wrapper that temporarily patches the overrides onto the target.
 				return function (...args: unknown[]) {
 					const saved: Record<string, unknown> = {};
 					const hadOwn = new Set<string>();
 
+					// Patch the overrides onto the target, saving the original values.
 					for (const key of patchKeys) {
 						if (Object.prototype.hasOwnProperty.call(target, key)) {
 							hadOwn.add(key);
@@ -175,6 +186,7 @@ npm	 *
 						target[key] = overrides[key];
 					}
 
+					// Call the original function with the target as `this`, and restore the original values afterwards.
 					try {
 						return value.apply(target, args);
 					} finally {
@@ -188,6 +200,8 @@ npm	 *
 					}
 				};
 			},
+			// Intercepts property writes, storing the value in the overrides if it's a string key, otherwise delegating to the real target.
+			// We don't expect to be writing to the question instance since these clones are only used to display values, but this is here for completeness.
 			set(_targetObj, prop, value) {
 				if (typeof prop === 'string') {
 					overrides[prop] = value;
