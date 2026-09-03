@@ -1,9 +1,7 @@
 import { isBefore } from 'date-fns';
 import { body, validationResult, type ValidationChain } from 'express-validator';
-
-import { parseDateInput } from '@planning-inspectorate/dynamic-forms/src/lib/date-utils.js';
-import BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
-import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
+// TODO wait until dynamic-forms is updated to fix this file (BaseValidator exports)
+import { BaseValidator, DateValidator, parseDateInput } from '@planning-inspectorate/dynamic-forms';
 
 interface DateValidationSettings {
 	ensureFuture: boolean;
@@ -45,7 +43,7 @@ export default class CustomDatePeriodValidator extends BaseValidator {
 		endOptional = false,
 		endDateAfterStartDateMessage?: string
 	) {
-		super(inputLabel, {}, {});
+		super();
 		this.inputLabel = inputLabel;
 		this.startDateValidator = new DateValidator(`${inputLabel} start date`, startDateValidationSettings);
 		this.endDateValidator = new DateValidator(`${inputLabel} end date`, endDateValidationSettings);
