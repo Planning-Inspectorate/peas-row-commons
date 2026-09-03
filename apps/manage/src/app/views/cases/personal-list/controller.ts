@@ -3,6 +3,8 @@ import type { ManageService } from '#service';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
 import { casesToViewModel } from './view-model.ts';
 import { CASE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static-data/status.ts';
+import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
+import { getPageData, getPaginationParams } from '../../pagination/pagination-utils.ts';
 
 /**
  * Safely extracts a single string from an Express query parameter,
@@ -17,17 +19,25 @@ function getQueryString(param: unknown): string | undefined {
 /**
  * Fetches a user's assigned cases as either case officer or insepector
  */
-function fetchCasesForUser(db: ManageService['db'], userId: string, statusFilter?: string) {
+function fetchCasesForUser(
+	db: ManageService['db'],
+	userId: string,
+	statusFilter: string | undefined,
+	skipSize: number,
+	pageSize: number
+) {
+	const where = buildPersonalListWhereClause(userId, statusFilter);
+
 	return db.case.findMany({
-		where: {
-			...(statusFilter && statusFilter !== 'all' ? { Status: { id: statusFilter } } : {}),
-			OR: [{ CaseOfficer: { idpUserId: userId } }, { Inspectors: { some: { Inspector: { idpUserId: userId } } } }]
-		},
+		where,
 		include: {
 			Status: true,
 			CaseOfficer: true,
 			Inspectors: { include: { Inspector: true } }
-		}
+		},
+		orderBy: { receivedDate: 'desc' },
+		skip: skipSize,
+		take: pageSize
 	});
 }
 
@@ -44,10 +54,13 @@ export function buildViewPersonalList(service: ManageService): AsyncRequestHandl
 			throw new Error('Cannot get personal cases without a userId');
 		}
 
+		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
+
 		logger.info({ userId, statusFilter: status }, 'Fetching personal list data');
 
-		const [personalCases, groupMembers] = await Promise.all([
-			fetchCasesForUser(db, userId, status),
+		const [personalCases, totalCases, groupMembers] = await Promise.all([
+			fetchCasesForUser(db, userId, status, skipSize, pageSize),
+			countCasesForUser(db, userId, status),
 			getEntraGroupMembers({
 				logger,
 				initClient: getEntraClient,
@@ -62,6 +75,26 @@ export function buildViewPersonalList(service: ManageService): AsyncRequestHandl
 		);
 
 		const userName = groupMembers?.allUsers?.find((member) => member.id === userId)?.displayName;
+
+		const totalPages = Math.ceil((totalCases || 0) / pageSize);
+		const { resultsStartNumber, resultsEndNumber } = getPageData(
+			totalCases || 0,
+			selectedItemsPerPage,
+			pageSize,
+			pageNumber
+		);
+
+		const paginationItems = getPaginationModel(req, totalPages, pageNumber);
+
+		const paginationParams = {
+			selectedItemsPerPage,
+			pageNumber,
+			totalPages,
+			resultsStartNumber,
+			resultsEndNumber,
+			totalCases,
+			uiItems: paginationItems
+		};
 
 		// If we have attempted to view a specific user, and they are not in Entra, redirect back to personal page
 		if (selectedUserId && !userName) {
@@ -84,7 +117,8 @@ export function buildViewPersonalList(service: ManageService): AsyncRequestHandl
 				currentStatus: status
 			},
 			selectedUserId,
-			viewAnotherHref
+			viewAnotherHref,
+			paginationParams
 		});
 	};
 }
@@ -166,4 +200,25 @@ export function buildFindSelectedUser(service: ManageService): AsyncRequestHandl
 
 		return res.redirect(`/cases/personal-list?userId=${userId}`);
 	};
+}
+
+/**
+ * Builds the where clause for filtering a user's assigned cases.
+ *
+ * Needed for consistency between findMany and count queries during pagination.
+ */
+function buildPersonalListWhereClause(userId: string, statusFilter?: string) {
+	return {
+		...(statusFilter && statusFilter !== 'all' ? { Status: { id: statusFilter } } : {}),
+		OR: [{ CaseOfficer: { idpUserId: userId } }, { Inspectors: { some: { Inspector: { idpUserId: userId } } } }]
+	};
+}
+
+/**
+ * Counts the total number of cases assigned to a user.
+ */
+function countCasesForUser(db: ManageService['db'], userId: string, statusFilter?: string) {
+	return db.case.count({
+		where: buildPersonalListWhereClause(userId, statusFilter)
+	});
 }
