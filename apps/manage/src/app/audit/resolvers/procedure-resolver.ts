@@ -1,12 +1,10 @@
-import type { AuditEntry } from '../types.ts';
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { AUDIT_ACTIONS } from '../actions.ts';
 import {
-	PROCEDURES,
-	PROCEDURE_STATUSES,
-	PROCEDURE_EVENT_FORMATS,
-	INQUIRY_OR_CONFERENCES,
 	ADMIN_PROCEDURES,
+	INQUIRY_OR_CONFERENCES,
+	PROCEDURES,
+	PROCEDURE_EVENT_FORMATS,
+	PROCEDURE_STATUSES,
 	SITE_VISITS
 } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
@@ -16,6 +14,8 @@ import {
 	formatDateTime,
 	formatNumber
 } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import { AUDIT_ACTIONS } from '../actions.ts';
+import type { AuditEntry } from '../types.ts';
 
 export type ProcedureWithRelations = Prisma.ProcedureGetPayload<{
 	include: {

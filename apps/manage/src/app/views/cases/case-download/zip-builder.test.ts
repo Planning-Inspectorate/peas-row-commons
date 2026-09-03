@@ -1,7 +1,7 @@
-import { describe, it, beforeEach, mock } from 'node:test';
 import assert from 'node:assert';
-import { streamCaseZip } from './zip-builder.ts';
+import { beforeEach, describe, it, mock } from 'node:test';
 import type { DownloadableDocument } from './types.ts';
+import { streamCaseZip } from './zip-builder.ts';
 
 function createMockLogger() {
 	return {

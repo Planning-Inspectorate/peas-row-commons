@@ -1,11 +1,11 @@
-import * as authSession from './session.service.ts';
-import { ConfidentialClientApplication } from '@azure/msal-node';
 import { buildMsalConfig } from '#util/auth.ts';
-import type { Config } from '../config.ts';
 import type { AccountInfo, AuthenticationResult, Configuration } from '@azure/msal-node';
-import type { Logger } from 'pino';
+import { ConfidentialClientApplication } from '@azure/msal-node';
 import type { RedisClient } from '@pins/peas-row-commons-lib/redis/redis-client.ts';
 import type { RequestHandler } from 'express';
+import type { Logger } from 'pino';
+import type { Config } from '../config.ts';
+import * as authSession from './session.service.ts';
 
 type AuthenticationResultWithNonce = AuthenticationResult & {
 	idTokenClaims: {

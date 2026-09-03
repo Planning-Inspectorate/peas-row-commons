@@ -1,6 +1,6 @@
-import escape from 'escape-html';
-import { SelectQuestion } from '@planning-inspectorate/dynamic-forms';
 import type { SelectableOption, SelectQuestionParams } from '@planning-inspectorate/dynamic-forms';
+import { SelectQuestion } from '@planning-inspectorate/dynamic-forms';
+import escape from 'escape-html';
 
 export type LegacySelectQuestionParams = SelectQuestionParams & {
 	legacyOptions: SelectableOption[];

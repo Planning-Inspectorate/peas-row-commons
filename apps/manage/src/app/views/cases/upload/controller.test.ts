@@ -1,5 +1,5 @@
-import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { beforeEach, describe, it, mock } from 'node:test';
 import { buildUploadToFolderView } from './controller.ts';
 
 describe('buildUploadToFolderView', () => {

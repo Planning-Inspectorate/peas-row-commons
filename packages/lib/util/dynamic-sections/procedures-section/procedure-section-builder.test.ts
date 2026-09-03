@@ -1,10 +1,10 @@
-import { describe, it, beforeEach } from 'node:test';
-import assert from 'node:assert';
-import { ProcedureSectionBuilder } from './procedure-section-builder.ts';
-import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
 import { PROCEDURES, PROCEDURE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import assert from 'node:assert';
+import { beforeEach, describe, it } from 'node:test';
+import { ProcedureSectionBuilder } from './procedure-section-builder.ts';
 
 interface MockResponse {
 	answers: Record<string, unknown>;

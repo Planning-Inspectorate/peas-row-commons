@@ -1,5 +1,5 @@
-import { test, describe } from 'node:test';
 import { strict as assert } from 'node:assert';
+import { describe, test } from 'node:test';
 import { parseRedisConnectionString } from './redis-client.ts';
 
 describe('redis', () => {

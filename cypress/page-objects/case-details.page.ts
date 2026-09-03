@@ -1,10 +1,10 @@
 import type { CaseDetailsSection, CaseDetailsSectionRowMap, SummaryRowState } from 'cypress/types/case-details.ts';
 
-import HeaderUtility from 'cypress/page-utilities/header.utility.ts';
-import FooterUtility from 'cypress/page-utilities/footer.utility.ts';
-import CheckDetailsPage from './check-details.page.ts';
 import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';
+import FooterUtility from 'cypress/page-utilities/footer.utility.ts';
+import HeaderUtility from 'cypress/page-utilities/header.utility.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
+import CheckDetailsPage from './check-details.page.ts';
 
 class CaseDetailsPage {
 	private readonly sectionSelectors: Record<CaseDetailsSection, string> = {

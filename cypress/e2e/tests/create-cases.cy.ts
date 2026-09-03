@@ -3,9 +3,9 @@
 import CasesListPage from 'cypress/page-objects/case-list.page.ts';
 import CreateCaseUtility from 'cypress/page-utilities/create-case.utility.ts';
 
-import type { Journeys, JourneyTag } from '../../types/journeys.ts';
 import { planningJourneys } from 'cypress/fixtures/planning-case-journeys.ts';
 import { rightsOfWayJourneys } from 'cypress/fixtures/right-of-way-case-journeys.ts';
+import type { Journeys, JourneyTag } from '../../types/journeys.ts';
 
 type JourneyName = (typeof planningJourneys)[number]['name'] | (typeof rightsOfWayJourneys)[number]['name'];
 

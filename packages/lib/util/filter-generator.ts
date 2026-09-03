@@ -1,8 +1,8 @@
 import {
-	CASE_TYPES,
-	CASEWORK_AREAS,
+	CASE_STATUSES,
 	CASE_SUBTYPES,
-	CASE_STATUSES
+	CASE_TYPES,
+	CASEWORK_AREAS
 } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import type { ParsedQs } from 'qs';
 

@@ -1,19 +1,19 @@
+import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
+import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
 import {
-	CASE_STATUSES,
-	PRIORITIES,
 	ADVERTISED_MODIFICATIONS,
-	INSPECTOR_BANDS
+	CASE_STATUSES,
+	INSPECTOR_BANDS,
+	PRIORITIES
 } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
-import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../config.ts';
-import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
-import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
 import {
 	formatAddress,
 	formatDate,
 	formatMonetaryValue,
 	formatValue
 } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import { ENVIRONMENT_NAME, loadEnvironmentConfig } from '../../config.ts';
 
 interface ResolverContext {
 	userDisplayNameMap?: Map<string, string>;

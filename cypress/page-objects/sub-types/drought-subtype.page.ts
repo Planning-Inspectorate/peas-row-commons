@@ -1,5 +1,5 @@
-import type { Drought } from '../../types/journey-subtypes.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
+import type { Drought } from '../../types/journey-subtypes.ts';
 
 class DroughtSubtypePage {
 	isPageDisplayed(fullValidation = true): void {

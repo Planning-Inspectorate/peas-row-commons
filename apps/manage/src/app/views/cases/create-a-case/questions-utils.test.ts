@@ -1,11 +1,11 @@
-import { describe, it, mock, before } from 'node:test';
 import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import {
-	referenceDataToRadioOptions,
 	generateConditionalOptions,
 	getChildPageOptions,
 	getParentPageOptions,
-	kebabToCamel
+	kebabToCamel,
+	referenceDataToRadioOptions
 } from './questions-utils.ts';
 
 describe('Questions Utils', () => {

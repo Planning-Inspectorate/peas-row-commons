@@ -1,8 +1,8 @@
-import { describe, it, mock } from 'node:test';
-import assert from 'node:assert/strict';
-import { buildViewPersonalList, buildSelectUserView, buildFindSelectedUser } from './controller.ts';
-import type { Request, Response, NextFunction } from 'express';
 import type { ManageService } from '#service';
+import type { NextFunction, Request, Response } from 'express';
+import assert from 'node:assert/strict';
+import { describe, it, mock } from 'node:test';
+import { buildFindSelectedUser, buildSelectUserView, buildViewPersonalList } from './controller.ts';
 
 type MockRes = Omit<Response, 'render' | 'status' | 'redirect'> & {
 	render: ReturnType<typeof mock.fn>;

@@ -1,10 +1,10 @@
-import { Router as createRouter } from 'express';
+import type { ManageService } from '#service';
 import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
+import type { Handler, IRouter } from 'express';
+import { Router as createRouter } from 'express';
+import { AuthService, clearAuthenticationData, registerAuthLocals } from './auth-service.ts';
 import { buildCompleteMsalAuthentication, buildHandleSignout, buildStartMsalAuthentication } from './controller.ts';
 import { assertIsUnauthenticated, buildAssertGroupAccess, buildAssertIsAuthenticated } from './guards.ts';
-import { AuthService, clearAuthenticationData, registerAuthLocals } from './auth-service.ts';
-import type { ManageService } from '#service';
-import type { IRouter, Handler } from 'express';
 
 export interface AuthRoutesAndGuards {
 	router: IRouter;

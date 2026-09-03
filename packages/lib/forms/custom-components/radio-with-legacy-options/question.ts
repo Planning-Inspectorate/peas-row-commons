@@ -1,6 +1,6 @@
-import escape from 'escape-html';
+import type { RadioQuestionParams, SelectableOption } from '@planning-inspectorate/dynamic-forms';
 import { RadioQuestion } from '@planning-inspectorate/dynamic-forms';
-import type { SelectableOption, RadioQuestionParams } from '@planning-inspectorate/dynamic-forms';
+import escape from 'escape-html';
 
 export type LegacyRadioQuestionParams = RadioQuestionParams & {
 	viewFolder?: string;

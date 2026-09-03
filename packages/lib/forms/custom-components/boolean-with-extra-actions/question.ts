@@ -1,5 +1,5 @@
-import { BooleanQuestion } from '@planning-inspectorate/dynamic-forms';
 import type { BooleanQuestionParams } from '@planning-inspectorate/dynamic-forms';
+import { BooleanQuestion } from '@planning-inspectorate/dynamic-forms';
 
 export default class BooleanWithExtraActions extends BooleanQuestion {
 	constructor(params: BooleanQuestionParams) {

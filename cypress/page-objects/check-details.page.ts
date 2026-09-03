@@ -1,6 +1,6 @@
+import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 import RemoveDetailsPage from './remove-details.page.ts';
-import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';
 
 const CheckDetailsPageConfig = {
 	applicantAppellant: {

@@ -1,7 +1,7 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import LinkedCasesListQuestion from './question.ts';
+import { describe, it } from 'node:test';
 import type { TableManageListQuestionParameters } from '../types.ts';
+import LinkedCasesListQuestion from './question.ts';
 
 describe('LinkedCasesListQuestion', () => {
 	const mockParams = {

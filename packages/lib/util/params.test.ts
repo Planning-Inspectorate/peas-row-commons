@@ -1,6 +1,6 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { getStringParam, getStringParams, getOptionalStringParam, getOptionalStringParams } from './params.ts';
+import { describe, it } from 'node:test';
+import { getOptionalStringParam, getOptionalStringParams, getStringParam, getStringParams } from './params.ts';
 
 describe('Params Utils', () => {
 	describe('getStringParam', () => {

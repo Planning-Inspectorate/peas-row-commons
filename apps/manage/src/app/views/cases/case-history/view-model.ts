@@ -1,7 +1,7 @@
+import { BULK_FILE_ACTIONS } from '@pins/peas-row-commons-lib/constants/audit.ts';
 import { formatDateTime } from '@pins/peas-row-commons-lib/util/dates.ts';
 import { resolveTemplate, type AuditAction } from '../../../audit/actions.ts';
 import type { AuditEvent } from '../../../audit/types.ts';
-import { BULK_FILE_ACTIONS } from '@pins/peas-row-commons-lib/constants/audit.ts';
 
 export interface CaseHistoryRow {
 	/** Formatted date line: "11 February 2026" */

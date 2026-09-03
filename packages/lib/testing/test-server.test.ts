@@ -1,9 +1,9 @@
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
-import express from 'express';
 import cookieParser from 'cookie-parser';
-import { TestServer } from './test-server.ts';
+import express from 'express';
+import assert from 'node:assert/strict';
 import type { TestContext } from 'node:test';
+import { describe, it } from 'node:test';
+import { TestServer } from './test-server.ts';
 
 // Basic express app for testing
 function createApp() {

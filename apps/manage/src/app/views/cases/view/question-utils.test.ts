@@ -1,17 +1,17 @@
 process.env.ENVIRONMENT = 'dev';
 
-import { afterEach, beforeEach, describe, it } from 'node:test';
+import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import {
-	dateQuestion,
+	ALL_QUESTIONS,
 	camelCaseToKebabCase,
 	camelCaseToSentenceCase,
-	ALL_QUESTIONS,
+	dateQuestion,
 	handleOriginatorFormattingFn,
-	validateDateRangeIsAfterReceivedDate,
-	validateDateIsAfterReceivedDate
+	validateDateIsAfterReceivedDate,
+	validateDateRangeIsAfterReceivedDate
 } from './question-utils.ts';
-import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 
 describe('questions utils', () => {
 	beforeEach(() => {

@@ -1,5 +1,5 @@
-import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert';
+import { beforeEach, describe, it } from 'node:test';
 import ConditionalOptionsQuestion from './question.ts';
 
 let mockJourney: any;

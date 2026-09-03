@@ -1,7 +1,7 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { createDocumentsViewModel } from './view-model.ts';
+import { describe, it } from 'node:test';
 import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
+import { createDocumentsViewModel } from './view-model.ts';
 
 describe('createDocumentsViewModel', () => {
 	const createMockDoc = (overrides = {}) =>

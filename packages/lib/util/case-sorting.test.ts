@@ -1,5 +1,5 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { sortLinkedCases, sortRelatedCases } from './case-sorting.ts';
 
 describe('case-sorting', () => {

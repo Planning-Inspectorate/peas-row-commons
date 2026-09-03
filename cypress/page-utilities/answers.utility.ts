@@ -1,5 +1,5 @@
-import type { Journeys } from '../types/journeys.ts';
 import type { CaseAnswers } from '../types/answers.ts';
+import type { Journeys } from '../types/journeys.ts';
 
 class AnswersUtility {
 	private readonly alias = 'journeyAnswers';

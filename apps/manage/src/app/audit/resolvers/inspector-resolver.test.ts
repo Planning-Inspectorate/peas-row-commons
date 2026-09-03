@@ -1,7 +1,7 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { resolveInspectorAudits, type InspectorWithUser } from './inspector-resolver.ts';
+import { describe, it } from 'node:test';
 import { AUDIT_ACTIONS } from '../actions.ts';
+import { resolveInspectorAudits, type InspectorWithUser } from './inspector-resolver.ts';
 
 /**
  * Helper to build a mock InspectorWithUser matching the Prisma shape.

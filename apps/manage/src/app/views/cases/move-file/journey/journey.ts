@@ -1,4 +1,4 @@
-import { Section, Journey, type JourneyResponse } from '@planning-inspectorate/dynamic-forms';
+import { Journey, Section, type JourneyResponse } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
 
 export const JOURNEY_ID = 'move';

@@ -1,5 +1,5 @@
-import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert';
+import { beforeEach, describe, it } from 'node:test';
 import FencingPermanentQuestion from './question.ts';
 
 let mockJourney: any;

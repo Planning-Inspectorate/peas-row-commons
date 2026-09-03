@@ -1,16 +1,16 @@
+import AddressWithIdQuestion from './address-with-id/question.ts';
+import BooleanWithExtraActions from './boolean-with-extra-actions/question.ts';
 import ConditionalOptionsQuestion from './conditional-text-input/question.ts';
+import DatePeriodWithExtraActions from './date-period-with-extra-actions/question.ts';
 import FencingPermanentQuestion from './fencing-permanent/question.ts';
-import LinkedCasesListQuestion from './manage-list-table/linked-cases-table/question.ts';
+import OutcomesTableQuestion from './manage-list-table/defined-columns-list-table/outcomes-table/question.ts';
 import DefinedColumnsTableQuestion from './manage-list-table/defined-columns-list-table/question.ts';
+import LinkedCasesListQuestion from './manage-list-table/linked-cases-table/question.ts';
 import TableManageListQuestion from './manage-list-table/question.ts';
 import NestedFolderQuestion from './nested-folder-radio/question.ts';
 import OptionalTimeDateTimeInput from './optional-time-date-time-input/question.ts';
-import OutcomesTableQuestion from './manage-list-table/defined-columns-list-table/outcomes-table/question.ts';
 import LegacyRadioQuestion from './radio-with-legacy-options/question.ts';
 import LegacySelectQuestion from './select-with-legacy-options/question.ts';
-import AddressWithIdQuestion from './address-with-id/question.ts';
-import BooleanWithExtraActions from './boolean-with-extra-actions/question.ts';
-import DatePeriodWithExtraActions from './date-period-with-extra-actions/question.ts';
 
 export const CUSTOM_COMPONENTS = Object.freeze({
 	CONDITIONAL_TEXT_OPTIONS: 'conditional-text-options',

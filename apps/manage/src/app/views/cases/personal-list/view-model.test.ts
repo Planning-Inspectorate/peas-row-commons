@@ -1,8 +1,7 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { casesToViewModel } from './view-model.ts';
-import type { CaseOfficer } from '../view/types.ts';
+import { describe, it } from 'node:test';
 import type { CaseListFields } from './types.ts';
+import { casesToViewModel } from './view-model.ts';
 
 describe('casesToViewModel', () => {
 	const mockGroupMembers = {

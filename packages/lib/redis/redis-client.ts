@@ -1,11 +1,11 @@
-import { createClient } from 'redis';
-import { RedisStore } from 'connect-redis';
-import { MSALCacheClient } from './msal-cache-client.ts';
-import { PartitionManager } from './partition-manager.ts';
+import type { IPartitionManager } from '@azure/msal-node';
 import { DistributedCachePlugin } from '@azure/msal-node';
+import { RedisStore } from 'connect-redis';
 import type { Logger } from 'pino';
 import type { RedisClientType } from 'redis';
-import type { IPartitionManager } from '@azure/msal-node';
+import { createClient } from 'redis';
+import { MSALCacheClient } from './msal-cache-client.ts';
+import { PartitionManager } from './partition-manager.ts';
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 

@@ -1,9 +1,9 @@
-import { describe, it, mock } from 'node:test';
+import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 import assert from 'node:assert';
+import { describe, it, mock } from 'node:test';
 import { buildAuditService } from './service.ts';
 import type { AuditEntry } from './types.ts';
-import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
-import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 
 describe('Audit Service', () => {
 	const createMockDb = () => ({

@@ -1,5 +1,5 @@
-import puppeteer, { type Browser } from 'puppeteer-core';
 import type { Logger } from 'pino';
+import puppeteer, { type Browser } from 'puppeteer-core';
 
 /**
  * Recommended Chromium launch arguments for headless Docker/Linux environments.

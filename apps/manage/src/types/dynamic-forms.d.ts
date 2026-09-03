@@ -26,10 +26,10 @@ declare module '@planning-inspectorate/dynamic-forms/src/journey/journey-respons
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/questions/options-question.js' {
+	import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+	import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 	import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 	import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-	import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
-	import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 	import type { Request } from 'express';
 
 	export interface ConditionalConfig {
@@ -109,8 +109,8 @@ declare module '@planning-inspectorate/dynamic-forms/src/components/date/questio
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/components/select/question.js' {
-	import type { QuestionParameters } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 	import type OptionsQuestion from '@planning-inspectorate/dynamic-forms/src/questions/options-question.js';
+	import type { QuestionParameters } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 
 	export default class SelectQuestion extends OptionsQuestion {
 		constructor(params: QuestionParameters);
@@ -118,10 +118,10 @@ declare module '@planning-inspectorate/dynamic-forms/src/components/select/quest
 }
 
 declare module '@planning-inspectorate/dynamic-forms/src/questions/question.js' {
-	import type { Request, Response } from 'express';
-	import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-	import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 	import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+	import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+	import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+	import type { Request, Response } from 'express';
 
 	export interface ActionLink {
 		href: string;

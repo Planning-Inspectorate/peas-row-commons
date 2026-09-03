@@ -1,5 +1,5 @@
-import type { Browser, PDFOptions } from 'puppeteer';
 import type { Logger } from 'pino';
+import type { Browser, PDFOptions } from 'puppeteer';
 
 /**
  * PDF page configuration.

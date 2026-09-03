@@ -1,6 +1,6 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { sanitiseSearchQuery, createWhereClause } from './search-queries.ts';
+import { describe, it } from 'node:test';
+import { createWhereClause, sanitiseSearchQuery } from './search-queries.ts';
 
 describe('getStringQueries', () => {
 	it('should not split comma-separated values', () => {

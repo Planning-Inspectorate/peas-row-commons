@@ -1,9 +1,9 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
-import ManageListItemsCompleteValidator from './validator.ts';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import type ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
 import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js';
+import type ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
+import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
+import ManageListItemsCompleteValidator from './validator.ts';
 
 describe('ManageListItemsCompleteValidator', () => {
 	describe('validate()', () => {

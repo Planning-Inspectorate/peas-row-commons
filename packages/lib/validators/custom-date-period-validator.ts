@@ -1,9 +1,9 @@
-import { body, validationResult, type ValidationChain } from 'express-validator';
 import { isBefore } from 'date-fns';
+import { body, validationResult, type ValidationChain } from 'express-validator';
 
+import { parseDateInput } from '@planning-inspectorate/dynamic-forms/src/lib/date-utils.js';
 import BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
 import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
-import { parseDateInput } from '@planning-inspectorate/dynamic-forms/src/lib/date-utils.js';
 
 interface DateValidationSettings {
 	ensureFuture: boolean;

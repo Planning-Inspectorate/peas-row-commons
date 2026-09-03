@@ -10,26 +10,26 @@
  * 6. Record the download in case history (audit)
  */
 
-import type { Request, Response } from 'express';
 import type { ManageService } from '#service';
-import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
-import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
-import type { Logger } from 'pino';
-import nunjucks from 'nunjucks';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
+import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import type { Request, Response } from 'express';
+import nunjucks from 'nunjucks';
+import type { Logger } from 'pino';
+import { AUDIT_ACTIONS } from '../../../audit/index.ts';
 import {
-	getOrLaunchBrowser,
-	generatePdf,
 	fetchCaseForDownload,
+	generatePdf,
+	getOrLaunchBrowser,
 	mapCaseDetailsData,
-	mapObjectorListData,
 	mapContactListData,
 	mapDownloadableDocuments,
+	mapObjectorListData,
 	streamCaseZip
 } from './index.ts';
 import type { CaseDownloadQueryResult } from './query.ts';
-import { AUDIT_ACTIONS } from '../../../audit/index.ts';
-import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
  * Relative template paths from the configured Nunjucks views dir

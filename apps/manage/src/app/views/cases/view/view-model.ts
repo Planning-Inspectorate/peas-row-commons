@@ -1,23 +1,23 @@
+import { getUserDisplayName } from '#util/entra-groups.ts';
+import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
+import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
+import { DECISION_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-type.ts';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
+import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/legacy/act-sections.ts';
+import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
+import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address.ts';
+import { sortLinkedCases, sortRelatedCases } from '@pins/peas-row-commons-lib/util/case-sorting.ts';
+import { mapContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
 import {
 	dateISOStringToDisplayDate,
 	dateISOStringToDisplayTime12hr,
 	getDayFromISODate
 } from '@pins/peas-row-commons-lib/util/dates.ts';
-import type { CaseDecisionFields, CaseListFields, CaseNoteFields, CaseProcedureFields, UserMap } from './types.ts';
-import { formatInTimeZone } from 'date-fns-tz';
-import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms';
-import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address.ts';
-import { mapContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
-import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
-import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
 import { nl2br, truncateComment } from '@pins/peas-row-commons-lib/util/strings.ts';
-import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
-import { DECISION_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-type.ts';
-import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
-import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/legacy/act-sections.ts';
-import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
-import { getUserDisplayName } from '#util/entra-groups.ts';
-import { sortLinkedCases, sortRelatedCases } from '@pins/peas-row-commons-lib/util/case-sorting.ts';
+import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms';
+import { formatInTimeZone } from 'date-fns-tz';
+import type { CaseDecisionFields, CaseListFields, CaseNoteFields, CaseProcedureFields, UserMap } from './types.ts';
 
 function formatValue(value: any) {
 	if (typeof value === 'boolean') {

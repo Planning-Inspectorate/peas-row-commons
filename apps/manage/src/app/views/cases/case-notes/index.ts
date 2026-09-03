@@ -1,18 +1,18 @@
-import { Router as createRouter } from 'express';
 import type { ManageService } from '#service';
+import { validateIdFormat, validateNoteIdFormat } from '@pins/peas-row-commons-lib/middleware/validate-params.ts';
+import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import type { IRouter } from 'express';
+import { Router as createRouter } from 'express';
 import {
 	buildCreateCaseNote,
-	buildViewCaseNotes,
-	buildViewEditCaseNote,
-	buildUpdateCaseNote,
+	buildDeleteCaseNote,
 	buildPreloadCaseNoteData,
+	buildUpdateCaseNote,
+	buildViewCaseNotes,
 	buildViewDeleteCaseNote,
-	buildDeleteCaseNote
+	buildViewEditCaseNote
 } from './controller.ts';
-import { validateIdFormat, validateNoteIdFormat } from '@pins/peas-row-commons-lib/middleware/validate-params.ts';
 import { buildValidateCaseNotesMiddleware } from './validation-middleware.ts';
-import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 
 export function createRoutes(service: ManageService): IRouter {
 	const router = createRouter({ mergeParams: true });

@@ -1,9 +1,9 @@
 /// <reference types="cypress" />
 
-import CasesListPage from 'cypress/page-objects/case-list.page.ts';
 import CaseDetailsPage from 'cypress/page-objects/case-details.page.ts';
-import CreateCaseUtility from 'cypress/page-utilities/create-case.utility.ts';
+import CasesListPage from 'cypress/page-objects/case-list.page.ts';
 import AnswersUtility from 'cypress/page-utilities/answers.utility.ts';
+import CreateCaseUtility from 'cypress/page-utilities/create-case.utility.ts';
 import DownloadsUtility from 'cypress/page-utilities/downloads.utility.ts';
 
 import { shouldRunTest } from '../../page-utilities/test-tags.utility.ts';

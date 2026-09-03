@@ -1,8 +1,8 @@
-import { describe, it, beforeEach } from 'node:test';
+import type { NextFunction, Request, Response } from 'express';
 import assert from 'node:assert/strict';
-import type { Request, Response, NextFunction } from 'express';
+import { beforeEach, describe, it } from 'node:test';
 
-import { validateInspectorRemoval, checkForInspectorErrors, buildRemovalErrorSummary } from './validate-inspectors.ts';
+import { buildRemovalErrorSummary, checkForInspectorErrors, validateInspectorRemoval } from './validate-inspectors.ts';
 
 const MANAGE_LIST_ACTIONS = { REMOVE: 'remove' };
 const INSPECTOR_CONSTANTS = { INSPECTOR_URL: 'inspector-details' };

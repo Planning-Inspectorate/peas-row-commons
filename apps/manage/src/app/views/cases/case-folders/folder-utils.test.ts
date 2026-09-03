@@ -1,14 +1,14 @@
-import { describe, it, mock } from 'node:test';
+import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/types.ts';
 import assert from 'node:assert';
+import { describe, it, mock } from 'node:test';
 import {
 	addCaseIdToFolders,
+	buildBreadcrumbItems,
 	buildFolderTree,
 	createFolders,
 	findFolders,
-	FOLDER_TEMPLATES_MAP,
-	buildBreadcrumbItems
+	FOLDER_TEMPLATES_MAP
 } from './folder-utils.ts';
-import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/types.ts';
 import type { FolderBreadcrumb } from './types.ts';
 
 describe('Folder creation utils', () => {

@@ -1,7 +1,7 @@
-import { describe, it, beforeEach } from 'node:test';
-import assert from 'node:assert';
-import LegacySelectQuestion from './question.ts';
 import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import assert from 'node:assert';
+import { beforeEach, describe, it } from 'node:test';
+import LegacySelectQuestion from './question.ts';
 
 let mockJourney: Journey;
 let question: LegacySelectQuestion;

@@ -1,6 +1,6 @@
-import { describe, it, beforeEach, mock } from 'node:test';
 import assert from 'node:assert';
-import { getOrLaunchBrowser, closeBrowser, _resetForTesting } from './browser-manager.ts';
+import { beforeEach, describe, it, mock } from 'node:test';
+import { _resetForTesting, closeBrowser, getOrLaunchBrowser } from './browser-manager.ts';
 
 function createMockBrowser() {
 	const listeners: Record<string, Array<(...args: unknown[]) => void>> = {};

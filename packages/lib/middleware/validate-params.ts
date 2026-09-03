@@ -1,4 +1,4 @@
-import type { Request, Response, NextFunction, RequestHandler } from 'express';
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { isValidUuidFormat } from '../util/uuid.ts';
 import { notFoundHandler } from './errors.ts';
 

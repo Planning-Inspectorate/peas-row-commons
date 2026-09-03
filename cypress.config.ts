@@ -1,6 +1,6 @@
 import { defineConfig } from 'cypress';
-import { setupNodeEvents } from './cypress/support/tasks.ts';
 import { loadEnvFile } from 'node:process';
+import { setupNodeEvents } from './cypress/support/tasks.ts';
 // prettier-ignore
 try { loadEnvFile(); } catch {/* ignore errors*/}
 

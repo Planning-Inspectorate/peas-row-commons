@@ -1,5 +1,5 @@
-import type { Wayleaves } from '../../types/journey-subtypes.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
+import type { Wayleaves } from '../../types/journey-subtypes.ts';
 
 class WayleavesSubtypePage {
 	isPageDisplayed(fullValidation = true): void {

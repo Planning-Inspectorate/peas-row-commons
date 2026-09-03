@@ -1,7 +1,7 @@
-import path from 'node:path';
-import { createRequire } from 'node:module';
-import { loadBuildConfig } from '../app/config.ts';
 import { runBuild } from '@pins/peas-row-commons-lib/util/build.ts';
+import { createRequire } from 'node:module';
+import path from 'node:path';
+import { loadBuildConfig } from '../app/config.ts';
 
 /**
  * Do all steps to run the build

@@ -1,7 +1,7 @@
+import type { Handler } from 'express';
 import helmet from 'helmet';
 import crypto from 'node:crypto';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { Handler } from 'express';
 
 // not directly exported from helmet types??
 type LocalsResponse = ServerResponse & {

@@ -1,5 +1,5 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { createJourney, JOURNEY_ID } from './journey.ts';
 
 describe('case details journey', () => {

@@ -1,9 +1,9 @@
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { kebabToCamel } from './questions-utils.ts';
-import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
+import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 import { mapAddressViewModelToDb } from '@pins/peas-row-commons-lib/util/address.ts';
 import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms';
+import { kebabToCamel } from './questions-utils.ts';
 
 /**
  * Takes an answers object and formats the data correctly ready for insertion into DB.

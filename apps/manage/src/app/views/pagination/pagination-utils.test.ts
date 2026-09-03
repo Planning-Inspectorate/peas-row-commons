@@ -1,6 +1,6 @@
-import { describe, it } from 'node:test';
-import { getPaginationParams, getPageData } from './pagination-utils.ts';
 import assert from 'node:assert';
+import { describe, it } from 'node:test';
+import { getPageData, getPaginationParams } from './pagination-utils.ts';
 
 describe('pagination-utils', () => {
 	describe('getPaginationParams', () => {

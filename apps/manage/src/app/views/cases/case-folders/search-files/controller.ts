@@ -1,13 +1,12 @@
 import type { ManageService } from '#service';
-import { createWhereClause, sanitiseSearchQuery } from '@pins/peas-row-commons-lib/util/search-queries.ts';
-import type { RequestHandler } from 'express';
-import { createDocumentsViewModel } from '../case-folder/view-model.ts';
-import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
-import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
-import type { Request } from 'express';
-import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import { createWhereClause, sanitiseSearchQuery } from '@pins/peas-row-commons-lib/util/search-queries.ts';
+import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import type { Request, RequestHandler } from 'express';
+import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
+import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
+import { createDocumentsViewModel } from '../case-folder/view-model.ts';
 
 /**
  * Controller for viewing the file search page, handles the pagination and select of the files.

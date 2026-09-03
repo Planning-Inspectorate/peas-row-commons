@@ -1,9 +1,9 @@
+import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
+import { format } from 'date-fns';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import nunjucks, { type Environment } from 'nunjucks';
-import { format } from 'date-fns';
 import { loadBuildConfig } from './config.ts';
-import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
 
 /**
  * Configure nunjucks with govuk and app folders for loading views

@@ -1,5 +1,5 @@
-import type { DateField, UkAddress } from '../types/standard.ts';
 import { faker } from '@faker-js/faker';
+import type { DateField, UkAddress } from '../types/standard.ts';
 
 /**
  * Builds a case name from the last segment of a journey name, then appends the current date and time for uniqueness.

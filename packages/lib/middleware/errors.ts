@@ -1,6 +1,6 @@
 import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
-import type { Logger } from 'pino';
 import type { ErrorRequestHandler, Request, Response } from 'express';
+import type { Logger } from 'pino';
 
 /**
  * A catch-all error handler to use as express middleware

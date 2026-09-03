@@ -1,7 +1,5 @@
-import { describe, it, beforeEach } from 'node:test';
-import assert from 'node:assert';
-import TableManageListQuestion from './question.ts';
 import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
+import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 import type {
 	ActionLink,
 	Question,
@@ -9,7 +7,9 @@ import type {
 	SummaryListItem
 } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import assert from 'node:assert';
+import { beforeEach, describe, it } from 'node:test';
+import TableManageListQuestion from './question.ts';
 
 describe('TableManageListQuestion', () => {
 	let tableQuestion: TableManageListQuestion;

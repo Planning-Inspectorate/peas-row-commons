@@ -1,12 +1,12 @@
-import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert';
+import { beforeEach, describe, it, mock } from 'node:test';
 import {
 	buildValidateFolderCreate,
 	buildValidateFolderRename,
-	sanitiseFolderName,
-	getSyntaxError,
 	getDuplicateErrorsCreate,
-	getDuplicateErrorsRename
+	getDuplicateErrorsRename,
+	getSyntaxError,
+	sanitiseFolderName
 } from './validation.ts';
 
 describe('Folder Validation Utils', () => {

@@ -2,10 +2,10 @@ import type { ManageService } from '#service';
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
-import { createFoldersViewModel } from './view-model.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { Request } from 'express';
-import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import { createFoldersViewModel } from './view-model.ts';
 
 export function buildViewCaseFolders(service: ManageService): AsyncRequestHandler {
 	const { db, logger } = service;

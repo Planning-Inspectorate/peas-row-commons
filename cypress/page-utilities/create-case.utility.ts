@@ -1,41 +1,41 @@
 import type { CaseAnswers } from 'cypress/types/answers.ts';
 import { createAnswers } from 'cypress/types/answers.ts';
 
-import AnswersUtility from 'cypress/page-utilities/answers.utility.ts';
+import AddressPage from 'cypress/page-objects/address-details.page.ts';
 import CasesListPage from 'cypress/page-objects/case-list.page.ts';
+import CaseReceivedDatePage from 'cypress/page-objects/case-received-date.page.ts';
+import CaseTypePage from 'cypress/page-objects/case-type.page.ts';
+import CaseWorkAreaPage from 'cypress/page-objects/case-work-area.page.ts';
+import ExternalReferencePage from 'cypress/page-objects/external-reference.page.ts';
+import AddressUtility from 'cypress/page-utilities/address.utility.ts';
+import AnswersUtility from 'cypress/page-utilities/answers.utility.ts';
 import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';
 import DateUtility from 'cypress/page-utilities/date.utility.ts';
-import AddressUtility from 'cypress/page-utilities/address.utility.ts';
-import AddressPage from 'cypress/page-objects/address-details.page.ts';
 import HeaderUtility from 'cypress/page-utilities/header.utility.ts';
-import CaseWorkAreaPage from 'cypress/page-objects/case-work-area.page.ts';
-import CaseTypePage from 'cypress/page-objects/case-type.page.ts';
-import ExternalReferencePage from 'cypress/page-objects/external-reference.page.ts';
-import CaseReceivedDatePage from 'cypress/page-objects/case-received-date.page.ts';
 
-import DroughtSubtypePage from 'cypress/page-objects/sub-types/drought-subtype.page.ts';
-import CpoSubtypePage from 'cypress/page-objects/sub-types/cpo-subtype.page.ts';
-import SosSubtypePage from 'cypress/page-objects/sub-types/sos-subtype.page.ts';
-import WayleavesSubtypePage from 'cypress/page-objects/sub-types/wayleaves-subtype.page.ts';
 import CoastalAccessSubtypePage from 'cypress/page-objects/sub-types/coastal-access-subtype.page.ts';
 import CommonLandSubtypePage from 'cypress/page-objects/sub-types/common-land-subtype.page.ts';
+import CpoSubtypePage from 'cypress/page-objects/sub-types/cpo-subtype.page.ts';
+import DroughtSubtypePage from 'cypress/page-objects/sub-types/drought-subtype.page.ts';
 import RightsOfWaySubtypePage from 'cypress/page-objects/sub-types/rights-of-way-subtype.page.ts';
+import SosSubtypePage from 'cypress/page-objects/sub-types/sos-subtype.page.ts';
+import WayleavesSubtypePage from 'cypress/page-objects/sub-types/wayleaves-subtype.page.ts';
 
-import CheckDetailsPage from '../page-objects/check-details.page.ts';
-import ContactDetailsPage from 'cypress/page-objects/contact-details.page.ts';
-import WhoAppellantObjectorPage from 'cypress/page-objects/who-appellant-objector.page.ts';
-import CaseNamePage from 'cypress/page-objects/case-name.page.ts';
-import SiteAddressPage from 'cypress/page-objects/site-address.page.ts';
-import SiteLocationPage from 'cypress/page-objects/site-location.page.ts';
-import WhoAuthorityPage from 'cypress/page-objects/who-authority.page.ts';
-import CaseOfficerPage from 'cypress/page-objects/case-officer.page.ts';
-import CheckAnswersPage from 'cypress/page-objects/check-answers.page.ts';
 import CaseCreatedPage from 'cypress/page-objects/case-created.page.ts';
 import CaseDetailsPage from 'cypress/page-objects/case-details.page.ts';
+import CaseNamePage from 'cypress/page-objects/case-name.page.ts';
+import CaseOfficerPage from 'cypress/page-objects/case-officer.page.ts';
+import CheckAnswersPage from 'cypress/page-objects/check-answers.page.ts';
+import ContactDetailsPage from 'cypress/page-objects/contact-details.page.ts';
+import SiteAddressPage from 'cypress/page-objects/site-address.page.ts';
+import SiteLocationPage from 'cypress/page-objects/site-location.page.ts';
+import WhoAppellantObjectorPage from 'cypress/page-objects/who-appellant-objector.page.ts';
+import WhoAuthorityPage from 'cypress/page-objects/who-authority.page.ts';
+import CheckDetailsPage from '../page-objects/check-details.page.ts';
 
-import type { Journeys } from '../types/journeys.ts';
 import { planningJourneys } from 'cypress/fixtures/planning-case-journeys.ts';
 import { rightsOfWayJourneys } from 'cypress/fixtures/right-of-way-case-journeys.ts';
+import type { Journeys } from '../types/journeys.ts';
 
 type JourneyName = (typeof planningJourneys)[number]['name'] | (typeof rightsOfWayJourneys)[number]['name'];
 

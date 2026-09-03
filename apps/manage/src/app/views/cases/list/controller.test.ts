@@ -1,5 +1,7 @@
-import { describe, it, mock } from 'node:test';
+import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 import assert from 'node:assert';
+import { describe, it, mock } from 'node:test';
+import { configureNunjucks } from '../../../nunjucks.ts';
 import {
 	buildListCases,
 	caseToViewModel,
@@ -7,13 +9,11 @@ import {
 	formatCountData,
 	getCurrentFiltersAndGenerateString
 } from './controller.ts';
-import { configureNunjucks } from '../../../nunjucks.ts';
-import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 
 import {
 	CASEWORK_AREAS_ID,
-	CASE_TYPES_ID,
-	CASE_SUBTYPES_ID
+	CASE_SUBTYPES_ID,
+	CASE_TYPES_ID
 } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 

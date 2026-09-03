@@ -1,5 +1,5 @@
-import type { CommonLand } from '../../types/journey-subtypes.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
+import type { CommonLand } from '../../types/journey-subtypes.ts';
 
 class CommonLandSubtypePage {
 	isPageDisplayed(fullValidation = true): void {

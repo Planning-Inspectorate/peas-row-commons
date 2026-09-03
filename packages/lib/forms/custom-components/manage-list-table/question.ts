@@ -1,18 +1,18 @@
-import ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
+import type { QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
 import { DateQuestion } from '@planning-inspectorate/dynamic-forms';
+import ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
+import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import type { Request } from 'express';
+import nunjucks from 'nunjucks';
 import type {
 	TableHeadCell,
 	TableManageListQuestionParameters,
-	TableRowCell,
-	TableManageListQuestionView
+	TableManageListQuestionView,
+	TableRowCell
 } from './types.ts';
-import nunjucks from 'nunjucks';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-import type { QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
-import type { Request } from 'express';
 
 export default class TableManageListQuestion extends ManageListQuestion {
 	viewFolder: string;

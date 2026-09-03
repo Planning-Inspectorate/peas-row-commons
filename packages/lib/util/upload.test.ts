@@ -1,6 +1,6 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatBytes, encodeBlobNameToBase64, formatExtensions } from './upload.ts';
+import { describe, it } from 'node:test';
+import { encodeBlobNameToBase64, formatBytes, formatExtensions } from './upload.ts';
 
 describe('Utility Functions', () => {
 	describe('formatBytes', () => {

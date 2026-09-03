@@ -1,10 +1,9 @@
-import type { InitEntraClient } from '@pins/peas-row-commons-lib/graph/types.ts';
-import type { EntraGroupMembers } from './entra-groups-types.ts';
+import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import type { UserDetails } from '@pins/peas-row-commons-lib/graph/cached-entra-client.ts';
+import type { AuthSession, InitEntraClient } from '@pins/peas-row-commons-lib/graph/types.ts';
 import type { BaseLogger } from 'pino';
 import type { UserMap } from '../app/views/cases/view/types.ts';
-import type { UserDetails } from '@pins/peas-row-commons-lib/graph/cached-entra-client.ts';
-import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
-import type { AuthSession } from '@pins/peas-row-commons-lib/graph/types.ts';
+import type { EntraGroupMembers } from './entra-groups-types.ts';
 
 export type GroupMembers = {
 	allUsers: string;

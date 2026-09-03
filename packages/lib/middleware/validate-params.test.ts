@@ -1,5 +1,5 @@
-import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
+import { describe, it, mock } from 'node:test';
 import { buildValidateParamFormat, validateIdFormat, validateNoteIdFormat } from './validate-params.ts';
 
 describe('validate-params middleware', () => {

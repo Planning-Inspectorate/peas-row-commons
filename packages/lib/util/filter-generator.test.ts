@@ -1,12 +1,12 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
 import {
 	CASEWORK_AREAS_ID,
-	CASE_TYPES_ID,
-	CASE_SUBTYPES_ID
+	CASE_SUBTYPES_ID,
+	CASE_TYPES_ID
 } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 import { CASE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { FilterGenerator } from './filter-generator.ts';
 
 // Type helper for accessing OR conditions in test assertions

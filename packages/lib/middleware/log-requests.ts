@@ -1,5 +1,5 @@
-import type { Logger } from 'pino';
 import type { RequestHandler } from 'express';
+import type { Logger } from 'pino';
 
 /**
  * Log all requests to console

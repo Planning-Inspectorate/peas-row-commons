@@ -1,12 +1,12 @@
+import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
+import { OutcomeSectionBuilder } from '@pins/peas-row-commons-lib/util/dynamic-sections/outcomes-section/outcomes-section-builder.ts';
 import {
 	ManageListSection,
 	whenQuestionHasAnswer,
 	type JourneyResponse,
-	type Section,
-	type Question
+	type Question,
+	type Section
 } from '@planning-inspectorate/dynamic-forms';
-import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
-import { OutcomeSectionBuilder } from '@pins/peas-row-commons-lib/util/dynamic-sections/outcomes-section/outcomes-section-builder.ts';
 
 export function buildOutcomeManageList(questions: Record<string, Question>): ManageListSection {
 	return (

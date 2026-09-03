@@ -1,5 +1,5 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { createFoldersViewModel } from './view-model.ts';
 
 describe('createFoldersViewModel', () => {
