@@ -136,9 +136,9 @@ interface DateQuestionProps {
 	 */
 	optional?: boolean;
 	/**
-	 * Additional validators to merge with DateValidator (or overrideValidator if set).
+	 * Additional validators to merge with DateValidator.
 	 */
-	validators?: InstanceType<typeof BaseValidator>[];
+	validators?: BaseValidator[];
 }
 
 export function dateQuestion({

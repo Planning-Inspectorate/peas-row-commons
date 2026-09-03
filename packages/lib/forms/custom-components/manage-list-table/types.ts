@@ -1,5 +1,3 @@
-import type { ManageListQuestionParams } from '@planning-inspectorate/dynamic-forms';
-
 export interface TableHeadCell {
 	text?: string;
 	html?: string;
@@ -20,8 +18,8 @@ export interface TableRowCell {
 	attributes?: Record<string, any>;
 }
 
-export interface PreppedQuestion {
-	value: Record<string, any>;
+export interface TableManageListQuestionView {
+	value: Record<string, unknown>[];
 	question: string;
 	fieldName: string;
 	pageTitle: string;
