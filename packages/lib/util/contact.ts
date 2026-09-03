@@ -1,10 +1,11 @@
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
-import { COMPONENT_TYPES, AddressValidator, MultiFieldInputValidator } from '@planning-inspectorate/dynamic-forms';
-import AtLeastOneFieldValidator from '../forms/custom-components/multi-field-input/validator.ts';
 import type { MultiFieldInputQuestionProps } from '@planning-inspectorate/dynamic-forms';
-import { mapAddressDbToViewModel, mapAddressViewModelToDb } from './address.ts';
+import { AddressValidator, COMPONENT_TYPES, MultiFieldInputValidator } from '@planning-inspectorate/dynamic-forms';
 import type { AddressWithIdQuestionProps } from '../forms/custom-components/address-with-id/question.ts';
+import { CUSTOM_COMPONENTS } from '../forms/custom-components/index.ts';
+import AtLeastOneFieldValidator from '../forms/custom-components/multi-field-input/validator.ts';
+import { mapAddressDbToViewModel, mapAddressViewModelToDb } from './address.ts';
 import type { AddressItem, ContactMappingConfig } from './types.ts';
 
 /**
@@ -240,7 +241,7 @@ export const createPersonQuestions = <S extends string>({
 		validators: [
 			new AtLeastOneFieldValidator({
 				fields: [`${db}FirstName`, `${db}LastName`, `${db}OrgName`],
-				errorMessage: 'Add at least one of First name, Last name or Company or organisation name'
+				errorMessage: 'Add at least one of first name, last name, or company or organisation name'
 			}),
 			new MultiFieldInputValidator({
 				fields: [
