@@ -13,7 +13,7 @@ type NameDetailsErrorConfig = {
 const nameDetailsErrorMap: Record<NameDetailsType, Record<NameDetailsErrorType, NameDetailsErrorConfig>> = {
 	applicantAppellant: {
 		required: {
-			message: 'Add at least one of First name, Last name or Company or organisation name',
+			message: 'Add at least one of first name, last name, or company or organisation name',
 			href: '#applicantName'
 		},
 		firstNameTooLong: {
@@ -34,7 +34,7 @@ const nameDetailsErrorMap: Record<NameDetailsType, Record<NameDetailsErrorType, 
 	},
 	objector: {
 		required: {
-			message: 'Add at least one of First name, Last name or Company or organisation name',
+			message: 'Add at least one of first name, last name, or company or organisation name',
 			href: '#objectorName'
 		},
 		firstNameTooLong: {
