@@ -1,6 +1,6 @@
-import type { Journeys } from '../types/journeys.ts';
-import { buildCaseName } from '../page-utilities/generate.utility.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
+import { buildCaseName } from '../page-utilities/generate.utility.ts';
+import type { Journeys } from '../types/journeys.ts';
 
 type CaseNameErrorType = 'required' | 'tooLong';
 

@@ -1,7 +1,7 @@
 import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
+import type { NextFunction, Request, Response } from 'express';
 import type { ValidationChain } from 'express-validator';
-import type { Request, Response, NextFunction } from 'express';
 import type { ContextRunningOptions } from 'express-validator/lib/chain/context-runner.js';
 
 /**

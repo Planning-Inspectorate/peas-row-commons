@@ -1,13 +1,13 @@
+import { CASEWORK_AREAS_ID, CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import {
-	Section,
+	BOOLEAN_OPTIONS,
 	Journey,
 	ManageListSection,
-	BOOLEAN_OPTIONS,
+	Section,
 	whenQuestionHasAnswer,
 	type JourneyResponse
 } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
-import { CASEWORK_AREAS_ID, CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import type { CreateCaseQuestions } from './questions.ts';
 
 export const JOURNEY_ID = 'create-a-case';

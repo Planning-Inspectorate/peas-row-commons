@@ -1,7 +1,7 @@
-import { describe, it, beforeEach } from 'node:test';
+import type { NextFunction, Request, Response } from 'express';
 import assert from 'node:assert/strict';
-import { bounceRemoveCancellation, trackRemovedItemId, resetRemovedListItems } from './track-removes.ts';
-import type { Request, Response, NextFunction } from 'express';
+import { beforeEach, describe, it } from 'node:test';
+import { bounceRemoveCancellation, resetRemovedListItems, trackRemovedItemId } from './track-removes.ts';
 
 const MANAGE_LIST_ACTIONS = { REMOVE: 'remove' };
 const BOOLEAN_OPTIONS = { YES: 'yes', NO: 'no' };

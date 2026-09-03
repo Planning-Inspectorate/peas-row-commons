@@ -1,4 +1,4 @@
-import type { Response, Request, NextFunction } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 
 export function cacheNoStoreMiddleware(req: Request, res: Response, next: NextFunction) {
 	res.set('Cache-Control', 'no-store');

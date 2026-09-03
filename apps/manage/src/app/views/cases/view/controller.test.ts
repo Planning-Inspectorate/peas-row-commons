@@ -1,12 +1,12 @@
-import { describe, it, mock } from 'node:test';
-import assert from 'node:assert';
-import {
-	buildViewCaseDetails,
-	buildGetJourneyMiddleware,
-	combineSessionAndDbData,
-	buildSuccessHtml
-} from './controller.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
+import assert from 'node:assert';
+import { describe, it, mock } from 'node:test';
+import {
+	buildGetJourneyMiddleware,
+	buildSuccessHtml,
+	buildViewCaseDetails,
+	combineSessionAndDbData
+} from './controller.ts';
 
 describe('Case Controller', () => {
 	const newMockRes = () => ({

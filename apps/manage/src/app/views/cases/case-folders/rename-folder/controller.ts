@@ -3,10 +3,10 @@ import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/cl
 import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
+import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import type { Request } from 'express';
 import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
-import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 
 /**
  * Controller to render the Rename Folder view (get)

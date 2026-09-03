@@ -1,14 +1,14 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
 import {
-	stringToKebab,
 	checkAnswerlength,
 	checkRequiredAnswer,
-	toCamelCase,
-	shouldTruncateComment,
-	truncateComment,
 	nl2br,
-	nullEmptyString
+	nullEmptyString,
+	shouldTruncateComment,
+	stringToKebab,
+	toCamelCase,
+	truncateComment
 } from './strings.ts';
 
 describe('String Utils', () => {

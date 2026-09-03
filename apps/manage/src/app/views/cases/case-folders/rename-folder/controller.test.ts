@@ -1,6 +1,6 @@
-import { describe, it, beforeEach, mock } from 'node:test';
 import assert from 'node:assert';
-import { buildRenameFolderView, buildRenameFolder, renameFolderRecord, getSessionErrors } from './controller.ts';
+import { beforeEach, describe, it, mock } from 'node:test';
+import { buildRenameFolder, buildRenameFolderView, getSessionErrors, renameFolderRecord } from './controller.ts';
 
 describe('Rename Folder Controller', () => {
 	let mockReq: any;

@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { describe, it } from 'node:test';
-import { optionalWhere, wrapPrismaError } from './database.ts';
-import assert from 'node:assert';
 import { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { mockLogger } from '../testing/mock-logger.ts';
+import { optionalWhere, wrapPrismaError } from './database.ts';
 
 describe('database', () => {
 	describe('optionalWhere', () => {

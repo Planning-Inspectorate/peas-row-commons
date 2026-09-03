@@ -1,5 +1,5 @@
-import type { CPOs } from '../../types/journey-subtypes.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
+import type { CPOs } from '../../types/journey-subtypes.ts';
 
 class CpoSubtypePage {
 	isPageDisplayed(fullValidation = true): void {

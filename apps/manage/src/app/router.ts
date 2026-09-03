@@ -1,12 +1,12 @@
+import type { ManageService } from '#service';
+import { createMonitoringRoutes } from '@pins/peas-row-commons-lib/controllers/monitoring.ts';
+import { cacheNoCacheMiddleware } from '@pins/peas-row-commons-lib/middleware/cache.ts';
+import type { IRouter } from 'express';
 import { Router as createRouter } from 'express';
 import { createRoutesAndGuards as createAuthRoutesAndGuards } from './auth/router.ts';
-import { createMonitoringRoutes } from '@pins/peas-row-commons-lib/controllers/monitoring.ts';
 import { createRoutes as createCaseRoutes } from './views/cases/index.ts';
 import { createRoutes as createDocumentsRoutes } from './views/documents/index.ts';
 import { createErrorRoutes } from './views/static/error/index.ts';
-import { cacheNoCacheMiddleware } from '@pins/peas-row-commons-lib/middleware/cache.ts';
-import type { ManageService } from '#service';
-import type { IRouter } from 'express';
 
 /**
  * Main app router

@@ -1,5 +1,12 @@
-import { describe, it } from 'node:test';
+import {
+	DECISION_MAKER_TYPE_ID,
+	DECISION_TYPE_ID,
+	PROCEDURES_ID
+} from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
+import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import assert from 'node:assert';
+import { describe, it } from 'node:test';
+import type { CaseDecisionFields, CaseProcedureFields } from './types.ts';
 import {
 	caseToViewModel,
 	mapAndSortDecisions,
@@ -7,13 +14,6 @@ import {
 	mapProceduresToArray,
 	sortProceduresChronologically
 } from './view-model.ts';
-import {
-	DECISION_TYPE_ID,
-	DECISION_MAKER_TYPE_ID,
-	PROCEDURES_ID
-} from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
-import type { CaseDecisionFields, CaseProcedureFields } from './types.ts';
-import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 
 describe('view-model', () => {
 	const userMap: Map<string, string> = new Map<string, string>();

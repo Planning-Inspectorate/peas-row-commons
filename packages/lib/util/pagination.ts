@@ -1,5 +1,5 @@
-import { UrlBuilder } from './url-builder.ts';
 import type { Request } from 'express';
+import { UrlBuilder } from './url-builder.ts';
 
 /**
  * Builds the URLs for the pagination macro

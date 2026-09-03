@@ -1,15 +1,15 @@
 import { DefaultAzureCredential } from '@azure/identity';
-import { BlobServiceClient } from '@azure/storage-blob';
 import type {
-	BlockBlobClient,
-	BlobUploadCommonResponse,
-	BlobDownloadResponseParsed,
 	BlobDeleteIfExistsResponse,
-	BlockBlobUploadStreamOptions,
-	BlobItem
+	BlobDownloadResponseParsed,
+	BlobItem,
+	BlobUploadCommonResponse,
+	BlockBlobClient,
+	BlockBlobUploadStreamOptions
 } from '@azure/storage-blob';
-import type { Logger } from 'pino';
+import { BlobServiceClient } from '@azure/storage-blob';
 import type { Readable } from 'node:stream';
+import type { Logger } from 'pino';
 import type { BlobMetaData } from './types.d.ts';
 
 const commonOptions = { retryOptions: { maxTries: 3 } };

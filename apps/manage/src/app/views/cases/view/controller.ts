@@ -1,19 +1,19 @@
-import { list, JourneyResponse, clearDataFromSession } from '@planning-inspectorate/dynamic-forms';
-import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
-import { caseToViewModel } from './view-model.ts';
-import { createJourney, JOURNEY_ID } from './journey.ts';
-import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import type { ManageService } from '#service';
-import type { Request, Response } from 'express';
-import { getQuestions } from './questions.ts';
-import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { buildUserDisplayNameMap, getEntraGroupMembers } from '#util/entra-groups.ts';
-import type { Section } from '@planning-inspectorate/dynamic-forms';
-import { hasAnyContacts } from '../contacts-download/index.ts';
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
+import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
+import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { getOptionalStringParams, getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { escapeHtml } from '@pins/peas-row-commons-lib/util/strings.ts';
+import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
+import type { Section } from '@planning-inspectorate/dynamic-forms';
+import { clearDataFromSession, JourneyResponse, list } from '@planning-inspectorate/dynamic-forms';
+import type { Request, Response } from 'express';
+import { hasAnyContacts } from '../contacts-download/index.ts';
+import { createJourney, JOURNEY_ID } from './journey.ts';
+import { getQuestions } from './questions.ts';
+import { caseToViewModel } from './view-model.ts';
 
 const caseToViewInclude = {
 	SiteAddress: true,

@@ -1,8 +1,8 @@
-import { describe, it } from 'node:test';
+import type { LinkedCase, RelatedCase } from '@pins/peas-row-commons-database/src/client/client.ts';
 import assert from 'node:assert';
-import { resolveRelatedCaseAudits, resolveLinkedCaseAudits } from './list-field-resolver.ts';
+import { describe, it } from 'node:test';
 import { AUDIT_ACTIONS } from '../actions.ts';
-import type { RelatedCase, LinkedCase } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { resolveLinkedCaseAudits, resolveRelatedCaseAudits } from './list-field-resolver.ts';
 
 const CASE_ID = 'case-1';
 const USER_ID = 'user-performing-action';

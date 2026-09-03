@@ -1,3 +1,4 @@
+import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
 import {
 	checkFileNameConflict,
@@ -5,7 +6,6 @@ import {
 	checkForDuplicateFilesInDraft,
 	getExistingFileNamesInFolder
 } from './file-duplicate-validation.ts';
-import assert from 'node:assert/strict';
 
 const createMockFile = (name: any, size = 100) =>
 	({

@@ -1,8 +1,8 @@
-import type { AuditEntry } from '../types.ts';
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { type AuditAction } from '../actions.ts';
-import { OBJECTOR_STATUSES, CONTACT_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import { CONTACT_TYPES, OBJECTOR_STATUSES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { formatAddress } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import { type AuditAction } from '../actions.ts';
+import type { AuditEntry } from '../types.ts';
 
 export type ContactWithAddress = Prisma.ContactGetPayload<{ include: { Address: true } }>;
 

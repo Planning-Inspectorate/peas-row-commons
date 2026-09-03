@@ -1,5 +1,5 @@
-import type { CaseType } from '../types/work-area-case-types.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
+import type { CaseType } from '../types/work-area-case-types.ts';
 
 class CaseTypePage {
 	isPageDisplayed(fullValidation = true): void {

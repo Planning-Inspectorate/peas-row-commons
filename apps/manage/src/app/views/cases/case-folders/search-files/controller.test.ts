@@ -1,8 +1,8 @@
-import { describe, it, beforeEach, mock } from 'node:test';
-import assert from 'node:assert';
-import type { Request, Response } from 'express';
-import { buildFileSearchView } from './controller.ts';
 import type { MockDb, MockResponse } from '@pins/peas-row-commons-lib/testing/type.ts';
+import type { Request, Response } from 'express';
+import assert from 'node:assert';
+import { beforeEach, describe, it, mock } from 'node:test';
+import { buildFileSearchView } from './controller.ts';
 
 describe('File Search View Controller', () => {
 	let mockReq: {

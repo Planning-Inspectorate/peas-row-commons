@@ -1,11 +1,11 @@
 import {
+	COMMON_LAND_FOLDERS,
 	PEAS_FOLDERS,
-	ROW_FOLDERS,
-	COMMON_LAND_FOLDERS
+	ROW_FOLDERS
 } from '@pins/peas-row-commons-database/src/seed/static-data/folders.ts';
 import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/types.ts';
-import type { BreadcrumbItem, FlatFolder, FolderBreadcrumb, FolderNode } from './types.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
+import type { BreadcrumbItem, FlatFolder, FolderBreadcrumb, FolderNode } from './types.ts';
 
 const ROW_FOLDERS_MAP = {
 	[CASE_TYPES_ID.COASTAL_ACCESS]: ROW_FOLDERS,

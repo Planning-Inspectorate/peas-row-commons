@@ -1,13 +1,13 @@
-import escape from 'escape-html';
-import { OptionsQuestion } from '@planning-inspectorate/dynamic-forms';
 import type {
-	Section,
+	CommonQuestionParams,
 	Journey,
-	QuestionViewModel,
-	SelectableOption,
 	PrepQuestionForRenderingOptions,
-	CommonQuestionParams
+	QuestionViewModel,
+	Section,
+	SelectableOption
 } from '@planning-inspectorate/dynamic-forms';
+import { OptionsQuestion } from '@planning-inspectorate/dynamic-forms';
+import escape from 'escape-html';
 import type { Request } from 'express';
 
 type NarrowedConditional = Omit<NonNullable<SelectableOption['conditional']>, 'type'> & {

@@ -1,4 +1,4 @@
-import { Section, type Question, type JourneyResponse } from '@planning-inspectorate/dynamic-forms';
+import { Section, type JourneyResponse, type Question } from '@planning-inspectorate/dynamic-forms';
 
 /**
  * Class for dynamically generating sections based on a manage list section parameter.

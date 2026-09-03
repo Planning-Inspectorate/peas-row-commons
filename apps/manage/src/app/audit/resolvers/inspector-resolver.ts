@@ -1,7 +1,7 @@
-import type { AuditEntry } from '../types.ts';
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { AUDIT_ACTIONS } from '../actions.ts';
 import { formatDate } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import { AUDIT_ACTIONS } from '../actions.ts';
+import type { AuditEntry } from '../types.ts';
 
 export type InspectorWithUser = Prisma.InspectorGetPayload<{ include: { Inspector: true } }>;
 

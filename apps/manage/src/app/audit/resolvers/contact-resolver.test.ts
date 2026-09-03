@@ -1,7 +1,7 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { resolveContactAudits, type ContactWithAddress } from './contact-resolver.ts';
+import { describe, it } from 'node:test';
 import { AUDIT_ACTIONS } from '../actions.ts';
+import { resolveContactAudits, type ContactWithAddress } from './contact-resolver.ts';
 
 const CASE_ID = 'case-1';
 const USER_ID = 'user-performing-action';

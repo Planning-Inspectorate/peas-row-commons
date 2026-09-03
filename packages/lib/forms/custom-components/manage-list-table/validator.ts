@@ -1,9 +1,9 @@
-import { body } from 'express-validator';
-import BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import type ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js';
+import type ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
+import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
+import { body } from 'express-validator';
 
 /**
  * Validator for the manage list table.

@@ -1,5 +1,5 @@
-import { test, describe, beforeEach } from 'node:test';
 import { strict as assert } from 'node:assert';
+import { beforeEach, describe, test } from 'node:test';
 import { UrlBuilder } from './url-builder.ts';
 
 describe('url-builder', () => {

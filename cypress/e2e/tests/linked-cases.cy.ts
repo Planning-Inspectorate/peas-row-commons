@@ -2,15 +2,15 @@
 
 import type { CaseAnswers } from 'cypress/types/answers.ts';
 
-import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';
-import CasesListPage from 'cypress/page-objects/case-list.page.ts';
-import CaseDetailsPage from 'cypress/page-objects/case-details.page.ts';
-import WhoAppellantObjectorPage from '../../page-objects/who-appellant-objector.page.ts';
-import AddressUtility from 'cypress/page-utilities/address.utility.ts';
 import AddressPage from 'cypress/page-objects/address-details.page.ts';
+import CaseDetailsPage from 'cypress/page-objects/case-details.page.ts';
+import CasesListPage from 'cypress/page-objects/case-list.page.ts';
 import ContactDetailsPage from 'cypress/page-objects/contact-details.page.ts';
-import CreateCaseUtility from 'cypress/page-utilities/create-case.utility.ts';
+import AddressUtility from 'cypress/page-utilities/address.utility.ts';
 import AnswersUtility from 'cypress/page-utilities/answers.utility.ts';
+import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';
+import CreateCaseUtility from 'cypress/page-utilities/create-case.utility.ts';
+import WhoAppellantObjectorPage from '../../page-objects/who-appellant-objector.page.ts';
 import { generateRandomString } from '../../page-utilities/generate.utility.ts';
 
 import CheckDetailsPage from 'cypress/page-objects/check-details.page.ts';

@@ -1,9 +1,9 @@
-import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
-import type { Logger } from 'pino';
-import { parseMetadata, type AuditEntry, type AuditEvent, type AuditQueryOptions } from './types.ts';
-import { formatDateTime } from '@pins/peas-row-commons-lib/util/dates.ts';
 import { getUserDisplayName } from '#util/entra-groups.ts';
+import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { formatDateTime } from '@pins/peas-row-commons-lib/util/dates.ts';
+import type { Logger } from 'pino';
 import type { UserMap } from '../views/cases/view/types.ts';
+import { parseMetadata, type AuditEntry, type AuditEvent, type AuditQueryOptions } from './types.ts';
 
 /**
  * Builds the audit service used to record and retrieve case history events.

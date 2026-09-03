@@ -1,6 +1,6 @@
-import { describe, it, beforeEach } from 'node:test';
+import type { NextFunction, Request, Response } from 'express';
 import assert from 'node:assert/strict';
-import type { Request, Response, NextFunction } from 'express';
+import { beforeEach, describe, it } from 'node:test';
 
 import { loadQuestionSpecificErrors, loadQuestionSpecificValidation } from './middleware.ts';
 

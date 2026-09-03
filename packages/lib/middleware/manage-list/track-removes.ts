@@ -1,8 +1,8 @@
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
-import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js';
 import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
-import type { RequestHandler } from 'express';
+import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js';
 import { question } from '@planning-inspectorate/dynamic-forms/src/controller.js';
+import type { RequestHandler } from 'express';
 
 /**
  * The dynamic-forms remove functionality is built on the idea of a single POST

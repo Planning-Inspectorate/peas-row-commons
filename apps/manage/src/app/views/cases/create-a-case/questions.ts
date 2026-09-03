@@ -1,19 +1,9 @@
-import {
-	createQuestions,
-	questionClasses,
-	RequiredValidator,
-	ConditionalRequiredValidator,
-	AddressValidator,
-	DateValidator,
-	StringValidator,
-	COMPONENT_TYPES
-} from '@planning-inspectorate/dynamic-forms';
-import { CASEWORK_AREAS } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
+import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
 import { AUTHORITY_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/authority-status.ts';
-import {
-	PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES,
-	RIGHTS_OF_WAY_COMMON_LAND_TYPES
-} from '@pins/peas-row-commons-database/src/seed/static-data/types.ts';
+import { CASEWORK_AREAS } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import {
 	COASTAL_ACCESS_SUBTYPES,
 	COMMON_LAND_SUBTYPES,
@@ -24,22 +14,32 @@ import {
 	WAYLEAVES_SUBTYPES
 } from '@pins/peas-row-commons-database/src/seed/static-data/subtypes.ts';
 import {
-	referenceDataToRadioOptions,
-	SUB_TYPE_ERROR,
-	CASE_TYPES_CAMEL,
-	CASEWORK_AREAS_CAMEL,
-	generateConditionalOptions
-} from './questions-utils.ts';
+	PLANNING_ENVIRONMENTAL_APPLICATIONS_TYPES,
+	RIGHTS_OF_WAY_COMMON_LAND_TYPES
+} from '@pins/peas-row-commons-database/src/seed/static-data/types.ts';
 import {
 	CUSTOM_COMPONENT_CLASSES,
 	CUSTOM_COMPONENTS
 } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
-import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../../config.ts';
-import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
-import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
-import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
-import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
+import {
+	AddressValidator,
+	COMPONENT_TYPES,
+	ConditionalRequiredValidator,
+	createQuestions,
+	DateValidator,
+	questionClasses,
+	RequiredValidator,
+	StringValidator
+} from '@planning-inspectorate/dynamic-forms';
+import { ENVIRONMENT_NAME, loadEnvironmentConfig } from '../../../config.ts';
+import {
+	CASE_TYPES_CAMEL,
+	CASEWORK_AREAS_CAMEL,
+	generateConditionalOptions,
+	referenceDataToRadioOptions,
+	SUB_TYPE_ERROR
+} from './questions-utils.ts';
 
 export function getQuestions(groupMembers: EntraGroupMembers) {
 	let LPAs: Prisma.AuthorityUncheckedCreateInput[];

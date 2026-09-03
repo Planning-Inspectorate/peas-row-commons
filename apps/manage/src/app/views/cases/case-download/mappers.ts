@@ -5,28 +5,28 @@
  * only the fields needed for its corresponding Nunjucks template.
  */
 
-import type {
-	CaseDetailsPdfData,
-	ObjectorListPdfData,
-	ContactListPdfData,
-	PdfAddress,
-	PdfContact,
-	PdfProcedure,
-	PdfOutcome,
-	PdfCosts,
-	PdfOutcomeDates,
-	DownloadableDocument
-} from './types.ts';
+import { getUserDisplayName } from '#util/entra-groups.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
-import type { CaseDownloadQueryResult } from './query.ts';
-import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
-import { DECISION_MAKER_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
-import { getUniqueProcedureFields } from '@pins/peas-row-commons-lib/util/dynamic-sections/procedures-section/procedure-section-builder.ts';
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
+import { DECISION_MAKER_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
 import { formatAddress, formatDate, formatDateTime } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
-import { getUserDisplayName } from '#util/entra-groups.ts';
 import { sortLinkedCases, sortRelatedCases } from '@pins/peas-row-commons-lib/util/case-sorting.ts';
+import { getUniqueProcedureFields } from '@pins/peas-row-commons-lib/util/dynamic-sections/procedures-section/procedure-section-builder.ts';
+import type { CaseDownloadQueryResult } from './query.ts';
+import type {
+	CaseDetailsPdfData,
+	ContactListPdfData,
+	DownloadableDocument,
+	ObjectorListPdfData,
+	PdfAddress,
+	PdfContact,
+	PdfCosts,
+	PdfOutcome,
+	PdfOutcomeDates,
+	PdfProcedure
+} from './types.ts';
 
 /**
  * Maps a Prisma Address record to the simplified PDF address format.

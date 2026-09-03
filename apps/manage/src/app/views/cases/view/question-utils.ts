@@ -1,56 +1,56 @@
-import { COMPONENT_TYPES, CrossQuestionValidator } from '@planning-inspectorate/dynamic-forms';
-import type BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
-import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
-import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
-import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js';
-import NumericValidator from '@planning-inspectorate/dynamic-forms/src/validator/numeric-validator.js';
-import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
 import CustomDatePeriodValidator from '@pins/peas-row-commons-lib/validators/custom-date-period-validator.ts';
+import { COMPONENT_TYPES, CrossQuestionValidator } from '@planning-inspectorate/dynamic-forms';
+import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
+import type BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
+import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
+import NumericValidator from '@planning-inspectorate/dynamic-forms/src/validator/numeric-validator.js';
+import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js';
+import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
 
+import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
+import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
+import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
+import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/admin-procedure-type.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
+import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
+import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/outcome.ts';
 import {
-	INVOICE_STATUSES,
-	CASE_STATUSES,
+	ADMIN_PROCEDURES,
 	ADVERTISED_MODIFICATIONS,
-	PRIORITIES,
-	CASE_TYPES,
+	CASE_STATUSES,
 	CASE_SUBTYPES,
-	INSPECTOR_BANDS,
+	CASE_TYPES,
+	CONTACT_TYPES,
+	DECISION_MAKER_TYPES,
 	DECISION_TYPES,
+	INQUIRY_OR_CONFERENCES,
+	INSPECTOR_BANDS,
+	INVOICE_STATUSES,
+	OBJECTOR_STATUSES,
 	OUTCOMES,
+	PRIORITIES,
+	PROCEDURE_EVENT_FORMATS,
 	PROCEDURE_STATUSES,
 	PROCEDURES,
-	PROCEDURE_EVENT_FORMATS,
-	INQUIRY_OR_CONFERENCES,
-	ADMIN_PROCEDURES,
-	SITE_VISITS,
-	OBJECTOR_STATUSES,
-	CONTACT_TYPES,
-	DECISION_MAKER_TYPES
+	SITE_VISITS
 } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/legacy/act-sections.ts';
+import { LEGACY_CONTACT_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/legacy/contact-types.ts';
+import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
+import { INSPECTOR_CONSTANTS } from '@pins/peas-row-commons-lib/constants/inspectors.ts';
+import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
+import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
+import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/validator.ts';
+import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-components/optional-date-component/validator.ts';
+import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
+import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
+import { ENVIRONMENT_NAME, loadEnvironmentConfig } from '../../../config.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
 import type { UserMap } from './types.ts';
-import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
-import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/outcome.ts';
-import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
-import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/validator.ts';
-import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-components/optional-date-component/validator.ts';
-import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
-import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
-import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
-import { loadEnvironmentConfig, ENVIRONMENT_NAME } from '../../../config.ts';
-import { AUTHORITIES as AUTHORITIES_PROD } from '@pins/peas-row-commons-database/src/seed/data-authorities-prod.ts';
-import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
-import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { LEGACY_CONTACT_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/legacy/contact-types.ts';
-import { LEGACY_ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/legacy/act-sections.ts';
-import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/admin-procedure-type.ts';
-import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
-import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
-import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
-import { INSPECTOR_CONSTANTS } from '@pins/peas-row-commons-lib/constants/inspectors.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
 

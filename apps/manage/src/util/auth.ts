@@ -1,5 +1,5 @@
-import { LogLevel } from '@azure/msal-node';
 import type { Configuration } from '@azure/msal-node';
+import { LogLevel } from '@azure/msal-node';
 import type { Logger } from 'pino';
 import type { Config } from '../app/config.ts';
 

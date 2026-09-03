@@ -1,6 +1,6 @@
-import { describe, it, mock, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildDeleteFileView, buildDeleteFileController, buildRemoveFileFromSelection } from './controller.ts';
+import { beforeEach, describe, it, mock } from 'node:test';
+import { buildDeleteFileController, buildDeleteFileView, buildRemoveFileFromSelection } from './controller.ts';
 
 describe('Delete File Controllers', () => {
 	const mockLogger = {

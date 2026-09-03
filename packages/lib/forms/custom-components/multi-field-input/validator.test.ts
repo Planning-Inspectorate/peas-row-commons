@@ -1,9 +1,9 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
-import { validationResult } from 'express-validator';
-import AtLeastOneFieldValidator from './validator.ts';
 import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import type { Request } from 'express';
+import { validationResult } from 'express-validator';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
+import AtLeastOneFieldValidator from './validator.ts';
 
 describe('AtLeastOneFieldValidator', () => {
 	describe('constructor', () => {

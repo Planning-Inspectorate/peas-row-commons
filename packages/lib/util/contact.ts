@@ -1,14 +1,14 @@
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
-import { mapAddressDbToViewModel, mapAddressViewModelToDb } from './address.ts';
 import {
-	COMPONENT_TYPES,
 	AddressValidator,
+	COMPONENT_TYPES,
 	MultiFieldInputValidator,
 	type BaseQuestionProps
 } from '@planning-inspectorate/dynamic-forms';
-import AtLeastOneFieldValidator from '../forms/custom-components/multi-field-input/validator.ts';
 import { CUSTOM_COMPONENTS } from '../forms/custom-components/index.ts';
+import AtLeastOneFieldValidator from '../forms/custom-components/multi-field-input/validator.ts';
+import { mapAddressDbToViewModel, mapAddressViewModelToDb } from './address.ts';
 import type { AddressItem, ContactMappingConfig } from './types.ts';
 
 /**

@@ -1,6 +1,6 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
 import type { Request } from 'express';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { getPaginationModel } from './pagination.ts';
 
 const createMockReq = (

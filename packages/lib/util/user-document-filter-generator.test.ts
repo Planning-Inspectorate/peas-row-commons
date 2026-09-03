@@ -1,9 +1,9 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import {
-	DocumentFilterGenerator,
 	DOCUMENT_FILTER_KEYS,
-	DOCUMENT_FILTER_VALUES
+	DOCUMENT_FILTER_VALUES,
+	DocumentFilterGenerator
 } from './user-document-filter-generator.ts';
 
 describe('DocumentFilterGenerator Integration Tests', () => {

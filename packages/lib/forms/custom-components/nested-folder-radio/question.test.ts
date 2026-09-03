@@ -1,8 +1,8 @@
-import { describe, it, beforeEach } from 'node:test';
-import assert from 'node:assert';
-import NestedFolderQuestion, { type FolderNode } from './question.ts';
-import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import assert from 'node:assert';
+import { beforeEach, describe, it } from 'node:test';
+import NestedFolderQuestion, { type FolderNode } from './question.ts';
 
 describe('NestedFolderQuestion', () => {
 	let nestedQuestion: NestedFolderQuestion;

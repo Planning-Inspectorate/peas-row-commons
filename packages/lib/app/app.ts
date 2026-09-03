@@ -1,13 +1,13 @@
-import { buildLogRequestsMiddleware } from '../middleware/log-requests.ts';
-import { initSessionMiddleware } from '../util/session.ts';
 import bodyParser from 'body-parser';
+import type { Express, Handler, IRouter } from 'express';
 import express from 'express';
-import { initContentSecurityPolicyMiddlewares } from '../middleware/csp-middleware.ts';
-import { buildDefaultErrorHandlerMiddleware, notFoundHandler } from '../middleware/errors.ts';
-import type { BaseService } from './base-service.ts';
-import type { Express, IRouter, Handler } from 'express';
 import type { Environment } from 'nunjucks';
 import type { HelmetCspDirectives } from '../middleware/csp-middleware.js';
+import { initContentSecurityPolicyMiddlewares } from '../middleware/csp-middleware.ts';
+import { buildDefaultErrorHandlerMiddleware, notFoundHandler } from '../middleware/errors.ts';
+import { buildLogRequestsMiddleware } from '../middleware/log-requests.ts';
+import { initSessionMiddleware } from '../util/session.ts';
+import type { BaseService } from './base-service.ts';
 
 interface BaseAppOptions {
 	service: BaseService;

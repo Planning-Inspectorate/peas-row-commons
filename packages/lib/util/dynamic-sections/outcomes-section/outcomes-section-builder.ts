@@ -1,7 +1,7 @@
-import { DynamicSectionBuilder } from '../dynamic-section-builder.ts';
-import { Section, type Question, type JourneyResponse } from '@planning-inspectorate/dynamic-forms';
 import { DECISION_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/decision-type.ts';
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
+import { Section, type JourneyResponse, type Question } from '@planning-inspectorate/dynamic-forms';
+import { DynamicSectionBuilder } from '../dynamic-section-builder.ts';
 
 /**
  * Dynamically generated sections based on number of Outcome(s).

@@ -1,9 +1,9 @@
+import AdmZip from 'adm-zip';
 import fs from 'fs';
 import path from 'path';
-import AdmZip from 'adm-zip';
 
-import { chromium, type Browser, type Cookie } from 'playwright-core';
 import { loadEnvFile } from 'node:process';
+import { chromium, type Browser, type Cookie } from 'playwright-core';
 
 import { LoginMicrosoftPage } from '../page-objects/login-microsoft.page.ts';
 

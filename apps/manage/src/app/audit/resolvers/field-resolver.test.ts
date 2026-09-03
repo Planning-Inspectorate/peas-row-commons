@@ -1,5 +1,5 @@
-import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { resolveFieldValues } from './field-resolver.ts';
 
 const CASE_ID = 'case-1';

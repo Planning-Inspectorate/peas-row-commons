@@ -1,5 +1,5 @@
-import type core from 'express-serve-static-core';
 import type { RequestHandler } from 'express';
+import type core from 'express-serve-static-core';
 
 // an async handler type, since RequestHandler is sync and does not return a Promise
 // adapted from https://github.com/DefinitelyTyped/DefinitelyTyped/blob/8e274af6ed512811d15426cca3b946cd9227a255/types/express-serve-static-core/index.d.ts#L52-L65

@@ -1,7 +1,7 @@
-import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
-import { getRedirectUrl, buildDeleteFolderView, buildDeleteFolderController } from './controller.ts';
+import { describe, it, mock } from 'node:test';
 import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
+import { buildDeleteFolderController, buildDeleteFolderView, getRedirectUrl } from './controller.ts';
 
 describe('Delete Folder Controller', () => {
 	describe('getRedirectUrl', () => {

@@ -1,5 +1,5 @@
-import type { WorkArea } from '../types/work-area-case-types.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
+import type { WorkArea } from '../types/work-area-case-types.ts';
 
 class CaseworkAreaPage {
 	isPageDisplayed(fullValidation = true): void {

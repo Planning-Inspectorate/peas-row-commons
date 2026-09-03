@@ -1,5 +1,5 @@
-import type { WorkArea, CaseType } from './work-area-case-types.ts';
-import type { Drought, CPOs, SoS, Wayleaves, CoastalAccess, CommonLand, RightOfWay } from './journey-subtypes.ts';
+import type { CoastalAccess, CommonLand, CPOs, Drought, RightOfWay, SoS, Wayleaves } from './journey-subtypes.ts';
+import type { CaseType, WorkArea } from './work-area-case-types.ts';
 
 export type JourneyTag = 'smoke' | 'regression';
 

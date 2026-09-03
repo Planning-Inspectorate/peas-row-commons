@@ -1,8 +1,8 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
-import { mapContacts, handleContacts, createPersonQuestions } from './contact.ts';
-import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
+import assert from 'node:assert';
+import { describe, it } from 'node:test';
+import { createPersonQuestions, handleContacts, mapContacts } from './contact.ts';
 
 describe('mapContacts', () => {
 	it('should map properties correctly', () => {

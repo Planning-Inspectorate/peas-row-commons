@@ -1,17 +1,17 @@
 import type { ManageService } from '#service';
-import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
+import { buildUserDisplayNameMap, getEntraGroupMembers } from '#util/entra-groups.ts';
 import type { Prisma, PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { NOTE_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/note-type.ts';
+import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
+import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
+import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
+import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
 import type { Logger } from 'pino';
 import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
-import { NOTE_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/note-type.ts';
-import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
 import { mapNotes } from '../view/view-model.ts';
-import { buildUserDisplayNameMap, getEntraGroupMembers } from '#util/entra-groups.ts';
-import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
-import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
-import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
-import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 
 /**
  * Preloads case and note data for edit and delete routes, populating res.locals.

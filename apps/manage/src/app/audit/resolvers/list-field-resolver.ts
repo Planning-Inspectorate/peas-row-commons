@@ -1,7 +1,7 @@
-import type { AuditEntry } from '../types.ts';
-import type { RelatedCase, LinkedCase } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { AUDIT_ACTIONS } from '../actions.ts';
+import type { LinkedCase, RelatedCase } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { formatBoolean, formatYesNo } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import { AUDIT_ACTIONS } from '../actions.ts';
+import type { AuditEntry } from '../types.ts';
 
 /**
  * Compares old and new related cases and returns audit entries for

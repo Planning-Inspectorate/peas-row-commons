@@ -1,5 +1,5 @@
-import { test, describe, mock } from 'node:test';
 import { strict as assert } from 'node:assert';
+import { describe, mock, test } from 'node:test';
 import { buildLogRequestsMiddleware } from './log-requests.ts';
 
 describe('log-requests', () => {

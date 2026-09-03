@@ -1,5 +1,5 @@
-import { RedisClient } from './redis-client.ts';
 import type { Logger } from 'pino';
+import { RedisClient } from './redis-client.ts';
 
 interface RedisConfig {
 	redis?: string;

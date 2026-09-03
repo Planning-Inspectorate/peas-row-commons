@@ -1,5 +1,5 @@
-import { describe, it, beforeEach, mock } from 'node:test';
 import assert from 'node:assert';
+import { beforeEach, describe, it, mock } from 'node:test';
 import { buildHandleDuplicateFileNamesMiddleware, buildHandleMoveSelection, buildViewMoveFiles } from './controller.ts';
 
 describe('Move Selection Controller', () => {

@@ -1,10 +1,10 @@
-import { describe, it, beforeEach } from 'node:test';
-import assert from 'node:assert';
-import AddressWithIdQuestion from './question.ts';
-import type { Request } from 'express';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import type { AddressItem } from '../../../util/types.ts';
 import type { QuestionParameters } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type { Request } from 'express';
+import assert from 'node:assert';
+import { beforeEach, describe, it } from 'node:test';
+import type { AddressItem } from '../../../util/types.ts';
+import AddressWithIdQuestion from './question.ts';
 
 describe('AddressWithIdQuestion', () => {
 	let question: AddressWithIdQuestion;

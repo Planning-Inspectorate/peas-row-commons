@@ -1,8 +1,8 @@
-import { describe, it, beforeEach } from 'node:test';
-import assert from 'node:assert/strict';
-import type { Request, Response, NextFunction } from 'express';
-import type { Logger } from 'pino';
 import type { ManageService } from '#service';
+import type { NextFunction, Request, Response } from 'express';
+import assert from 'node:assert/strict';
+import { beforeEach, describe, it } from 'node:test';
+import type { Logger } from 'pino';
 import { buildToggleDocumentAction } from './controller.ts';
 
 interface MockSession {

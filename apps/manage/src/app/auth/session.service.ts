@@ -1,5 +1,5 @@
-import type { Session } from 'express-session';
 import type { AccountInfo, AuthenticationResult } from '@azure/msal-node';
+import type { Session } from 'express-session';
 
 export interface AuthenticationData {
 	nonce: string;

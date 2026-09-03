@@ -1,9 +1,9 @@
-import { createQuestions, questionClasses } from '@planning-inspectorate/dynamic-forms';
-import NestedRequiredValidator from '@pins/peas-row-commons-lib/forms/custom-components/nested-folder-radio/validator.ts';
 import {
 	CUSTOM_COMPONENT_CLASSES,
 	CUSTOM_COMPONENTS
 } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
+import NestedRequiredValidator from '@pins/peas-row-commons-lib/forms/custom-components/nested-folder-radio/validator.ts';
+import { createQuestions, questionClasses } from '@planning-inspectorate/dynamic-forms';
 
 export function getQuestions(folderStructure: Record<string, any>) {
 	const questions = {

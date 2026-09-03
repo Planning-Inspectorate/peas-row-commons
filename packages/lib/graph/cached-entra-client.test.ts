@@ -1,7 +1,7 @@
+import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import assert from 'node:assert';
 import { describe, it, mock } from 'node:test';
 import { buildInitEntraClient, CachedEntraClient } from './cached-entra-client.ts';
-import assert from 'node:assert';
-import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 
 describe('cached-entra-client', () => {
 	describe('buildInitEntraClient', () => {

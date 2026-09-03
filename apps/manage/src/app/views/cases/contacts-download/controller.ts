@@ -6,16 +6,16 @@
  * back to the user's browser.
  */
 
-import type { Request, Response } from 'express';
 import type { ManageService } from '#service';
-import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
-import type { PdfContact } from '../case-download/index.ts';
-import { fetchCaseContactsForDownload, type CaseContactsQueryResult } from './query.ts';
-import { buildContactsCsv } from './csv-builder.ts';
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
-import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import { mapAddressDbToViewModel } from '@pins/peas-row-commons-lib/util/address.ts';
+import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
+import type { Request, Response } from 'express';
+import type { PdfContact } from '../case-download/index.ts';
+import { buildContactsCsv } from './csv-builder.ts';
+import { fetchCaseContactsForDownload, type CaseContactsQueryResult } from './query.ts';
 
 /** A single contact row as returned by the lightweight contacts query */
 type QueryContact = CaseContactsQueryResult['Contacts'][number];

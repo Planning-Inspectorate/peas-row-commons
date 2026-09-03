@@ -1,5 +1,5 @@
-import { URL } from 'node:url';
 import type { Client } from '@microsoft/microsoft-graph-client';
+import { URL } from 'node:url';
 import { isValidUuidFormat } from '../util/uuid.ts';
 import type { UserDetails } from './cached-entra-client.ts';
 const PER_PAGE = 500; // max 999 per page

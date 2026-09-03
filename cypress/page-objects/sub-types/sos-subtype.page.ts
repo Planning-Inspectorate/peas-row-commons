@@ -1,5 +1,5 @@
-import type { SoS } from '../../types/journey-subtypes.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
+import type { SoS } from '../../types/journey-subtypes.ts';
 
 class SosSubtypePage {
 	isPageDisplayed(fullValidation = true): void {

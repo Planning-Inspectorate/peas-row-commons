@@ -1,5 +1,5 @@
-import type { RightOfWay } from '../../types/journey-subtypes.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
+import type { RightOfWay } from '../../types/journey-subtypes.ts';
 
 class RightsOfWaySubtypePage {
 	isPageDisplayed(fullValidation = true): void {

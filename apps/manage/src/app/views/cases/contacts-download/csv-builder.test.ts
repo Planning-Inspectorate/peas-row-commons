@@ -1,7 +1,7 @@
-import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { buildContactsCsv } from './csv-builder.ts';
+import { describe, it } from 'node:test';
 import type { PdfContact } from '../case-download/index.ts';
+import { buildContactsCsv } from './csv-builder.ts';
 
 describe('csv-builder', () => {
 	describe('buildContactsCsv', () => {

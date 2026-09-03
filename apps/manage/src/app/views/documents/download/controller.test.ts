@@ -1,7 +1,7 @@
-import { describe, it, mock, beforeEach } from 'node:test';
-import assert from 'node:assert/strict';
-import { buildDownloadDocument } from './controller.ts';
 import { ManageService } from '#service';
+import assert from 'node:assert/strict';
+import { beforeEach, describe, it, mock } from 'node:test';
+import { buildDownloadDocument } from './controller.ts';
 
 describe('buildDownloadDocument', () => {
 	const mockLogger = {

@@ -1,5 +1,5 @@
-import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import OptionalTimeDateTimeInput from './question.ts';
 
 let mockJourney: any;

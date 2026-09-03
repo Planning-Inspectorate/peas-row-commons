@@ -1,6 +1,6 @@
-import { body } from 'express-validator';
-import BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
 import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
+import { body } from 'express-validator';
 
 interface AtLeastOneFieldValidatorParams {
 	fields: string[];

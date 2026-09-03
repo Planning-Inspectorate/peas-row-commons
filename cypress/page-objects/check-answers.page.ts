@@ -1,6 +1,6 @@
-import type { Journeys } from 'cypress/types/journeys.ts';
 import AnswersUtility from 'cypress/page-utilities/answers.utility.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
+import type { Journeys } from 'cypress/types/journeys.ts';
 
 /**
  * Expected stable question labels shown on the Check your answers page.

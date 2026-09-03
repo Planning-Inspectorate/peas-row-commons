@@ -1,14 +1,14 @@
+import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
+import { ProcedureSectionBuilder } from '@pins/peas-row-commons-lib/util/dynamic-sections/procedures-section/procedure-section-builder.ts';
 import {
 	ManageListSection,
 	questionHasAnswer,
 	whenQuestionHasAnswer,
 	type JourneyResponse,
-	type Section,
-	type Question
+	type Question,
+	type Section
 } from '@planning-inspectorate/dynamic-forms';
-import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
-import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
-import { ProcedureSectionBuilder } from '@pins/peas-row-commons-lib/util/dynamic-sections/procedures-section/procedure-section-builder.ts';
 
 /**
  * Build the manage list section that defines the "add procedure" flow.

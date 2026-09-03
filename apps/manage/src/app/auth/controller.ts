@@ -1,9 +1,9 @@
-import { promisify } from 'node:util';
-import * as authSession from './session.service.ts';
-import { randomUUID } from 'node:crypto';
-import type { AuthService } from './auth-service.ts';
 import type { RequestHandler } from 'express';
+import { randomUUID } from 'node:crypto';
+import { promisify } from 'node:util';
 import type { Logger } from 'pino';
+import type { AuthService } from './auth-service.ts';
+import * as authSession from './session.service.ts';
 
 /**
  * Phase 1 – Navigate to external MSAL signin url

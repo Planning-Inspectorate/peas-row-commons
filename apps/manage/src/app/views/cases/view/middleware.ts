@@ -3,8 +3,8 @@ import {
 	checkForInspectorErrors,
 	validateInspectorRemoval
 } from '@pins/peas-row-commons-lib/middleware/manage-list/validate-inspectors.ts';
-import type { RequestHandler } from 'express';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import type { RequestHandler } from 'express';
 
 /**
  * Map of error checks for questions

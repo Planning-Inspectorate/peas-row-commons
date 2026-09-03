@@ -1,10 +1,10 @@
 // @ts-nocheck
-import { describe, it, mock } from 'node:test';
-import assert from 'node:assert';
-import express from 'express';
-import { createRoutesAndGuards } from './router.ts';
 import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 import { TestServer } from '@pins/peas-row-commons-lib/testing/test-server.ts';
+import express from 'express';
+import assert from 'node:assert';
+import { describe, it, mock } from 'node:test';
+import { createRoutesAndGuards } from './router.ts';
 
 describe('auth', () => {
 	describe('authentication', () => {

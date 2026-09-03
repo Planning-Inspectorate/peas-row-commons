@@ -1,8 +1,8 @@
-import * as sass from 'sass';
-import path from 'node:path';
-import fs from 'node:fs/promises';
-import { copyFile, copyFolder } from './copy.ts';
 import crypto from 'node:crypto';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import * as sass from 'sass';
+import { copyFile, copyFolder } from './copy.ts';
 
 interface SassOptions {
 	staticDir: string;

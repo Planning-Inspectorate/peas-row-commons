@@ -1,10 +1,10 @@
-import type { Request, Response, NextFunction } from 'express';
 import type { ManageService } from '#service';
-import type { ToggleDocumentBody, ToggleDocumentPayload, ToggleType } from './types.ts';
 import { DOCUMENT_STATUS_ACTIONS } from '@pins/peas-row-commons-lib/constants/documents.ts';
-import type { Logger } from 'pino';
-import { determineDefaultStatuses } from '@pins/peas-row-commons-lib/util/user-document-status.ts';
 import { CLOSED_STATUSES } from '@pins/peas-row-commons-lib/constants/statuses.ts';
+import { determineDefaultStatuses } from '@pins/peas-row-commons-lib/util/user-document-status.ts';
+import type { NextFunction, Request, Response } from 'express';
+import type { Logger } from 'pino';
+import type { ToggleDocumentBody, ToggleDocumentPayload, ToggleType } from './types.ts';
 
 /**
  * Handles the database operations for toggling a user's document state

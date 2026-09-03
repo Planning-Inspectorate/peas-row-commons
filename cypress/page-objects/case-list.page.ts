@@ -1,5 +1,5 @@
-import HeaderUtility from 'cypress/page-utilities/header.utility.ts';
 import FooterUtility from 'cypress/page-utilities/footer.utility.ts';
+import HeaderUtility from 'cypress/page-utilities/header.utility.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 
 class CasesListPage {

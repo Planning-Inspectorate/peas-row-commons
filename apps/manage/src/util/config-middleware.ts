@@ -1,5 +1,5 @@
-import type { Handler } from 'express';
 import type { Manifest } from '@pins/peas-row-commons-lib/util/manifest.ts';
+import type { Handler } from 'express';
 
 /**
  * Add configuration values to locals.

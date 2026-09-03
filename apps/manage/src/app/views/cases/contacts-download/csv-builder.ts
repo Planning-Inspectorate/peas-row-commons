@@ -6,7 +6,7 @@
  * so they display correctly when opened in Excel or Outlook.
  */
 
-import type { PdfContact, PdfAddress } from '../case-download/index.ts';
+import type { PdfAddress, PdfContact } from '../case-download/index.ts';
 
 const CSV_HEADERS = [
 	'Contact type',

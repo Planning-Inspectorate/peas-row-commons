@@ -1,5 +1,5 @@
-import type { ICacheClient } from '@azure/msal-node';
 import type { AccountEntity } from '@azure/msal-common';
+import type { ICacheClient } from '@azure/msal-node';
 import type { BaseLogger } from 'pino';
 
 export class PartitionManager {

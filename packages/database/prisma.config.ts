@@ -1,6 +1,6 @@
-import { defineConfig } from 'prisma/config';
 import path from 'node:path';
 import { loadEnvFile } from 'node:process';
+import { defineConfig } from 'prisma/config';
 
 // load configuration from .env file into process.env
 // prettier-ignore

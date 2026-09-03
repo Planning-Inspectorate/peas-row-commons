@@ -1,5 +1,5 @@
-import type { Request, Response } from 'express';
 import type { ManageService } from '#service';
+import type { Request, Response } from 'express';
 
 /**
  * Controller used for deleting draft documents after the user has

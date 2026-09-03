@@ -1,7 +1,7 @@
-import { afterEach, beforeEach, describe, it } from 'node:test';
-import assert from 'node:assert';
-import { createJourney } from './journey.ts';
 import type { Request } from 'express';
+import assert from 'node:assert';
+import { afterEach, beforeEach, describe, it } from 'node:test';
+import { createJourney } from './journey.ts';
 
 import { JourneyResponse } from '@planning-inspectorate/dynamic-forms';
 import { getQuestions, type CreateCaseQuestions } from './questions.ts';

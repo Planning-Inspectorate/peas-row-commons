@@ -1,5 +1,5 @@
-import type { Handler } from 'express';
 import type { ManageService } from '#service';
+import type { Handler } from 'express';
 
 /**
  * Simple firewall error page

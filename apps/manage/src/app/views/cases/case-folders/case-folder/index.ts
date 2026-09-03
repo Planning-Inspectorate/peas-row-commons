@@ -1,18 +1,18 @@
-import { Router as createRouter, type Request, type Response } from 'express';
-import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
-import { validateIdFormat } from '@pins/peas-row-commons-lib/middleware/validate-params.ts';
 import type { ManageService } from '#service';
-import { buildViewCaseFolder } from './controller.ts';
-import { createRoutes as createUploadRoutes } from '../../upload/index.ts';
+import { validateIdFormat } from '@pins/peas-row-commons-lib/middleware/validate-params.ts';
+import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
+import { Router as createRouter, type Request, type Response } from 'express';
 import {
 	buildDeleteFileController,
 	buildDeleteFileView,
 	buildRemoveFileFromSelection
 } from '../../../documents/delete/controller.ts';
+import { createRoutes as createMoveFileRoutes } from '../../move-file/index.ts';
+import { createRoutes as createUploadRoutes } from '../../upload/index.ts';
 import { createRoutes as createCreateFolderRoutes } from '../create-folder/index.ts';
 import { createRoutes as createDeleteFolderRoutes } from '../delete-folder/index.ts';
 import { createRoutes as createRenameFolderRoutes } from '../rename-folder/index.ts';
-import { createRoutes as createMoveFileRoutes } from '../../move-file/index.ts';
+import { buildViewCaseFolder } from './controller.ts';
 
 export function createRoutes(service: ManageService) {
 	const router = createRouter({ mergeParams: true });

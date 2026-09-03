@@ -1,7 +1,7 @@
-import * as authSession from './session.service.ts';
-import type { Request, Response, NextFunction, RequestHandler } from 'express';
-import type { AuthService } from './auth-service.ts';
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import type { Logger } from 'pino';
+import type { AuthService } from './auth-service.ts';
+import * as authSession from './session.service.ts';
 
 const _403View = 'views/errors/403';
 

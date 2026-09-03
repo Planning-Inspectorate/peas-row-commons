@@ -1,50 +1,50 @@
 import type { ManageService } from '#service';
-import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import type {
-	Prisma,
-	PrismaClient,
 	Case,
 	LinkedCase,
+	Prisma,
+	PrismaClient,
 	RelatedCase
 } from '@pins/peas-row-commons-database/src/client/client.ts';
+import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { getRelationForField } from '@pins/peas-row-commons-lib/util/schema-map.ts';
 
+import { getEntraGroupMembers } from '#util/entra-groups.ts';
+import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
+import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
+import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
+import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
+import { LIST_FIELDS } from '@pins/peas-row-commons-lib/constants/audit.ts';
+import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
+import { mapAddressViewModelToDb } from '@pins/peas-row-commons-lib/util/address.ts';
+import { CONTACT_MAPPINGS, handleContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
+import { toDateOrNull } from '@pins/peas-row-commons-lib/util/dates.ts';
+import { toFloat } from '@pins/peas-row-commons-lib/util/numbers.ts';
+import { getOptionalStringParam, getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import { remapFlattenedFieldsToArray } from '@pins/peas-row-commons-lib/util/remap-flattened-fields.ts';
+import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { nullEmptyString } from '@pins/peas-row-commons-lib/util/strings.ts';
+import type { AddressItem } from '@pins/peas-row-commons-lib/util/types.ts';
+import { clearDataFromSession, yesNoToBoolean } from '@planning-inspectorate/dynamic-forms';
 import type { Request, Response } from 'express';
 import type { Logger } from 'pino';
-import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
-import { clearDataFromSession, yesNoToBoolean } from '@planning-inspectorate/dynamic-forms';
-import { JOURNEY_ID } from './journey.ts';
-import { CONTACT_MAPPINGS, handleContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
-import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
-import { AUDIT_ACTIONS, type AuditEntry, type AuditService, type AuditAction } from '../../../audit/index.ts';
-import { getFieldDisplayNames } from './question-utils.ts';
-import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
-import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
-import { remapFlattenedFieldsToArray } from '@pins/peas-row-commons-lib/util/remap-flattened-fields.ts';
-import { toDateOrNull } from '@pins/peas-row-commons-lib/util/dates.ts';
-import { mapProceduresToArray, sortProceduresChronologically } from './view-model.ts';
-import { mapAddressViewModelToDb } from '@pins/peas-row-commons-lib/util/address.ts';
-import type { AddressItem } from '@pins/peas-row-commons-lib/util/types.ts';
-import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
+import { AUDIT_ACTIONS, type AuditAction, type AuditEntry, type AuditService } from '../../../audit/index.ts';
 import {
 	type ContactWithAddress,
+	type DecisionWithRelations,
 	type InspectorWithUser,
 	type ProcedureWithRelations,
-	type DecisionWithRelations,
-	resolveFieldValues,
-	resolveLinkedCaseAudits,
-	resolveRelatedCaseAudits,
 	resolveContactAudits,
+	resolveFieldValues,
 	resolveInspectorAudits,
+	resolveLinkedCaseAudits,
+	resolveOutcomeAudits,
 	resolveProcedureAudits,
-	resolveOutcomeAudits
+	resolveRelatedCaseAudits
 } from '../../../audit/resolvers/index.ts';
-import { LIST_FIELDS } from '@pins/peas-row-commons-lib/constants/audit.ts';
-import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
-import { getEntraGroupMembers } from '#util/entra-groups.ts';
-import { toFloat } from '@pins/peas-row-commons-lib/util/numbers.ts';
-import { nullEmptyString } from '@pins/peas-row-commons-lib/util/strings.ts';
-import { getOptionalStringParam, getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import { JOURNEY_ID } from './journey.ts';
+import { getFieldDisplayNames } from './question-utils.ts';
+import { mapProceduresToArray, sortProceduresChronologically } from './view-model.ts';
 
 interface HandlerParams {
 	req: Request;

@@ -1,5 +1,5 @@
-import prompts from 'prompts';
 import { spawnSync } from 'child_process';
+import prompts from 'prompts';
 
 (async () => {
 	const response = await prompts({

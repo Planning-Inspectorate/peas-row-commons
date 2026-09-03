@@ -1,6 +1,6 @@
-import type { DateField } from '../types/standard.ts';
 import type { DateErrorState } from 'cypress/types/errors.ts';
 import { generateRandomDate } from '../page-utilities/generate.utility.ts';
+import type { DateField } from '../types/standard.ts';
 
 type DateString = 'day' | 'month' | 'year';
 

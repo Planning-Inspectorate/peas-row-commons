@@ -1,14 +1,14 @@
 /// <reference types="cypress" />
 
-import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';
-import CasesListPage from 'cypress/page-objects/case-list.page.ts';
 import CaseDetailsPage from 'cypress/page-objects/case-details.page.ts';
-import CreateCaseUtility from 'cypress/page-utilities/create-case.utility.ts';
+import CasesListPage from 'cypress/page-objects/case-list.page.ts';
 import AnswersUtility from 'cypress/page-utilities/answers.utility.ts';
+import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';
+import CreateCaseUtility from 'cypress/page-utilities/create-case.utility.ts';
 import { generateRandomString } from '../../page-utilities/generate.utility.ts';
 
-import CheckDetailsPage from 'cypress/page-objects/check-details.page.ts';
 import AddDetailsPage from 'cypress/page-objects/add-details.page.ts';
+import CheckDetailsPage from 'cypress/page-objects/check-details.page.ts';
 import RemoveDetailsPage from 'cypress/page-objects/remove-details.page.ts';
 
 import { shouldRunTest } from '../../page-utilities/test-tags.utility.ts';
