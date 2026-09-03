@@ -1,13 +1,13 @@
-import DatePeriodQuestion from '@planning-inspectorate/dynamic-forms/src/components/date-period/question.js';
-import type { QuestionParameters } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import { DatePeriodQuestion } from '@planning-inspectorate/dynamic-forms';
+import type { DatePeriodQuestionParams } from '@planning-inspectorate/dynamic-forms';
+
+export interface DatePeriodWithExtraActionsProps extends DatePeriodQuestionParams {
+	type: 'date-period-with-extra-actions';
+}
 
 export default class DatePeriodWithExtraActions extends DatePeriodQuestion {
-	constructor(params: QuestionParameters) {
+	constructor(params: DatePeriodQuestionParams) {
 		super(params);
 		this.viewFolder = 'custom-components/date-period-with-extra-actions';
-
-		if (params.viewData) {
-			this.viewData = params.viewData;
-		}
 	}
 }

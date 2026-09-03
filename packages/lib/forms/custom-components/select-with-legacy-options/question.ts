@@ -8,6 +8,13 @@ export type LegacySelectQuestionParams = SelectQuestionParams & {
 };
 
 /**
+ * Question props shape for the `legacy-select` custom component.
+ */
+export interface LegacySelectQuestionProps extends OptionsQuestionParams {
+	type: 'legacy-select';
+}
+
+/**
  * A select question that has `options` the same as a regular select
  * but importantly has a set of legacy options that are NOT to be presented
  * to the user at all, but are needed for finding the data of legacy data

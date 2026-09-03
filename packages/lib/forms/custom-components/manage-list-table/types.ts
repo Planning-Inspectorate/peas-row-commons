@@ -20,13 +20,8 @@ export interface TableRowCell {
 	attributes?: Record<string, any>;
 }
 
-export type TableManageListQuestionParameters = ManageListQuestionParams & {
-	summaryLimit?: number;
-	hideRemoveOnLastItem?: boolean;
-};
-
-export interface TableManageListQuestionView {
-	value: Record<string, unknown>[];
+export interface PreppedQuestion {
+	value: Record<string, any>;
 	question: string;
 	fieldName: string;
 	pageTitle: string;

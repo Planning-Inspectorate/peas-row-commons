@@ -12,6 +12,8 @@ import OptionalTimeDateTimeInput from './optional-time-date-time-input/question.
 import LegacyRadioQuestion from './radio-with-legacy-options/question.ts';
 import LegacySelectQuestion from './select-with-legacy-options/question.ts';
 
+export type { MpescQuestionProps, CustomComponentQuestionProps } from './question-props.ts';
+
 export const CUSTOM_COMPONENTS = Object.freeze({
 	CONDITIONAL_TEXT_OPTIONS: 'conditional-text-options',
 	FENCING_PERMANENT: 'fencing-permanent',
@@ -26,7 +28,7 @@ export const CUSTOM_COMPONENTS = Object.freeze({
 	ADDRESS_WITH_ID: 'address-with-id',
 	BOOLEAN_WITH_EXTRA_ACTIONS: 'boolean-with-extra-actions',
 	DATE_PERIOD_WITH_EXTRA_ACTIONS: 'date-period-with-extra-actions'
-});
+} as const);
 
 export const CUSTOM_COMPONENT_CLASSES = Object.freeze({
 	[CUSTOM_COMPONENTS.CONDITIONAL_TEXT_OPTIONS]: ConditionalOptionsQuestion,

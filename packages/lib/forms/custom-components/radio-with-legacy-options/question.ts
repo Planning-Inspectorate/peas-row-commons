@@ -8,6 +8,13 @@ export type LegacyRadioQuestionParams = RadioQuestionParams & {
 };
 
 /**
+ * Question props shape for the `legacy-radio` custom component.
+ */
+export interface LegacyRadioQuestionProps extends OptionsQuestionParams {
+	type: 'legacy-radio';
+}
+
+/**
  * A radio question that has `options` the same as a regular radio
  * but importantly has a set of legacy options that are NOT to be presented
  * to the user at all, but are needed for finding the data of legacy data

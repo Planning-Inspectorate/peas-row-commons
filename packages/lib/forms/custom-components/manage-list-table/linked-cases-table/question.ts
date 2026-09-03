@@ -1,4 +1,9 @@
 import TableManageListQuestion from '../question.ts';
+import type { TableManageListQuestionParams } from '../question.ts';
+
+export interface LinkedCasesListQuestionProps extends TableManageListQuestionParams {
+	type: 'linked-cases-list';
+}
 
 /**
  * Class for the Linked Cases question, identical to the TableManageListQuestion

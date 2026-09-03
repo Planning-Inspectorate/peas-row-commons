@@ -1,6 +1,11 @@
 import type { JourneyResponse, SiteAddressQuestionParams } from '@planning-inspectorate/dynamic-forms';
 import { AddressQuestion } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
+import type { SiteAddressQuestionParams } from '@planning-inspectorate/dynamic-forms';
+
+export interface AddressWithIdQuestionProps extends SiteAddressQuestionParams {
+	type: 'address-with-id';
+}
 
 export type AddressWithIdQuestionProps = SiteAddressQuestionParams & {
 	type: 'address-with-id';

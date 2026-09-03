@@ -1,4 +1,4 @@
-import type { QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
+import type { ManageListQuestionParams, QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
 import { DateQuestion } from '@planning-inspectorate/dynamic-forms';
 import ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
@@ -9,10 +9,18 @@ import type { Request } from 'express';
 import nunjucks from 'nunjucks';
 import type {
 	TableHeadCell,
-	TableManageListQuestionParameters,
 	TableManageListQuestionView,
 	TableRowCell
 } from './types.ts';
+
+export interface TableManageListQuestionParams extends ManageListQuestionParams {
+	summaryLimit?: number;
+	hideRemoveOnLastItem?: boolean;
+}
+
+export interface TableManageListQuestionProps extends TableManageListQuestionParams {
+	type: 'table-manage-list';
+}
 
 export default class TableManageListQuestion extends ManageListQuestion {
 	viewFolder: string;
@@ -20,7 +28,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	showAnswersInSummary: boolean;
 	hideRemoveOnLastItem: boolean;
 
-	constructor(params: TableManageListQuestionParameters) {
+	constructor(params: TableManageListQuestionParams) {
 		super(params);
 
 		this.summaryLimit = params.summaryLimit || 2;

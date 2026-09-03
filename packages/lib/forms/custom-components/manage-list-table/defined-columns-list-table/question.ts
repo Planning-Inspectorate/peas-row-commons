@@ -1,9 +1,10 @@
-import type { ManageListQuestionParams, QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
+import type { QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
 import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import TableManageListQuestion from '../question.ts';
+import type { TableManageListQuestionParams } from '../question.ts';
 import type { TableHeadCell, TableManageListQuestionView, TableRowCell } from '../types.ts';
 
 export interface TableColumn {
@@ -17,8 +18,12 @@ export interface TableColumn {
 	sortType?: 'date' | 'string' | 'number';
 }
 
-export interface DefinedColumnsTableParams extends ManageListQuestionParams {
+export interface DefinedColumnsTableParams extends TableManageListQuestionParams {
 	columns: TableColumn[];
+}
+
+export interface DefinedColumnsTableQuestionProps extends DefinedColumnsTableParams {
+	type: 'defined-columns-list';
 }
 
 /**
