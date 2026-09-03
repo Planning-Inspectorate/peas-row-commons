@@ -1,15 +1,11 @@
+import type { DateQuestion } from '@planning-inspectorate/dynamic-forms';
+import { BaseValidator, DateValidator, parseDateInput } from '@planning-inspectorate/dynamic-forms';
 import { isBefore } from 'date-fns';
 import { body, validationResult, type ValidationChain } from 'express-validator';
-// TODO wait until dynamic-forms is updated to fix this file (BaseValidator exports)
-import { BaseValidator, DateValidator, parseDateInput } from '@planning-inspectorate/dynamic-forms';
 
 interface DateValidationSettings {
 	ensureFuture: boolean;
 	ensurePast: boolean;
-}
-
-interface DateQuestion {
-	fieldName: string;
 }
 
 interface DateInputFields {
@@ -67,7 +63,10 @@ export default class CustomDatePeriodValidator extends BaseValidator {
 
 		const chains: ValidationChain[] = [
 			// Start date is always validated
-			...this.startDateValidator.validate({ ...questionObj, fieldName: `${fieldName}_start` })
+			...this.startDateValidator.validate({
+				...questionObj,
+				fieldName: `${fieldName}_start`
+			} as unknown as DateQuestion)
 		];
 
 		if (this.endOptional) {
@@ -86,7 +85,12 @@ export default class CustomDatePeriodValidator extends BaseValidator {
 				})
 			);
 		} else {
-			chains.push(...this.endDateValidator.validate({ ...questionObj, fieldName: `${fieldName}_end` }));
+			chains.push(
+				...this.endDateValidator.validate({
+					...questionObj,
+					fieldName: `${fieldName}_end`
+				} as unknown as DateQuestion)
+			);
 		}
 
 		chains.push(
@@ -135,7 +139,10 @@ export default class CustomDatePeriodValidator extends BaseValidator {
 
 				// At least one field has a value — run the full end-date validation
 				// against an isolated request to avoid polluting the real one
-				const endChains = endDateValidator.validate({ ...questionObj, fieldName: `${fieldName}_end` });
+				const endChains = endDateValidator.validate({
+					...questionObj,
+					fieldName: `${fieldName}_end`
+				} as unknown as DateQuestion);
 				const isolatedReq = { body: { ...req.body } };
 
 				await Promise.all(endChains.map((chain: ValidationChain) => chain.run(isolatedReq)));
