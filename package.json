@@ -60,7 +60,7 @@
     "file-type": "^22.0.1",
     "govuk-frontend": "^6.4.0",
     "helmet": "^8.3.0",
-    "multer": "^2.2.0",
+    "multer": "^2.3.0",
     "nunjucks": "^3.2.4",
     "pdf-lib": "^1.17.1",
     "pino": "^10.3.1",
