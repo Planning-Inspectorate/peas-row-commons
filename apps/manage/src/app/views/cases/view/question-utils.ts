@@ -46,6 +46,7 @@ import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-compo
 import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/validator.ts';
 import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-components/optional-date-component/validator.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
+import { LinkedCasesLeadValidator } from '@pins/peas-row-commons-lib/validators/linked-case-validator.ts';
 import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
 import { ENVIRONMENT_NAME, loadEnvironmentConfig } from '../../../config.ts';
@@ -835,7 +836,13 @@ export const OVERVIEW_QUESTIONS = {
 				value: 'no'
 			}
 		],
-		validators: [new RequiredValidator('Select yes if this is the lead case')]
+		validators: [
+			new RequiredValidator('Select yes if this is the lead case'),
+			new LinkedCasesLeadValidator({
+				dependencyFieldName: 'linkedCaseDetails',
+				validationFunction: (isLead, linkedCaseDetails) => validateOnlyOneLeadLinkedCase(isLead, linkedCaseDetails)
+			})
+		]
 	}
 };
 
@@ -2351,6 +2358,23 @@ export function validateDateIsAfterReceivedDate(date: unknown, receivedDate: unk
 
 	if (date < receivedDate) {
 		throw new Error(`${label} cannot be before case received date`);
+	}
+
+	return true;
+}
+
+export function validateOnlyOneLeadLinkedCase(isLead: unknown, linkedCaseDetails: unknown) {
+	const hasLinkedCases = Array.isArray(linkedCaseDetails) && linkedCaseDetails.length > 0;
+	// Validation: Only one linked case can be marked as lead.
+	if (!hasLinkedCases || isLead !== 'yes') {
+		return true;
+	}
+	// Current case is marked as lead - check there's only one lead case total
+	// Filter out current so that it doesn't count itself when checking for other lead cases
+	const otherLeadCases = linkedCaseDetails.filter((caseDetail) => caseDetail.linkedCaseIsLead === 'yes');
+
+	if (!(otherLeadCases.length === 0)) {
+		throw new Error(`There is already a linked case marked as lead.`);
 	}
 
 	return true;
