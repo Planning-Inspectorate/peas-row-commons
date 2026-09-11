@@ -1,5 +1,5 @@
 import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
-import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
+import { mockLogger } from '@planning-inspectorate/core/testing';
 import assert from 'node:assert';
 import { describe, it, mock } from 'node:test';
 import { buildAuditService } from './service.ts';

@@ -1,6 +1,6 @@
 import type { ManageService } from '#service';
 import { bounceRemoveCancellation } from '@pins/peas-row-commons-lib/middleware/manage-list/track-removes.ts';
-import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
+import { asyncHandler } from '@planning-inspectorate/core/util';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms';
 import { buildSave, list, question } from '@planning-inspectorate/dynamic-forms/src/controller.js';
 import {

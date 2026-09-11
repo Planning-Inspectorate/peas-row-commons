@@ -1,6 +1,6 @@
 import type { ManageService } from '#service';
 import { validateIdFormat } from '@pins/peas-row-commons-lib/middleware/validate-params.ts';
-import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
+import { asyncHandler } from '@planning-inspectorate/core/util';
 import { Router as createRouter } from 'express';
 import { createRoutes as createSingleFolderRoutes } from './case-folder/index.ts';
 import { buildViewCaseFolders } from './controller.ts';

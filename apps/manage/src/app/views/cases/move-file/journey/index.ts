@@ -1,5 +1,5 @@
 import type { ManageService } from '#service';
-import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
+import { asyncHandler } from '@planning-inspectorate/core/util';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms';
 import { buildSave, question } from '@planning-inspectorate/dynamic-forms/src/controller.js';
 import {

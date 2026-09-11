@@ -1,6 +1,5 @@
 import type { ManageService } from '#service';
-import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
-import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { addSessionData, wrapPrismaError } from '@planning-inspectorate/core/util';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 
 export function buildValidateDeleteFolder(service: ManageService, setSessionData = addSessionData): RequestHandler {

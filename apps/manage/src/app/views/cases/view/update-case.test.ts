@@ -1,7 +1,7 @@
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
 import { ACT_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/act.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
-import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
+import { mockLogger } from '@planning-inspectorate/core/testing';
 import assert from 'node:assert';
 import { beforeEach, describe, it, mock } from 'node:test';
 import { buildUpdateCase, handleAbeyancePeriod, mapCasePayload } from './update-case.ts';
