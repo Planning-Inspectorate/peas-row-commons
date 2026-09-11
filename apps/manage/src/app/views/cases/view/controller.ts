@@ -1,15 +1,16 @@
 import type { ManageService } from '#service';
 import { buildUserDisplayNameMap, getEntraGroupMembers } from '#util/entra-groups.ts';
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
-import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { getOptionalStringParams, getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
-import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { escapeHtml } from '@pins/peas-row-commons-lib/util/strings.ts';
 import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
-import type { Section } from '@planning-inspectorate/dynamic-forms';
+import { notFoundHandler } from '@planning-inspectorate/core/middleware';
+import type { AsyncRequestHandler, AsyncRequestHandlerWithLocals } from '@planning-inspectorate/core/util';
+import { clearSessionData, readSessionData } from '@planning-inspectorate/core/util';
+import type { Journey, Section } from '@planning-inspectorate/dynamic-forms';
 import { clearDataFromSession, JourneyResponse, list } from '@planning-inspectorate/dynamic-forms';
 import type { Request, Response } from 'express';
+import type { AuditService } from '../../../audit/index.ts';
 import { hasAnyContacts } from '../contacts-download/index.ts';
 import { createJourney, JOURNEY_ID } from './journey.ts';
 import { getQuestions } from './questions.ts';
@@ -74,8 +75,18 @@ const caseToViewInclude = {
 } satisfies Prisma.CaseInclude;
 
 type CaseToView = Prisma.CaseGetPayload<{ include: typeof caseToViewInclude }>;
+type ViewModel = ReturnType<typeof caseToViewModel> & {
+	_count?: { Notes: number };
+};
+type ViewCaseHandler = AsyncRequestHandlerWithLocals<{
+	backLinkUrl: string;
+	journey: Journey;
+	// ViewModel loses type information as caseToViewModel uses Record<string, any>
+	journeyResponse: JourneyResponse<ViewModel & Record<string, unknown>>;
+	lastModified?: Awaited<ReturnType<AuditService['getLastModifiedInfo']>>;
+}>;
 
-export function buildViewCaseDetails(): AsyncRequestHandler {
+export function buildViewCaseDetails(): ViewCaseHandler {
 	return async (req, res) => {
 		const reference = res.locals?.journeyResponse?.answers?.reference;
 		const caseName = res.locals?.journeyResponse?.answers?.name;
@@ -174,7 +185,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 		// put these on locals for the list controller
 		res.locals.originalAnswers = { ...answers };
 		res.locals.journeyResponse = new JourneyResponse(JOURNEY_ID, 'ref', finalAnswers);
-		res.locals.journey = createJourney(questions, res.locals.journeyResponse, req);
+		res.locals.journey = createJourney(questions, res.locals.journeyResponse as JourneyResponse, req);
 
 		// Set backlink to case details page when on a normal question only
 		// (not a manage list)

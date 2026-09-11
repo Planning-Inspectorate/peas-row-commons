@@ -2,6 +2,7 @@ import type { Client } from '@microsoft/microsoft-graph-client';
 import { URL } from 'node:url';
 import { isValidUuidFormat } from '../util/uuid.ts';
 import type { UserDetails } from './cached-entra-client.ts';
+import type { GroupMember } from './types.ts';
 const PER_PAGE = 500; // max 999 per page
 const MAX_PAGES = 10; // max 5000 entries
 const MAX_BATCH_SIZE = 20; // max 20 requests per batch as per Microsoft Graph API limits
@@ -24,7 +25,7 @@ export class EntraClient {
 	/**
 	 * Fetch all group members - direct and indirect - of an Entra group, up to a maximum of 5000
 	 */
-	async listAllGroupMembers(groupId: string) {
+	async listAllGroupMembers(groupId: string): Promise<GroupMember[]> {
 		const listMembers = this.#client
 			.api(`groups/${groupId}/transitiveMembers`)
 			.select(['id', 'displayName'])

@@ -1,6 +1,6 @@
+import { notFoundHandler } from '@planning-inspectorate/core/middleware';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { isValidUuidFormat } from '../util/uuid.ts';
-import { notFoundHandler } from './errors.ts';
 
 /**
  * Factory function that creates a middleware to validate a route parameter is a valid UUID format.

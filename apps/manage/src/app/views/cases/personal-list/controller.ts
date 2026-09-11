@@ -1,8 +1,8 @@
 import type { ManageService } from '#service';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
 import { CASE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static-data/status.ts';
-import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
+import type { AsyncRequestHandler, AsyncRequestHandlerWithBody } from '@planning-inspectorate/core/util';
 import { getPageData, getPaginationParams } from '../../pagination/pagination-utils.ts';
 import { casesToViewModel } from './view-model.ts';
 
@@ -172,7 +172,7 @@ export function buildSelectUserView(service: ManageService): AsyncRequestHandler
  * Redirects user back to the personal-list page with a query param
  * with the selected user (if validated)
  */
-export function buildFindSelectedUser(service: ManageService): AsyncRequestHandler {
+export function buildFindSelectedUser(service: ManageService): AsyncRequestHandlerWithBody<{ userId: string }> {
 	const { logger, getEntraClient } = service;
 	const groupIds = service.entraGroupIds;
 

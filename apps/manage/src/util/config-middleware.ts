@@ -4,7 +4,7 @@ import type { Handler } from 'express';
 /**
  * Add configuration values to locals.
  */
-export function addLocalsConfiguration(manifest: Manifest): Handler {
+export function addLocalsConfiguration(manifest: Manifest, changeAuthorityEmail?: string): Handler {
 	const styleFile = manifest['style.css'] ?? 'style.css';
 	return (req, res, next) => {
 		res.locals.config = {
@@ -17,6 +17,8 @@ export function addLocalsConfiguration(manifest: Manifest): Handler {
 				}
 			]
 		};
+		// set a global variable for Nunjucks, used by the select-authority component
+		res.locals.changeAuthorityEmail = changeAuthorityEmail;
 		next();
 	};
 }

@@ -1,11 +1,10 @@
 import type { ManageService } from '#service';
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
-import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
-import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { getOptionalStringParam, getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
-import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
+import { notFoundHandler } from '@planning-inspectorate/core/middleware';
+import type { AsyncRequestHandler, AsyncRequestHandlerWithBody } from '@planning-inspectorate/core/util';
+import { addSessionData, clearSessionData, readSessionData, wrapPrismaError } from '@planning-inspectorate/core/util';
 import type { Request } from 'express';
 import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
 
@@ -35,7 +34,7 @@ export function buildViewCreateFolders(): AsyncRequestHandler {
 /**
  * Controller to handle the folder creation logic (post)
  */
-export function buildCreateFolders(service: ManageService): AsyncRequestHandler {
+export function buildCreateFolders(service: ManageService): AsyncRequestHandlerWithBody<{ folderName: string }> {
 	const { db, audit, logger } = service;
 
 	return async (req, res) => {
