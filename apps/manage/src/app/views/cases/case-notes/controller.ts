@@ -1,23 +1,32 @@
 import type { ManageService } from '#service';
 import { buildUserDisplayNameMap, getEntraGroupMembers } from '#util/entra-groups.ts';
 import type { Prisma, PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { CaseNoteGetPayload } from '@pins/peas-row-commons-database/src/client/models/CaseNote.ts';
 import { NOTE_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/note-type.ts';
 import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
-import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
-import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
-import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
-import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
+import { notFoundHandler } from '@planning-inspectorate/core/middleware';
+import type { AsyncRequestHandlerWithBody, AsyncRequestHandlerWithLocals } from '@planning-inspectorate/core/util';
+import { addSessionData, wrapPrismaError } from '@planning-inspectorate/core/util';
 import type { Logger } from 'pino';
 import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
 import { mapNotes } from '../view/view-model.ts';
+
+interface CommentLocals {
+	caseNote: CaseNoteGetPayload<{ include: { Author: true } }>;
+	reference: string;
+	[key: string]: unknown;
+}
+
+export type CommentHandler = AsyncRequestHandlerWithLocals<CommentLocals>;
+export type CommentBodyHandler = AsyncRequestHandlerWithBody<{ comment: string }, CommentLocals>;
 
 /**
  * Preloads case and note data for edit and delete routes, populating res.locals.
  * Used by both GET and POST handlers for /:noteId/edit.
  */
-export function buildPreloadCaseNoteData(service: ManageService): AsyncRequestHandler {
+export function buildPreloadCaseNoteData(service: ManageService): CommentHandler {
 	const { db, logger } = service;
 
 	return async (req, res, next) => {
@@ -59,7 +68,7 @@ export function buildPreloadCaseNoteData(service: ManageService): AsyncRequestHa
 	};
 }
 
-export function buildCreateCaseNote(service: ManageService): AsyncRequestHandler {
+export function buildCreateCaseNote(service: ManageService): CommentBodyHandler {
 	const { db, logger, audit } = service;
 
 	return async (req, res) => {
@@ -133,7 +142,7 @@ async function createCaseNote(id: string, comment: string, authorId: string, db:
 	}
 }
 
-export function buildViewCaseNotes(service: ManageService): AsyncRequestHandler {
+export function buildViewCaseNotes(service: ManageService): CommentHandler {
 	const { db, logger, getEntraClient } = service;
 	const groupIds = service.entraGroupIds;
 
@@ -207,7 +216,7 @@ export function buildViewCaseNotes(service: ManageService): AsyncRequestHandler 
  * Renders the edit case note page.
  * Expects res.locals.reference and res.locals.caseNote to be populated by buildPreloadCaseNoteData middleware.
  */
-export function buildViewEditCaseNote(): AsyncRequestHandler {
+export function buildViewEditCaseNote(): CommentBodyHandler {
 	return async (req, res) => {
 		const caseId = getStringParam(req.params, 'id');
 		const { reference, caseNote } = res.locals;
@@ -227,7 +236,7 @@ export function buildViewEditCaseNote(): AsyncRequestHandler {
 /**
  * Handles updating a case note in the database.
  */
-export function buildUpdateCaseNote(service: ManageService): AsyncRequestHandler {
+export function buildUpdateCaseNote(service: ManageService): CommentBodyHandler {
 	const { db, logger, audit } = service;
 
 	return async (req, res) => {
@@ -288,7 +297,7 @@ export function buildUpdateCaseNote(service: ManageService): AsyncRequestHandler
 /**
  * Renders a page for confirming deletion of a case note
  */
-export function buildViewDeleteCaseNote(): AsyncRequestHandler {
+export function buildViewDeleteCaseNote(): CommentHandler {
 	return async (req, res) => {
 		const caseId = getStringParam(req.params, 'id');
 		const { reference, caseNote } = res.locals;
@@ -308,7 +317,7 @@ export function buildViewDeleteCaseNote(): AsyncRequestHandler {
 /**
  * Handles deleting a case note from the database.
  */
-export function buildDeleteCaseNote(service: ManageService): AsyncRequestHandler {
+export function buildDeleteCaseNote(service: ManageService): CommentHandler {
 	const { db, logger, audit } = service;
 
 	return async (req, res) => {

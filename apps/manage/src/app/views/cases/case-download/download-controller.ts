@@ -13,8 +13,8 @@
 import type { ManageService } from '#service';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
-import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import type { AsyncRequestHandler } from '@planning-inspectorate/core/util';
 import type { Request, Response } from 'express';
 import nunjucks from 'nunjucks';
 import type { Logger } from 'pino';

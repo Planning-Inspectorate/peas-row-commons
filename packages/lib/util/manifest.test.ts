@@ -1,9 +1,9 @@
+import { mockLogger } from '@planning-inspectorate/core/testing';
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
-import { mockLogger } from '../testing/mock-logger.ts';
 import { loadManifest } from './manifest.ts';
 
 describe('manifest', () => {

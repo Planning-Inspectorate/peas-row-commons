@@ -1,4 +1,4 @@
-import { runBuild } from '@pins/peas-row-commons-lib/util/build.ts';
+import { runBuild } from '@planning-inspectorate/core/util';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { loadBuildConfig } from '../app/config.ts';
@@ -12,8 +12,6 @@ async function run(): Promise<void> {
 	const repoRoot = path.resolve(require.resolve('govuk-frontend'), '../../../../..');
 	// resolves to <root>/node_modules/accessible-autocomplete/dist/*.js then maps to `dist`
 	const accessibleAutocompleteRoot = path.resolve(require.resolve('accessible-autocomplete'), '..');
-	// resolves to <root>/node_modules/@ministryofjustice/frontend/moj/all.bundle.js then maps to `<root>`
-	const mojRoot = path.resolve(require.resolve('@ministryofjustice/frontend'), '../../../../..');
 
 	const config = loadBuildConfig();
 
@@ -22,7 +20,7 @@ async function run(): Promise<void> {
 		srcDir: config.srcDir,
 		repoRoot,
 		accessibleAutocompleteRoot,
-		mojRoot
+		copyMoj: true
 	});
 }
 

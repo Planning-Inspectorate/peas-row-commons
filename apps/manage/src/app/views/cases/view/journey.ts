@@ -1,6 +1,6 @@
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms';
 import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
 import { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';

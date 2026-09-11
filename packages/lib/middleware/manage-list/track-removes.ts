@@ -1,8 +1,10 @@
-import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
+import type { AsyncRequestHandlerWithBody } from '@planning-inspectorate/core/util';
 import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
 import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js';
 import { question } from '@planning-inspectorate/dynamic-forms/src/controller.js';
 import type { RequestHandler } from 'express';
+
+type RemoveHandler = AsyncRequestHandlerWithBody<{ remove?: string }>;
 
 /**
  * The dynamic-forms remove functionality is built on the idea of a single POST
@@ -16,7 +18,7 @@ import type { RequestHandler } from 'express';
  * 3) It is a remove POST and the user selected nothing -> reload with an error
  * 4) It is NOT a remove post -> let them through
  */
-export const bounceRemoveCancellation: AsyncRequestHandler = async (req, res, next) => {
+export const bounceRemoveCancellation: RemoveHandler = async (req, res, next) => {
 	const { manageListAction, manageListItemId } = req.params;
 	const { remove } = req.body;
 
@@ -44,7 +46,7 @@ export const bounceRemoveCancellation: AsyncRequestHandler = async (req, res, ne
  * specifically for reconciling the differences between session & DB where if we don't do this
  * then the DB will overwrite the session meaning the items are not correctly removed.
  */
-export const trackRemovedItemId: AsyncRequestHandler = async (req, res, next) => {
+export const trackRemovedItemId: RemoveHandler = async (req, res, next) => {
 	const { manageListAction, manageListItemId } = req.params;
 	const { remove } = req.body;
 

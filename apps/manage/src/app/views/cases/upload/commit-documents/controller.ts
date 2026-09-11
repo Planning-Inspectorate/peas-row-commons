@@ -1,8 +1,7 @@
 import type { ManageService } from '#service';
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
-import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { addSessionData, wrapPrismaError } from '@planning-inspectorate/core/util';
 import type { Request, Response } from 'express';
 import type { Logger } from 'pino';
 import { AUDIT_ACTIONS } from '../../../../audit/index.ts';
