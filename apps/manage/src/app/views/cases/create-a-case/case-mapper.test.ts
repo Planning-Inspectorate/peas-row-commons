@@ -2,8 +2,8 @@ import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
 import assert from 'node:assert';
-import { describe, it } from 'node:test';
-import { mapAnswersToCaseInput, resolveCaseTypeIds } from './case-mapper.ts';
+import { beforeEach, describe, it, mock } from 'node:test';
+import { handleLinkedCaseCreate, mapAnswersToCaseInput, resolveCaseTypeIds } from './case-mapper.ts';
 
 const getBaseAnswers = (): Record<string, unknown> => ({
 	name: 'Test Case',
@@ -175,58 +175,123 @@ describe('Case Mapper', () => {
 
 			assert.deepStrictEqual(result.Authority, undefined);
 		});
+	});
 
-		it('should not create LinkedCases when hasLinkedCases is not yes', () => {
-			const answers = {
-				...getBaseAnswers(),
-				hasLinkedCases: BOOLEAN_OPTIONS.NO
-			};
+	describe('handleLinkedCaseCreate', () => {
+		const mockTx = {
+			linkedCase: {
+				create: mock.fn(),
+				update: mock.fn()
+			},
+			case: {
+				findUnique: mock.fn()
+			}
+		};
 
-			const result = mapAnswersToCaseInput(answers, 'REF-009');
-
-			assert.strictEqual(result.LinkedCases, undefined);
+		beforeEach(() => {
+			mockTx.linkedCase.create.mock.resetCalls();
+			mockTx.linkedCase.update.mock.resetCalls();
+			mockTx.case.findUnique.mock.resetCalls();
 		});
 
-		it('should not create LinkedCases when this case is the lead case', () => {
-			const answers = {
-				...getBaseAnswers(),
-				hasLinkedCases: BOOLEAN_OPTIONS.YES,
-				isLeadCase: BOOLEAN_OPTIONS.YES
-			};
+		it('should not create or update a linked case group if the created case has no linked cases', async () => {
+			const answers = getBaseAnswers();
+			answers.hasLinkedCases = BOOLEAN_OPTIONS.NO;
 
-			const result = mapAnswersToCaseInput(answers, 'REF-010');
+			await handleLinkedCaseCreate(mockTx as any, answers, 'case-001');
 
-			assert.strictEqual(result.LinkedCases, undefined);
+			assert.strictEqual(mockTx.linkedCase.create.mock.callCount(), 0);
+			assert.strictEqual(mockTx.linkedCase.update.mock.callCount(), 0);
 		});
 
-		it('should create LinkedCase with lead reference when this case is not the lead', () => {
-			const answers = {
-				...getBaseAnswers(),
-				hasLinkedCases: BOOLEAN_OPTIONS.YES,
-				isLeadCase: BOOLEAN_OPTIONS.NO,
-				leadCaseReference: 'LEAD-001'
-			};
+		it('should create a new linked case group with itself as lead if the created case is the lead case', async () => {
+			const answers = getBaseAnswers();
+			answers.hasLinkedCases = BOOLEAN_OPTIONS.YES;
+			answers.isLeadCase = BOOLEAN_OPTIONS.YES;
 
-			const result = mapAnswersToCaseInput(answers, 'REF-011');
+			await handleLinkedCaseCreate(mockTx as any, answers, 'case-001');
 
-			assert.ok(result.LinkedCases?.create);
-			const linkedCases = result.LinkedCases.create as any[];
-			assert.strictEqual(linkedCases.length, 1);
-			assert.strictEqual(linkedCases[0].reference, 'LEAD-001');
-			assert.strictEqual(linkedCases[0].isLead, true);
+			assert.strictEqual(mockTx.linkedCase.create.mock.callCount(), 1);
+			assert.deepStrictEqual(mockTx.linkedCase.create.mock.calls[0].arguments[0].data, {
+				leadCaseId: 'case-001',
+				Cases: {
+					connect: { id: 'case-001' }
+				}
+			});
+			assert.strictEqual(mockTx.linkedCase.update.mock.callCount(), 0);
 		});
 
-		it('should not create LinkedCases when leadCaseReference is missing', () => {
-			const answers = {
-				...getBaseAnswers(),
-				hasLinkedCases: BOOLEAN_OPTIONS.YES,
-				isLeadCase: BOOLEAN_OPTIONS.NO,
-				leadCaseReference: ''
-			};
+		it('should error if there is no leadCaseReference but the case has linked cases and is not the lead', async () => {
+			const answers = getBaseAnswers();
+			answers.hasLinkedCases = BOOLEAN_OPTIONS.YES;
+			answers.isLeadCase = BOOLEAN_OPTIONS.NO;
+			answers.leadCaseReference = undefined;
 
-			const result = mapAnswersToCaseInput(answers, 'REF-012');
+			await assert.rejects(
+				() => handleLinkedCaseCreate(mockTx as any, answers, 'case-001'),
+				/leadCaseReference required when isLeadCase is "no" but the case has linked cases/
+			);
+			assert.strictEqual(mockTx.linkedCase.create.mock.callCount(), 0);
+			assert.strictEqual(mockTx.linkedCase.update.mock.callCount(), 0);
+		});
 
-			assert.strictEqual(result.LinkedCases, undefined);
+		it('should error if the lead case reference does not exist in the database', async () => {
+			const answers = getBaseAnswers();
+			answers.hasLinkedCases = BOOLEAN_OPTIONS.YES;
+			answers.isLeadCase = BOOLEAN_OPTIONS.NO;
+			answers.leadCaseReference = 'NON-EXISTENT-CASE';
+
+			mockTx.case.findUnique.mock.mockImplementationOnce(() => Promise.resolve(null) as any);
+
+			await assert.rejects(
+				() => handleLinkedCaseCreate(mockTx as any, answers, 'case-001'),
+				/Lead case not found: NON-EXISTENT-CASE/
+			);
+			assert.strictEqual(mockTx.case.findUnique.mock.callCount(), 1);
+			assert.strictEqual(mockTx.linkedCase.create.mock.callCount(), 0);
+			assert.strictEqual(mockTx.linkedCase.update.mock.callCount(), 0);
+		});
+
+		it('should update if the lead case is already in a linked case group', async () => {
+			const answers = getBaseAnswers();
+			answers.hasLinkedCases = BOOLEAN_OPTIONS.YES;
+			answers.isLeadCase = BOOLEAN_OPTIONS.NO;
+			answers.leadCaseReference = 'EXISTING-LEAD-CASE';
+
+			mockTx.case.findUnique.mock.mockImplementationOnce(
+				() => Promise.resolve({ id: 'lead-case-id', linkedCasesId: 'existing-group-id' }) as any
+			);
+
+			(await handleLinkedCaseCreate(mockTx as any, answers, 'case-001'),
+				assert.strictEqual(mockTx.case.findUnique.mock.callCount(), 1));
+			assert.strictEqual(mockTx.linkedCase.update.mock.callCount(), 1);
+			assert.deepStrictEqual(mockTx.linkedCase.update.mock.calls[0].arguments[0].where, { id: 'existing-group-id' });
+			assert.deepStrictEqual(mockTx.linkedCase.update.mock.calls[0].arguments[0].data, {
+				Cases: { connect: { id: 'case-001' } }
+			});
+			assert.strictEqual(mockTx.linkedCase.create.mock.callCount(), 0);
+		});
+
+		it('should create a new linked cases group if the lead case is not in a linked case group', async () => {
+			const answers = getBaseAnswers();
+			answers.hasLinkedCases = BOOLEAN_OPTIONS.YES;
+			answers.isLeadCase = BOOLEAN_OPTIONS.NO;
+			answers.leadCaseReference = 'EXISTING-LEAD-CASE';
+
+			mockTx.case.findUnique.mock.mockImplementationOnce(
+				() => Promise.resolve({ id: 'lead-case-id', linkedCasesId: null }) as any
+			);
+
+			await handleLinkedCaseCreate(mockTx as any, answers, 'case-001');
+			assert.strictEqual(mockTx.case.findUnique.mock.callCount(), 1);
+			assert.strictEqual(mockTx.linkedCase.create.mock.callCount(), 1);
+			assert.deepStrictEqual(mockTx.linkedCase.create.mock.calls[0].arguments[0].data, {
+				leadCaseId: 'lead-case-id',
+				Cases: {
+					connect: [{ id: 'lead-case-id' }, { id: 'case-001' }]
+				}
+			});
+			assert.strictEqual(mockTx.linkedCase.update.mock.callCount(), 0);
 		});
 	});
 });

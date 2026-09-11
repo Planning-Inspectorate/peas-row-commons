@@ -64,7 +64,12 @@ const caseToViewInclude = {
 		}
 	},
 	RelatedCases: true,
-	LinkedCases: true,
+	LinkedCases: {
+		include: {
+			Cases: true,
+			LeadCase: true
+		}
+	},
 	CaseOfficer: true,
 	_count: {
 		select: {

@@ -191,12 +191,14 @@ export function caseToViewModel(caseRow: CaseListFields, userMap: UserMap) {
 		delete mergedData.RelatedCases;
 	}
 
-	if (caseRow.LinkedCases?.length) {
-		mergedData.linkedCaseDetails = sortLinkedCases(caseRow.LinkedCases).map((linkedCase) => ({
-			id: linkedCase.id,
-			linkedCaseReference: linkedCase.reference,
-			linkedCaseIsLead: formatValue(linkedCase.isLead)
-		}));
+	if (caseRow.LinkedCases) {
+		mergedData.linkedCaseDetails = sortLinkedCases(caseRow.LinkedCases.Cases, caseRow.LinkedCases.leadCaseId).map(
+			(linkedCase) => ({
+				id: linkedCase.id,
+				linkedCaseReference: linkedCase.reference,
+				linkedCaseIsLead: formatValue(linkedCase.id === caseRow.LinkedCases?.leadCaseId)
+			})
+		);
 		delete mergedData.LinkedCases;
 	}
 
