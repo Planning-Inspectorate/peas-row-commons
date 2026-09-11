@@ -2,7 +2,7 @@ import type { ManageService } from '#service';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 import { createWhereClause, sanitiseSearchQuery } from '@pins/peas-row-commons-lib/util/search-queries.ts';
-import { clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { clearSessionData, readSessionData } from '@planning-inspectorate/core/util';
 import type { Request, RequestHandler } from 'express';
 import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
 import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';

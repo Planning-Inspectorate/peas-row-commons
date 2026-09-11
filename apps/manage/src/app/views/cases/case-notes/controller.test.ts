@@ -1,4 +1,4 @@
-import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
+import { mockLogger } from '@planning-inspectorate/core/testing';
 import assert from 'node:assert';
 import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import { AUDIT_ACTIONS } from '../../../audit/actions.ts';

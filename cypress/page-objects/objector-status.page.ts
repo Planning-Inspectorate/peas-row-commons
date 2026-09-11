@@ -28,7 +28,8 @@ class ObjectorStatusPage {
 	}
 
 	selectAnswer(answer?: ObjectorStatusAnswer): string {
-		const answerToUse = answer ?? Cypress._.sample(Object.keys(this.objectorStatusLabelMap) as ObjectorStatusAnswer[])!;
+		const answerToUse: ObjectorStatusAnswer =
+			answer ?? Cypress._.sample(Object.keys(this.objectorStatusLabelMap) as ObjectorStatusAnswer[])!;
 
 		cy.get(`[data-cy="answer-${answerToUse}"]`).should('exist').check().should('be.checked');
 

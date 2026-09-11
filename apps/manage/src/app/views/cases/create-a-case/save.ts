@@ -8,7 +8,7 @@ import { mapAnswersToCaseInput, resolveCaseTypeIds } from './case-mapper.ts';
 import { generateCaseReference } from './case-reference.ts';
 import { JOURNEY_ID } from './journey.ts';
 
-import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
+import { wrapPrismaError } from '@planning-inspectorate/core/util';
 
 import { BOOLEAN_OPTIONS, clearDataFromSession } from '@planning-inspectorate/dynamic-forms';
 

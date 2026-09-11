@@ -1,5 +1,5 @@
 import type { ManageService } from '#service';
-import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
+import { asyncHandler } from '@planning-inspectorate/core/util';
 import type { IRouter } from 'express';
 import { Router as createRouter } from 'express';
 import { buildDownloadDocument } from './download/controller.ts';
