@@ -51,6 +51,8 @@ model Case {
   CaseOfficer              User?                         @relation("caseOfficer", fields: [caseOfficerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   /// TODO HRP-545 remove old linked cases structure
   linkedCases              String?
+  //
+  LegacyLinkedCases        LinkedCase[]                  @relation("LegacyLinkedCases")
   Dates                    CaseDates?
   /// Physical location of real-world files
   filesLocation            String?
@@ -92,9 +94,10 @@ model Case {
   Contacts                 Contact[]
   /// Related Cases to this case
   RelatedCases             RelatedCase[]
-  /// TODO HRP-545 remove old linked cases structure
-  /// Cases linked to this case
-  LinkedCases              LinkedCase[]
+  /// Linked Cases
+  linkedCasesId            String?                       @db.UniqueIdentifier
+  LinkedCases              LinkedCase?                   @relation("LinkedCases", fields: [linkedCasesId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  LeadOfLinkedCases        LinkedCase[]                  @relation("LeadCase")
   /// Cases where this case is the parent
   ChildRelationships       CaseRelationship[]            @relation("ParentCase")
   /// Cases where this case is the child (one level only - child cases cannot have children)
@@ -631,13 +634,24 @@ model RelatedCase {
   Case      Case    @relation(fields: [caseId], references: [id])
 }
 
-/// TODO HRP-545 remove old linked cases structure
 model LinkedCase {
-  id        String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  id String @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+
+  /// The lead case for the linked group
+  leadCaseId String? @db.UniqueIdentifier
+  LeadCase   Case?   @relation("LeadCase", fields: [leadCaseId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  /// All cases in the linked group, including the lead case
+  Cases Case[] @relation("LinkedCases")
+
+  /// DEPRECATED: Old fields - kept for backward compatibility during migration (TODO: HRP-545)
+  /// Can be removed after all data migrated to new family structure
   reference String?
-  isLead    Boolean @default(false)
-  caseId    String  @db.UniqueIdentifier
-  Case      Case    @relation(fields: [caseId], references: [id])
+  isLead    Boolean? @default(false)
+  caseId    String?  @db.UniqueIdentifier
+  Case      Case?    @relation("LegacyLinkedCases", fields: [caseId], references: [id])
+
+  @@index([leadCaseId])
 }
 
 /// Join table for parent-child case relationships (one level only - child cases cannot have children)

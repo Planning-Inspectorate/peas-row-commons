@@ -2,7 +2,7 @@ import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.t
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 import { mapAddressViewModelToDb } from '@pins/peas-row-commons-lib/util/address.ts';
-import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms';
+import { yesNoToBoolean } from '@planning-inspectorate/dynamic-forms';
 import { kebabToCamel } from './questions-utils.ts';
 
 /**
@@ -86,22 +86,6 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 		input.Authority = { connect: { id: answers.authorityId } };
 	}
 
-	// Handle linked cases - create LinkedCase record when this case is linked but not the lead
-	if (
-		answers.hasLinkedCases === BOOLEAN_OPTIONS.YES &&
-		answers.isLeadCase === BOOLEAN_OPTIONS.NO &&
-		answers.leadCaseReference
-	) {
-		input.LinkedCases = {
-			create: [
-				{
-					reference: answers.leadCaseReference,
-					isLead: true
-				}
-			]
-		};
-	}
-
 	return input;
 }
 
@@ -178,4 +162,63 @@ function generateSubTypeId(newSubType: string) {
 		.replace(/[^a-zA-Z0-9\s_-]/g, '')
 		.replace(/[\s_]+/g, '-')
 		.toLowerCase();
+}
+
+interface LinkedCaseAnswer {
+	hasLinkedCases?: string; // 'yes' | 'no'
+	isLeadCase?: string; // 'yes' | 'no'
+	leadCaseReference?: string; // reference of the lead case (when isLeadCase is 'no')
+}
+
+export async function handleLinkedCaseCreate(
+	$tx: Prisma.TransactionClient,
+	answers: LinkedCaseAnswer | undefined,
+	newCaseId: string
+): Promise<void> {
+	if (!yesNoToBoolean(answers?.hasLinkedCases)) return;
+
+	const isLead = yesNoToBoolean(answers?.isLeadCase);
+
+	if (isLead) {
+		await $tx.linkedCase.create({
+			data: {
+				leadCaseId: newCaseId,
+				Cases: { connect: { id: newCaseId } }
+			}
+		});
+		return;
+	}
+
+	if (!answers?.leadCaseReference) {
+		throw new Error('leadCaseReference required when isLeadCase is "no" but the case has linked cases');
+	}
+
+	const leadCase = await $tx.case.findUnique({
+		where: { reference: answers.leadCaseReference },
+		select: { id: true, linkedCasesId: true }
+	});
+
+	if (!leadCase) {
+		throw new Error(`Lead case not found: ${answers.leadCaseReference}`);
+	}
+
+	if (leadCase.linkedCasesId) {
+		// Lead already has a group -> just connect the new case
+		await $tx.linkedCase.update({
+			where: { id: leadCase.linkedCasesId },
+			data: {
+				Cases: { connect: { id: newCaseId } }
+			}
+		});
+	} else {
+		// Lead doesn't have a group yet -> create one containing both
+		await $tx.linkedCase.create({
+			data: {
+				leadCaseId: leadCase.id,
+				Cases: {
+					connect: [{ id: leadCase.id }, { id: newCaseId }]
+				}
+			}
+		});
+	}
 }
