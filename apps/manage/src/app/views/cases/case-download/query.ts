@@ -101,7 +101,12 @@ export async function fetchCaseForDownload(db: PrismaClient, caseId: string) {
 				orderBy: { displayOrder: 'asc' }
 			},
 			RelatedCases: true,
-			LinkedCases: true
+			LinkedCases: {
+				include: {
+					Cases: true,
+					LeadCase: true
+				}
+			}
 		}
 	});
 }

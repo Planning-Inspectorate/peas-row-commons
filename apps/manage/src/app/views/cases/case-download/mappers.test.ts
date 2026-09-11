@@ -447,12 +447,15 @@ describe('mappers', () => {
 
 		it('should map linked cases with lead cases first, then alphanumerically', () => {
 			const caseData = createBaseCaseData({
-				LinkedCases: [
-					{ reference: 'LINK-010', isLead: false },
-					{ reference: 'LINK-001', isLead: false },
-					{ reference: 'LINK-002', isLead: true },
-					{ reference: null, isLead: false }
-				]
+				LinkedCases: {
+					leadCaseId: 3,
+					Cases: [
+						{ id: 1, reference: 'LINK-010' },
+						{ id: 2, reference: 'LINK-001' },
+						{ id: 3, reference: 'LINK-002' },
+						{ id: 4, reference: null }
+					]
+				}
 			});
 
 			const result = mapCaseDetailsData(caseData as any, undefined, new Map());

@@ -327,10 +327,12 @@ export function mapCaseDetailsData(
 		.map((rc) => rc.reference)
 		.filter((ref): ref is string => ref !== null && ref !== undefined);
 
-	const linkedCases = sortLinkedCases(caseData.LinkedCases ?? []).map((lc) => ({
-		reference: lc.reference ?? GENERAL_CONSTANTS.NOT_APPLICABLE,
-		isLead: lc.isLead
-	}));
+	const linkedCases = sortLinkedCases(caseData.LinkedCases?.Cases ?? [], caseData.LinkedCases?.leadCaseId).map(
+		(lc) => ({
+			reference: lc.reference ?? GENERAL_CONSTANTS.NOT_APPLICABLE,
+			isLead: lc.id === caseData.LinkedCases?.leadCaseId
+		})
+	);
 
 	return {
 		reference: caseData.reference,
