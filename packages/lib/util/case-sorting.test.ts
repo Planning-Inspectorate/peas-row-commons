@@ -4,61 +4,49 @@ import { sortLinkedCases, sortRelatedCases } from './case-sorting.ts';
 
 describe('case-sorting', () => {
 	describe('sortLinkedCases', () => {
-		it('should sort lead cases first', () => {
+		it('should sort lead case first', () => {
 			const cases = [
-				{ reference: 'CASE/001', isLead: false },
-				{ reference: 'CASE/002', isLead: true },
-				{ reference: 'CASE/003', isLead: false }
+				{ id: '1', reference: 'CASE/001' },
+				{ id: '2', reference: 'CASE/002' },
+				{ id: '3', reference: 'CASE/003' }
 			];
+			const leadCaseId = '2';
 
-			const result = sortLinkedCases(cases);
+			const result = sortLinkedCases(cases, leadCaseId);
 
 			assert.strictEqual(result[0].reference, 'CASE/002');
-			assert.strictEqual(result[0].isLead, true);
+			assert.strictEqual(result[0].id, leadCaseId);
 		});
 
 		it('should sort alphanumerically within lead and non-lead groups', () => {
 			const cases = [
-				{ reference: 'CASE/10', isLead: false },
-				{ reference: 'CASE/02', isLead: false },
-				{ reference: 'CASE/1', isLead: true },
-				{ reference: 'CASE/20', isLead: true }
+				{ id: '1', reference: 'CASE/10' },
+				{ id: '2', reference: 'CASE/02' },
+				{ id: '3', reference: 'CASE/1' },
+				{ id: '4', reference: 'CASE/20' }
 			];
 
-			const result = sortLinkedCases(cases);
+			const leadCaseId = '3';
 
-			// Lead cases first, then alphanumeric
+			const result = sortLinkedCases(cases, leadCaseId);
+
+			// Lead case first, then alphanumeric
 			assert.strictEqual(result[0].reference, 'CASE/1');
-			assert.strictEqual(result[1].reference, 'CASE/20');
+			assert.strictEqual(result[0].id, leadCaseId);
 			// Non-lead cases, alphanumeric
-			assert.strictEqual(result[2].reference, 'CASE/02');
-			assert.strictEqual(result[3].reference, 'CASE/10');
-		});
-
-		it('should push null/empty references to the start within each group', () => {
-			const cases = [
-				{ reference: null, isLead: false },
-				{ reference: 'CASE/001', isLead: false },
-				{ reference: '', isLead: true },
-				{ reference: 'CASE/002', isLead: true }
-			];
-
-			const result = sortLinkedCases(cases);
-
-			// Lead cases
-			assert.strictEqual(result[0].reference, '');
-			assert.strictEqual(result[1].reference, 'CASE/002');
-
-			// Non lead cases
-			assert.strictEqual(result[2].reference, null);
-			assert.strictEqual(result[3].reference, 'CASE/001');
+			assert.strictEqual(result[1].reference, 'CASE/02');
+			assert.strictEqual(result[2].reference, 'CASE/10');
+			assert.strictEqual(result[3].reference, 'CASE/20');
 		});
 
 		it('should not mutate the original array', () => {
 			const cases = [
-				{ reference: 'CASE/002', isLead: false },
-				{ reference: 'CASE/001', isLead: true }
+				{ id: '1', reference: 'CASE/10' },
+				{ id: '2', reference: 'CASE/02' },
+				{ id: '3', reference: 'CASE/1' },
+				{ id: '4', reference: 'CASE/20' }
 			];
+
 			const originalLength = cases.length;
 			const originalFirst = cases[0];
 

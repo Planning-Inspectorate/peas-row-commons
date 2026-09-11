@@ -11,8 +11,8 @@ function compareReferences(a?: string | null, b?: string | null): number {
 }
 
 interface LinkedCaseSortable {
+	id: string;
 	reference?: string | null;
-	isLead: boolean;
 }
 
 /**
@@ -20,12 +20,11 @@ interface LinkedCaseSortable {
  *
  * Uses numeric collation so that 'CASE/2' comes before 'CASE/10'.
  */
-export function sortLinkedCases<T extends LinkedCaseSortable>(cases: T[]): T[] {
+export function sortLinkedCases<T extends LinkedCaseSortable>(cases: T[], leadCaseId?: string | null): T[] {
 	return [...cases].sort((a, b) => {
-		// Lead cases first
-		if (a.isLead !== b.isLead) {
-			return a.isLead ? -1 : 1;
-		}
+		// Lead case first
+		if (a.id === leadCaseId && b.id !== leadCaseId) return -1;
+		if (a.id !== leadCaseId && b.id === leadCaseId) return 1;
 
 		return compareReferences(a.reference, b.reference);
 	});

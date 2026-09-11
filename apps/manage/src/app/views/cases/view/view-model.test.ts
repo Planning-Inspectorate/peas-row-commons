@@ -170,11 +170,14 @@ describe('view-model', () => {
 		});
 
 		it('should pass through Linked Case data to linkedCaseDetails sorted with lead cases first, then alphanumerically', () => {
-			const mockRelations = [
-				{ reference: 'DRO/10', isLead: false, id: 3 },
-				{ reference: 'DRO/2', isLead: true, id: 2 },
-				{ reference: 'DRO/1', isLead: false, id: 1 }
-			];
+			const mockRelations = {
+				leadCaseId: 2,
+				Cases: [
+					{ id: 3, reference: 'DRO/10' },
+					{ id: 2, reference: 'DRO/2' },
+					{ id: 1, reference: 'DRO/1' }
+				]
+			};
 			const mockOutcome = [
 				{ linkedCaseReference: 'DRO/2', linkedCaseIsLead: 'yes', id: 2 },
 				{ linkedCaseReference: 'DRO/1', linkedCaseIsLead: 'no', id: 1 },

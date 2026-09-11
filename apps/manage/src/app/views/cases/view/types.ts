@@ -39,7 +39,12 @@ export const caseListSelect = {
 		}
 	},
 	RelatedCases: true,
-	LinkedCases: true,
+	LinkedCases: {
+		include: {
+			Cases: true,
+			LeadCase: true
+		}
+	},
 	CaseOfficer: true,
 	Outcome: {
 		include: {
