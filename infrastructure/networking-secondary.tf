@@ -60,10 +60,9 @@ resource "azurerm_virtual_network_peering" "secondary_tooling_to_peas" {
 ## DNS Zones for Azure Services
 ## Private DNS Zones exist in the tooling subscription and are shared here
 resource "azurerm_private_dns_zone_virtual_network_link" "secondary_database" {
-  name                  = "${local.org}-vnetlink-db-${local.secondary_resource_suffix}"
-  resource_group_name   = var.tooling_config.network_rg
-  private_dns_zone_name = data.azurerm_private_dns_zone.database.name
-  virtual_network_id    = azurerm_virtual_network.secondary.id
+  name                = "${local.org}-vnetlink-db-${local.secondary_resource_suffix}"
+  private_dns_zone_id = data.azurerm_private_dns_zone.database.id
+  virtual_network_id  = azurerm_virtual_network.secondary.id
 
   provider = azurerm.tooling
 }

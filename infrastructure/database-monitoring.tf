@@ -1,13 +1,8 @@
 resource "azurerm_storage_account" "sql_server" {
-  #TODO: Customer Managed Keys
   #checkov:skip=CKV2_AZURE_1: Customer Managed Keys not implemented yet
   #checkov:skip=CKV2_AZURE_18: Customer Managed Keys not implemented yet
-  #TODO: Logging
   #checkov:skip=CKV_AZURE_33: Not using queues, could implement example commented out
   #checkov:skip=CKV2_AZURE_21: Logging not implemented yet
-  #TODO: Access restrictions
-  #checkov:skip=CKV_AZURE_35: Network access restrictions
-  #checkov:skip=CKV_AZURE_59: TODO: Ensure that Storage accounts disallow public access
   #checkov:skip=CKV2_AZURE_33: "Ensure storage account is configured with private endpoint"
   #checkov:skip=CKV2_AZURE_38: "Ensure soft-delete is enabled on Azure storage account"
   #checkov:skip=CKV2_AZURE_40: "Ensure storage account is not configured with Shared Key authorization"
@@ -73,7 +68,7 @@ resource "azurerm_role_assignment" "sql_server_storage" {
 # auditing policy
 resource "azurerm_mssql_server_extended_auditing_policy" "sql_server" {
   enabled                = true
-  storage_endpoint       = azurerm_storage_account.sql_server.primary_blob_endpoint
+  blob_storage_endpoint  = azurerm_storage_account.sql_server.primary_blob_endpoint
   server_id              = azurerm_mssql_server.primary.id
   retention_in_days      = var.sql_config.retention.audit_days
   log_monitoring_enabled = false
@@ -86,14 +81,15 @@ resource "azurerm_mssql_server_extended_auditing_policy" "sql_server" {
 
 # security alerts
 resource "azurerm_mssql_server_security_alert_policy" "sql_server" {
-  state                      = var.alerts_enabled ? "Enabled" : "Disabled"
-  resource_group_name        = azurerm_resource_group.primary.name
-  server_name                = azurerm_mssql_server.primary.name
-  storage_endpoint           = azurerm_storage_account.sql_server.primary_blob_endpoint
-  storage_account_access_key = azurerm_storage_account.sql_server.primary_access_key
-  retention_days             = var.sql_config.retention.audit_days
-  email_account_admins       = true
-  email_addresses            = local.tech_emails
+  #checkov:skip=CKV_AZURE_27: "Ensure that 'Email service and co-administrators' is 'Enabled' for MSSQL servers"
+  state                        = var.alerts_enabled ? "Enabled" : "Disabled"
+  resource_group_name          = azurerm_resource_group.primary.name
+  server_name                  = azurerm_mssql_server.primary.name
+  storage_endpoint             = azurerm_storage_account.sql_server.primary_blob_endpoint
+  storage_account_access_key   = azurerm_storage_account.sql_server.primary_access_key
+  retention_days               = var.sql_config.retention.audit_days
+  email_account_admins_enabled = true
+  email_addresses              = local.tech_emails
 }
 
 # vulnerabilty assesment
