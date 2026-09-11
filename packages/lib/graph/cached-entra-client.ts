@@ -1,8 +1,8 @@
 import { Client } from '@microsoft/microsoft-graph-client';
 import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
-import type { MapCache } from '../util/map-cache.ts';
+import type { MapCache } from '@planning-inspectorate/core/util';
 import { EntraClient } from './entra.ts';
-import { type InitEntraClient } from './types.ts';
+import type { GroupMember, InitEntraClient } from './types.ts';
 
 export interface UserDetails {
 	id: string;
@@ -12,7 +12,10 @@ export interface UserDetails {
 const CACHE_PREFIX = 'entra-group__';
 const USER_CACHE_PREFIX = 'entra-user__';
 
-export function buildInitEntraClient(authEnabled: boolean, cache: MapCache): InitEntraClient {
+export type EntraClientCacheEntry = GroupMember[] | UserDetails | null;
+export type EntraClientMapCache = MapCache<EntraClientCacheEntry>;
+
+export function buildInitEntraClient(authEnabled: boolean, cache: EntraClientMapCache): InitEntraClient {
 	return (session) => {
 		if (!authEnabled) {
 			return null;
@@ -40,9 +43,9 @@ export function buildInitEntraClient(authEnabled: boolean, cache: MapCache): Ini
  */
 export class CachedEntraClient {
 	#client: EntraClient;
-	#cache: MapCache;
+	#cache: EntraClientMapCache;
 
-	constructor(client: EntraClient, cache: MapCache) {
+	constructor(client: EntraClient, cache: EntraClientMapCache) {
 		this.#client = client;
 		this.#cache = cache;
 	}
@@ -80,7 +83,7 @@ export class CachedEntraClient {
 				users.push({ id, displayName: UNKNOWN_USER });
 			} else {
 				// Found in cache
-				users.push(cached);
+				users.push(cached as UserDetails);
 			}
 		}
 

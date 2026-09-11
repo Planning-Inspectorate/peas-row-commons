@@ -1,5 +1,5 @@
-import type { BaseConfig } from '@pins/peas-row-commons-lib/app/config-types.d.ts';
 import type { BlobStoreConfig } from '@pins/peas-row-commons-lib/blob-store/types.d.ts';
+import type { BaseConfig } from '@planning-inspectorate/core/app';
 import path from 'node:path';
 import { loadEnvFile } from 'node:process';
 import { fileURLToPath } from 'url';

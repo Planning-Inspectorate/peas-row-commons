@@ -1,10 +1,9 @@
 import type { ManageService } from '#service';
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { notFoundHandler } from '@pins/peas-row-commons-lib/middleware/errors.ts';
-import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
-import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
-import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { notFoundHandler } from '@planning-inspectorate/core/middleware';
+import type { AsyncRequestHandler, AsyncRequestHandlerWithBody } from '@planning-inspectorate/core/util';
+import { addSessionData, clearSessionData, readSessionData, wrapPrismaError } from '@planning-inspectorate/core/util';
 import type { Request } from 'express';
 import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
 
@@ -50,7 +49,7 @@ export function buildRenameFolderView(service: ManageService): AsyncRequestHandl
 /**
  * Controller to handle the folder renaming logic (post)
  */
-export function buildRenameFolder(service: ManageService): AsyncRequestHandler {
+export function buildRenameFolder(service: ManageService): AsyncRequestHandlerWithBody<{ folderName: string }> {
 	const { db, logger, audit } = service;
 
 	return async (req, res) => {

@@ -1,11 +1,11 @@
 import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
-import type { AsyncRequestHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import { getOptionalStringParam, getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
-import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { checkAnswerlength, checkRequiredAnswer } from '@pins/peas-row-commons-lib/util/strings.ts';
+import { addSessionData } from '@planning-inspectorate/core/util';
 import type { Request } from 'express';
+import type { CommentBodyHandler } from './controller.ts';
 
-export function buildValidateCaseNotesMiddleware(): AsyncRequestHandler {
+export function buildValidateCaseNotesMiddleware(): CommentBodyHandler {
 	return async (req, res, next) => {
 		const id = getStringParam(req.params, 'id');
 		const noteId = getOptionalStringParam(req.params, 'noteId');
