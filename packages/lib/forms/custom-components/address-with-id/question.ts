@@ -2,9 +2,9 @@ import type { JourneyResponse, SiteAddressQuestionParams } from '@planning-inspe
 import { AddressQuestion } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
 
-export type AddressWithIdQuestionProps = SiteAddressQuestionParams & {
+export interface AddressWithIdQuestionProps extends SiteAddressQuestionParams {
 	type: 'address-with-id';
-};
+}
 
 /**
  * An address input that has a hidden ID field that gets populated

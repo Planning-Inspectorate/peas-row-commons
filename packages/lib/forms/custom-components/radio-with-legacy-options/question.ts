@@ -4,8 +4,15 @@ import escape from 'escape-html';
 
 export type LegacyRadioQuestionParams = RadioQuestionParams & {
 	viewFolder?: string;
-	legacyOptions: SelectableOption[];
+	legacyOptions?: SelectableOption[];
 };
+
+/**
+ * Question props shape for the `legacy-radio` custom component.
+ */
+export interface LegacyRadioQuestionProps extends LegacyRadioQuestionParams {
+	type: 'legacy-radio';
+}
 
 /**
  * A radio question that has `options` the same as a regular radio
@@ -31,7 +38,7 @@ export default class LegacyRadioQuestion extends RadioQuestion {
 		this.label = params.label;
 		this.legend = params.legend;
 		// New array of options that are not allowed to be displayed as selectable.
-		this.legacyOptions = params.legacyOptions;
+		this.legacyOptions = params.legacyOptions ?? [];
 	}
 
 	/**

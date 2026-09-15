@@ -1,3 +1,4 @@
+import type { CommonQuestionParams } from '@planning-inspectorate/dynamic-forms';
 import { Question, type Journey, type QuestionViewModel, type Section } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
 
@@ -24,10 +25,18 @@ interface NestedFolderPreppedQuestion {
 	selectedPath: string[] | null;
 }
 
+export interface NestedFolderQuestionParams extends CommonQuestionParams {
+	folderStructure: FolderNode[];
+}
+
+export interface NestedFolderQuestionProps extends NestedFolderQuestionParams {
+	type: 'nested-folders';
+}
+
 export default class NestedFolderQuestion extends Question {
 	folderStructure: FolderNode[];
 
-	constructor(params: any) {
+	constructor(params: NestedFolderQuestionParams) {
 		super({
 			...params,
 			viewFolder: 'custom-components/nested-folder-radio'
