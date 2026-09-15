@@ -39,7 +39,7 @@ export default class CustomDatePeriodValidator extends BaseValidator {
 		endOptional = false,
 		endDateAfterStartDateMessage?: string
 	) {
-		super(inputLabel, {}, {});
+		super();
 		this.inputLabel = inputLabel;
 		this.startDateValidator = new DateValidator(`${inputLabel} start date`, startDateValidationSettings);
 		this.endDateValidator = new DateValidator(`${inputLabel} end date`, endDateValidationSettings);
