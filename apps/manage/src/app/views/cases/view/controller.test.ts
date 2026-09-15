@@ -85,6 +85,7 @@ describe('Case Controller', () => {
 			const mockDb = {
 				$transaction: mock.fn(async (promises) => Promise.all(promises)),
 				case: {
+					findMany: mock.fn(() => []),
 					findUnique: mock.fn(() => ({
 						id: 'case-1',
 						receivedDate: Date.now()

@@ -169,7 +169,13 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 
 		const finalAnswers = combineSessionAndDbData(res, answers, removedIds);
 
-		const questions = getQuestions(groupMembers, answers, userMap);
+		const otherCases = await db.case.findMany({
+			where: { id: { not: id } },
+			select: { id: true, reference: true },
+			orderBy: { reference: 'asc' }
+		});
+
+		const questions = getQuestions(groupMembers, answers, userMap, otherCases);
 
 		// put these on locals for the list controller
 		res.locals.originalAnswers = { ...answers };

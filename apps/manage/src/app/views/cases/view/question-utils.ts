@@ -793,27 +793,17 @@ export const OVERVIEW_QUESTIONS = {
 		]
 	},
 	linkedCaseReference: {
-		type: COMPONENT_TYPES.MULTI_FIELD_INPUT, // Multi because we want an H1 header and an inline question too.
+		type: COMPONENT_TYPES.SELECT,
 		title: 'Add linked case details',
 		question: 'Add linked case details',
-		fieldName: 'addlinkedCase',
+		fieldName: 'linkedCases',
 		url: 'linked-case-reference',
-		inputFields: [{ fieldName: 'linkedCaseReference', label: 'Linked case reference' }],
 		viewData: {
 			tableHeader: 'Linked case reference',
 			continueButtonText: 'Continue'
 		},
-		validators: [
-			new MultiFieldInputValidator({
-				fields: [
-					{
-						fieldName: 'linkedCaseReference',
-						required: true,
-						errorMessage: 'Enter linked case reference',
-						maxLength: { maxLength: 250, maxLengthMessage: 'Linked case must be 250 characters or less' }
-					}
-				]
-			})
+		options: [
+			// options populated dynamically in createOverviewQuestions with other case references
 		]
 	},
 	isLead: {
@@ -1216,7 +1206,8 @@ export function createOutcomeQuestions(
  */
 export function createOverviewQuestions(
 	overviewQuestions: typeof OVERVIEW_QUESTIONS,
-	answers: Record<string, unknown>
+	answers: Record<string, unknown>,
+	otherCases: { id: string; reference: string }[] = []
 ) {
 	const subType = answers.SubType as { displayName: string; id: string };
 
@@ -1229,11 +1220,23 @@ export function createOverviewQuestions(
 			]
 		: [];
 
+	const linkedCaseOptions = [
+		{ text: '', value: '' }, // ensure there is a 'null' option so the first case isn't selected by default
+		...otherCases.map((otherCase) => ({
+			text: otherCase.reference,
+			value: otherCase.id
+		}))
+	];
+
 	return {
 		...overviewQuestions,
 		caseSubtype: {
 			...overviewQuestions.caseSubtype,
 			legacyOptions: subTypes
+		},
+		linkedCaseReference: {
+			...overviewQuestions.linkedCaseReference,
+			options: linkedCaseOptions
 		}
 	};
 }

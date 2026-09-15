@@ -7,8 +7,10 @@ import {
 	ALL_QUESTIONS,
 	camelCaseToKebabCase,
 	camelCaseToSentenceCase,
+	createOverviewQuestions,
 	dateQuestion,
 	handleOriginatorFormattingFn,
+	OVERVIEW_QUESTIONS,
 	validateDateIsAfterReceivedDate,
 	validateDateRangeIsAfterReceivedDate,
 	validateOnlyOneLeadLinkedCase
@@ -437,6 +439,34 @@ describe('questions utils', () => {
 				() => validateOnlyOneLeadLinkedCase(newEntry.isLead, linkedCases),
 				/There is already a linked case marked as lead./
 			);
+		});
+	});
+
+	describe('createOverviewQuestions', () => {
+		it('should populate linkedCaseReference options from other cases', () => {
+			const otherCases = [
+				{ id: 'case-1', reference: 'REF-001' },
+				{ id: 'case-2', reference: 'REF-002' }
+			];
+
+			const result = createOverviewQuestions(OVERVIEW_QUESTIONS, {}, otherCases);
+
+			assert.deepStrictEqual(result.linkedCaseReference.options, [
+				{ text: '', value: '' },
+				{ text: 'REF-001', value: 'case-1' },
+				{ text: 'REF-002', value: 'case-2' }
+			]);
+		});
+
+		it('should default to an empty options list when no other cases are passed', () => {
+			const result = createOverviewQuestions(OVERVIEW_QUESTIONS, {});
+
+			assert.deepStrictEqual(result.linkedCaseReference.options, [
+				{
+					text: '',
+					value: ''
+				}
+			]);
 		});
 	});
 });
