@@ -1,5 +1,10 @@
 import type { Journey } from '@planning-inspectorate/dynamic-forms';
+import type { ConditionalOptionsQuestionParams } from '../conditional-text-input/question.ts';
 import ConditionalOptionsQuestion from '../conditional-text-input/question.ts';
+
+export interface FencingPermanentQuestionProps extends ConditionalOptionsQuestionParams {
+	type: 'fencing-permanent';
+}
 
 export default class FencingPermanentQuestion extends ConditionalOptionsQuestion {
 	/**

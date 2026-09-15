@@ -1,8 +1,8 @@
 import type {
-	CommonQuestionParams,
 	Journey,
 	PrepQuestionForRenderingOptions,
 	QuestionViewModel,
+	RadioQuestionParams,
 	Section,
 	SelectableOption
 } from '@planning-inspectorate/dynamic-forms';
@@ -24,9 +24,17 @@ type OptionWithCondition = Omit<SelectableOption, 'conditional'> & {
 	conditional?: NarrowedConditional;
 };
 
-type ConditionalOptionsQuestionParams = CommonQuestionParams & {
+/**
+ * This component is essentially a RadioQuestion with different handling of conditional data structure.
+ * TODO HRP-653 deprecate this for RadioQuestion
+ */
+export type ConditionalOptionsQuestionParams = Omit<RadioQuestionParams, 'options'> & {
 	options: OptionWithCondition[];
 };
+
+export interface ConditionalOptionsQuestionProps extends ConditionalOptionsQuestionParams {
+	type: 'conditional-text-options';
+}
 
 /**
  * Custom class for handling the use of nested conditional text inputs inside
