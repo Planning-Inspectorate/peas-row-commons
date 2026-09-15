@@ -122,7 +122,8 @@ export class DynamicSectionBuilder {
 	 * throws `TypeError: Receiver must be an instance of class Question`.
 	 *
 	 * Instead, the returned Proxy:
-	 * - returns the overridden values directly for the overridden keys (fieldName/editable/url/shouldDisplay)
+	 * - returns the overridden values directly for the overridden keys (fieldName/editable/url/
+	 *   shouldDisplay/isInManageListSection)
 	 * - delegates every other property/method to the REAL, correctly-branded `question` instance,
 	 *   temporarily patching the overridden (non-function) properties onto it for the duration of
 	 *   each (synchronous) method call, so methods that read `this.fieldName` etc. see the cloned
@@ -131,12 +132,40 @@ export class DynamicSectionBuilder {
 	protected cloneQuestion(question: Question, index: number): Question {
 		const flatFieldName = this.getFlatFieldName(index, question.fieldName);
 
-		return DynamicSectionBuilder.createQuestionProxy(question, {
+		const cloned = DynamicSectionBuilder.createQuestionProxy(question, {
 			fieldName: flatFieldName,
 			editable: false,
 			url: '',
-			shouldDisplay: () => true
+			shouldDisplay: () => true,
+			/**
+			 * The source questions live in a ManageListSection, but cloned questions are standalone.
+			 * Therefore, we must override `question.isInManageListSection` to be false.
+			 *
+			 * `isInManageListSection` is a prototype accessor whose setter rejects `false`, so we also
+			 * override its backing field for methods that read `this.isInManageListSection`.
+			 */
+			// The getter method
+			isInManageListSection: false,
+			// The backing field
+			_isInManageListSection: false
 		});
+
+		/**
+		 * These sections are built from flattened data and are not part of a question flow, so the
+		 * previous question in the section is usually a non-editable clone with no url. Send the user
+		 * back to the case details page instead of an unreachable sibling question.
+		 */
+		const baseToViewModel = typeof cloned.toViewModel === 'function' ? cloned.toViewModel.bind(cloned) : undefined;
+
+		if (baseToViewModel) {
+			cloned.toViewModel = (options: Parameters<Question['toViewModel']>[0]): ReturnType<Question['toViewModel']> => {
+				const viewModel = baseToViewModel(options);
+				viewModel.backLink = options.journey.taskListUrl;
+				return viewModel;
+			};
+		}
+
+		return cloned;
 	}
 
 	/**
@@ -153,7 +182,13 @@ export class DynamicSectionBuilder {
 		// methods relying on `this.<key>` (including other methods calling `this.someOverriddenFn()`
 		// internally) see the overridden value whilst still being invoked with `this` bound to the
 		// real, branded object.
-		const patchKeys = new Set(Object.keys(initialOverrides));
+		//
+		// Accessor-backed keys are excluded: assigning to them runs the real setter, which may reject
+		// the value (e.g. `Question.isInManageListSection` throws when set to false). Such keys stay
+		// as read-only overrides, and their backing data field should be overridden instead.
+		const patchKeys = new Set(
+			Object.keys(initialOverrides).filter((key) => !DynamicSectionBuilder.isAccessor(target, key))
+		);
 
 		// Proxy is a wrapper for the target question instance, so that we can override some properties
 		return new Proxy(question, {
@@ -205,11 +240,31 @@ export class DynamicSectionBuilder {
 			set(_targetObj, prop, value) {
 				if (typeof prop === 'string') {
 					overrides[prop] = value;
-					patchKeys.add(prop);
+					if (!DynamicSectionBuilder.isAccessor(target, prop)) {
+						patchKeys.add(prop);
+					}
 					return true;
 				}
 				return Reflect.set(target, prop, value);
 			}
 		}) as unknown as Question;
+	}
+
+	/**
+	 * Whether `key` resolves to an accessor (getter/setter) property anywhere on `obj`'s own
+	 * properties or prototype chain. Accessors cannot be safely shadowed by plain assignment.
+	 */
+	private static isAccessor(obj: object, key: string): boolean {
+		let current: object | null = obj;
+
+		while (current) {
+			const descriptor = Object.getOwnPropertyDescriptor(current, key);
+			if (descriptor) {
+				return typeof descriptor.get === 'function' || typeof descriptor.set === 'function';
+			}
+			current = Object.getPrototypeOf(current);
+		}
+
+		return false;
 	}
 }

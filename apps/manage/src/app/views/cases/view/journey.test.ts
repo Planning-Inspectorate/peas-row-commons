@@ -1,3 +1,5 @@
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
+import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
 import { createJourney, JOURNEY_ID } from './journey.ts';
@@ -253,5 +255,47 @@ describe('case details journey', () => {
 		assert.ok(overviewIdx >= 0, 'Overview section should exist');
 		assert.ok(outcomeIdx >= 0, 'Outcome overview section should exist');
 		assert.ok(outcomeIdx > overviewIdx, 'Outcome overview should come after Overview');
+	});
+
+	it('should resolve and render an editable question in a dynamic procedure section', () => {
+		const mockReq = { params: { id: '123' }, baseUrl: '/case/123/details' };
+
+		const mockQuestions = new Proxy(
+			{},
+			{
+				get: (_target, prop) =>
+					new Question({
+						title: String(prop),
+						question: String(prop),
+						viewFolder: 'radio',
+						fieldName: String(prop),
+						url: String(prop)
+					})
+			}
+		);
+
+		const response: any = {
+			answers: {
+				procedureDetails: [{ id: 'proc-1', procedureType: PROCEDURES_ID.HEARING, procedureHearingVenue: 'Town Hall' }]
+			}
+		};
+
+		const journey: any = createJourney(mockQuestions, response, mockReq as any);
+
+		const section = journey.getSection('procedure-1');
+		assert.ok(section, 'dynamic procedure section should exist');
+
+		const question = journey.getQuestionByParams({ section: 'procedure-1', question: 'procedureHearingVenue' });
+		assert.ok(question, 'the question behind the Change link should resolve');
+		assert.strictEqual(question.isInManageListSection, false);
+
+		const viewModel = question.toViewModel({
+			params: { section: 'procedure-1', question: 'procedureHearingVenue' },
+			section,
+			journey
+		});
+
+		assert.strictEqual(viewModel.answer, 'Town Hall');
+		assert.strictEqual(viewModel.backLink, journey.taskListUrl);
 	});
 });
