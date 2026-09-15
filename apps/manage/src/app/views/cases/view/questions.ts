@@ -22,7 +22,12 @@ import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
 import { CUSTOM_COMPONENT_CLASSES } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import type { UserMap } from './types.ts';
 
-export function getQuestions(groupMembers: EntraGroupMembers, answers: Record<string, unknown>, userMap: UserMap) {
+export function getQuestions(
+	groupMembers: EntraGroupMembers,
+	answers: Record<string, unknown>,
+	userMap: UserMap,
+	otherCases: { id: string; reference: string }[] = []
+) {
 	// We must generate team questions due to the varying nature of groupMembers
 	const generatedTeamQuestions = createTeamQuestions(TEAM_QUESTIONS, groupMembers, userMap);
 	const generateOutcomeQuestions = createOutcomeQuestions(
@@ -30,7 +35,7 @@ export function getQuestions(groupMembers: EntraGroupMembers, answers: Record<st
 		groupMembers,
 		answers.inspectorDetails as Record<string, unknown>[]
 	);
-	const generateOverviewQuestions = createOverviewQuestions(OVERVIEW_QUESTIONS, answers);
+	const generateOverviewQuestions = createOverviewQuestions(OVERVIEW_QUESTIONS, answers, otherCases);
 	const generatedProcedureQuestions = createProcedureDetailQuestions(
 		PROCEDURE_QUESTIONS,
 		groupMembers,
