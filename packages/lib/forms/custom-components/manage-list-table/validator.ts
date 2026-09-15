@@ -15,10 +15,19 @@ import { body } from 'express-validator';
  */
 export default class ManageListItemsCompleteValidator extends BaseValidator {
 	requiredFields: Record<string, string>;
+	errorMessage: string;
 
 	constructor(requiredFields: Record<string, string> = {}) {
 		super();
 		this.requiredFields = requiredFields;
+		this.errorMessage = 'Add the required details for each item';
+	}
+
+	/**
+	 * This validator is only "required" if at least one required field has been configured.
+	 */
+	isRequired(): boolean {
+		return Object.keys(this.requiredFields).length > 0;
 	}
 
 	/**
