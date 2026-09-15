@@ -1,6 +1,8 @@
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
 import { PROCEDURES, PROCEDURE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
@@ -321,6 +323,72 @@ describe('ProcedureSectionBuilder', () => {
 			};
 
 			assert.strictEqual(action?.href, '/procedure-1/siteVisitDate-url');
+		});
+	});
+
+	describe('Rendering the question behind a detail field Change link', () => {
+		const buildRealProcedureSection = () => {
+			const typeQuestion = new Question({
+				title: 'Procedure type',
+				question: 'What is the procedure type?',
+				viewFolder: 'radio',
+				fieldName: 'procedureTypeId',
+				url: 'procedure-type'
+			});
+			const hearingVenueQuestion = new Question({
+				title: 'Hearing venue',
+				question: 'What is the hearing venue?',
+				viewFolder: 'text-entry',
+				fieldName: 'hearingVenue',
+				url: 'hearing-venue'
+			});
+
+			const manageListSection = new ManageListSection().addQuestion(typeQuestion).addQuestion(hearingVenueQuestion);
+
+			const response = {
+				answers: {
+					procedureDetails: [{ id: 'proc-1', procedureTypeId: PROCEDURES_ID.HEARING, hearingVenue: 'Town Hall' }]
+				}
+			} as unknown as JourneyResponse;
+
+			const builder = new ProcedureSectionBuilder(manageListSection as unknown as Section);
+			const [section] = builder.build(response);
+
+			return { section, response };
+		};
+
+		it('should make the detail field editable and not treat it as a manage list question', () => {
+			const { section } = buildRealProcedureSection();
+
+			const venue = section.questions.find((q) => q.fieldName === 'procedureDetails_0_hearingVenue');
+
+			assert.ok(venue);
+			assert.strictEqual(venue.editable, true);
+			assert.strictEqual(venue.url, 'hearing-venue');
+			assert.strictEqual(venue.isInManageListSection, false);
+		});
+
+		it('should build a view model for the detail field without manage list route params', () => {
+			const { section, response } = buildRealProcedureSection();
+
+			const venue = section.questions.find((q) => q.fieldName === 'procedureDetails_0_hearingVenue');
+
+			assert.ok(venue);
+
+			const viewModel = venue.toViewModel({
+				params: { section: 'procedure-1', question: 'hearing-venue' },
+				section,
+				journey: {
+					response,
+					taskListUrl: '/cases/case-1',
+					journeyTemplate: 'template.njk',
+					journeyTitle: 'Case details',
+					getBackLink: () => '/somewhere-else'
+				} as never
+			} as never);
+
+			assert.strictEqual(viewModel.answer, 'Town Hall');
+			assert.strictEqual(viewModel.backLink, '/cases/case-1');
 		});
 	});
 });

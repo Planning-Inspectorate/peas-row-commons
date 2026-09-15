@@ -1,4 +1,6 @@
+import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
+import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
@@ -188,6 +190,99 @@ describe('DynamicSectionBuilder', () => {
 			const sections = builder.build(mockJourneyResponse as unknown as JourneyResponse) as unknown as MockSection[];
 
 			assert.strictEqual(sections[0].name, 'Custom Title: Special - 0');
+		});
+	});
+
+	/**
+	 * These use the real dynamic-forms classes rather than the mocks above, because the bug they
+	 * guard against lives in Question's manage list answer resolution and in the private class
+	 * field "branding" that the clone Proxy exists to preserve.
+	 */
+	describe('Cloning real dynamic-forms questions', () => {
+		const buildRealSection = () => {
+			const question = new Question({
+				title: 'Hearing format',
+				question: 'What is the hearing format?',
+				viewFolder: 'radio',
+				fieldName: 'hearingFormatId',
+				url: 'hearing-format'
+			});
+
+			const manageListSection = new ManageListSection().addQuestion(question);
+
+			const response = {
+				answers: {
+					procedureDetails: [{ id: 'proc-1', hearingFormatId: 'in-person' }]
+				}
+			} as unknown as JourneyResponse;
+
+			const builder = new DynamicSectionBuilder('procedureDetails', manageListSection as unknown as Section);
+			const [section] = builder.build(response);
+
+			return { question, section, response };
+		};
+
+		const mockJourney = {
+			taskListUrl: '/cases/case-1',
+			journeyTemplate: 'template.njk',
+			journeyTitle: 'Case details',
+			getBackLink: () => '/cases/case-1/procedure-1/procedureDetails_0_hearingFormatId'
+		};
+
+		it('should not mark clones as being in a manage list section', () => {
+			const { question, section } = buildRealSection();
+
+			assert.strictEqual(question.isInManageListSection, true);
+			assert.strictEqual(section.questions[0].isInManageListSection, false);
+		});
+
+		it('should leave the original question marked as in a manage list section', () => {
+			const { question } = buildRealSection();
+
+			// the clone must not mutate the shared question instance
+			assert.strictEqual(question.isInManageListSection, true);
+			assert.strictEqual(question.fieldName, 'hearingFormatId');
+			assert.strictEqual(question.url, 'hearing-format');
+		});
+
+		it('should build a view model from the flattened answer without manage list route params', () => {
+			const { section, response } = buildRealSection();
+			const clone = section.questions[0];
+
+			const viewModel = clone.toViewModel({
+				params: { section: 'procedure-1', question: 'hearing-format' },
+				section,
+				journey: { ...mockJourney, response } as never
+			} as never);
+
+			assert.strictEqual(viewModel.question.fieldName, 'procedureDetails_0_hearingFormatId');
+			assert.strictEqual(viewModel.answer, 'in-person');
+		});
+
+		it('should send the back link to the task list rather than a sibling clone', () => {
+			const { section, response } = buildRealSection();
+			const clone = section.questions[0];
+
+			const viewModel = clone.toViewModel({
+				params: { section: 'procedure-1', question: 'hearing-format' },
+				section,
+				journey: { ...mockJourney, response } as never
+			} as never);
+
+			assert.strictEqual(viewModel.backLink, '/cases/case-1');
+		});
+
+		it('should still resolve the clone answer via methods that use private class fields', () => {
+			const { section, response } = buildRealSection();
+			const clone = section.questions[0];
+
+			const summary = clone.formatAnswerForSummary(
+				'procedure-1',
+				{ ...mockJourney, response, getCurrentQuestionUrl: () => '' } as never,
+				'in-person'
+			);
+
+			assert.strictEqual(summary[0].value, 'In-person');
 		});
 	});
 });
