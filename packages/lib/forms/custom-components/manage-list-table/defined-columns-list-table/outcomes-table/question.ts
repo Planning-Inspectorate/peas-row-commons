@@ -1,4 +1,9 @@
+import type { DefinedColumnsTableParams } from '../question.ts';
 import DefinedColumnsTableQuestion from '../question.ts';
+
+export interface OutcomesTableQuestionProps extends DefinedColumnsTableParams {
+	type: 'outcomes-list';
+}
 
 /**
  * We want to show only the decision type as the item inside of the summary items.

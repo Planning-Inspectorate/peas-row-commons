@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
-import type { TableManageListQuestionParameters } from '../types.ts';
+import type { TableManageListQuestionParams } from '../question.ts';
 import LinkedCasesListQuestion from './question.ts';
 
 describe('LinkedCasesListQuestion', () => {
@@ -28,7 +28,7 @@ describe('LinkedCasesListQuestion', () => {
 		});
 
 		it('should return only the reference string if the case is NOT lead', () => {
-			const question = new LinkedCasesListQuestion(mockParams as TableManageListQuestionParameters);
+			const question = new LinkedCasesListQuestion(mockParams as TableManageListQuestionParams);
 
 			const answer = {
 				linkedCaseReference: 'APP/456/B',
@@ -41,7 +41,7 @@ describe('LinkedCasesListQuestion', () => {
 		});
 
 		it('should handle missing lead status gracefully (defaults to not lead)', () => {
-			const question = new LinkedCasesListQuestion(mockParams as TableManageListQuestionParameters);
+			const question = new LinkedCasesListQuestion(mockParams as TableManageListQuestionParams);
 
 			const answer = {
 				linkedCaseReference: 'APP/789/C'

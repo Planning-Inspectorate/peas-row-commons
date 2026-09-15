@@ -1,5 +1,3 @@
-import type { ManageListQuestionParams } from '@planning-inspectorate/dynamic-forms';
-
 export interface TableHeadCell {
 	text?: string;
 	html?: string;
@@ -19,11 +17,6 @@ export interface TableRowCell {
 	rowspan?: number;
 	attributes?: Record<string, any>;
 }
-
-export type TableManageListQuestionParameters = ManageListQuestionParams & {
-	summaryLimit?: number;
-	hideRemoveOnLastItem?: boolean;
-};
 
 export interface TableManageListQuestionView {
 	value: Record<string, unknown>[];
