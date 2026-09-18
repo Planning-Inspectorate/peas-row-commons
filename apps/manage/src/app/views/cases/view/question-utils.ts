@@ -48,7 +48,7 @@ import type TableManageListQuestion from '@pins/peas-row-commons-lib/forms/custo
 import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/validator.ts';
 import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-components/optional-date-component/validator.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
-import { LinkedCasesLeadValidator } from '@pins/peas-row-commons-lib/validators/linked-case-validator.ts';
+import { ManageListCrossFieldValidator } from '@pins/peas-row-commons-lib/validators/manage-list-cross-field-validator.ts';
 import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
 import nunjucks from 'nunjucks';
@@ -839,7 +839,14 @@ export const OVERVIEW_QUESTIONS = {
 		options: [
 			// options populated dynamically in createOverviewQuestions with other case references
 		],
-		validators: [new RequiredValidator('Select the linked case reference')]
+		validators: [
+			new RequiredValidator('Select the linked case reference'),
+			new ManageListCrossFieldValidator({
+				dependencyFieldName: 'linkedCaseDetails',
+				validationFunction: (linkedCaseId, linkedCaseDetails) =>
+					validateUniqueLinkedCaseId(linkedCaseId, linkedCaseDetails)
+			})
+		]
 	},
 	isLead: {
 		type: COMPONENT_TYPES.RADIO,
@@ -863,7 +870,7 @@ export const OVERVIEW_QUESTIONS = {
 		],
 		validators: [
 			new RequiredValidator('Select yes if this is the lead case'),
-			new LinkedCasesLeadValidator({
+			new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCaseDetails',
 				validationFunction: (isLead, linkedCaseDetails) => validateOnlyOneLeadLinkedCase(isLead, linkedCaseDetails)
 			})
@@ -2413,6 +2420,22 @@ export function validateOnlyOneLeadLinkedCase(isLead: unknown, linkedCaseDetails
 
 	if (!(otherLeadCases.length === 0)) {
 		throw new Error(`There is already a linked case marked as lead.`);
+	}
+
+	return true;
+}
+
+export function validateUniqueLinkedCaseId(linkedCaseId: unknown, linkedCaseDetails: unknown) {
+	const hasLinkedCases = Array.isArray(linkedCaseDetails) && linkedCaseDetails.length > 0;
+	if (!hasLinkedCases || !linkedCaseId) {
+		return true;
+	}
+
+	// linkedCaseDetails has already been filtered to exclude the row currently being edited
+	const duplicateLinkedCase = linkedCaseDetails.some((caseDetail) => caseDetail.linkedCaseId === linkedCaseId);
+
+	if (duplicateLinkedCase) {
+		throw new Error('This case has already been added as a linked case.');
 	}
 
 	return true;

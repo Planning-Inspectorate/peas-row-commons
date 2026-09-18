@@ -15,7 +15,8 @@ import {
 	OVERVIEW_QUESTIONS,
 	validateDateIsAfterReceivedDate,
 	validateDateRangeIsAfterReceivedDate,
-	validateOnlyOneLeadLinkedCase
+	validateOnlyOneLeadLinkedCase,
+	validateUniqueLinkedCaseId
 } from './question-utils.ts';
 
 describe('questions utils', () => {
@@ -440,6 +441,37 @@ describe('questions utils', () => {
 			assert.throws(
 				() => validateOnlyOneLeadLinkedCase(newEntry.isLead, linkedCases),
 				/There is already a linked case marked as lead./
+			);
+		});
+	});
+
+	describe('validateUniqueLinkedCaseId', () => {
+		it('should pass validation when there are no other linked cases', () => {
+			const linkedCases = [] as unknown as string[];
+			assert.ok(validateUniqueLinkedCaseId('case-1', linkedCases));
+		});
+
+		it('should pass validation when no linkedCaseId is provided', () => {
+			const linkedCases = [{ id: '1', linkedCaseId: 'case-1' }];
+			assert.ok(validateUniqueLinkedCaseId(undefined, linkedCases));
+		});
+
+		it('should pass validation when linkedCaseId is not already in the list', () => {
+			const linkedCases = [
+				{ id: '1', linkedCaseId: 'case-1' },
+				{ id: '3', linkedCaseId: 'case-3' }
+			];
+			assert.ok(validateUniqueLinkedCaseId('case-2', linkedCases));
+		});
+
+		it('should throw error when linkedCaseId is already in the list', () => {
+			const linkedCases = [
+				{ id: '1', linkedCaseId: 'case-1' },
+				{ id: '3', linkedCaseId: 'case-2' }
+			];
+			assert.throws(
+				() => validateUniqueLinkedCaseId('case-2', linkedCases),
+				/This case has already been added as a linked case./
 			);
 		});
 	});
