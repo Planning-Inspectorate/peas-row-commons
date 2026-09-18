@@ -103,7 +103,7 @@ export function createJourney(
 					whenQuestionHasAnswer(questions.hasLinkedCases, BOOLEAN_OPTIONS.YES)
 				)
 				.addQuestion(questions.isLeadCase)
-				.addQuestion(questions.leadCaseReference)
+				.addQuestion(questions.leadCaseId)
 				.withCondition(whenQuestionHasAnswer(questions.isLeadCase, BOOLEAN_OPTIONS.NO))
 				.endMultiQuestionCondition('has-linked-cases')
 		],

@@ -40,4 +40,19 @@ describe('create-a-case journey', () => {
 
 		assert.strictEqual(section.questions[0].fieldName, 'caseworkArea');
 	});
+
+	it('should populate leadCaseId options from otherCases', () => {
+		const otherCases = [
+			{ id: 'case-1', reference: 'REF-001' },
+			{ id: 'case-2', reference: 'REF-002' }
+		];
+
+		const questions = getQuestions({ allUsers: [], inspectors: [], caseOfficers: [] }, otherCases);
+
+		assert.deepStrictEqual(questions.leadCaseId.options, [
+			{ text: '', value: '' },
+			{ text: 'REF-001', value: 'case-1' },
+			{ text: 'REF-002', value: 'case-2' }
+		]);
+	});
 });

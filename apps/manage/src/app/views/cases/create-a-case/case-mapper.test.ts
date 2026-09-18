@@ -176,57 +176,17 @@ describe('Case Mapper', () => {
 			assert.deepStrictEqual(result.Authority, undefined);
 		});
 
-		it('should not create LinkedCases when hasLinkedCases is not yes', () => {
-			const answers = {
-				...getBaseAnswers(),
-				hasLinkedCases: BOOLEAN_OPTIONS.NO
-			};
-
-			const result = mapAnswersToCaseInput(answers, 'REF-009');
-
-			assert.strictEqual(result.LinkedCases, undefined);
-		});
-
-		it('should not create LinkedCases when this case is the lead case', () => {
-			const answers = {
-				...getBaseAnswers(),
-				hasLinkedCases: BOOLEAN_OPTIONS.YES,
-				isLeadCase: BOOLEAN_OPTIONS.YES
-			};
-
-			const result = mapAnswersToCaseInput(answers, 'REF-010');
-
-			assert.strictEqual(result.LinkedCases, undefined);
-		});
-
-		it('should create LinkedCase with lead reference when this case is not the lead', () => {
+		it('should never set a LinkedCases field (linked case relationships are written separately in save.ts)', () => {
 			const answers = {
 				...getBaseAnswers(),
 				hasLinkedCases: BOOLEAN_OPTIONS.YES,
 				isLeadCase: BOOLEAN_OPTIONS.NO,
-				leadCaseReference: 'LEAD-001'
+				leadCaseId: 'case-id-lead'
 			};
 
 			const result = mapAnswersToCaseInput(answers, 'REF-011');
 
-			assert.ok(result.LinkedCases?.create);
-			const linkedCases = result.LinkedCases.create as any[];
-			assert.strictEqual(linkedCases.length, 1);
-			assert.strictEqual(linkedCases[0].reference, 'LEAD-001');
-			assert.strictEqual(linkedCases[0].isLead, true);
-		});
-
-		it('should not create LinkedCases when leadCaseReference is missing', () => {
-			const answers = {
-				...getBaseAnswers(),
-				hasLinkedCases: BOOLEAN_OPTIONS.YES,
-				isLeadCase: BOOLEAN_OPTIONS.NO,
-				leadCaseReference: ''
-			};
-
-			const result = mapAnswersToCaseInput(answers, 'REF-012');
-
-			assert.strictEqual(result.LinkedCases, undefined);
+			assert.strictEqual((result as any).LinkedCases, undefined);
 		});
 	});
 });
