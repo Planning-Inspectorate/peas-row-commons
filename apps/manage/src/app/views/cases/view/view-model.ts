@@ -17,6 +17,7 @@ import {
 import { nl2br, truncateComment } from '@pins/peas-row-commons-lib/util/strings.ts';
 import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms';
 import { formatInTimeZone } from 'date-fns-tz';
+import type { Logger } from 'pino';
 import type { CaseDecisionFields, CaseListFields, CaseNoteFields, CaseProcedureFields, UserMap } from './types.ts';
 
 function formatValue(value: any) {
@@ -148,7 +149,7 @@ export function mapProceduresToArray(procedures: any[]): Record<string, any>[] |
  * Takes raw case data and converts into UI usable data format.
  * Converts the nested nature of join tables into a flat object.
  */
-export function caseToViewModel(caseRow: CaseListFields, userMap: UserMap) {
+export function caseToViewModel(caseRow: CaseListFields, userMap: UserMap, logger?: Logger) {
 	const mergedData: Record<string, any> = { ...caseRow };
 
 	NESTED_SECTIONS.forEach((sectionKey) => {
@@ -191,14 +192,52 @@ export function caseToViewModel(caseRow: CaseListFields, userMap: UserMap) {
 		delete mergedData.RelatedCases;
 	}
 
-	if (caseRow.LinkedCases?.length) {
-		mergedData.linkedCaseDetails = sortLinkedCases(caseRow.LinkedCases).map((linkedCase) => ({
+	let allLinkedCases: { id: string; reference: string | null; otherCaseId: string; isLead: boolean }[];
+
+	if (caseRow.ParentRelationship) {
+		if (caseRow.ChildRelationships?.length) {
+			logger?.error(
+				{ caseId: caseRow.id },
+				'Case has both a ParentRelationship and ChildRelationships - a case should only have one. Ignoring ChildRelationships.'
+			);
+		}
+
+		const parentCase = {
+			id: caseRow.ParentRelationship.id,
+			reference: caseRow.ParentRelationship.ParentCase.reference,
+			otherCaseId: caseRow.ParentRelationship.ParentCase.id,
+			isLead: true
+		};
+
+		const siblingCases = (caseRow.ParentRelationship.ParentCase.ChildRelationships ?? [])
+			.filter((relationship) => relationship.ChildCase.id !== caseRow.id)
+			.map((relationship) => ({
+				id: relationship.id,
+				reference: relationship.ChildCase.reference,
+				otherCaseId: relationship.ChildCase.id,
+				isLead: false
+			}));
+
+		allLinkedCases = [parentCase, ...siblingCases];
+	} else {
+		allLinkedCases = (caseRow.ChildRelationships ?? []).map((relationship) => ({
+			id: relationship.id,
+			reference: relationship.ChildCase.reference,
+			otherCaseId: relationship.ChildCase.id,
+			isLead: false
+		}));
+	}
+
+	if (allLinkedCases.length) {
+		mergedData.linkedCaseDetails = sortLinkedCases(allLinkedCases).map((linkedCase) => ({
 			id: linkedCase.id,
-			linkedCaseReference: linkedCase.reference,
+			linkedCaseId: linkedCase.otherCaseId,
 			linkedCaseIsLead: formatValue(linkedCase.isLead)
 		}));
-		delete mergedData.LinkedCases;
 	}
+
+	delete mergedData.ChildRelationships;
+	delete mergedData.ParentRelationship;
 
 	if (caseRow.CaseOfficer) {
 		mergedData.caseOfficerId = caseRow.CaseOfficer.idpUserId;

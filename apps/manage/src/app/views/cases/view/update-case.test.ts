@@ -8,11 +8,19 @@ import { buildUpdateCase, handleAbeyancePeriod, mapCasePayload } from './update-
 
 const mockFindUnique = mock.fn();
 const mockUpdate = mock.fn();
+const mockCaseRelationshipDeleteMany = mock.fn();
+const mockCaseRelationshipCreate = mock.fn();
+const mockCaseRelationshipCreateMany = mock.fn();
 
 const mockTx = {
 	case: {
 		findUnique: mockFindUnique,
 		update: mockUpdate
+	},
+	caseRelationship: {
+		deleteMany: mockCaseRelationshipDeleteMany,
+		create: mockCaseRelationshipCreate,
+		createMany: mockCaseRelationshipCreateMany
 	}
 };
 
@@ -52,6 +60,9 @@ describe('Update Case Controller', () => {
 		mockFindUnique.mock.resetCalls();
 		mockUpdate.mock.resetCalls();
 		mockDbTransaction.mock.resetCalls();
+		mockCaseRelationshipDeleteMany.mock.resetCalls();
+		mockCaseRelationshipCreate.mock.resetCalls();
+		mockCaseRelationshipCreateMany.mock.resetCalls();
 		mockService.logger.info.mock.resetCalls();
 	});
 
@@ -135,6 +146,153 @@ describe('Update Case Controller', () => {
 			assert.strictEqual(mockUpdate.mock.callCount(), 1);
 			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
 			assert.strictEqual(updateArgs.data.name, null);
+		});
+
+		it('should make this case the lead (hub) and its submitted rows its children when no row is marked lead', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = {
+				answers: {
+					linkedCaseDetails: [
+						{ linkedCaseId: 'case-id-1', linkedCaseIsLead: 'no' },
+						{ linkedCaseId: 'case-id-2', linkedCaseIsLead: 'no' }
+					]
+				}
+			};
+
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockCaseRelationshipDeleteMany.mock.callCount(), 2);
+			assert.deepStrictEqual(mockCaseRelationshipDeleteMany.mock.calls[0].arguments[0], {
+				where: { parentCaseId: { in: ['case-123'] } }
+			});
+			assert.deepStrictEqual(mockCaseRelationshipDeleteMany.mock.calls[1].arguments[0], {
+				where: { childCaseId: { in: ['case-123', 'case-id-1', 'case-id-2'] } }
+			});
+
+			assert.strictEqual(mockCaseRelationshipCreateMany.mock.callCount(), 1);
+			assert.deepStrictEqual(mockCaseRelationshipCreateMany.mock.calls[0].arguments[0], {
+				data: [
+					{ parentCaseId: 'case-123', childCaseId: 'case-id-1' },
+					{ parentCaseId: 'case-123', childCaseId: 'case-id-2' }
+				]
+			});
+		});
+
+		it('should make this case a child of the lead case, and reparent its siblings to that lead case too', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = {
+				answers: {
+					linkedCaseDetails: [
+						{ linkedCaseId: 'case-id-lead', linkedCaseIsLead: 'yes' },
+						{ linkedCaseId: 'case-id-sibling', linkedCaseIsLead: 'no' }
+					]
+				}
+			};
+
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockCaseRelationshipDeleteMany.mock.callCount(), 2);
+			assert.deepStrictEqual(mockCaseRelationshipDeleteMany.mock.calls[0].arguments[0], {
+				where: { parentCaseId: { in: ['case-123', 'case-id-lead'] } }
+			});
+			assert.deepStrictEqual(mockCaseRelationshipDeleteMany.mock.calls[1].arguments[0], {
+				where: { childCaseId: { in: ['case-123', 'case-id-sibling'] } }
+			});
+
+			assert.strictEqual(mockCaseRelationshipCreateMany.mock.callCount(), 1);
+			assert.deepStrictEqual(mockCaseRelationshipCreateMany.mock.calls[0].arguments[0], {
+				data: [
+					{ parentCaseId: 'case-id-lead', childCaseId: 'case-123' },
+					{ parentCaseId: 'case-id-lead', childCaseId: 'case-id-sibling' }
+				]
+			});
+		});
+
+		it('should clear all linked case relationships when linkedCaseDetails is submitted empty', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = { answers: { linkedCaseDetails: [] } };
+
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockCaseRelationshipDeleteMany.mock.callCount(), 2);
+			assert.deepStrictEqual(mockCaseRelationshipDeleteMany.mock.calls[0].arguments[0], {
+				where: { parentCaseId: { in: ['case-123'] } }
+			});
+			assert.deepStrictEqual(mockCaseRelationshipDeleteMany.mock.calls[1].arguments[0], {
+				where: { childCaseId: { in: ['case-123'] } }
+			});
+
+			assert.strictEqual(mockCaseRelationshipCreateMany.mock.callCount(), 0);
+		});
+
+		it('should collapse the wipe scope to a single root when the lead is unchanged, so a dropped sibling is wiped along with it', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = {
+				answers: {
+					linkedCaseDetails: [{ linkedCaseId: 'case-id-lead', linkedCaseIsLead: 'yes' }]
+				}
+			};
+
+			mockFindUnique.mock.mockImplementationOnce(
+				() =>
+					({
+						id: 'case-123',
+						reference: 'REF-001',
+						ParentRelationship: {
+							id: 'rel-1',
+							parentCaseId: 'case-id-lead',
+							ParentCase: { id: 'case-id-lead', reference: 'LEAD-REF' }
+						}
+					}) as any
+			);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockCaseRelationshipDeleteMany.mock.callCount(), 2);
+			// This wipes every child of 'case-id-lead', including any dropped sibling's row,
+			// not just the ones resubmitted.
+			assert.deepStrictEqual(mockCaseRelationshipDeleteMany.mock.calls[0].arguments[0], {
+				where: { parentCaseId: { in: ['case-id-lead'] } }
+			});
+			assert.deepStrictEqual(mockCaseRelationshipDeleteMany.mock.calls[1].arguments[0], {
+				where: { childCaseId: { in: ['case-123'] } }
+			});
+
+			// Any dropped sibling is absent here too: only the resubmitted case is recreated
+			// as a child of the lead.
+			assert.strictEqual(mockCaseRelationshipCreateMany.mock.callCount(), 1);
+			assert.deepStrictEqual(mockCaseRelationshipCreateMany.mock.calls[0].arguments[0], {
+				data: [{ parentCaseId: 'case-id-lead', childCaseId: 'case-123' }]
+			});
+		});
+
+		it('should not touch CaseRelationship when linkedCaseDetails is not submitted', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = { answers: { name: 'New Name' } };
+
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockCaseRelationshipDeleteMany.mock.callCount(), 0);
+			assert.strictEqual(mockCaseRelationshipCreate.mock.callCount(), 0);
+			assert.strictEqual(mockCaseRelationshipCreateMany.mock.callCount(), 0);
 		});
 	});
 
@@ -262,28 +420,18 @@ describe('Update Case Controller', () => {
 			assert.strictEqual((result as any).relatedCaseDetails, undefined);
 		});
 
-		it('should transform linkedCaseDetails into RelatedCases deleteMany/create payload', () => {
+		it('should strip linkedCaseDetails from the payload (handled via direct CaseRelationship writes)', () => {
 			const input = {
 				linkedCaseDetails: [
-					{ linkedCaseReference: 'REF-123', linkedCaseIsLead: 'yes' },
-					{ linkedCaseReference: 'REF-456', linkedCaseIsLead: 'yes' }
+					{ linkedCaseId: 'case-id-123', linkedCaseIsLead: 'no' },
+					{ linkedCaseId: 'case-id-456', linkedCaseIsLead: 'no' }
 				]
 			};
 
 			const result = mapCasePayload(input);
 
-			const linkedCaseUpdate = (result as any).LinkedCases;
-			assert.ok(linkedCaseUpdate, 'Should have LinkedCases property');
-
-			assert.deepStrictEqual(linkedCaseUpdate.deleteMany, {});
-			assert.strictEqual(linkedCaseUpdate.create.length, 2);
-
-			assert.strictEqual(linkedCaseUpdate.create[0].reference, 'REF-123');
-			assert.strictEqual(linkedCaseUpdate.create[1].reference, 'REF-456');
-
-			assert.strictEqual(linkedCaseUpdate.create[0].isLead, true);
-			assert.strictEqual(linkedCaseUpdate.create[1].isLead, true);
-
+			assert.strictEqual((result as any).ChildRelationships, undefined);
+			assert.strictEqual((result as any).ParentRelationship, undefined);
 			assert.strictEqual((result as any).linkedCaseDetails, undefined);
 		});
 

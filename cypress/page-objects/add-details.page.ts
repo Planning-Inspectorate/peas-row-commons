@@ -10,8 +10,8 @@ const pageConfig = {
 	},
 	linked: {
 		title: 'Add linked case details',
-		fieldId: 'linkedCaseReference',
-		fieldName: 'linkedCaseReference'
+		fieldId: 'linkedCaseId',
+		fieldName: 'linkedCaseId'
 	}
 } as const;
 

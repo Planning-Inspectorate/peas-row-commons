@@ -443,7 +443,7 @@ describe('questions utils', () => {
 	});
 
 	describe('createOverviewQuestions', () => {
-		it('should populate linkedCaseReference options from other cases', () => {
+		it('should populate linkedCaseId options from other cases', () => {
 			const otherCases = [
 				{ id: 'case-1', reference: 'REF-001' },
 				{ id: 'case-2', reference: 'REF-002' }
@@ -451,7 +451,7 @@ describe('questions utils', () => {
 
 			const result = createOverviewQuestions(OVERVIEW_QUESTIONS, {}, otherCases);
 
-			assert.deepStrictEqual(result.linkedCaseReference.options, [
+			assert.deepStrictEqual(result.linkedCaseId.options, [
 				{ text: '', value: '' },
 				{ text: 'REF-001', value: 'case-1' },
 				{ text: 'REF-002', value: 'case-2' }
@@ -461,7 +461,7 @@ describe('questions utils', () => {
 		it('should default to an empty options list when no other cases are passed', () => {
 			const result = createOverviewQuestions(OVERVIEW_QUESTIONS, {});
 
-			assert.deepStrictEqual(result.linkedCaseReference.options, [
+			assert.deepStrictEqual(result.linkedCaseId.options, [
 				{
 					text: '',
 					value: ''

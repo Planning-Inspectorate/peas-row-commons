@@ -39,7 +39,31 @@ export const caseListSelect = {
 		}
 	},
 	RelatedCases: true,
-	LinkedCases: true,
+	ChildRelationships: {
+		include: {
+			ChildCase: {
+				select: { id: true, reference: true }
+			}
+		}
+	},
+	ParentRelationship: {
+		include: {
+			ParentCase: {
+				select: {
+					id: true,
+					reference: true,
+					// Other children of this case's parent are this case's siblings.
+					ChildRelationships: {
+						include: {
+							ChildCase: {
+								select: { id: true, reference: true }
+							}
+						}
+					}
+				}
+			}
+		}
+	},
 	CaseOfficer: true,
 	Outcome: {
 		include: {
@@ -80,3 +104,21 @@ export type CaseUpdated = {
  * A map of user IDs to display names, used to avoid multiple lookups for the same user when rendering lists of items with associated users (e.g. case history events).
  */
 export type UserMap = Map<string, string>;
+
+/**
+ * The shape of a single submitted `linkedCaseDetails` answer row.
+ */
+export interface LinkedCaseDetailInput {
+	id?: string;
+	linkedCaseId: string;
+	linkedCaseIsLead: string;
+}
+
+/**
+ * Shape used for auditing linked cases.
+ */
+export interface LinkedCaseAuditSource {
+	id: string;
+	reference: string | null;
+	isLead: boolean;
+}

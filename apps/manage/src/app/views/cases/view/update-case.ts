@@ -1,11 +1,5 @@
 import type { ManageService } from '#service';
-import type {
-	Case,
-	LinkedCase,
-	Prisma,
-	PrismaClient,
-	RelatedCase
-} from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { Case, Prisma, PrismaClient, RelatedCase } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { getRelationForField } from '@pins/peas-row-commons-lib/util/schema-map.ts';
 
@@ -43,6 +37,14 @@ import {
 	resolveRelatedCaseAudits
 } from '../../../audit/resolvers/index.ts';
 import { JOURNEY_ID } from './journey.ts';
+import {
+	applyLinkedCaseRelationships,
+	buildPreviousLinkedCases,
+	extractLinkedCaseChanges,
+	getLinkedCaseDetailRows,
+	type LinkedCaseChanges,
+	stripLinkedCaseDetails
+} from './linked-cases.ts';
 import { getFieldDisplayNames } from './question-utils.ts';
 import { mapProceduresToArray, sortProceduresChronologically } from './view-model.ts';
 
@@ -118,11 +120,18 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 
 		const answersSnapshot = { ...rawAnswers };
 
+		// Extracted here (before mapCasePayload mutates/removes linkedCaseDetails) because
+		// linked case relationships are written as direct CaseRelationship table writes
+		// inside the update transaction (see updateCaseData/applyLinkedCaseRelationships),
+		// rather than as a nested Case payload field - some of these writes affect other
+		// cases (e.g. siblings being reparented), not just the case currently being edited.
+		const linkedCaseChanges = extractLinkedCaseChanges(rawAnswers);
+
 		const formattedAnswersForQuery = mapCasePayload(rawAnswers);
 
 		logger.info({ fields: updatedFieldNames }, 'update case input');
 
-		const result = await updateCaseData(id, db, logger, formattedAnswersForQuery);
+		const result = await updateCaseData(id, db, logger, formattedAnswersForQuery, linkedCaseChanges);
 
 		if (result) {
 			const userId = req?.session?.account?.localAccountId;
@@ -178,12 +187,18 @@ function flattenReferenceTables(previousValues: Record<string, unknown>, itemsTo
 /**
  * Queries DB and upserts (or removes) data for specified data fields.
  * Also returns the current (unchanged) case for auditing purposes.
+ *
+ * `linkedCaseChanges` is handled separately from `formattedAnswersForQuery` because
+ * submitting linked case details for this case can require reparenting other cases
+ * too (e.g. siblings being moved under a newly-designated lead case) - not just
+ * writing this case's own row. See `applyLinkedCaseRelationships`.
  */
 async function updateCaseData(
 	id: string,
 	db: PrismaClient,
 	logger: Logger,
-	formattedAnswersForQuery: Prisma.CaseUpdateInput
+	formattedAnswersForQuery: Prisma.CaseUpdateInput,
+	linkedCaseChanges?: LinkedCaseChanges
 ): Promise<{ previous: Case; updated: Case } | undefined> {
 	try {
 		return await db.$transaction(async ($tx: Prisma.TransactionClient) => {
@@ -194,7 +209,20 @@ async function updateCaseData(
 					SiteAddress: true,
 					Abeyance: true,
 					RelatedCases: true,
-					LinkedCases: true,
+					ChildRelationships: {
+						include: {
+							ChildCase: {
+								select: { id: true, reference: true }
+							}
+						}
+					},
+					ParentRelationship: {
+						include: {
+							ParentCase: {
+								select: { id: true, reference: true }
+							}
+						}
+					},
 					Contacts: { include: { Address: true } },
 					CaseOfficer: true,
 					Inspectors: { include: { Inspector: true } },
@@ -239,6 +267,11 @@ async function updateCaseData(
 				where: { id },
 				data: formattedAnswersForQuery
 			});
+
+			if (linkedCaseChanges) {
+				const previousParentCaseId = caseRow.ParentRelationship?.parentCaseId ?? null;
+				await applyLinkedCaseRelationships($tx, id, linkedCaseChanges, previousParentCaseId);
+			}
 
 			return { previous: caseRow, updated };
 		});
@@ -327,7 +360,7 @@ function handleUniqueDataCases(flatData: Record<string, unknown>, prismaPayload:
 	handleInspectors(flatData, prismaPayload);
 	handleContacts(flatData, prismaPayload, CONTACT_MAPPINGS);
 	handleRelatedCases(flatData, prismaPayload);
-	handleLinkedCases(flatData, prismaPayload);
+	stripLinkedCaseDetails(flatData);
 	handleProcedureDetails(flatData, prismaPayload);
 	handleBooleans(flatData);
 	handleCaseOfficer(flatData, prismaPayload);
@@ -636,28 +669,6 @@ function handleCaseOfficer(flatData: Record<string, any>, prismaPayload: Prisma.
 }
 
 /**
- * Handles the deletion and creation of linked cases
- */
-function handleLinkedCases(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
-	if (!Object.hasOwn(flatData, 'linkedCaseDetails')) return;
-
-	const newLinkedCases = flatData.linkedCaseDetails.map((linkedCase: any) => ({
-		reference: linkedCase.linkedCaseReference,
-		isLead: yesNoToBoolean(linkedCase.linkedCaseIsLead)
-	}));
-
-	// TODO: deleteMany wipes the current LinkedCases and then we replace
-	// them with the current cases + any new ones. This will need to change
-	// when we do case history.
-	prismaPayload.LinkedCases = {
-		deleteMany: {},
-		create: newLinkedCases
-	};
-
-	delete flatData.linkedCaseDetails;
-}
-
-/**
  * Handles the deletion and creation of related cases
  */
 function handleRelatedCases(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
@@ -888,11 +899,8 @@ async function recordAuditEntries(
 				...resolveLinkedCaseAudits(
 					caseId,
 					userId,
-					(previousValues.LinkedCases as LinkedCase[]) ?? [],
-					answersSnapshot.linkedCaseDetails as {
-						linkedCaseReference: string;
-						linkedCaseIsLead: string;
-					}[]
+					buildPreviousLinkedCases(previousValues),
+					getLinkedCaseDetailRows(answersSnapshot.linkedCaseDetails)
 				)
 			);
 		}

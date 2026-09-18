@@ -64,7 +64,31 @@ const caseToViewInclude = {
 		}
 	},
 	RelatedCases: true,
-	LinkedCases: true,
+	ChildRelationships: {
+		include: {
+			ChildCase: {
+				select: { id: true, reference: true }
+			}
+		}
+	},
+	ParentRelationship: {
+		include: {
+			ParentCase: {
+				select: {
+					id: true,
+					reference: true,
+					// We also want to display siblings.
+					ChildRelationships: {
+						include: {
+							ChildCase: {
+								select: { id: true, reference: true }
+							}
+						}
+					}
+				}
+			}
+		}
+	},
 	CaseOfficer: true,
 	_count: {
 		select: {
@@ -163,7 +187,7 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 
 		const lastModified = await service.audit.getLastModifiedInfo(id, userMap);
 
-		const answers = caseToViewModel(caseToView, userMap);
+		const answers = caseToViewModel(caseToView, userMap, logger);
 
 		const removedIds = (req.session.removedListItems || []) as string[];
 
