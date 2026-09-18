@@ -1,5 +1,6 @@
-import type { LinkedCase, RelatedCase } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { RelatedCase } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { formatBoolean, formatYesNo } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import type { LinkedCaseAuditSource, LinkedCaseDetailInput } from '../../views/cases/view/types.ts';
 import { AUDIT_ACTIONS } from '../actions.ts';
 import type { AuditEntry } from '../types.ts';
 
@@ -91,8 +92,8 @@ export function resolveRelatedCaseAudits(
 export function resolveLinkedCaseAudits(
 	caseId: string,
 	userId: string | undefined,
-	oldLinkedCases: LinkedCase[],
-	newLinkedCases: { id?: string; linkedCaseReference: string; linkedCaseIsLead: string }[]
+	oldLinkedCases: LinkedCaseAuditSource[],
+	newLinkedCases: LinkedCaseDetailInput[]
 ): AuditEntry[] {
 	const entries: AuditEntry[] = [];
 
@@ -106,7 +107,7 @@ export function resolveLinkedCaseAudits(
 				caseId,
 				action: AUDIT_ACTIONS.LINKED_CASE_ADDED,
 				userId,
-				metadata: { reference: newCase.linkedCaseReference }
+				metadata: { reference: newCase.linkedCaseId }
 			});
 		}
 	}
@@ -128,7 +129,7 @@ export function resolveLinkedCaseAudits(
 		const oldCase = oldById.get(id);
 		if (!oldCase) continue;
 
-		if (oldCase.reference !== newCase.linkedCaseReference) {
+		if (oldCase.reference !== newCase.linkedCaseId) {
 			entries.push({
 				caseId,
 				action: AUDIT_ACTIONS.LINKED_CASE_UPDATED,
@@ -137,7 +138,7 @@ export function resolveLinkedCaseAudits(
 					entityName: oldCase.reference,
 					fieldName: 'linked case reference',
 					oldValue: oldCase.reference,
-					newValue: newCase.linkedCaseReference
+					newValue: newCase.linkedCaseId
 				}
 			});
 		}
@@ -151,7 +152,7 @@ export function resolveLinkedCaseAudits(
 				action: AUDIT_ACTIONS.LINKED_CASE_UPDATED,
 				userId,
 				metadata: {
-					entityName: newCase.linkedCaseReference,
+					entityName: newCase.linkedCaseId,
 					fieldName: 'lead?',
 					oldValue: oldIsLead,
 					newValue: newIsLead

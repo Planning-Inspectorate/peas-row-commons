@@ -1,6 +1,7 @@
-import type { LinkedCase, RelatedCase } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { RelatedCase } from '@pins/peas-row-commons-database/src/client/client.ts';
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
+import type { LinkedCaseAuditSource } from '../../views/cases/view/types.ts';
 import { AUDIT_ACTIONS } from '../actions.ts';
 import { resolveLinkedCaseAudits, resolveRelatedCaseAudits } from './list-field-resolver.ts';
 
@@ -11,8 +12,8 @@ function buildOldRelatedCase(id: string, reference: string): RelatedCase {
 	return { id, reference, caseId: CASE_ID } as unknown as RelatedCase;
 }
 
-function buildOldLinkedCase(id: string, reference: string, isLead: boolean | null): LinkedCase {
-	return { id, reference, isLead, caseId: CASE_ID } as unknown as LinkedCase;
+function buildOldLinkedCase(id: string, reference: string, isLead: boolean): LinkedCaseAuditSource {
+	return { id, reference, isLead };
 }
 
 describe('resolveRelatedCaseAudits', () => {
@@ -151,8 +152,8 @@ describe('resolveRelatedCaseAudits', () => {
 describe('resolveLinkedCaseAudits', () => {
 	describe('additions', () => {
 		it('should detect a new linked case without an ID as added', () => {
-			const oldCases: LinkedCase[] = [];
-			const newCases = [{ linkedCaseReference: '123456', linkedCaseIsLead: 'yes' }];
+			const oldCases: LinkedCaseAuditSource[] = [];
+			const newCases = [{ linkedCaseId: '123456', linkedCaseIsLead: 'yes' }];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
@@ -164,8 +165,8 @@ describe('resolveLinkedCaseAudits', () => {
 		it('should detect a new linked case with an unknown ID as added', () => {
 			const oldCases = [buildOldLinkedCase('id-1', 'existing', true)];
 			const newCases = [
-				{ id: 'id-1', linkedCaseReference: 'existing', linkedCaseIsLead: 'yes' },
-				{ id: 'id-new', linkedCaseReference: 'new-ref', linkedCaseIsLead: 'no' }
+				{ id: 'id-1', linkedCaseId: 'existing', linkedCaseIsLead: 'yes' },
+				{ id: 'id-new', linkedCaseId: 'new-ref', linkedCaseIsLead: 'no' }
 			];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
@@ -179,7 +180,7 @@ describe('resolveLinkedCaseAudits', () => {
 	describe('deletions', () => {
 		it('should detect a linked case being removed', () => {
 			const oldCases = [buildOldLinkedCase('id-1', '123456', true)];
-			const newCases: { id?: string; linkedCaseReference: string; linkedCaseIsLead: string }[] = [];
+			const newCases: { id?: string; linkedCaseId: string; linkedCaseIsLead: string }[] = [];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
@@ -195,8 +196,8 @@ describe('resolveLinkedCaseAudits', () => {
 				buildOldLinkedCase('id-3', 'third', false)
 			];
 			const newCases = [
-				{ id: 'id-1', linkedCaseReference: 'first', linkedCaseIsLead: 'yes' },
-				{ id: 'id-3', linkedCaseReference: 'third', linkedCaseIsLead: 'no' }
+				{ id: 'id-1', linkedCaseId: 'first', linkedCaseIsLead: 'yes' },
+				{ id: 'id-3', linkedCaseId: 'third', linkedCaseIsLead: 'no' }
 			];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
@@ -210,7 +211,7 @@ describe('resolveLinkedCaseAudits', () => {
 	describe('updates — reference change', () => {
 		it('should detect a reference being changed', () => {
 			const oldCases = [buildOldLinkedCase('id-1', '123456', true)];
-			const newCases = [{ id: 'id-1', linkedCaseReference: '78910', linkedCaseIsLead: 'yes' }];
+			const newCases = [{ id: 'id-1', linkedCaseId: '78910', linkedCaseIsLead: 'yes' }];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
@@ -226,7 +227,7 @@ describe('resolveLinkedCaseAudits', () => {
 	describe('updates — isLead change', () => {
 		it('should detect isLead changing from Yes to No', () => {
 			const oldCases = [buildOldLinkedCase('id-1', '123456', true)];
-			const newCases = [{ id: 'id-1', linkedCaseReference: '123456', linkedCaseIsLead: 'no' }];
+			const newCases = [{ id: 'id-1', linkedCaseId: '123456', linkedCaseIsLead: 'no' }];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
@@ -240,7 +241,7 @@ describe('resolveLinkedCaseAudits', () => {
 
 		it('should detect isLead changing from No to Yes', () => {
 			const oldCases = [buildOldLinkedCase('id-1', '123456', false)];
-			const newCases = [{ id: 'id-1', linkedCaseReference: '123456', linkedCaseIsLead: 'yes' }];
+			const newCases = [{ id: 'id-1', linkedCaseId: '123456', linkedCaseIsLead: 'yes' }];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
@@ -249,20 +250,9 @@ describe('resolveLinkedCaseAudits', () => {
 			assert.strictEqual(entries[0].metadata?.newValue, 'Yes');
 		});
 
-		it('should detect isLead changing from null to Yes', () => {
-			const oldCases = [buildOldLinkedCase('id-1', '123456', null)];
-			const newCases = [{ id: 'id-1', linkedCaseReference: '123456', linkedCaseIsLead: 'yes' }];
-
-			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
-
-			assert.strictEqual(entries.length, 1);
-			assert.strictEqual(entries[0].metadata?.oldValue, '-');
-			assert.strictEqual(entries[0].metadata?.newValue, 'Yes');
-		});
-
 		it('should not produce an entry when isLead has not changed', () => {
 			const oldCases = [buildOldLinkedCase('id-1', '123456', true)];
-			const newCases = [{ id: 'id-1', linkedCaseReference: '123456', linkedCaseIsLead: 'yes' }];
+			const newCases = [{ id: 'id-1', linkedCaseId: '123456', linkedCaseIsLead: 'yes' }];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
@@ -273,7 +263,7 @@ describe('resolveLinkedCaseAudits', () => {
 	describe('updates — both reference and isLead change', () => {
 		it('should produce two entries when both reference and isLead change', () => {
 			const oldCases = [buildOldLinkedCase('id-1', '123456', true)];
-			const newCases = [{ id: 'id-1', linkedCaseReference: '78910', linkedCaseIsLead: 'no' }];
+			const newCases = [{ id: 'id-1', linkedCaseId: '78910', linkedCaseIsLead: 'no' }];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
@@ -296,8 +286,8 @@ describe('resolveLinkedCaseAudits', () => {
 		it('should detect add, delete, and update in a single diff', () => {
 			const oldCases = [buildOldLinkedCase('id-1', 'first', true), buildOldLinkedCase('id-2', 'second', false)];
 			const newCases = [
-				{ id: 'id-1', linkedCaseReference: 'first', linkedCaseIsLead: 'no' },
-				{ linkedCaseReference: 'third', linkedCaseIsLead: 'yes' }
+				{ id: 'id-1', linkedCaseId: 'first', linkedCaseIsLead: 'no' },
+				{ linkedCaseId: 'third', linkedCaseIsLead: 'yes' }
 			];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
@@ -322,7 +312,7 @@ describe('resolveLinkedCaseAudits', () => {
 	describe('no changes', () => {
 		it('should return no entries when lists are identical', () => {
 			const oldCases = [buildOldLinkedCase('id-1', '123456', true)];
-			const newCases = [{ id: 'id-1', linkedCaseReference: '123456', linkedCaseIsLead: 'yes' }];
+			const newCases = [{ id: 'id-1', linkedCaseId: '123456', linkedCaseIsLead: 'yes' }];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
@@ -338,8 +328,8 @@ describe('resolveLinkedCaseAudits', () => {
 
 	describe('metadata', () => {
 		it('should include caseId and userId on all entries', () => {
-			const oldCases: LinkedCase[] = [];
-			const newCases = [{ linkedCaseReference: '123', linkedCaseIsLead: 'yes' }];
+			const oldCases: LinkedCaseAuditSource[] = [];
+			const newCases = [{ linkedCaseId: '123', linkedCaseIsLead: 'yes' }];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
