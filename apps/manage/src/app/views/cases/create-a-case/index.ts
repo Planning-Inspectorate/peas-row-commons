@@ -1,5 +1,4 @@
 import type { ManageService } from '#service';
-import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
 import { bounceRemoveCancellation } from '@pins/peas-row-commons-lib/middleware/manage-list/track-removes.ts';
 import { asyncHandler } from '@pins/peas-row-commons-lib/util/async-handler.ts';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms';
@@ -12,12 +11,13 @@ import { buildGetJourney } from '@planning-inspectorate/dynamic-forms/src/middle
 import { redirectToUnansweredQuestion } from '@planning-inspectorate/dynamic-forms/src/middleware/redirect-to-unanswered-question.js';
 import { validationErrorHandler } from '@planning-inspectorate/dynamic-forms/src/validator/validation-error-handler.js';
 import validate from '@planning-inspectorate/dynamic-forms/src/validator/validator.js';
-import type { IRouter, Request } from 'express';
+import type { IRouter } from 'express';
 import { Router as createRouter } from 'express';
 import { buildGetJourneyMiddleware } from './controller.ts';
 import { JOURNEY_ID, createJourney } from './journey.ts';
 import { getQuestions } from './questions.ts';
 import { buildSaveController, buildSuccessController } from './save.ts';
+import type { CreateCaseRequest } from './types.ts';
 
 export function createNewCaseRoutes(service: ManageService): IRouter {
 	const router = createRouter({ mergeParams: true });
@@ -25,14 +25,15 @@ export function createNewCaseRoutes(service: ManageService): IRouter {
 
 	const getJourneyResponse = buildGetJourneyResponseFromSession(JOURNEY_ID);
 
-	const getJourney = buildGetJourney(
-		(req: Request & { groupMembers: EntraGroupMembers }, journeyResponse: JourneyResponse) => {
-			const groupMembers = req.groupMembers; // Stored on request object because we do not have access to the response object.
-			const questions = getQuestions(groupMembers);
+	const getJourney = buildGetJourney((req: CreateCaseRequest, journeyResponse: JourneyResponse) => {
+		// Stored on request object because we do not have access to the response object.
+		// Falls back to empty groups if the entra group members fetch failed.
+		const groupMembers = req.groupMembers ?? { allUsers: [], caseOfficers: [], inspectors: [] };
+		const otherCases = req.otherCases ?? [];
+		const questions = getQuestions(groupMembers, otherCases);
 
-			return createJourney(JOURNEY_ID, questions, journeyResponse, req);
-		}
-	);
+		return createJourney(JOURNEY_ID, questions, journeyResponse, req);
+	});
 
 	const saveController = buildSaveController(service);
 	const successController = buildSuccessController();
