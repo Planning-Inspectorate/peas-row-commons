@@ -191,7 +191,7 @@ export function camelCaseToKebabCase(str: string) {
 /**
  * Merges the linked case and lead case status onto one line for each case
  */
-const linkedCaseSummaryFormatter = ({ answer, formattedAnswer, question }: SummaryFormatterContext) => {
+export const linkedCaseSummaryFormatter = ({ answer, formattedAnswer, question }: SummaryFormatterContext) => {
 	const rows = getLinkedCaseDetailRows(answer);
 
 	if (!rows.length) {
@@ -204,7 +204,7 @@ const linkedCaseSummaryFormatter = ({ answer, formattedAnswer, question }: Summa
 	const answers = rows.map((row) => {
 		const referenceText = referenceQuestion ? referenceQuestion.formatAnswer(row.linkedCaseId) : row.linkedCaseId;
 
-		const summaryLine = row.linkedCaseIsLead === 'yes' ? `${referenceText} (Lead case)` : referenceText;
+		const summaryLine = row.linkedCaseIsLead === 'yes' ? `${referenceText} (Lead)` : referenceText;
 
 		return [{ answer: summaryLine }];
 	});
@@ -839,7 +839,7 @@ export const OVERVIEW_QUESTIONS = {
 		options: [
 			// options populated dynamically in createOverviewQuestions with other case references
 		],
-		validators: [new RequiredValidator('Enter the linked case reference')]
+		validators: [new RequiredValidator('Select the linked case reference')]
 	},
 	isLead: {
 		type: COMPONENT_TYPES.RADIO,
