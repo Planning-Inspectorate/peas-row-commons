@@ -50,7 +50,7 @@ export function createJourney(questions: Record<string, any>, response: JourneyR
 				.addQuestion(questions.relatedCaseDetails, new ManageListSection().addQuestion(questions.addRelatedCase))
 				.addQuestion(
 					questions.linkedCaseDetails,
-					new ManageListSection().addQuestion(questions.linkedCaseReference).addQuestion(questions.isLead)
+					new ManageListSection().addQuestion(questions.linkedCaseId).addQuestion(questions.isLead)
 				),
 			new Section('Case details', 'case-details')
 				.addQuestion(questions.reference)

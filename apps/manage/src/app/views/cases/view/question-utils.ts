@@ -1,5 +1,6 @@
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
 import CustomDatePeriodValidator from '@pins/peas-row-commons-lib/validators/custom-date-period-validator.ts';
+import type { SummaryFormatterContext } from '@planning-inspectorate/dynamic-forms';
 import { COMPONENT_TYPES, CrossQuestionValidator } from '@planning-inspectorate/dynamic-forms';
 import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
 import type BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
@@ -43,14 +44,17 @@ import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.
 import { INSPECTOR_CONSTANTS } from '@pins/peas-row-commons-lib/constants/inspectors.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
+import type TableManageListQuestion from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/question.ts';
 import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/validator.ts';
 import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-components/optional-date-component/validator.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
 import { LinkedCasesLeadValidator } from '@pins/peas-row-commons-lib/validators/linked-case-validator.ts';
 import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
+import nunjucks from 'nunjucks';
 import { ENVIRONMENT_NAME, loadEnvironmentConfig } from '../../../config.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
+import { getLinkedCaseDetailRows } from './linked-cases.ts';
 import type { UserMap } from './types.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
@@ -183,6 +187,35 @@ export function camelCaseToKebabCase(str: string) {
 		.map((s) => s.toLowerCase())
 		.join('-');
 }
+
+/**
+ * Merges the linked case and lead case status onto one line for each case
+ */
+const linkedCaseSummaryFormatter = ({ answer, formattedAnswer, question }: SummaryFormatterContext) => {
+	const rows = getLinkedCaseDetailRows(answer);
+
+	if (!rows.length) {
+		return formattedAnswer;
+	}
+
+	const { section, summaryLimit } = question as unknown as TableManageListQuestion;
+	const referenceQuestion = section.questions.find((q: Question) => q.fieldName === 'linkedCaseId');
+
+	const answers = rows.map((row) => {
+		const referenceText = referenceQuestion ? referenceQuestion.formatAnswer(row.linkedCaseId) : row.linkedCaseId;
+
+		const summaryLine = row.linkedCaseIsLead === 'yes' ? `${referenceText} (Lead case)` : referenceText;
+
+		return [{ answer: summaryLine }];
+	});
+
+	return nunjucks.render('custom-components/manage-list-table/answer-summary-list.njk', {
+		answers,
+		limit: summaryLimit,
+		uniqueId: `list-${question.fieldName}`,
+		enableToggle: answers.length > summaryLimit
+	});
+};
 
 export const DATE_QUESTIONS = {
 	receivedDate: dateQuestion({
@@ -790,13 +823,14 @@ export const OVERVIEW_QUESTIONS = {
 			new ManageListItemsCompleteValidator({
 				linkedCaseIsLead: 'whether the case is the lead case'
 			})
-		]
+		],
+		formatSummaryValue: linkedCaseSummaryFormatter
 	},
-	linkedCaseReference: {
+	linkedCaseId: {
 		type: COMPONENT_TYPES.SELECT,
 		title: 'Add linked case details',
 		question: 'Add linked case details',
-		fieldName: 'linkedCases',
+		fieldName: 'linkedCaseId',
 		url: 'linked-case-reference',
 		viewData: {
 			tableHeader: 'Linked case reference',
@@ -804,7 +838,8 @@ export const OVERVIEW_QUESTIONS = {
 		},
 		options: [
 			// options populated dynamically in createOverviewQuestions with other case references
-		]
+		],
+		validators: [new RequiredValidator('Enter the linked case reference')]
 	},
 	isLead: {
 		type: COMPONENT_TYPES.RADIO,
@@ -1234,8 +1269,8 @@ export function createOverviewQuestions(
 			...overviewQuestions.caseSubtype,
 			legacyOptions: subTypes
 		},
-		linkedCaseReference: {
-			...overviewQuestions.linkedCaseReference,
+		linkedCaseId: {
+			...overviewQuestions.linkedCaseId,
 			options: linkedCaseOptions
 		}
 	};
