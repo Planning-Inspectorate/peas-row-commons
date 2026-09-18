@@ -5,7 +5,6 @@ import DatePeriodWithExtraActions from './date-period-with-extra-actions/questio
 import FencingPermanentQuestion from './fencing-permanent/question.ts';
 import OutcomesTableQuestion from './manage-list-table/defined-columns-list-table/outcomes-table/question.ts';
 import DefinedColumnsTableQuestion from './manage-list-table/defined-columns-list-table/question.ts';
-import LinkedCasesListQuestion from './manage-list-table/linked-cases-table/question.ts';
 import TableManageListQuestion from './manage-list-table/question.ts';
 import NestedFolderQuestion from './nested-folder-radio/question.ts';
 import OptionalTimeDateTimeInput from './optional-time-date-time-input/question.ts';
@@ -18,7 +17,6 @@ export const CUSTOM_COMPONENTS = Object.freeze({
 	OPTIONAL_TIME_DATE_TIME: 'optional-time-date-time',
 	TABLE_MANAGE_LIST: 'table-manage-list',
 	NESTED_FOLDERS: 'nested-folders',
-	LINKED_CASES_LIST: 'linked-cases-list',
 	DEFINED_COLUMNS_LIST: 'defined-columns-list',
 	OUTCOMES_LIST: 'outcomes-list',
 	LEGACY_RADIO: 'legacy-radio',
@@ -34,7 +32,6 @@ export const CUSTOM_COMPONENT_CLASSES = Object.freeze({
 	[CUSTOM_COMPONENTS.OPTIONAL_TIME_DATE_TIME]: OptionalTimeDateTimeInput,
 	[CUSTOM_COMPONENTS.TABLE_MANAGE_LIST]: TableManageListQuestion,
 	[CUSTOM_COMPONENTS.NESTED_FOLDERS]: NestedFolderQuestion,
-	[CUSTOM_COMPONENTS.LINKED_CASES_LIST]: LinkedCasesListQuestion,
 	[CUSTOM_COMPONENTS.DEFINED_COLUMNS_LIST]: DefinedColumnsTableQuestion,
 	[CUSTOM_COMPONENTS.OUTCOMES_LIST]: OutcomesTableQuestion,
 	[CUSTOM_COMPONENTS.LEGACY_RADIO]: LegacyRadioQuestion,
