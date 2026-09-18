@@ -2,7 +2,8 @@ process.env.ENVIRONMENT = 'dev';
 
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
-import { afterEach, beforeEach, describe, it } from 'node:test';
+import { afterEach, beforeEach, describe, it, mock } from 'node:test';
+import nunjucks from 'nunjucks';
 import {
 	ALL_QUESTIONS,
 	camelCaseToKebabCase,
@@ -10,6 +11,7 @@ import {
 	createOverviewQuestions,
 	dateQuestion,
 	handleOriginatorFormattingFn,
+	linkedCaseSummaryFormatter,
 	OVERVIEW_QUESTIONS,
 	validateDateIsAfterReceivedDate,
 	validateDateRangeIsAfterReceivedDate,
@@ -467,6 +469,139 @@ describe('questions utils', () => {
 					value: ''
 				}
 			]);
+		});
+	});
+
+	describe('linkedCaseSummaryFormatter', () => {
+		const createReferenceQuestion = () => ({
+			fieldName: 'linkedCaseId',
+			formatAnswer: (linkedCaseId: string) => `Ref-${linkedCaseId}`
+		});
+
+		const createQuestionContext = (
+			referenceQuestion: unknown,
+			{ fieldName = 'linkedCaseDetails', summaryLimit = 5 } = {}
+		) => ({
+			fieldName,
+			section: {
+				questions: referenceQuestion ? [referenceQuestion] : []
+			},
+			summaryLimit
+		});
+
+		type RenderData = { answers: unknown[]; limit: number; uniqueId: string; enableToggle: boolean };
+
+		let renderMock: ReturnType<typeof mock.method>;
+
+		const getRenderCall = (callIndex = 0) =>
+			renderMock.mock.calls[callIndex].arguments as unknown as [string, RenderData];
+
+		beforeEach(() => {
+			renderMock = mock.method(nunjucks, 'render', () => '<rendered-html>');
+		});
+
+		afterEach(() => {
+			renderMock.mock.restore();
+		});
+
+		it('should return formattedAnswer unchanged and not render when answer has no valid rows', () => {
+			const question = createQuestionContext(createReferenceQuestion());
+
+			const result = linkedCaseSummaryFormatter({
+				answer: [],
+				formattedAnswer: 'Not started',
+				question
+			} as any);
+
+			assert.strictEqual(result, 'Not started');
+			assert.strictEqual(renderMock.mock.calls.length, 0);
+		});
+
+		it('should return formattedAnswer unchanged when answer is not an array', () => {
+			const question = createQuestionContext(createReferenceQuestion());
+
+			const result = linkedCaseSummaryFormatter({
+				answer: 'not-an-array',
+				formattedAnswer: 'fallback',
+				question
+			} as any);
+
+			assert.strictEqual(result, 'fallback');
+			assert.strictEqual(renderMock.mock.calls.length, 0);
+		});
+
+		it('should format rows using the referenceQuestion and mark the lead case', () => {
+			const question = createQuestionContext(createReferenceQuestion());
+			const answer = [
+				{ linkedCaseId: 'case-1', linkedCaseIsLead: 'no' },
+				{ linkedCaseId: 'case-2', linkedCaseIsLead: 'yes' }
+			];
+
+			linkedCaseSummaryFormatter({ answer, formattedAnswer: '', question } as any);
+
+			assert.strictEqual(renderMock.mock.calls.length, 1);
+			const [, data] = getRenderCall();
+			assert.deepStrictEqual(data.answers, [[{ answer: 'Ref-case-1' }], [{ answer: 'Ref-case-2 (Lead)' }]]);
+		});
+
+		it('should fall back to the raw linkedCaseId when no reference question is found', () => {
+			const question = createQuestionContext(null);
+			const answer = [{ linkedCaseId: 'case-1', linkedCaseIsLead: 'no' }];
+
+			linkedCaseSummaryFormatter({ answer, formattedAnswer: '', question } as any);
+
+			const [, data] = getRenderCall();
+			assert.deepStrictEqual(data.answers, [[{ answer: 'case-1' }]]);
+		});
+
+		it('should render with the correct template, limit and uniqueId', () => {
+			const question = createQuestionContext(createReferenceQuestion(), {
+				fieldName: 'linkedCaseDetails',
+				summaryLimit: 3
+			});
+			const answer = [{ linkedCaseId: 'case-1', linkedCaseIsLead: 'no' }];
+
+			linkedCaseSummaryFormatter({ answer, formattedAnswer: '', question } as any);
+
+			const [template, data] = getRenderCall();
+			assert.strictEqual(template, 'custom-components/manage-list-table/answer-summary-list.njk');
+			assert.strictEqual(data.limit, 3);
+			assert.strictEqual(data.uniqueId, 'list-linkedCaseDetails');
+		});
+
+		it('should set enableToggle to true when there are more answers than the summary limit', () => {
+			const question = createQuestionContext(createReferenceQuestion(), { summaryLimit: 1 });
+			const answer = [
+				{ linkedCaseId: 'case-1', linkedCaseIsLead: 'no' },
+				{ linkedCaseId: 'case-2', linkedCaseIsLead: 'no' }
+			];
+
+			linkedCaseSummaryFormatter({ answer, formattedAnswer: '', question } as any);
+
+			const [, data] = getRenderCall();
+			assert.strictEqual(data.enableToggle, true);
+		});
+
+		it('should set enableToggle to false when answers equal the summary limit', () => {
+			const question = createQuestionContext(createReferenceQuestion(), { summaryLimit: 2 });
+			const answer = [
+				{ linkedCaseId: 'case-1', linkedCaseIsLead: 'no' },
+				{ linkedCaseId: 'case-2', linkedCaseIsLead: 'no' }
+			];
+
+			linkedCaseSummaryFormatter({ answer, formattedAnswer: '', question } as any);
+
+			const [, data] = getRenderCall();
+			assert.strictEqual(data.enableToggle, false);
+		});
+
+		it('should return the rendered html from nunjucks', () => {
+			const question = createQuestionContext(createReferenceQuestion());
+			const answer = [{ linkedCaseId: 'case-1', linkedCaseIsLead: 'no' }];
+
+			const result = linkedCaseSummaryFormatter({ answer, formattedAnswer: '', question } as any);
+
+			assert.strictEqual(result, '<rendered-html>');
 		});
 	});
 });
