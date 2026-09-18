@@ -2,6 +2,7 @@ import type { ManageService } from '#service';
 import type { Request, Response } from 'express';
 import { AUDIT_ACTIONS } from '../../../audit/index.ts';
 import { createFolders, findFolders, FOLDER_TEMPLATES_MAP } from '../case-folders/folder-utils.ts';
+import { applyLinkedCaseRelationships } from '../view/linked-cases.ts';
 import { buildReferencePrefix } from './case-codes.ts';
 import { mapAnswersToCaseInput, resolveCaseTypeIds } from './case-mapper.ts';
 import { generateCaseReference } from './case-reference.ts';
@@ -9,7 +10,7 @@ import { JOURNEY_ID } from './journey.ts';
 
 import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 
-import { clearDataFromSession } from '@planning-inspectorate/dynamic-forms';
+import { BOOLEAN_OPTIONS, clearDataFromSession } from '@planning-inspectorate/dynamic-forms';
 
 export function buildSaveController({ db, logger, audit }: ManageService) {
 	return async (req: Request, res: Response) => {
@@ -35,6 +36,19 @@ export function buildSaveController({ db, logger, audit }: ManageService) {
 				const created = await $tx.case.create({ data: caseInput });
 
 				id = created.id;
+
+				/**
+				 * Write the CaseRelationship linking this new case to its lead case.
+				 * If this case is the lead case, it's assumed the others don't yet exist,
+				 * and will be linked when they are created.
+				 */
+				if (
+					answers.hasLinkedCases === BOOLEAN_OPTIONS.YES &&
+					answers.isLeadCase === BOOLEAN_OPTIONS.NO &&
+					answers.leadCaseId
+				) {
+					await applyLinkedCaseRelationships($tx, id, { leadCaseId: answers.leadCaseId, otherCaseIds: [] }, null);
+				}
 
 				logger.info({ reference }, 'created a new case');
 

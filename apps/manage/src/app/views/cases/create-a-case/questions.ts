@@ -40,8 +40,9 @@ import {
 	referenceDataToRadioOptions,
 	SUB_TYPE_ERROR
 } from './questions-utils.ts';
+import type { OtherCaseOption } from './types.ts';
 
-export function getQuestions(groupMembers: EntraGroupMembers) {
+export function getQuestions(groupMembers: EntraGroupMembers, otherCases: OtherCaseOption[] = []) {
 	let LPAs: Prisma.AuthorityUncheckedCreateInput[];
 	try {
 		const env = loadEnvironmentConfig();
@@ -62,6 +63,11 @@ export function getQuestions(groupMembers: EntraGroupMembers) {
 	];
 	const mappedCaseOfficers = groupMembers.caseOfficers.map(referenceDataToRadioOptions);
 	mappedCaseOfficers.unshift({ text: '', value: '' });
+
+	const leadCaseOptions = [
+		{ text: '', value: '' }, // ensure there is a 'null' option so the first case isn't selected by default
+		...otherCases.map((otherCase) => ({ text: otherCase.reference, value: otherCase.id }))
+	];
 
 	const questions = {
 		caseworkArea: {
@@ -298,21 +304,14 @@ export function getQuestions(groupMembers: EntraGroupMembers) {
 			url: 'is-lead-case',
 			validators: [new RequiredValidator('Select whether this is the lead case')]
 		},
-		leadCaseReference: {
-			type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
+		leadCaseId: {
+			type: COMPONENT_TYPES.SELECT,
 			title: 'What is the case reference of the lead case?',
 			question: 'What is the case reference of the lead case?',
-			fieldName: 'leadCaseReference',
+			fieldName: 'leadCaseId',
 			url: 'lead-case-reference',
-			validators: [
-				new RequiredValidator('Enter the lead case reference'),
-				new StringValidator({
-					maxLength: {
-						maxLength: 25,
-						maxLengthMessage: 'Lead case must be between 1 and 25 characters'
-					}
-				})
-			]
+			options: leadCaseOptions,
+			validators: [new RequiredValidator('Select the lead case reference')]
 		}
 	};
 

@@ -23,7 +23,20 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 			if (next) next();
 		} catch (error) {
 			logger.error({ error }, 'Failed to fetch entra group members');
-			if (next) next();
 		}
+
+		try {
+			// Fetches the list of existing cases (id + reference) so they can be
+			// offered as options for the lead case reference question.
+			req.otherCases = await db.case.findMany({
+				select: { id: true, reference: true },
+				orderBy: { reference: 'asc' }
+			});
+		} catch (error) {
+			logger.error({ error }, 'Failed to fetch other cases');
+			req.otherCases = [];
+		}
+
+		if (next) next();
 	};
 }

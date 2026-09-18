@@ -2,7 +2,6 @@ import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.t
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 import { mapAddressViewModelToDb } from '@pins/peas-row-commons-lib/util/address.ts';
-import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms';
 import { kebabToCamel } from './questions-utils.ts';
 
 /**
@@ -86,21 +85,9 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 		input.Authority = { connect: { id: answers.authorityId } };
 	}
 
-	// Handle linked cases - create LinkedCase record when this case is linked but not the lead
-	if (
-		answers.hasLinkedCases === BOOLEAN_OPTIONS.YES &&
-		answers.isLeadCase === BOOLEAN_OPTIONS.NO &&
-		answers.leadCaseReference
-	) {
-		input.LinkedCases = {
-			create: [
-				{
-					reference: answers.leadCaseReference,
-					isLead: true
-				}
-			]
-		};
-	}
+	// Note: linked-case relationships (CaseRelationship rows) are written separately
+	// after the case is created, in save.ts, since they may require the newly
+	// generated case id (see applyLinkedCaseRelationships).
 
 	return input;
 }
