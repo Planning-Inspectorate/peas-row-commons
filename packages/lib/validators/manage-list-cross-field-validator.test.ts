@@ -2,7 +2,7 @@ import type { JourneyResponse, Question } from '@planning-inspectorate/dynamic-f
 import assert from 'assert';
 import type { FieldValidationError } from 'express-validator';
 import { describe, it } from 'node:test';
-import { LinkedCasesLeadValidator } from './linked-case-validator.ts';
+import { ManageListCrossFieldValidator } from './manage-list-cross-field-validator.ts';
 
 /** Minimal Question stub */
 function makeQuestion(overrides: Partial<Question> = {}): Question {
@@ -26,7 +26,7 @@ function makeReq(overrides: Record<string, unknown> = {}) {
 
 /** Runs the returned validation chain against a fake req and returns errors */
 async function runValidation(
-	validator: LinkedCasesLeadValidator,
+	validator: ManageListCrossFieldValidator,
 	question: Question,
 	journeyResponse: JourneyResponse,
 	req: ReturnType<typeof makeReq>
@@ -37,12 +37,12 @@ async function runValidation(
 	return result;
 }
 
-describe('LinkedCasesLeadValidator', () => {
+describe('ManageListCrossFieldValidator', () => {
 	describe('constructor', () => {
 		it('throws when dependencyFieldName is missing', () => {
 			assert.throws(
 				() =>
-					new LinkedCasesLeadValidator({
+					new ManageListCrossFieldValidator({
 						validationFunction: () => true
 					} as never),
 				/dependencyFieldName/
@@ -52,7 +52,7 @@ describe('LinkedCasesLeadValidator', () => {
 		it('throws when validationFunction is missing', () => {
 			assert.throws(
 				() =>
-					new LinkedCasesLeadValidator({
+					new ManageListCrossFieldValidator({
 						dependencyFieldName: 'linkedCases'
 					} as never),
 				/validationFunction/
@@ -62,7 +62,7 @@ describe('LinkedCasesLeadValidator', () => {
 		it('throws when validationFunction is not a function', () => {
 			assert.throws(
 				() =>
-					new LinkedCasesLeadValidator({
+					new ManageListCrossFieldValidator({
 						dependencyFieldName: 'linkedCases',
 						validationFunction: 42 as never
 					}),
@@ -72,7 +72,7 @@ describe('LinkedCasesLeadValidator', () => {
 
 		it('assigns properties on success', () => {
 			const fn = () => true;
-			const v = new LinkedCasesLeadValidator({
+			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: fn
 			});
@@ -83,7 +83,7 @@ describe('LinkedCasesLeadValidator', () => {
 
 	describe('validate()', () => {
 		it('returns an array with one validation chain', () => {
-			const v = new LinkedCasesLeadValidator({
+			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: () => true
 			});
@@ -93,7 +93,7 @@ describe('LinkedCasesLeadValidator', () => {
 		});
 
 		it('passes when validationFunction returns true', async () => {
-			const v = new LinkedCasesLeadValidator({
+			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: () => true
 			});
@@ -108,7 +108,7 @@ describe('LinkedCasesLeadValidator', () => {
 		});
 
 		it('fails with descriptive error when validationFunction returns false', async () => {
-			const v = new LinkedCasesLeadValidator({
+			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: () => false
 			});
@@ -126,7 +126,7 @@ describe('LinkedCasesLeadValidator', () => {
 
 		it('defaults dependency answer to [] when not an array', async () => {
 			let receivedDep: unknown;
-			const v = new LinkedCasesLeadValidator({
+			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: (_c, d) => {
 					receivedDep = d;
@@ -144,7 +144,7 @@ describe('LinkedCasesLeadValidator', () => {
 
 		it('defaults answers to {} when journeyResponse.answers is missing', async () => {
 			let receivedDep: unknown;
-			const v = new LinkedCasesLeadValidator({
+			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: (_c, d) => {
 					receivedDep = d;
@@ -157,7 +157,7 @@ describe('LinkedCasesLeadValidator', () => {
 
 		it('filters out dependency item whose id matches manageListItemId', async () => {
 			let receivedDep: Array<{ id: string }> = [];
-			const v = new LinkedCasesLeadValidator({
+			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: (_c, d) => {
 					receivedDep = d as Array<{ id: string }>;
@@ -177,7 +177,7 @@ describe('LinkedCasesLeadValidator', () => {
 
 		it('uses req.body[fieldName] when question has no getDataToSave', async () => {
 			let receivedCurrent: unknown;
-			const v = new LinkedCasesLeadValidator({
+			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: (c) => {
 					receivedCurrent = c;
@@ -195,7 +195,7 @@ describe('LinkedCasesLeadValidator', () => {
 
 		it('uses formattedAnswers[fieldName] from getDataToSave when present', async () => {
 			let receivedCurrent: unknown;
-			const v = new LinkedCasesLeadValidator({
+			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: (c) => {
 					receivedCurrent = c;
@@ -216,7 +216,7 @@ describe('LinkedCasesLeadValidator', () => {
 
 		it('falls back to whole formattedAnswers when fieldName not in it', async () => {
 			let receivedCurrent: unknown;
-			const v = new LinkedCasesLeadValidator({
+			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: (c) => {
 					receivedCurrent = c;
@@ -237,7 +237,7 @@ describe('LinkedCasesLeadValidator', () => {
 		});
 
 		it('uses first bodyFieldNames entry as the bound body field', async () => {
-			const v = new LinkedCasesLeadValidator({
+			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: () => false
 			});
@@ -256,7 +256,7 @@ describe('LinkedCasesLeadValidator', () => {
 		});
 
 		it('falls back to fieldName when bodyFieldNames is absent', async () => {
-			const v = new LinkedCasesLeadValidator({
+			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: () => false
 			});

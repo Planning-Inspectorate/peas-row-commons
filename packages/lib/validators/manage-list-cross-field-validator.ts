@@ -3,9 +3,11 @@ import type { Request } from 'express';
 import { body } from 'express-validator';
 
 /**
- * Validator for validating a question's answer against another question's answer using a custom validation function.
+ * Validator for validating a manage-list question's answer against another question's saved list
+ * answer using a custom validation function, excluding the item currently being edited (identified
+ * by `req.params.manageListItemId`) from the dependency list before validating.
  */
-export class LinkedCasesLeadValidator extends BaseValidator {
+export class ManageListCrossFieldValidator extends BaseValidator {
 	dependencyFieldName: string;
 	validationFunction: (currentAnswer: unknown, dependencyAnswer: unknown) => boolean;
 
@@ -19,10 +21,10 @@ export class LinkedCasesLeadValidator extends BaseValidator {
 		super();
 
 		if (!dependencyFieldName) {
-			throw new Error('LinkedCasesLeadValidator requires dependencyFieldName');
+			throw new Error('ManageListCrossFieldValidator requires dependencyFieldName');
 		}
 		if (!validationFunction || typeof validationFunction !== 'function') {
-			throw new Error('LinkedCasesLeadValidator requires a validationFunction');
+			throw new Error('ManageListCrossFieldValidator requires a validationFunction');
 		}
 
 		this.dependencyFieldName = dependencyFieldName;
