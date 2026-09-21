@@ -2,7 +2,7 @@ import type { ManageService } from '#service';
 import type { Request, Response } from 'express';
 import { AUDIT_ACTIONS } from '../../../audit/index.ts';
 import { createFolders, findFolders, FOLDER_TEMPLATES_MAP } from '../case-folders/folder-utils.ts';
-import { applyLinkedCaseRelationships } from '../view/linked-cases.ts';
+import { linkNewCaseToLead } from '../view/linked-cases.ts';
 import { buildReferencePrefix } from './case-codes.ts';
 import { mapAnswersToCaseInput, resolveCaseTypeIds } from './case-mapper.ts';
 import { generateCaseReference } from './case-reference.ts';
@@ -47,7 +47,7 @@ export function buildSaveController({ db, logger, audit }: ManageService) {
 					answers.isLeadCase === BOOLEAN_OPTIONS.NO &&
 					answers.leadCaseId
 				) {
-					await applyLinkedCaseRelationships($tx, id, { leadCaseId: answers.leadCaseId, otherCaseIds: [] }, null);
+					await linkNewCaseToLead($tx, id, answers.leadCaseId);
 				}
 
 				logger.info({ reference }, 'created a new case');
