@@ -21,6 +21,7 @@ const mockCaseFindFirst = mock.fn(() => Promise.resolve(null));
 const mockCaseCreate = mock.fn(() => Promise.resolve({ id: 'case-123', reference: 'ROW/10001' }));
 const mockCaseRelationshipDeleteMany = mock.fn(() => Promise.resolve());
 const mockCaseRelationshipCreateMany = mock.fn(() => Promise.resolve());
+const mockCaseRelationshipCreate = mock.fn(() => Promise.resolve());
 const mockFolderCreate = mock.fn(() => Promise.resolve());
 
 const mockTx = {
@@ -30,7 +31,8 @@ const mockTx = {
 	},
 	caseRelationship: {
 		deleteMany: mockCaseRelationshipDeleteMany,
-		createMany: mockCaseRelationshipCreateMany
+		createMany: mockCaseRelationshipCreateMany,
+		create: mockCaseRelationshipCreate
 	},
 	folder: {
 		create: mockFolderCreate
@@ -69,6 +71,7 @@ describe('buildSaveController', () => {
 		mockCaseCreate.mock.resetCalls();
 		mockCaseRelationshipDeleteMany.mock.resetCalls();
 		mockCaseRelationshipCreateMany.mock.resetCalls();
+		mockCaseRelationshipCreate.mock.resetCalls();
 		mockFolderCreate.mock.resetCalls();
 		mockDbTransaction.mock.resetCalls();
 		mockAuditRecord.mock.resetCalls();
@@ -137,11 +140,12 @@ describe('buildSaveController', () => {
 
 			assert.strictEqual(mockCaseRelationshipDeleteMany.mock.calls.length, 0);
 			assert.strictEqual(mockCaseRelationshipCreateMany.mock.calls.length, 0);
+			assert.strictEqual(mockCaseRelationshipCreate.mock.calls.length, 0);
 		});
 	});
 
 	describe('linked case relationships', () => {
-		it('should link the new case to the lead case when hasLinkedCases is YES and this case is not the lead', async () => {
+		it('should append a single relationship linking the new case to the lead case, without wiping any existing relationships', async () => {
 			const answers = {
 				...getBaseAnswers(),
 				hasLinkedCases: BOOLEAN_OPTIONS.YES,
@@ -154,10 +158,11 @@ describe('buildSaveController', () => {
 			const controller = buildSaveController(mockService as any);
 			await controller(req as any, res as any);
 
-			assert.strictEqual(mockCaseRelationshipDeleteMany.mock.calls.length, 2);
-			assert.strictEqual(mockCaseRelationshipCreateMany.mock.calls.length, 1);
-			assert.deepStrictEqual(mockCaseRelationshipCreateMany.mock.calls[0].arguments[0], {
-				data: [{ parentCaseId: 'lead-case-456', childCaseId: 'case-123' }]
+			assert.strictEqual(mockCaseRelationshipDeleteMany.mock.calls.length, 0);
+			assert.strictEqual(mockCaseRelationshipCreateMany.mock.calls.length, 0);
+			assert.strictEqual(mockCaseRelationshipCreate.mock.calls.length, 1);
+			assert.deepStrictEqual(mockCaseRelationshipCreate.mock.calls[0].arguments[0], {
+				data: { parentCaseId: 'lead-case-456', childCaseId: 'case-123' }
 			});
 		});
 
@@ -176,6 +181,7 @@ describe('buildSaveController', () => {
 
 			assert.strictEqual(mockCaseRelationshipDeleteMany.mock.calls.length, 0);
 			assert.strictEqual(mockCaseRelationshipCreateMany.mock.calls.length, 0);
+			assert.strictEqual(mockCaseRelationshipCreate.mock.calls.length, 0);
 		});
 
 		it('should not write case relationships when hasLinkedCases is YES but there is no leadCaseId', async () => {
@@ -193,6 +199,7 @@ describe('buildSaveController', () => {
 
 			assert.strictEqual(mockCaseRelationshipDeleteMany.mock.calls.length, 0);
 			assert.strictEqual(mockCaseRelationshipCreateMany.mock.calls.length, 0);
+			assert.strictEqual(mockCaseRelationshipCreate.mock.calls.length, 0);
 		});
 	});
 

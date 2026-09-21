@@ -99,6 +99,20 @@ export async function applyLinkedCaseRelationships(
 }
 
 /**
+ * Links a newly created case to its lead case by appending a single
+ * `CaseRelationship` row.
+ */
+export async function linkNewCaseToLead(
+	$tx: Prisma.TransactionClient,
+	caseId: string,
+	leadCaseId: string
+): Promise<void> {
+	await $tx.caseRelationship.create({
+		data: { parentCaseId: leadCaseId, childCaseId: caseId }
+	});
+}
+
+/**
  * `linkedCaseDetails` is handled entirely via direct `CaseRelationship` writes
  * (see `extractLinkedCaseChanges`/`applyLinkedCaseRelationships`), so it just needs to
  * be removed from the flat data here so it isn't mistaken for a plain `Case` field.

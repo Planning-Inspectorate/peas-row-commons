@@ -5,6 +5,7 @@ import {
 	buildPreviousLinkedCases,
 	extractLinkedCaseChanges,
 	getLinkedCaseDetailRows,
+	linkNewCaseToLead,
 	stripLinkedCaseDetails
 } from './linked-cases.ts';
 
@@ -194,6 +195,29 @@ describe('linked-cases', () => {
 
 			await applyLinkedCaseRelationships($tx as any, 'case-1', changes, null);
 
+			assert.strictEqual($tx.caseRelationship.createMany.mock.calls.length, 0);
+		});
+	});
+
+	describe('linkNewCaseToLead', () => {
+		const createMockTx = () => ({
+			caseRelationship: {
+				create: mock.fn((_args: unknown) => Promise.resolve()),
+				deleteMany: mock.fn((_args: unknown) => Promise.resolve()),
+				createMany: mock.fn((_args: unknown) => Promise.resolve())
+			}
+		});
+
+		it('should append a single relationship row without deleting any existing relationships', async () => {
+			const $tx = createMockTx();
+
+			await linkNewCaseToLead($tx as any, 'new-case', 'lead-case');
+
+			assert.strictEqual($tx.caseRelationship.create.mock.calls.length, 1);
+			assert.deepStrictEqual($tx.caseRelationship.create.mock.calls[0].arguments[0], {
+				data: { parentCaseId: 'lead-case', childCaseId: 'new-case' }
+			});
+			assert.strictEqual($tx.caseRelationship.deleteMany.mock.calls.length, 0);
 			assert.strictEqual($tx.caseRelationship.createMany.mock.calls.length, 0);
 		});
 	});
