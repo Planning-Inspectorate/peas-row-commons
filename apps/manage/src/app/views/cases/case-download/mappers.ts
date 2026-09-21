@@ -14,6 +14,7 @@ import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.
 import { formatAddress, formatDate, formatDateTime } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
 import { sortLinkedCases, sortRelatedCases } from '@pins/peas-row-commons-lib/util/case-sorting.ts';
 import { getUniqueProcedureFields } from '@pins/peas-row-commons-lib/util/dynamic-sections/procedures-section/procedure-section-builder.ts';
+import { resolveLinkedCaseRelationships } from '../view/linked-cases.ts';
 import type { CaseDownloadQueryResult } from './query.ts';
 import type {
 	CaseDetailsPdfData,
@@ -267,6 +268,14 @@ function mapOutcome(
 }
 
 /**
+ * Builds the flat `{ reference, isLead }` linked-case list from the fetched
+ * `ChildRelationships`/`ParentRelationship` (`CaseRelationship` join records).
+ */
+function buildLinkedCases(caseData: CaseDownloadQueryResult): { reference: string | null; isLead: boolean }[] {
+	return resolveLinkedCaseRelationships(caseData).map(({ reference, isLead }) => ({ reference, isLead }));
+}
+
+/**
  * Builds the data object for the "Case details" PDF template.
  *
  * Extracts every section visible on the case details page:
@@ -327,7 +336,7 @@ export function mapCaseDetailsData(
 		.map((rc) => rc.reference)
 		.filter((ref): ref is string => ref !== null && ref !== undefined);
 
-	const linkedCases = sortLinkedCases(caseData.LinkedCases ?? []).map((lc) => ({
+	const linkedCases = sortLinkedCases(buildLinkedCases(caseData)).map((lc) => ({
 		reference: lc.reference ?? GENERAL_CONSTANTS.NOT_APPLICABLE,
 		isLead: lc.isLead
 	}));

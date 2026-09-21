@@ -170,53 +170,14 @@ describe('view-model', () => {
 			assert.deepStrictEqual(result.relatedCaseDetails, mockOutcome);
 		});
 
-		it('should pass through child case data to linkedCaseDetails sorted alphanumerically, when the case has no parent', () => {
-			const childRelationships = [
-				{ id: 3, ChildCase: { id: 'other-case-10', reference: 'DRO/10' } },
-				{ id: 1, ChildCase: { id: 'other-case-1', reference: 'DRO/1' } }
-			];
-			const mockOutcome = [
-				{ linkedCaseId: 'other-case-1', linkedCaseIsLead: 'no', id: 1 },
-				{ linkedCaseId: 'other-case-10', linkedCaseIsLead: 'no', id: 3 }
-			];
-			const input = {
-				id: '123',
-				receivedDate: new Date(),
-				ChildRelationships: childRelationships
-			};
-
-			const result: any = caseToViewModel(input as any, userMap);
-
-			assert.deepStrictEqual(result.linkedCaseDetails, mockOutcome);
-		});
-
-		it('should ignore child case data when a parent relationship is also present, since a case cannot have both, and should log an error', () => {
-			const childRelationships = [{ id: 3, ChildCase: { id: 'other-case-10', reference: 'DRO/10' } }];
-			const parentRelationship = { id: 2, ParentCase: { id: 'other-case-2', reference: 'DRO/2' } };
-			const mockOutcome = [{ linkedCaseId: 'other-case-2', linkedCaseIsLead: 'yes', id: 2 }];
-			const input = {
-				id: '123',
-				receivedDate: new Date(),
-				ChildRelationships: childRelationships,
-				ParentRelationship: parentRelationship
-			};
-			const logger = mockLogger();
-
-			const result: any = caseToViewModel(input as any, userMap, logger as any);
-
-			assert.deepStrictEqual(result.linkedCaseDetails, mockOutcome);
-			assert.strictEqual(logger.error.mock.calls.length, 1);
-			assert.deepStrictEqual(logger.error.mock.calls[0].arguments[0], { caseId: '123' });
-		});
-
-		it('should pass through sibling cases (other children of the same parent) to linkedCaseDetails, excluding itself', () => {
+		it('should map resolved linked-case relationships into sorted linkedCaseDetails, passing the logger through', () => {
 			const parentRelationship = {
 				id: 2,
 				ParentCase: {
 					id: 'other-case-2',
 					reference: 'DRO/2',
 					ChildRelationships: [
-						{ id: 2, ChildCase: { id: '123', reference: 'DRO/current' } }, // this case itself - should be excluded
+						{ id: 2, ChildCase: { id: '123', reference: 'DRO/current' } }, // this case itself - excluded
 						{ id: 3, ChildCase: { id: 'other-case-10', reference: 'DRO/10' } },
 						{ id: 1, ChildCase: { id: 'other-case-1', reference: 'DRO/1' } }
 					]
@@ -232,10 +193,12 @@ describe('view-model', () => {
 				receivedDate: new Date(),
 				ParentRelationship: parentRelationship
 			};
+			const logger = mockLogger();
 
-			const result: any = caseToViewModel(input as any, userMap);
+			const result: any = caseToViewModel(input as any, userMap, logger as any);
 
 			assert.deepStrictEqual(result.linkedCaseDetails, mockOutcome);
+			assert.strictEqual(logger.error.mock.calls.length, 0);
 		});
 
 		it('should map nested Outcome.CaseDecisions to outcomeDetails with resolved decisionMaker IDs', () => {

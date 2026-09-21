@@ -1,3 +1,4 @@
+import { mockLogger } from '@pins/peas-row-commons-lib/testing/mock-logger.ts';
 import assert from 'node:assert';
 import { describe, it, mock } from 'node:test';
 import {
@@ -6,6 +7,7 @@ import {
 	extractLinkedCaseChanges,
 	getLinkedCaseDetailRows,
 	linkNewCaseToLead,
+	resolveLinkedCaseRelationships,
 	stripLinkedCaseDetails
 } from './linked-cases.ts';
 
@@ -285,6 +287,83 @@ describe('linked-cases', () => {
 			assert.deepStrictEqual(result, [
 				{ id: 'rel-1', reference: 'case-2', isLead: false },
 				{ id: 'rel-parent', reference: 'case-1', isLead: true }
+			]);
+		});
+	});
+
+	describe('resolveLinkedCaseRelationships', () => {
+		it('should return an empty array when neither relationship is present', () => {
+			assert.deepStrictEqual(resolveLinkedCaseRelationships({ id: 'case-1' }), []);
+		});
+
+		it('should map ChildRelationships to non-lead entries when there is no ParentRelationship', () => {
+			const caseRow = {
+				id: 'case-1',
+				ChildRelationships: [
+					{ id: 'rel-3', ChildCase: { id: 'other-case-10', reference: 'DRO/10' } },
+					{ id: 'rel-1', ChildCase: { id: 'other-case-1', reference: 'DRO/1' } }
+				]
+			};
+
+			const result = resolveLinkedCaseRelationships(caseRow);
+
+			assert.deepStrictEqual(result, [
+				{ id: 'rel-3', reference: 'DRO/10', otherCaseId: 'other-case-10', isLead: false },
+				{ id: 'rel-1', reference: 'DRO/1', otherCaseId: 'other-case-1', isLead: false }
+			]);
+		});
+
+		it('should treat the ParentRelationship as the lead case and ignore ChildRelationships, logging an error', () => {
+			const caseRow = {
+				id: 'case-1',
+				ChildRelationships: [{ id: 'rel-3', ChildCase: { id: 'other-case-10', reference: 'DRO/10' } }],
+				ParentRelationship: { id: 'rel-2', ParentCase: { id: 'other-case-2', reference: 'DRO/2' } }
+			};
+			const logger = mockLogger();
+
+			const result = resolveLinkedCaseRelationships(caseRow, logger as any);
+
+			assert.deepStrictEqual(result, [{ id: 'rel-2', reference: 'DRO/2', otherCaseId: 'other-case-2', isLead: true }]);
+			assert.strictEqual(logger.error.mock.calls.length, 1);
+			assert.deepStrictEqual(logger.error.mock.calls[0].arguments[0], { caseId: 'case-1' });
+		});
+
+		it('should not log when ParentRelationship is present but ChildRelationships is empty', () => {
+			const caseRow = {
+				id: 'case-1',
+				ChildRelationships: [],
+				ParentRelationship: { id: 'rel-2', ParentCase: { id: 'other-case-2', reference: 'DRO/2' } }
+			};
+			const logger = mockLogger();
+
+			resolveLinkedCaseRelationships(caseRow, logger as any);
+
+			assert.strictEqual(logger.error.mock.calls.length, 0);
+		});
+
+		it('should include sibling cases (other children of the same parent), excluding itself', () => {
+			const caseRow = {
+				id: 'case-1',
+				ParentRelationship: {
+					id: 'rel-2',
+					ParentCase: {
+						id: 'other-case-2',
+						reference: 'DRO/2',
+						ChildRelationships: [
+							{ id: 'rel-2', ChildCase: { id: 'case-1', reference: 'DRO/current' } }, // itself - excluded
+							{ id: 'rel-3', ChildCase: { id: 'other-case-10', reference: 'DRO/10' } },
+							{ id: 'rel-1', ChildCase: { id: 'other-case-1', reference: 'DRO/1' } }
+						]
+					}
+				}
+			};
+
+			const result = resolveLinkedCaseRelationships(caseRow);
+
+			assert.deepStrictEqual(result, [
+				{ id: 'rel-2', reference: 'DRO/2', otherCaseId: 'other-case-2', isLead: true },
+				{ id: 'rel-3', reference: 'DRO/10', otherCaseId: 'other-case-10', isLead: false },
+				{ id: 'rel-1', reference: 'DRO/1', otherCaseId: 'other-case-1', isLead: false }
 			]);
 		});
 	});

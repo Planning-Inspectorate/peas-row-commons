@@ -101,7 +101,31 @@ export async function fetchCaseForDownload(db: PrismaClient, caseId: string) {
 				orderBy: { displayOrder: 'asc' }
 			},
 			RelatedCases: true,
-			LinkedCases: true
+			ChildRelationships: {
+				include: {
+					ChildCase: {
+						select: { id: true, reference: true }
+					}
+				}
+			},
+			ParentRelationship: {
+				include: {
+					ParentCase: {
+						select: {
+							id: true,
+							reference: true,
+							// Other children of this case's parent are this case's siblings.
+							ChildRelationships: {
+								include: {
+									ChildCase: {
+										select: { id: true, reference: true }
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	});
 }
