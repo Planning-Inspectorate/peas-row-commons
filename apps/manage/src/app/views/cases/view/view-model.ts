@@ -18,6 +18,7 @@ import { nl2br, truncateComment } from '@pins/peas-row-commons-lib/util/strings.
 import { booleanToYesNoValue } from '@planning-inspectorate/dynamic-forms';
 import { formatInTimeZone } from 'date-fns-tz';
 import type { Logger } from 'pino';
+import { resolveLinkedCaseRelationships } from './linked-cases.ts';
 import type { CaseDecisionFields, CaseListFields, CaseNoteFields, CaseProcedureFields, UserMap } from './types.ts';
 
 function formatValue(value: any) {
@@ -192,41 +193,7 @@ export function caseToViewModel(caseRow: CaseListFields, userMap: UserMap, logge
 		delete mergedData.RelatedCases;
 	}
 
-	let allLinkedCases: { id: string; reference: string | null; otherCaseId: string; isLead: boolean }[];
-
-	if (caseRow.ParentRelationship) {
-		if (caseRow.ChildRelationships?.length) {
-			logger?.error(
-				{ caseId: caseRow.id },
-				'Case has both a ParentRelationship and ChildRelationships - a case should only have one. Ignoring ChildRelationships.'
-			);
-		}
-
-		const parentCase = {
-			id: caseRow.ParentRelationship.id,
-			reference: caseRow.ParentRelationship.ParentCase.reference,
-			otherCaseId: caseRow.ParentRelationship.ParentCase.id,
-			isLead: true
-		};
-
-		const siblingCases = (caseRow.ParentRelationship.ParentCase.ChildRelationships ?? [])
-			.filter((relationship) => relationship.ChildCase.id !== caseRow.id)
-			.map((relationship) => ({
-				id: relationship.id,
-				reference: relationship.ChildCase.reference,
-				otherCaseId: relationship.ChildCase.id,
-				isLead: false
-			}));
-
-		allLinkedCases = [parentCase, ...siblingCases];
-	} else {
-		allLinkedCases = (caseRow.ChildRelationships ?? []).map((relationship) => ({
-			id: relationship.id,
-			reference: relationship.ChildCase.reference,
-			otherCaseId: relationship.ChildCase.id,
-			isLead: false
-		}));
-	}
+	const allLinkedCases = resolveLinkedCaseRelationships(caseRow, logger);
 
 	if (allLinkedCases.length) {
 		mergedData.linkedCaseDetails = sortLinkedCases(allLinkedCases).map((linkedCase) => ({

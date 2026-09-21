@@ -46,7 +46,8 @@ function createBaseCaseData(overrides: Record<string, unknown> = {}) {
 		Outcome: null,
 		Folders: [],
 		RelatedCases: [],
-		LinkedCases: [],
+		ChildRelationships: [],
+		ParentRelationship: null,
 		...overrides
 	};
 }
@@ -445,24 +446,49 @@ describe('mappers', () => {
 			assert.deepStrictEqual(result.relatedCases, ['REL-001', 'REL-002', 'REL-010']);
 		});
 
-		it('should map linked cases with lead cases first, then alphanumerically', () => {
+		it('should map linked cases when this case is the lead, sorted alphanumerically', () => {
 			const caseData = createBaseCaseData({
-				LinkedCases: [
-					{ reference: 'LINK-010', isLead: false },
-					{ reference: 'LINK-001', isLead: false },
-					{ reference: 'LINK-002', isLead: true },
-					{ reference: null, isLead: false }
+				ChildRelationships: [
+					{ ChildCase: { id: 'case-10', reference: 'LINK-010' } },
+					{ ChildCase: { id: 'case-1a', reference: 'LINK-001' } },
+					{ ChildCase: { id: 'case-null', reference: null } }
 				]
 			});
 
 			const result = mapCaseDetailsData(caseData as any, undefined, new Map());
 
-			assert.strictEqual(result.linkedCases.length, 4);
+			assert.strictEqual(result.linkedCases.length, 3);
+			assert.strictEqual(result.linkedCases[0].reference, 'N/A');
+			assert.strictEqual(result.linkedCases[0].isLead, false);
+			assert.strictEqual(result.linkedCases[1].reference, 'LINK-001');
+			assert.strictEqual(result.linkedCases[2].reference, 'LINK-010');
+		});
+
+		it('should map linked cases when this case is a child, with parent as lead and siblings after, excluding itself', () => {
+			const caseData = createBaseCaseData({
+				id: 'case-1',
+				ParentRelationship: {
+					ParentCase: {
+						id: 'parent-1',
+						reference: 'LINK-002',
+						ChildRelationships: [
+							{ ChildCase: { id: 'case-1', reference: 'DRT/2025/0001' } },
+							{ ChildCase: { id: 'case-10', reference: 'LINK-010' } },
+							{ ChildCase: { id: 'case-1a', reference: 'LINK-001' } }
+						]
+					}
+				}
+			});
+
+			const result = mapCaseDetailsData(caseData as any, undefined, new Map());
+
+			assert.strictEqual(result.linkedCases.length, 3);
 			assert.strictEqual(result.linkedCases[0].reference, 'LINK-002');
 			assert.strictEqual(result.linkedCases[0].isLead, true);
-			assert.strictEqual(result.linkedCases[1].reference, 'N/A');
-			assert.strictEqual(result.linkedCases[2].reference, 'LINK-001');
-			assert.strictEqual(result.linkedCases[3].reference, 'LINK-010');
+			assert.strictEqual(result.linkedCases[1].reference, 'LINK-001');
+			assert.strictEqual(result.linkedCases[1].isLead, false);
+			assert.strictEqual(result.linkedCases[2].reference, 'LINK-010');
+			assert.strictEqual(result.linkedCases[2].isLead, false);
 		});
 
 		it('should map document info fields', () => {

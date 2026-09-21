@@ -1,5 +1,6 @@
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { yesNoToBoolean } from '@planning-inspectorate/dynamic-forms';
+import type { Logger } from 'pino';
 import type { LinkedCaseAuditSource, LinkedCaseDetailInput } from './types.ts';
 
 /**
@@ -147,4 +148,86 @@ export function buildPreviousLinkedCases(previousValues: Record<string, unknown>
 	}
 
 	return linkedCases;
+}
+
+/**
+ * A single `CaseRelationship` join record, joined out to its child case's own
+ * identity fields.
+ */
+interface RelationshipRow {
+	id: string;
+	ChildCase: { id: string; reference: string | null };
+}
+
+/**
+ * The subset of a case's fetched fields needed to resolve its full set of
+ * linked cases (its own `id`, plus the `ChildRelationships`/`ParentRelationship`
+ * join records).
+ */
+export interface RelationshipCaseRow {
+	id: string;
+	ChildRelationships?: RelationshipRow[] | null;
+	ParentRelationship?: {
+		id: string;
+		ParentCase: {
+			id: string;
+			reference: string | null;
+			ChildRelationships?: RelationshipRow[] | null;
+		};
+	} | null;
+}
+
+/**
+ * A single resolved linked-case relationship.0
+ */
+export interface ResolvedLinkedCase {
+	id: string;
+	reference: string | null;
+	otherCaseId: string;
+	isLead: boolean;
+}
+
+/**
+ * Resolves the full set of linked cases for `caseRow` from its fetched
+ * `CaseRelationship` join records.
+ *
+ * If `caseRow` has a `ParentRelationship`, it's a child of another case: the
+ * parent is the lead, and the parent's other children (`caseRow`'s siblings)
+ * are included too. Otherwise, `caseRow`'s own `ChildRelationships` (if any)
+ * are its linked cases, none of which are the lead.
+ */
+export function resolveLinkedCaseRelationships(caseRow: RelationshipCaseRow, logger?: Logger): ResolvedLinkedCase[] {
+	if (caseRow.ParentRelationship) {
+		if (caseRow.ChildRelationships?.length) {
+			logger?.error(
+				{ caseId: caseRow.id },
+				'Case has both a ParentRelationship and ChildRelationships - a case should only have one. Ignoring ChildRelationships.'
+			);
+		}
+
+		const parentCase: ResolvedLinkedCase = {
+			id: caseRow.ParentRelationship.id,
+			reference: caseRow.ParentRelationship.ParentCase.reference,
+			otherCaseId: caseRow.ParentRelationship.ParentCase.id,
+			isLead: true
+		};
+
+		const siblingCases: ResolvedLinkedCase[] = (caseRow.ParentRelationship.ParentCase.ChildRelationships ?? [])
+			.filter((relationship) => relationship.ChildCase.id !== caseRow.id)
+			.map((relationship) => ({
+				id: relationship.id,
+				reference: relationship.ChildCase.reference,
+				otherCaseId: relationship.ChildCase.id,
+				isLead: false
+			}));
+
+		return [parentCase, ...siblingCases];
+	}
+
+	return (caseRow.ChildRelationships ?? []).map((relationship) => ({
+		id: relationship.id,
+		reference: relationship.ChildCase.reference,
+		otherCaseId: relationship.ChildCase.id,
+		isLead: false
+	}));
 }
