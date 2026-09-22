@@ -1,8 +1,9 @@
 {%- from "govuk/components/button/macro.njk" import govukButton -%}
 {%- from "govuk/components/character-count/macro.njk" import govukCharacterCount -%}
 
-{%- macro caseNotes(params) -%}
+{%- macro caseNotes(params, _csrf) -%}
 	<form method="POST" novalidate="novalidate" action="{{ params.baseUrl }}/case-notes">
+		<input type="hidden" name="_csrf" value="{{ _csrf }}">
 		<div class="govuk-grid-row">
 			<div class="govuk-grid-column-full">
 				{{ govukCharacterCount({

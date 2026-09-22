@@ -14,7 +14,7 @@
         <div class="govuk-grid-column-two-thirds">
 
             <form action="{{ removeSelectedFilesFromListUrl }}" method="post" novalidate>
-
+                <input type="hidden" name="_csrf" value="{{ _csrf }}">
                 <input type="hidden" name="returnUrl" value="{{ returnUrl }}">
 
                 {{ deleteTable(documents) }}
