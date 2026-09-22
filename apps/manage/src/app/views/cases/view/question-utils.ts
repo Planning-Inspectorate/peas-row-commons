@@ -48,6 +48,7 @@ import type TableManageListQuestion from '@pins/peas-row-commons-lib/forms/custo
 import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/validator.ts';
 import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-components/optional-date-component/validator.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
+import { ManageListItemsValidator } from '@pins/peas-row-commons-lib/validators/linked-cases-validator.ts';
 import { ManageListCrossFieldValidator } from '@pins/peas-row-commons-lib/validators/manage-list-cross-field-validator.ts';
 import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
@@ -822,6 +823,9 @@ export const OVERVIEW_QUESTIONS = {
 		validators: [
 			new ManageListItemsCompleteValidator({
 				linkedCaseIsLead: 'whether the case is the lead case'
+			}),
+			new ManageListItemsValidator({
+				validationFunction: (linkedCaseDetails) => validateOnlyOneLeadLinkedCase(linkedCaseDetails)
 			})
 		],
 		formatSummaryValue: linkedCaseSummaryFormatter
@@ -868,13 +872,7 @@ export const OVERVIEW_QUESTIONS = {
 				value: 'no'
 			}
 		],
-		validators: [
-			new RequiredValidator('Select yes if this is the lead case'),
-			new ManageListCrossFieldValidator({
-				dependencyFieldName: 'linkedCaseDetails',
-				validationFunction: (isLead, linkedCaseDetails) => validateOnlyOneLeadLinkedCase(isLead, linkedCaseDetails)
-			})
-		]
+		validators: [new RequiredValidator('Select yes if this is the lead case')]
 	}
 };
 
@@ -2437,18 +2435,15 @@ export function validateDateIsAfterReceivedDate(date: unknown, receivedDate: unk
 	return true;
 }
 
-export function validateOnlyOneLeadLinkedCase(isLead: unknown, linkedCaseDetails: unknown) {
-	const hasLinkedCases = Array.isArray(linkedCaseDetails) && linkedCaseDetails.length > 0;
-	// Validation: Only one linked case can be marked as lead.
-	if (!hasLinkedCases || isLead !== BOOLEAN_OPTIONS.YES) {
+export function validateOnlyOneLeadLinkedCase(linkedCaseDetails: unknown) {
+	if (!Array.isArray(linkedCaseDetails)) {
 		return true;
 	}
-	// Current case is marked as lead - check there's only one lead case total
-	// Filter out current so that it doesn't count itself when checking for other lead cases
-	const otherLeadCases = linkedCaseDetails.filter((caseDetail) => caseDetail.linkedCaseIsLead === BOOLEAN_OPTIONS.YES);
 
-	if (!(otherLeadCases.length === 0)) {
-		throw new Error(`There is already a linked case marked as lead.`);
+	const leadCases = linkedCaseDetails.filter((caseDetail) => caseDetail?.linkedCaseIsLead === BOOLEAN_OPTIONS.YES);
+
+	if (leadCases.length > 1) {
+		throw new Error('You cannot save with more than 1 lead case');
 	}
 
 	return true;

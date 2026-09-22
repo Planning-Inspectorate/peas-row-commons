@@ -413,37 +413,30 @@ describe('questions utils', () => {
 	});
 
 	describe('validateOnlyOneLeadLinkedCase', () => {
-		it('should pass validation when there are no other linked cases', () => {
+		it('should pass validation when there are no linked cases', () => {
 			const linkedCases = [] as unknown as string[];
-			const newEntry = { id: '1', isLead: 'yes' };
-			assert.ok(validateOnlyOneLeadLinkedCase(newEntry.isLead, linkedCases));
+			assert.ok(validateOnlyOneLeadLinkedCase(linkedCases));
 		});
 
-		it('should pass validation when isLead is no', () => {
-			const linkedCases = [{ id: '1', linkedCaseIsLead: 'yes' }];
-			const newEntry = { id: '2', isLead: 'no' };
-			assert.ok(validateOnlyOneLeadLinkedCase(newEntry.isLead, linkedCases));
+		it('should pass validation when no lead cases', () => {
+			const linkedCases = [{ id: '1', linkedCaseIsLead: 'no' }];
+			assert.ok(validateOnlyOneLeadLinkedCase(linkedCases));
 		});
 
 		it('should pass when there is only one lead linked case', () => {
 			const linkedCases = [
-				{ id: '1', linkedCaseIsLead: 'no' },
-				{ id: '3', linkedCaseIsLead: 'no' }
+				{ id: '1', linkedCaseIsLead: 'yes' },
+				{ id: '2', linkedCaseIsLead: 'no' }
 			];
-			const newEntry = { id: '2', isLead: 'yes' };
-			assert.ok(validateOnlyOneLeadLinkedCase(newEntry.isLead, linkedCases));
+			assert.ok(validateOnlyOneLeadLinkedCase(linkedCases));
 		});
 
 		it('should error when there are more than one lead linked case', () => {
 			const linkedCases = [
 				{ id: '1', linkedCaseIsLead: 'yes' },
-				{ id: '3', linkedCaseIsLead: 'no' }
+				{ id: '3', linkedCaseIsLead: 'yes' }
 			];
-			const newEntry = { id: '2', isLead: 'yes' };
-			assert.throws(
-				() => validateOnlyOneLeadLinkedCase(newEntry.isLead, linkedCases),
-				/There is already a linked case marked as lead./
-			);
+			assert.throws(() => validateOnlyOneLeadLinkedCase(linkedCases), /You cannot save with more than 1 lead case/);
 		});
 	});
 
