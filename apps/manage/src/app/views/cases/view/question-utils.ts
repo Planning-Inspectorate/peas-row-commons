@@ -1,7 +1,7 @@
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
 import CustomDatePeriodValidator from '@pins/peas-row-commons-lib/validators/custom-date-period-validator.ts';
 import type { SummaryFormatterContext } from '@planning-inspectorate/dynamic-forms';
-import { COMPONENT_TYPES, CrossQuestionValidator } from '@planning-inspectorate/dynamic-forms';
+import { BOOLEAN_OPTIONS, COMPONENT_TYPES, CrossQuestionValidator } from '@planning-inspectorate/dynamic-forms';
 import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
 import type BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
 import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
@@ -54,7 +54,7 @@ import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/v
 import nunjucks from 'nunjucks';
 import { ENVIRONMENT_NAME, loadEnvironmentConfig } from '../../../config.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
-import { getLinkedCaseDetailRows } from './linked-cases.ts';
+import { buildExistingLeadCaseMap, getLinkedCaseDetailRows, type OtherCaseWithParent } from './linked-cases.ts';
 import type { UserMap } from './types.ts';
 
 type RadioOption = { text: string; value: string } | { divider: string };
@@ -204,7 +204,7 @@ export const linkedCaseSummaryFormatter = ({ answer, formattedAnswer, question }
 	const answers = rows.map((row) => {
 		const referenceText = referenceQuestion ? referenceQuestion.formatAnswer(row.linkedCaseId) : row.linkedCaseId;
 
-		const summaryLine = row.linkedCaseIsLead === 'yes' ? `${referenceText} (Lead)` : referenceText;
+		const summaryLine = row.linkedCaseIsLead === BOOLEAN_OPTIONS.YES ? `${referenceText} (Lead)` : referenceText;
 
 		return [{ answer: summaryLine }];
 	});
@@ -1249,7 +1249,7 @@ export function createOutcomeQuestions(
 export function createOverviewQuestions(
 	overviewQuestions: typeof OVERVIEW_QUESTIONS,
 	answers: Record<string, unknown>,
-	otherCases: { id: string; reference: string }[] = []
+	otherCases: OtherCaseWithParent[] = []
 ) {
 	const subType = answers.SubType as { displayName: string; id: string };
 
@@ -1270,6 +1270,17 @@ export function createOverviewQuestions(
 		}))
 	];
 
+	const currentCaseId = answers.id as string;
+	const existingLeadCaseMap = buildExistingLeadCaseMap(otherCases);
+
+	// The current case's own pre-existing group lead, derived from its already-saved
+	// `linkedCaseDetails` (populated from the DB): the lead row's `linkedCaseId` if one
+	// of its existing linked cases is marked lead, otherwise the current case is already
+	// the lead of its own group (or unlinked), so it's its own lead.
+	const originalLinkedCaseRows = getLinkedCaseDetailRows(answers.linkedCaseDetails);
+	const originalLeadRow = originalLinkedCaseRows.find((row) => row.linkedCaseIsLead === BOOLEAN_OPTIONS.YES);
+	const currentCaseExistingLeadCaseId = originalLeadRow ? originalLeadRow.linkedCaseId : currentCaseId;
+
 	return {
 		...overviewQuestions,
 		caseSubtype: {
@@ -1279,6 +1290,24 @@ export function createOverviewQuestions(
 		linkedCaseId: {
 			...overviewQuestions.linkedCaseId,
 			options: linkedCaseOptions
+		},
+		isLead: {
+			...overviewQuestions.isLead,
+			validators: [
+				...overviewQuestions.isLead.validators,
+				new ManageListCrossFieldValidator({
+					dependencyFieldName: 'linkedCaseDetails',
+					validationFunction: (isLead, linkedCaseDetails, currentItem) =>
+						validateLeadCaseNotAlreadyLinked(
+							isLead,
+							linkedCaseDetails,
+							currentItem as { linkedCaseId?: string } | undefined,
+							existingLeadCaseMap,
+							currentCaseId,
+							currentCaseExistingLeadCaseId
+						)
+				})
+			]
 		}
 	};
 }
@@ -2411,12 +2440,12 @@ export function validateDateIsAfterReceivedDate(date: unknown, receivedDate: unk
 export function validateOnlyOneLeadLinkedCase(isLead: unknown, linkedCaseDetails: unknown) {
 	const hasLinkedCases = Array.isArray(linkedCaseDetails) && linkedCaseDetails.length > 0;
 	// Validation: Only one linked case can be marked as lead.
-	if (!hasLinkedCases || isLead !== 'yes') {
+	if (!hasLinkedCases || isLead !== BOOLEAN_OPTIONS.YES) {
 		return true;
 	}
 	// Current case is marked as lead - check there's only one lead case total
 	// Filter out current so that it doesn't count itself when checking for other lead cases
-	const otherLeadCases = linkedCaseDetails.filter((caseDetail) => caseDetail.linkedCaseIsLead === 'yes');
+	const otherLeadCases = linkedCaseDetails.filter((caseDetail) => caseDetail.linkedCaseIsLead === BOOLEAN_OPTIONS.YES);
 
 	if (!(otherLeadCases.length === 0)) {
 		throw new Error(`There is already a linked case marked as lead.`);
@@ -2436,6 +2465,56 @@ export function validateUniqueLinkedCaseId(linkedCaseId: unknown, linkedCaseDeta
 
 	if (duplicateLinkedCase) {
 		throw new Error('This case has already been added as a linked case.');
+	}
+
+	return true;
+}
+
+/**
+ * Blocks a submitted set of `linkedCaseDetails` rows from changing the lead case of an
+ * existing relationship, *except* when the change is just reassigning the lead within a
+ * group the current case is already part of.
+ *
+ * Resolves the intended lead for the whole set, then checks every row's `linkedCaseId`
+ * against `existingLeadCaseMap`: if any of them already has (or is) an existing lead
+ * case different from the intended one, and that existing lead isn't the group the
+ * current case already belongs to (`currentCaseExistingLeadCaseId`), this change would
+ * silently pull that case out of its own group and into a different one, so it's
+ * rejected.
+ */
+export function validateLeadCaseNotAlreadyLinked(
+	isLead: unknown,
+	linkedCaseDetails: unknown,
+	currentItem: { linkedCaseId?: string } | undefined,
+	existingLeadCaseMap: Map<string, string>,
+	currentCaseId: string,
+	currentCaseExistingLeadCaseId: string
+) {
+	const otherRows = getLinkedCaseDetailRows(linkedCaseDetails);
+	const normalisedIsLead = isLead === BOOLEAN_OPTIONS.YES ? BOOLEAN_OPTIONS.YES : BOOLEAN_OPTIONS.NO;
+	const currentRow = currentItem?.linkedCaseId
+		? [{ linkedCaseId: currentItem.linkedCaseId, linkedCaseIsLead: normalisedIsLead }]
+		: [];
+	const allRows = [...otherRows, ...currentRow];
+
+	const leadRow = allRows.find((row) => row.linkedCaseIsLead === BOOLEAN_OPTIONS.YES);
+	const intendedLeadCaseId = leadRow ? leadRow.linkedCaseId : currentCaseId;
+
+	for (const row of allRows) {
+		const existingLeadCaseId = existingLeadCaseMap.get(row.linkedCaseId);
+
+		if (
+			existingLeadCaseId &&
+			existingLeadCaseId !== intendedLeadCaseId &&
+			existingLeadCaseId !== currentCaseId &&
+			existingLeadCaseId !== currentCaseExistingLeadCaseId // So we can check across two groups of linked cases
+		) {
+			if (existingLeadCaseId === row.linkedCaseId) {
+				throw new Error('This case is already a lead case to other cases');
+			}
+
+			throw new Error('This case is already linked to a different lead case');
+		}
 	}
 
 	return true;

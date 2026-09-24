@@ -8,6 +8,7 @@ import { buildUpdateCase, handleAbeyancePeriod, mapCasePayload } from './update-
 
 const mockFindUnique = mock.fn();
 const mockUpdate = mock.fn();
+const mockCaseRelationshipFindMany = mock.fn(() => Promise.resolve([]));
 const mockCaseRelationshipDeleteMany = mock.fn();
 const mockCaseRelationshipCreate = mock.fn();
 const mockCaseRelationshipCreateMany = mock.fn();
@@ -18,6 +19,7 @@ const mockTx = {
 		update: mockUpdate
 	},
 	caseRelationship: {
+		findMany: mockCaseRelationshipFindMany,
 		deleteMany: mockCaseRelationshipDeleteMany,
 		create: mockCaseRelationshipCreate,
 		createMany: mockCaseRelationshipCreateMany
@@ -60,6 +62,7 @@ describe('Update Case Controller', () => {
 		mockFindUnique.mock.resetCalls();
 		mockUpdate.mock.resetCalls();
 		mockDbTransaction.mock.resetCalls();
+		mockCaseRelationshipFindMany.mock.resetCalls();
 		mockCaseRelationshipDeleteMany.mock.resetCalls();
 		mockCaseRelationshipCreate.mock.resetCalls();
 		mockCaseRelationshipCreateMany.mock.resetCalls();

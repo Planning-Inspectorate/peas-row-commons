@@ -54,6 +54,41 @@ export function extractLinkedCaseChanges(rawAnswers: Record<string, unknown>): L
 }
 
 /**
+ * A case option (as offered in the `linkedCaseId` select), along with its existing
+ * `ParentRelationship` (if any) or a count of its own `ChildRelationships`, used to
+ * detect cases that already belong to a different linked-case group - either as a
+ * child of an existing lead, or as an existing lead itself.
+ */
+export interface OtherCaseWithParent {
+	id: string;
+	reference: string;
+	ParentRelationship?: { parentCaseId: string } | null;
+	_count?: { ChildRelationships: number } | null;
+}
+
+/**
+ * Builds a lookup of `caseId -> existingLeadCaseId` for every `otherCase` that already
+ * belongs to an established linked-case group:
+ *   - a case with a `ParentRelationship` maps to its existing parent/lead case id.
+ *   - a case with its own `ChildRelationships` maps to itself.
+ * Used to block a submitted set of `linkedCaseDetails` from changing the lead case of
+ * an existing relationship.
+ */
+export function buildExistingLeadCaseMap(otherCases: OtherCaseWithParent[]): Map<string, string> {
+	const existingLeadCaseMap = new Map<string, string>();
+
+	for (const otherCase of otherCases) {
+		if (otherCase.ParentRelationship) {
+			existingLeadCaseMap.set(otherCase.id, otherCase.ParentRelationship.parentCaseId);
+		} else if (otherCase._count?.ChildRelationships) {
+			existingLeadCaseMap.set(otherCase.id, otherCase.id);
+		}
+	}
+
+	return existingLeadCaseMap;
+}
+
+/**
  * Writes the `CaseRelationship` rows for the case being edited (and, when a lead case
  * is designated, for its siblings too) to match `changes`. Done as direct table writes
  * rather than a nested `Case` payload field because:
@@ -64,6 +99,16 @@ export function extractLinkedCaseChanges(rawAnswers: Record<string, unknown>): L
  *
  * `previousParentCaseId` is this case's parent *before* this update (`null` if it had
  * none, e.g. it was previously the lead itself or unlinked).
+ *
+ * Two sets of existing relationships are preserved when the group is wiped and rebuilt:
+ *   - when `leadCaseId` designates an existing, separate case as lead, that case's own
+ *     existing children (siblings not explicitly listed in this edit, e.g. because they
+ *     weren't touched by whichever case's edit screen this update came from) - see
+ *     `existingLeadChildIds`.
+ *   - when the case being edited was previously the lead case, but is being redesignated
+ *     as a child, its own old children are carried over to the new lead too,
+ *     rather than being orphaned along with the rest of its previous root group - see
+ *     `existingOwnChildIds`.
  */
 export async function applyLinkedCaseRelationships(
 	$tx: Prisma.TransactionClient,
@@ -74,7 +119,43 @@ export async function applyLinkedCaseRelationships(
 	const { leadCaseId, otherCaseIds } = changes;
 
 	const newParentCaseId = leadCaseId ?? caseId;
-	const childCaseIds = leadCaseId ? [caseId, ...otherCaseIds] : otherCaseIds;
+	let childCaseIds = leadCaseId ? [caseId, ...otherCaseIds] : otherCaseIds;
+
+	// Carry over pre-existing children of the lead case and/or this case (see below),
+	// fetched together in a single query rather than two separate ones.
+	const needsOwnChildren = previousParentCaseId === null && newParentCaseId !== caseId;
+	const parentCaseIdsToFetch = [leadCaseId, needsOwnChildren ? caseId : null].filter((id): id is string => id !== null);
+
+	if (parentCaseIdsToFetch.length) {
+		const existingChildren = await $tx.caseRelationship.findMany({
+			where: { parentCaseId: { in: parentCaseIdsToFetch } },
+			select: { parentCaseId: true, childCaseId: true }
+		});
+		const existingChildrenByParent = Map.groupBy(existingChildren, (relationship) => relationship.parentCaseId);
+
+		if (leadCaseId) {
+			// Preserve any of the designated lead case's existing children that aren't
+			// already part of this edit, so they remain linked instead of being silently
+			// dropped when the group is wiped and rebuilt below.
+			const existingLeadChildIds = (existingChildrenByParent.get(leadCaseId) ?? [])
+				.map((relationship) => relationship.childCaseId)
+				.filter((childCaseId) => childCaseId !== caseId && !childCaseIds.includes(childCaseId));
+
+			childCaseIds = [...childCaseIds, ...existingLeadChildIds];
+		}
+
+		if (needsOwnChildren) {
+			// This case was previously unlinked or the lead of its own group, and is now
+			// becoming a child of a different lead - carry over any of its own existing
+			// children to the new lead too, instead of leaving them orphaned when this
+			// case's previous root group is wiped below.
+			const existingOwnChildIds = (existingChildrenByParent.get(caseId) ?? [])
+				.map((relationship) => relationship.childCaseId)
+				.filter((childCaseId) => childCaseId !== newParentCaseId && !childCaseIds.includes(childCaseId));
+
+			childCaseIds = [...childCaseIds, ...existingOwnChildIds];
+		}
+	}
 
 	// The root of this case's previous group: its former parent if it had one,
 	// otherwise this case itself (it may have been the lead, with its own children).
