@@ -26,7 +26,12 @@ export function getQuestions(
 	groupMembers: EntraGroupMembers,
 	answers: Record<string, unknown>,
 	userMap: UserMap,
-	otherCases: { id: string; reference: string }[] = []
+	otherCases: {
+		id: string;
+		reference: string;
+		ParentRelationship?: { parentCaseId: string } | null;
+		_count?: { ChildRelationships: number } | null;
+	}[] = []
 ) {
 	// We must generate team questions due to the varying nature of groupMembers
 	const generatedTeamQuestions = createTeamQuestions(TEAM_QUESTIONS, groupMembers, userMap);

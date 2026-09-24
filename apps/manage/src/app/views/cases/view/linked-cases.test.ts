@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import { describe, it, mock } from 'node:test';
 import {
 	applyLinkedCaseRelationships,
+	buildExistingLeadCaseMap,
 	buildPreviousLinkedCases,
 	extractLinkedCaseChanges,
 	getLinkedCaseDetailRows,
@@ -42,6 +43,52 @@ describe('linked-cases', () => {
 			]);
 
 			assert.deepStrictEqual(result, [validRow]);
+		});
+	});
+
+	describe('buildExistingLeadCaseMap', () => {
+		it('should return an empty map when there are no other cases', () => {
+			assert.deepStrictEqual(buildExistingLeadCaseMap([]), new Map());
+		});
+
+		it('should ignore cases without a ParentRelationship', () => {
+			const result = buildExistingLeadCaseMap([
+				{ id: 'case-1', reference: 'REF-001' },
+				{ id: 'case-2', reference: 'REF-002', ParentRelationship: null }
+			]);
+
+			assert.deepStrictEqual(result, new Map());
+		});
+
+		it('should map each case with a ParentRelationship to its existing parent case id', () => {
+			const result = buildExistingLeadCaseMap([
+				{ id: 'case-1', reference: 'REF-001', ParentRelationship: { parentCaseId: 'case-lead' } },
+				{ id: 'case-2', reference: 'REF-002' }
+			]);
+
+			assert.deepStrictEqual(result, new Map([['case-1', 'case-lead']]));
+		});
+
+		it('should map a case with its own ChildRelationships (an existing lead) to itself', () => {
+			const result = buildExistingLeadCaseMap([
+				{ id: 'case-lead', reference: 'REF-LEAD', _count: { ChildRelationships: 1 } },
+				{ id: 'case-2', reference: 'REF-002', _count: { ChildRelationships: 0 } }
+			]);
+
+			assert.deepStrictEqual(result, new Map([['case-lead', 'case-lead']]));
+		});
+
+		it('should prefer ParentRelationship over ChildRelationships count when both are present (invalid state)', () => {
+			const result = buildExistingLeadCaseMap([
+				{
+					id: 'case-1',
+					reference: 'REF-001',
+					ParentRelationship: { parentCaseId: 'case-lead' },
+					_count: { ChildRelationships: 2 }
+				}
+			]);
+
+			assert.deepStrictEqual(result, new Map([['case-1', 'case-lead']]));
 		});
 	});
 
@@ -119,8 +166,17 @@ describe('linked-cases', () => {
 	});
 
 	describe('applyLinkedCaseRelationships', () => {
-		const createMockTx = () => ({
+		const createMockTx = (childrenByParentCaseId: Record<string, { childCaseId: string }[]> = {}) => ({
 			caseRelationship: {
+				findMany: mock.fn(({ where }: { where: { parentCaseId: string | { in: string[] } } }) => {
+					const parentCaseIds = typeof where.parentCaseId === 'string' ? [where.parentCaseId] : where.parentCaseId.in;
+
+					return Promise.resolve(
+						parentCaseIds.flatMap((parentCaseId) =>
+							(childrenByParentCaseId[parentCaseId] ?? []).map((relationship) => ({ parentCaseId, ...relationship }))
+						)
+					);
+				}),
 				deleteMany: mock.fn((_args: unknown) => Promise.resolve()),
 				createMany: mock.fn((_args: unknown) => Promise.resolve())
 			}
@@ -149,6 +205,98 @@ describe('linked-cases', () => {
 					{ parentCaseId: 'lead-case', childCaseId: 'sibling-1' },
 					{ parentCaseId: 'lead-case', childCaseId: 'sibling-2' }
 				]
+			});
+		});
+
+		it('should preserve the lead case existing children not listed in this edit', async () => {
+			const $tx = createMockTx({
+				'lead-case': [{ childCaseId: 'existing-child' }, { childCaseId: 'sibling-1' }]
+			});
+			const changes = { leadCaseId: 'lead-case', otherCaseIds: ['sibling-1'] };
+
+			await applyLinkedCaseRelationships($tx as any, 'case-1', changes, null);
+
+			assert.strictEqual($tx.caseRelationship.findMany.mock.calls.length, 1);
+			assert.deepStrictEqual($tx.caseRelationship.findMany.mock.calls[0].arguments[0], {
+				where: { parentCaseId: { in: ['lead-case', 'case-1'] } },
+				select: { parentCaseId: true, childCaseId: true }
+			});
+
+			assert.deepStrictEqual($tx.caseRelationship.createMany.mock.calls[0].arguments[0], {
+				data: [
+					{ parentCaseId: 'lead-case', childCaseId: 'case-1' },
+					{ parentCaseId: 'lead-case', childCaseId: 'sibling-1' },
+					{ parentCaseId: 'lead-case', childCaseId: 'existing-child' }
+				]
+			});
+		});
+
+		it('should not treat the case being edited as its own preserved child', async () => {
+			// case-1 was already a child of lead-case before this edit
+			const $tx = createMockTx({ 'lead-case': [{ childCaseId: 'case-1' }] });
+			const changes = { leadCaseId: 'lead-case', otherCaseIds: [] };
+
+			await applyLinkedCaseRelationships($tx as any, 'case-1', changes, 'lead-case');
+
+			assert.deepStrictEqual($tx.caseRelationship.createMany.mock.calls[0].arguments[0], {
+				data: [{ parentCaseId: 'lead-case', childCaseId: 'case-1' }]
+			});
+		});
+
+		it('should not query for existing lead children when no lead case is designated', async () => {
+			const $tx = createMockTx();
+			const changes = { leadCaseId: null, otherCaseIds: ['other-1'] };
+
+			await applyLinkedCaseRelationships($tx as any, 'case-1', changes, null);
+
+			assert.strictEqual($tx.caseRelationship.findMany.mock.calls.length, 0);
+		});
+
+		it('should carry over this case own existing children to the new lead when it was previously the root of its own group', async () => {
+			// case-1 was previously the root of its own group with 'old-child' as a child
+			const $tx = createMockTx({ 'case-1': [{ childCaseId: 'old-child' }] });
+			const changes = { leadCaseId: 'new-lead', otherCaseIds: [] };
+
+			await applyLinkedCaseRelationships($tx as any, 'case-1', changes, null);
+
+			assert.strictEqual($tx.caseRelationship.findMany.mock.calls.length, 1);
+			assert.deepStrictEqual($tx.caseRelationship.findMany.mock.calls[0].arguments[0], {
+				where: { parentCaseId: { in: ['new-lead', 'case-1'] } },
+				select: { parentCaseId: true, childCaseId: true }
+			});
+
+			assert.deepStrictEqual($tx.caseRelationship.createMany.mock.calls[0].arguments[0], {
+				data: [
+					{ parentCaseId: 'new-lead', childCaseId: 'case-1' },
+					{ parentCaseId: 'new-lead', childCaseId: 'old-child' }
+				]
+			});
+		});
+
+		it('should not carry over old children when this case remains the lead', async () => {
+			// no leadCaseId submitted, so case-1 stays the lead/root of its own group
+			const $tx = createMockTx({ 'case-1': [{ childCaseId: 'old-child' }] });
+			const changes = { leadCaseId: null, otherCaseIds: ['other-1'] };
+
+			await applyLinkedCaseRelationships($tx as any, 'case-1', changes, null);
+
+			assert.strictEqual($tx.caseRelationship.findMany.mock.calls.length, 0);
+			assert.deepStrictEqual($tx.caseRelationship.createMany.mock.calls[0].arguments[0], {
+				data: [{ parentCaseId: 'case-1', childCaseId: 'other-1' }]
+			});
+		});
+
+		it('should not carry over old children when this case previously had a parent (was already a child)', async () => {
+			// this case had a parent already, so it wasn't the root of its own group -
+			// it can't have had its own ChildRelationships as a child
+			const $tx = createMockTx({ 'case-1': [{ childCaseId: 'stray-row' }] });
+			const changes = { leadCaseId: 'new-lead', otherCaseIds: [] };
+
+			await applyLinkedCaseRelationships($tx as any, 'case-1', changes, 'old-parent');
+
+			assert.strictEqual($tx.caseRelationship.findMany.mock.calls.length, 1);
+			assert.deepStrictEqual($tx.caseRelationship.createMany.mock.calls[0].arguments[0], {
+				data: [{ parentCaseId: 'new-lead', childCaseId: 'case-1' }]
 			});
 		});
 

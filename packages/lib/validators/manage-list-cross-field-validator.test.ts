@@ -39,7 +39,7 @@ async function runValidation(
 
 describe('ManageListCrossFieldValidator', () => {
 	describe('constructor', () => {
-		it('throws when dependencyFieldName is missing', () => {
+		it('should throw when dependencyFieldName is missing', () => {
 			assert.throws(
 				() =>
 					new ManageListCrossFieldValidator({
@@ -49,7 +49,7 @@ describe('ManageListCrossFieldValidator', () => {
 			);
 		});
 
-		it('throws when validationFunction is missing', () => {
+		it('should throw when validationFunction is missing', () => {
 			assert.throws(
 				() =>
 					new ManageListCrossFieldValidator({
@@ -59,7 +59,7 @@ describe('ManageListCrossFieldValidator', () => {
 			);
 		});
 
-		it('throws when validationFunction is not a function', () => {
+		it('should throw when validationFunction is not a function', () => {
 			assert.throws(
 				() =>
 					new ManageListCrossFieldValidator({
@@ -70,7 +70,7 @@ describe('ManageListCrossFieldValidator', () => {
 			);
 		});
 
-		it('assigns properties on success', () => {
+		it('should assign properties on success', () => {
 			const fn = () => true;
 			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
@@ -82,7 +82,7 @@ describe('ManageListCrossFieldValidator', () => {
 	});
 
 	describe('validate()', () => {
-		it('returns an array with one validation chain', () => {
+		it('should return an array with one validation chain', () => {
 			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: () => true
@@ -92,7 +92,7 @@ describe('ManageListCrossFieldValidator', () => {
 			assert.strictEqual(chains.length, 1);
 		});
 
-		it('passes when validationFunction returns true', async () => {
+		it('should pass when validationFunction returns true', async () => {
 			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: () => true
@@ -107,7 +107,7 @@ describe('ManageListCrossFieldValidator', () => {
 			assert.strictEqual(result.isEmpty(), true);
 		});
 
-		it('fails with descriptive error when validationFunction returns false', async () => {
+		it('should fail with descriptive error when validationFunction returns false', async () => {
 			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: () => false
@@ -124,7 +124,7 @@ describe('ManageListCrossFieldValidator', () => {
 			assert.match(err.msg, /leadCaseId.*linkedCases/);
 		});
 
-		it('defaults dependency answer to [] when not an array', async () => {
+		it('should default dependency answer to [] when not an array', async () => {
 			let receivedDep: unknown;
 			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
@@ -142,7 +142,7 @@ describe('ManageListCrossFieldValidator', () => {
 			assert.deepStrictEqual(receivedDep, []);
 		});
 
-		it('defaults answers to {} when journeyResponse.answers is missing', async () => {
+		it('should default answers to {} when journeyResponse.answers is missing', async () => {
 			let receivedDep: unknown;
 			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
@@ -155,7 +155,7 @@ describe('ManageListCrossFieldValidator', () => {
 			assert.deepStrictEqual(receivedDep, []);
 		});
 
-		it('filters out dependency item whose id matches manageListItemId', async () => {
+		it('should filter out dependency item whose id matches manageListItemId', async () => {
 			let receivedDep: Array<{ id: string }> = [];
 			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
@@ -175,7 +175,47 @@ describe('ManageListCrossFieldValidator', () => {
 			assert.deepStrictEqual(receivedDep, [{ id: '1' }, { id: '3' }]);
 		});
 
-		it('uses req.body[fieldName] when question has no getDataToSave', async () => {
+		it('should pass the unfiltered current item (matching manageListItemId) as the third argument', async () => {
+			let receivedCurrentItem: unknown;
+			const v = new ManageListCrossFieldValidator({
+				dependencyFieldName: 'linkedCases',
+				validationFunction: (_c, _d, currentItem) => {
+					receivedCurrentItem = currentItem;
+					return true;
+				}
+			});
+			await runValidation(
+				v,
+				makeQuestion(),
+				{
+					answers: { linkedCases: [{ id: '1' }, { id: '2', foo: 'bar' }, { id: '3' }] }
+				} as unknown as JourneyResponse,
+				makeReq({ body: { leadCaseId: 'ABC' }, params: { manageListItemId: '2' } })
+			);
+			assert.deepStrictEqual(receivedCurrentItem, { id: '2', foo: 'bar' });
+		});
+
+		it('should pass undefined as the third argument when no item matches manageListItemId', async () => {
+			let receivedCurrentItem: unknown = 'not-yet-set';
+			const v = new ManageListCrossFieldValidator({
+				dependencyFieldName: 'linkedCases',
+				validationFunction: (_c, _d, currentItem) => {
+					receivedCurrentItem = currentItem;
+					return true;
+				}
+			});
+			await runValidation(
+				v,
+				makeQuestion(),
+				{
+					answers: { linkedCases: [{ id: '1' }] }
+				} as unknown as JourneyResponse,
+				makeReq({ body: { leadCaseId: 'ABC' }, params: { manageListItemId: 'missing' } })
+			);
+			assert.strictEqual(receivedCurrentItem, undefined);
+		});
+
+		it('should use req.body[fieldName] when question has no getDataToSave', async () => {
 			let receivedCurrent: unknown;
 			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
@@ -193,7 +233,7 @@ describe('ManageListCrossFieldValidator', () => {
 			assert.strictEqual(receivedCurrent, 'FROM-BODY');
 		});
 
-		it('uses formattedAnswers[fieldName] from getDataToSave when present', async () => {
+		it('should use formattedAnswers[fieldName] from getDataToSave when present', async () => {
 			let receivedCurrent: unknown;
 			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
@@ -214,7 +254,7 @@ describe('ManageListCrossFieldValidator', () => {
 			assert.strictEqual(receivedCurrent, 'FROM-GDS');
 		});
 
-		it('falls back to whole formattedAnswers when fieldName not in it', async () => {
+		it('should fall back to whole formattedAnswers when fieldName not in it', async () => {
 			let receivedCurrent: unknown;
 			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
@@ -236,7 +276,7 @@ describe('ManageListCrossFieldValidator', () => {
 			assert.deepStrictEqual(receivedCurrent, formatted);
 		});
 
-		it('uses first bodyFieldNames entry as the bound body field', async () => {
+		it('should use first bodyFieldNames entry as the bound body field', async () => {
 			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: () => false
@@ -255,7 +295,7 @@ describe('ManageListCrossFieldValidator', () => {
 			assert.strictEqual(err.path, 'leadCaseId_custom');
 		});
 
-		it('falls back to fieldName when bodyFieldNames is absent', async () => {
+		it('should fall back to fieldName when bodyFieldNames is absent', async () => {
 			const v = new ManageListCrossFieldValidator({
 				dependencyFieldName: 'linkedCases',
 				validationFunction: () => false

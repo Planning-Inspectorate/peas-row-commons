@@ -195,7 +195,12 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 
 		const otherCases = await db.case.findMany({
 			where: { id: { not: id } },
-			select: { id: true, reference: true },
+			select: {
+				id: true,
+				reference: true,
+				ParentRelationship: { select: { parentCaseId: true } },
+				_count: { select: { ChildRelationships: true } }
+			},
 			orderBy: { reference: 'asc' }
 		});
 

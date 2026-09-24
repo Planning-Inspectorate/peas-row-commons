@@ -1,5 +1,6 @@
 process.env.ENVIRONMENT = 'dev';
 
+import { ManageListCrossFieldValidator } from '@pins/peas-row-commons-lib/validators/manage-list-cross-field-validator.ts';
 import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
 import { afterEach, beforeEach, describe, it, mock } from 'node:test';
@@ -15,6 +16,7 @@ import {
 	OVERVIEW_QUESTIONS,
 	validateDateIsAfterReceivedDate,
 	validateDateRangeIsAfterReceivedDate,
+	validateLeadCaseNotAlreadyLinked,
 	validateOnlyOneLeadLinkedCase,
 	validateUniqueLinkedCaseId
 } from './question-utils.ts';
@@ -476,6 +478,142 @@ describe('questions utils', () => {
 		});
 	});
 
+	describe('validateLeadCaseNotAlreadyLinked', () => {
+		it('should pass when there is no current item and no existing lead conflicts', () => {
+			const existingLeadCaseMap = new Map([['case-X', 'case-Y']]);
+			assert.ok(validateLeadCaseNotAlreadyLinked('yes', [], undefined, existingLeadCaseMap, 'case-A', 'case-A'));
+		});
+
+		it('should pass when the selected case has no existing lead case', () => {
+			const existingLeadCaseMap = new Map<string, string>();
+			assert.ok(
+				validateLeadCaseNotAlreadyLinked('yes', [], { linkedCaseId: 'case-X' }, existingLeadCaseMap, 'case-A', 'case-A')
+			);
+		});
+
+		it('should pass when the selected case is already linked to the current case', () => {
+			const existingLeadCaseMap = new Map([['case-X', 'case-A']]);
+			assert.ok(
+				validateLeadCaseNotAlreadyLinked('yes', [], { linkedCaseId: 'case-X' }, existingLeadCaseMap, 'case-A', 'case-A')
+			);
+		});
+
+		it('should throw when adding an existing lead case as a non-lead row', () => {
+			// case-B is itself an existing lead (maps to itself); adding it without marking
+			// it lead would implicitly make case-A the lead instead.
+			const existingLeadCaseMap = new Map([['case-B', 'case-B']]);
+			assert.throws(
+				() =>
+					validateLeadCaseNotAlreadyLinked(
+						'no',
+						[],
+						{ linkedCaseId: 'case-B' },
+						existingLeadCaseMap,
+						'case-A',
+						'case-A'
+					),
+				/This case is already a lead case to other cases/
+			);
+		});
+
+		it('should throw when adding an existing child of another case as a non-lead row', () => {
+			// case-C already has an existing lead (case-B); adding it without marking any
+			// row lead would implicitly make case-A the lead instead.
+			const existingLeadCaseMap = new Map([['case-C', 'case-B']]);
+			assert.throws(
+				() =>
+					validateLeadCaseNotAlreadyLinked(
+						'no',
+						[],
+						{ linkedCaseId: 'case-C' },
+						existingLeadCaseMap,
+						'case-A',
+						'case-A'
+					),
+				/This case is already linked to a different lead case/
+			);
+		});
+
+		it('should throw when the row being edited is marked lead but the selected case already has a different lead', () => {
+			const existingLeadCaseMap = new Map([['case-C', 'case-B']]);
+			assert.throws(
+				() =>
+					validateLeadCaseNotAlreadyLinked(
+						'yes',
+						[],
+						{ linkedCaseId: 'case-C' },
+						existingLeadCaseMap,
+						'case-A',
+						'case-A'
+					),
+				/This case is already linked to a different lead case/
+			);
+		});
+
+		it('should pass when adding an existing lead case and marking it as the new lead', () => {
+			const existingLeadCaseMap = new Map([['case-B', 'case-B']]);
+			assert.ok(
+				validateLeadCaseNotAlreadyLinked('yes', [], { linkedCaseId: 'case-B' }, existingLeadCaseMap, 'case-A', 'case-A')
+			);
+		});
+
+		it('should check other already-saved rows in linkedCaseDetails too, not just the current item', () => {
+			const existingLeadCaseMap = new Map([['case-C', 'case-B']]);
+			const linkedCaseDetails = [{ linkedCaseId: 'case-C', linkedCaseIsLead: 'no' }];
+			assert.throws(
+				() =>
+					validateLeadCaseNotAlreadyLinked(
+						'no',
+						linkedCaseDetails,
+						{ linkedCaseId: 'case-D' },
+						existingLeadCaseMap,
+						'case-A',
+						'case-A'
+					),
+				/This case is already linked to a different lead case/
+			);
+		});
+
+		it('should pass when reassigning the lead within a group the current case already belongs to', () => {
+			// case-B is being edited; it's already a child of case-A (its existing group
+			// lead). Re-adding sibling case-A as a plain (non-lead) row - because case-B
+			// itself is becoming the new lead - shouldn't be blocked just because case-A
+			// is still recorded as an existing lead of that same group.
+			const existingLeadCaseMap = new Map([
+				['case-A', 'case-A'],
+				['case-C', 'case-A']
+			]);
+			assert.ok(
+				validateLeadCaseNotAlreadyLinked(
+					'no',
+					[{ linkedCaseId: 'case-C', linkedCaseIsLead: 'no' }],
+					{ linkedCaseId: 'case-A' },
+					existingLeadCaseMap,
+					'case-B',
+					'case-A'
+				)
+			);
+		});
+
+		it('should still throw when pulling in a case from a genuinely different group', () => {
+			// case-B's existing group lead is case-A, but case-D belongs to an unrelated
+			// group led by case-Z - adding it in shouldn't be silently allowed.
+			const existingLeadCaseMap = new Map([['case-D', 'case-Z']]);
+			assert.throws(
+				() =>
+					validateLeadCaseNotAlreadyLinked(
+						'no',
+						[],
+						{ linkedCaseId: 'case-D' },
+						existingLeadCaseMap,
+						'case-B',
+						'case-A'
+					),
+				/This case is already linked to a different lead case/
+			);
+		});
+	});
+
 	describe('createOverviewQuestions', () => {
 		it('should populate linkedCaseId options from other cases', () => {
 			const otherCases = [
@@ -501,6 +639,53 @@ describe('questions utils', () => {
 					value: ''
 				}
 			]);
+		});
+
+		it('should attach a ManageListCrossFieldValidator wired to validateLeadCaseNotAlreadyLinked', () => {
+			const otherCases = [{ id: 'case-2', reference: 'REF-002', ParentRelationship: { parentCaseId: 'case-lead' } }];
+
+			const result = createOverviewQuestions(OVERVIEW_QUESTIONS, { id: 'case-1' }, otherCases);
+
+			const crossFieldValidators = result.isLead.validators.filter(
+				(validator) => validator instanceof ManageListCrossFieldValidator
+			) as ManageListCrossFieldValidator[];
+			const addedValidator = crossFieldValidators[crossFieldValidators.length - 1];
+
+			assert.ok(addedValidator, 'expected a ManageListCrossFieldValidator to be attached');
+			assert.strictEqual(addedValidator.dependencyFieldName, 'linkedCaseDetails');
+			assert.throws(
+				() => addedValidator.validationFunction('yes', [], { linkedCaseId: 'case-2' }),
+				/This case is already linked to a different lead case/
+			);
+		});
+
+		it('should allow reassigning the lead within a group the current case already belongs to', () => {
+			// case-1 (the case being edited) is already a child of case-lead, alongside
+			// sibling case-2. Re-adding case-2 as a plain row while case-1 becomes the new
+			// lead shouldn't be blocked just because case-2's `ParentRelationship` still
+			// points at the old lead.
+			const otherCases = [{ id: 'case-2', reference: 'REF-002', ParentRelationship: { parentCaseId: 'case-lead' } }];
+			const answers = {
+				id: 'case-1',
+				linkedCaseDetails: [{ linkedCaseId: 'case-lead', linkedCaseIsLead: 'yes' }]
+			};
+
+			const result = createOverviewQuestions(OVERVIEW_QUESTIONS, answers, otherCases);
+
+			const crossFieldValidators = result.isLead.validators.filter(
+				(validator) => validator instanceof ManageListCrossFieldValidator
+			) as ManageListCrossFieldValidator[];
+			const addedValidator = crossFieldValidators[crossFieldValidators.length - 1];
+
+			assert.ok(addedValidator.validationFunction('no', [], { linkedCaseId: 'case-2' }));
+		});
+
+		it('should still include the original isLead validators', () => {
+			const originalValidatorCount = OVERVIEW_QUESTIONS.isLead.validators.length;
+
+			const result = createOverviewQuestions(OVERVIEW_QUESTIONS, { id: 'case-1' });
+
+			assert.strictEqual(result.isLead.validators.length, originalValidatorCount + 1);
 		});
 	});
 
