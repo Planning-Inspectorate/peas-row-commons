@@ -9,6 +9,26 @@ import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
 import { getPageData, getPaginationParams } from '../../pagination/pagination-utils.ts';
 import { createCaseHistoryViewModel } from './view-model.ts';
 
+function getLinkedCaseIdsFromMetadata(metadata: Record<string, unknown> | null): string[] {
+	if (!metadata) return [];
+
+	const caseKeys = ['reference', 'entityName', 'linkedCaseId', 'oldValue', 'newValue'];
+	const ids: string[] = [];
+
+	for (const key of caseKeys) {
+		const value = metadata[key];
+
+		if (
+			typeof value === 'string' &&
+			/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+		) {
+			ids.push(value);
+		}
+	}
+
+	return ids;
+}
+
 export function buildViewCaseHistory(service: ManageService): AsyncRequestHandler {
 	const { db, audit, logger, getEntraClient } = service;
 	const groupIds = service.entraGroupIds;
@@ -82,12 +102,27 @@ export function buildViewCaseHistory(service: ManageService): AsyncRequestHandle
 			'case history user lookup summary'
 		);
 
+		const linkedCaseIds = Array.from(new Set(events.flatMap((event) => getLinkedCaseIdsFromMetadata(event.metadata))));
+
+		const linkedCases =
+			linkedCaseIds.length > 0
+				? await db.case.findMany({
+						where: { id: { in: linkedCaseIds } },
+						select: {
+							id: true,
+							reference: true
+						}
+					})
+				: [];
+
+		const caseReferenceMap = new Map(linkedCases.map((linkedCase) => [linkedCase.id, linkedCase.reference]));
+
 		const eventsWithUserNames = events.map((event) => ({
 			...event,
 			userName: getUserDisplayName(userMap, event.User?.idpUserId)
 		}));
 
-		const rows = createCaseHistoryViewModel(eventsWithUserNames);
+		const rows = createCaseHistoryViewModel(eventsWithUserNames, caseReferenceMap);
 
 		return res.render('views/cases/case-history/view.njk', {
 			pageHeading: 'Case history',

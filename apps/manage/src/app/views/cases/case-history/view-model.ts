@@ -21,16 +21,49 @@ export interface CaseHistoryRow {
 }
 
 /**
+ * Replaces any case IDs in the metadata with their corresponding case references
+ * using the provided caseReferenceMap. This is used to make the audit details
+ * more user-friendly by showing case references instead of internal IDs.
+ */
+
+function replaceCaseIdsWithReferences(
+	metadata: Record<string, unknown> | null,
+	caseReferenceMap: Map<string, string>
+): Record<string, unknown> | undefined {
+	if (!metadata) return undefined;
+
+	const resolvedMetadata = { ...metadata };
+
+	for (const key of ['reference', 'entityName', 'linkedCaseId', 'oldValue', 'newValue']) {
+		const value = resolvedMetadata[key];
+
+		if (typeof value === 'string') {
+			const reference = caseReferenceMap.get(value);
+
+			if (reference) {
+				resolvedMetadata[key] = reference;
+			}
+		}
+	}
+
+	return resolvedMetadata;
+}
+
+/**
  * Transforms raw audit events into rows ready for the case history table.
  */
-export function createCaseHistoryViewModel(events: Array<AuditEvent & { userName: string }>): CaseHistoryRow[] {
+export function createCaseHistoryViewModel(
+	events: Array<AuditEvent & { userName: string }>,
+	caseReferenceMap: Map<string, string> = new Map()
+): CaseHistoryRow[] {
 	return events.map((event) => {
 		const { date, time } = formatDateTime(new Date(event.createdAt));
+		const resolvedMetadata = replaceCaseIdsWithReferences(event.metadata ?? null, caseReferenceMap);
 
 		return {
 			date,
 			time,
-			details: resolveTemplate(event.action as AuditAction, event.metadata ?? undefined),
+			details: resolveTemplate(event.action as AuditAction, resolvedMetadata),
 			user: event.userName,
 			files:
 				BULK_FILE_ACTIONS.has(event.action) && Array.isArray(event.metadata?.files)

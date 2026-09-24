@@ -103,11 +103,28 @@ export function resolveLinkedCaseAudits(
 	// Added
 	for (const newCase of newLinkedCases) {
 		if (!newCase.id || !oldById.has(newCase.id)) {
+			const linkedCaseId = newCase.linkedCaseId;
+
+			// Entry for the current case
 			entries.push({
 				caseId,
 				action: AUDIT_ACTIONS.LINKED_CASE_ADDED,
 				userId,
-				metadata: { reference: newCase.linkedCaseId }
+				metadata: {
+					reference: linkedCaseId,
+					linkedCaseId
+				}
+			});
+
+			// Corresponding entry for the linked case
+			entries.push({
+				caseId: linkedCaseId,
+				action: AUDIT_ACTIONS.LINKED_CASE_ADDED,
+				userId,
+				metadata: {
+					reference: caseId,
+					linkedCaseId: caseId
+				}
 			});
 		}
 	}
@@ -115,11 +132,29 @@ export function resolveLinkedCaseAudits(
 	// Deleted
 	for (const [id, oldCase] of oldById) {
 		if (!newById.has(id)) {
+			if (!oldCase.reference) continue;
+			const linkedCaseId = oldCase.reference;
+
+			// Entry for the current case
 			entries.push({
 				caseId,
 				action: AUDIT_ACTIONS.LINKED_CASE_DELETED,
 				userId,
-				metadata: { reference: oldCase.reference }
+				metadata: {
+					reference: linkedCaseId,
+					linkedCaseId
+				}
+			});
+
+			// Corresponding entry for the linked case
+			entries.push({
+				caseId: linkedCaseId,
+				action: AUDIT_ACTIONS.LINKED_CASE_DELETED,
+				userId,
+				metadata: {
+					reference: caseId,
+					linkedCaseId: caseId
+				}
 			});
 		}
 	}
@@ -129,7 +164,11 @@ export function resolveLinkedCaseAudits(
 		const oldCase = oldById.get(id);
 		if (!oldCase) continue;
 
-		if (oldCase.reference !== newCase.linkedCaseId) {
+		const linkedCaseId = newCase.linkedCaseId;
+
+		// Reference change
+		if (oldCase.reference !== linkedCaseId) {
+			// Entry for the current case
 			entries.push({
 				caseId,
 				action: AUDIT_ACTIONS.LINKED_CASE_UPDATED,
@@ -138,15 +177,44 @@ export function resolveLinkedCaseAudits(
 					entityName: oldCase.reference,
 					fieldName: 'linked case reference',
 					oldValue: oldCase.reference,
-					newValue: newCase.linkedCaseId
+					newValue: linkedCaseId,
+					linkedCaseId
 				}
 			});
+
+			// Remove the link from the old linked case
+			if (oldCase.reference) {
+				entries.push({
+					caseId: oldCase.reference,
+					action: AUDIT_ACTIONS.LINKED_CASE_DELETED,
+					userId,
+					metadata: {
+						reference: caseId,
+						linkedCaseId: caseId
+					}
+				});
+			}
+
+			// Add the link to the new linked case
+			if (linkedCaseId) {
+				entries.push({
+					caseId: linkedCaseId,
+					action: AUDIT_ACTIONS.LINKED_CASE_ADDED,
+					userId,
+					metadata: {
+						reference: caseId,
+						linkedCaseId: caseId
+					}
+				});
+			}
 		}
 
+		// Lead status change
 		const oldIsLead = formatBoolean(oldCase.isLead);
 		const newIsLead = formatYesNo(newCase.linkedCaseIsLead);
 
 		if (oldIsLead !== newIsLead) {
+			// Entry for the current case
 			entries.push({
 				caseId,
 				action: AUDIT_ACTIONS.LINKED_CASE_UPDATED,
@@ -155,7 +223,24 @@ export function resolveLinkedCaseAudits(
 					entityName: newCase.linkedCaseId,
 					fieldName: 'lead?',
 					oldValue: oldIsLead,
-					newValue: newIsLead
+					newValue: newIsLead,
+					linkedCaseId,
+					isLeadChange: true
+				}
+			});
+
+			// Corresponding entry for the linked case
+			entries.push({
+				caseId: linkedCaseId,
+				action: AUDIT_ACTIONS.LINKED_CASE_UPDATED,
+				userId,
+				metadata: {
+					entityName: caseId,
+					fieldName: 'lead?',
+					oldValue: newIsLead,
+					newValue: oldIsLead,
+					linkedCaseId: caseId,
+					isLeadChange: true
 				}
 			});
 		}

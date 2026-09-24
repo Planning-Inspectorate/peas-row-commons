@@ -12,7 +12,10 @@ describe('buildViewCaseHistory', () => {
 	} as any;
 
 	const mockDb = {
-		case: { findUnique: mock.fn() }
+		case: {
+			findUnique: mock.fn(),
+			findMany: mock.fn()
+		}
 	} as any;
 
 	const mockAudit = {
@@ -60,6 +63,7 @@ describe('buildViewCaseHistory', () => {
 
 	beforeEach(() => {
 		mockDb.case.findUnique.mock.resetCalls();
+		mockDb.case.findMany.mock.resetCalls();
 		mockAudit.getAllForCase.mock.resetCalls();
 		mockAudit.countForCase.mock.resetCalls();
 		mockLogger.error.mock.resetCalls();
@@ -277,6 +281,73 @@ describe('buildViewCaseHistory', () => {
 
 			assert.strictEqual(viewData.paginationParams.pageNumber, 1);
 			assert.strictEqual(viewData.paginationParams.totalCount, 5);
+		});
+	});
+	describe('getLinkedCaseIdsFromMetadata', () => {
+		it('should look up linked case references from audit metadata and show them in the rendered history', async () => {
+			const req = mockReq();
+			const res = mockRes();
+
+			const linkedCaseId = 'df78cdb2-1fb0-42e4-81b9-798136dac55e';
+			const otherCaseId = 'b7b1c8e2-99b4-49cd-a4cf-123456789abc';
+
+			mockDb.case.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({ name: 'Test Case', reference: 'REF-001' })
+			);
+
+			mockDb.case.findMany.mock.mockImplementation(({ where }: any) =>
+				Promise.resolve(
+					where.id.in.map((id: string) => ({
+						id,
+						reference: id === linkedCaseId ? 'HOU/2025/1059' : id === otherCaseId ? 'HOU/2025/1058' : 'UNKNOWN-REF'
+					}))
+				)
+			);
+
+			mockAudit.getAllForCase.mock.mockImplementation(() =>
+				Promise.resolve([
+					{
+						id: 'evt-1',
+						action: 'LINKED_CASE_UPDATED',
+						User: { idpUserId: 'user-1' },
+						createdAt: '2026-02-11T14:31:00Z',
+						metadata: {
+							entityName: linkedCaseId,
+							fieldName: 'related case',
+							oldValue: otherCaseId,
+							newValue: linkedCaseId
+						}
+					}
+				])
+			);
+
+			mockAudit.countForCase.mock.mockImplementation(() => Promise.resolve(1));
+
+			await buildViewCaseHistory(buildService() as any)(req, res);
+
+			assert.strictEqual(mockDb.case.findMany.mock.callCount(), 1);
+
+			const findManyArgs = mockDb.case.findMany.mock.calls[0].arguments[0];
+			assert.deepStrictEqual(findManyArgs, {
+				where: {
+					id: {
+						in: [linkedCaseId, otherCaseId]
+					}
+				},
+				select: {
+					id: true,
+					reference: true
+				}
+			});
+
+			assert.strictEqual(res.render.mock.callCount(), 1);
+			const viewData = res.render.mock.calls[0].arguments[1];
+
+			assert.strictEqual(viewData.rows.length, 1);
+			assert.ok(viewData.rows[0].details.includes('HOU/2025/1059'));
+			assert.ok(viewData.rows[0].details.includes('HOU/2025/1058'));
+			assert.ok(!viewData.rows[0].details.includes(linkedCaseId));
+			assert.ok(!viewData.rows[0].details.includes(otherCaseId));
 		});
 	});
 });

@@ -157,12 +157,22 @@ describe('resolveLinkedCaseAudits', () => {
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
-			assert.strictEqual(entries.length, 1);
+			assert.strictEqual(entries.length, 2);
+
+			// Check entry for current case
+			assert.strictEqual(entries[0].caseId, CASE_ID);
 			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.LINKED_CASE_ADDED);
 			assert.strictEqual(entries[0].metadata?.reference, '123456');
+			assert.strictEqual(entries[0].metadata?.linkedCaseId, '123456');
+
+			// Check entry for linked case
+			assert.strictEqual(entries[1].caseId, '123456');
+			assert.strictEqual(entries[1].action, AUDIT_ACTIONS.LINKED_CASE_ADDED);
+			assert.strictEqual(entries[1].metadata?.reference, CASE_ID);
+			assert.strictEqual(entries[1].metadata?.linkedCaseId, CASE_ID);
 		});
 
-		it('should detect a new linked case with an unknown ID as added', () => {
+		it('should create audit entries on both cases when a new linked case is added', () => {
 			const oldCases = [buildOldLinkedCase('id-1', 'existing', true)];
 			const newCases = [
 				{ id: 'id-1', linkedCaseId: 'existing', linkedCaseIsLead: 'yes' },
@@ -171,9 +181,17 @@ describe('resolveLinkedCaseAudits', () => {
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
-			assert.strictEqual(entries.length, 1);
+			assert.strictEqual(entries.length, 2);
+
+			assert.strictEqual(entries[0].caseId, CASE_ID);
 			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.LINKED_CASE_ADDED);
 			assert.strictEqual(entries[0].metadata?.reference, 'new-ref');
+			assert.strictEqual(entries[0].metadata?.linkedCaseId, 'new-ref');
+
+			assert.strictEqual(entries[1].caseId, 'new-ref');
+			assert.strictEqual(entries[1].action, AUDIT_ACTIONS.LINKED_CASE_ADDED);
+			assert.strictEqual(entries[1].metadata?.reference, CASE_ID);
+			assert.strictEqual(entries[1].metadata?.linkedCaseId, CASE_ID);
 		});
 	});
 
@@ -184,12 +202,20 @@ describe('resolveLinkedCaseAudits', () => {
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
-			assert.strictEqual(entries.length, 1);
+			assert.strictEqual(entries.length, 2);
+
+			// Check entry for current case
+			assert.strictEqual(entries[0].caseId, CASE_ID);
 			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.LINKED_CASE_DELETED);
 			assert.strictEqual(entries[0].metadata?.reference, '123456');
+
+			// Check entry for linked case
+			assert.strictEqual(entries[1].caseId, '123456');
+			assert.strictEqual(entries[1].action, AUDIT_ACTIONS.LINKED_CASE_DELETED);
+			assert.strictEqual(entries[1].metadata?.reference, CASE_ID);
 		});
 
-		it('should detect the correct case removed from the middle of a list', () => {
+		it('should create audit entries on both cases when a linked case is removed', () => {
 			const oldCases = [
 				buildOldLinkedCase('id-1', 'first', true),
 				buildOldLinkedCase('id-2', 'second', false),
@@ -202,25 +228,38 @@ describe('resolveLinkedCaseAudits', () => {
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
-			assert.strictEqual(entries.length, 1);
+			assert.strictEqual(entries.length, 2);
 			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.LINKED_CASE_DELETED);
 			assert.strictEqual(entries[0].metadata?.reference, 'second');
 		});
 	});
 
 	describe('updates — reference change', () => {
-		it('should detect a reference being changed', () => {
+		it('should create audit entries on both cases when a linked case reference is updated', () => {
 			const oldCases = [buildOldLinkedCase('id-1', '123456', true)];
 			const newCases = [{ id: 'id-1', linkedCaseId: '78910', linkedCaseIsLead: 'yes' }];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
-			assert.strictEqual(entries.length, 1);
+			assert.strictEqual(entries.length, 3);
+
+			assert.strictEqual(entries[0].caseId, CASE_ID);
 			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.LINKED_CASE_UPDATED);
 			assert.strictEqual(entries[0].metadata?.entityName, '123456');
 			assert.strictEqual(entries[0].metadata?.fieldName, 'linked case reference');
 			assert.strictEqual(entries[0].metadata?.oldValue, '123456');
 			assert.strictEqual(entries[0].metadata?.newValue, '78910');
+			assert.strictEqual(entries[0].metadata?.linkedCaseId, '78910');
+
+			assert.strictEqual(entries[1].caseId, '123456');
+			assert.strictEqual(entries[1].action, AUDIT_ACTIONS.LINKED_CASE_DELETED);
+			assert.strictEqual(entries[1].metadata?.reference, CASE_ID);
+			assert.strictEqual(entries[1].metadata?.linkedCaseId, CASE_ID);
+
+			assert.strictEqual(entries[2].caseId, '78910');
+			assert.strictEqual(entries[2].action, AUDIT_ACTIONS.LINKED_CASE_ADDED);
+			assert.strictEqual(entries[2].metadata?.reference, CASE_ID);
+			assert.strictEqual(entries[2].metadata?.linkedCaseId, CASE_ID);
 		});
 	});
 
@@ -231,12 +270,21 @@ describe('resolveLinkedCaseAudits', () => {
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
-			assert.strictEqual(entries.length, 1);
+			assert.strictEqual(entries.length, 2);
+
+			// Check entry for current case
+			assert.strictEqual(entries[0].caseId, CASE_ID);
 			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.LINKED_CASE_UPDATED);
 			assert.strictEqual(entries[0].metadata?.entityName, '123456');
 			assert.strictEqual(entries[0].metadata?.fieldName, 'lead?');
 			assert.strictEqual(entries[0].metadata?.oldValue, 'Yes');
 			assert.strictEqual(entries[0].metadata?.newValue, 'No');
+
+			// Check entry for linked case
+			assert.strictEqual(entries[1].caseId, '123456');
+			assert.strictEqual(entries[1].metadata?.entityName, CASE_ID);
+			assert.strictEqual(entries[1].metadata?.oldValue, 'No');
+			assert.strictEqual(entries[1].metadata?.newValue, 'Yes');
 		});
 
 		it('should detect isLead changing from No to Yes', () => {
@@ -245,7 +293,7 @@ describe('resolveLinkedCaseAudits', () => {
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
-			assert.strictEqual(entries.length, 1);
+			assert.strictEqual(entries.length, 2);
 			assert.strictEqual(entries[0].metadata?.oldValue, 'No');
 			assert.strictEqual(entries[0].metadata?.newValue, 'Yes');
 		});
@@ -267,7 +315,7 @@ describe('resolveLinkedCaseAudits', () => {
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
-			assert.strictEqual(entries.length, 2);
+			assert.strictEqual(entries.length, 5);
 
 			const refChange = entries.find((e) => e.metadata?.fieldName === 'linked case reference');
 			const leadChange = entries.find((e) => e.metadata?.fieldName === 'lead?');
@@ -296,16 +344,16 @@ describe('resolveLinkedCaseAudits', () => {
 			const deleted = entries.filter((e) => e.action === AUDIT_ACTIONS.LINKED_CASE_DELETED);
 			const updated = entries.filter((e) => e.action === AUDIT_ACTIONS.LINKED_CASE_UPDATED);
 
-			assert.strictEqual(added.length, 1);
-			assert.strictEqual(added[0].metadata?.reference, 'third');
+			assert.strictEqual(added.length, 2); // bidirectional
+			assert.ok(added.some((e) => e.caseId === CASE_ID && e.metadata?.reference === 'third'));
+			assert.ok(added.some((e) => e.caseId === 'third' && e.metadata?.reference === CASE_ID));
 
-			assert.strictEqual(deleted.length, 1);
-			assert.strictEqual(deleted[0].metadata?.reference, 'second');
+			assert.strictEqual(deleted.length, 2); // bidirectional
+			assert.ok(deleted.some((e) => e.caseId === CASE_ID && e.metadata?.reference === 'second'));
+			assert.ok(deleted.some((e) => e.caseId === 'second' && e.metadata?.reference === CASE_ID));
 
-			assert.strictEqual(updated.length, 1);
-			assert.strictEqual(updated[0].metadata?.fieldName, 'lead?');
-			assert.strictEqual(updated[0].metadata?.oldValue, 'Yes');
-			assert.strictEqual(updated[0].metadata?.newValue, 'No');
+			assert.strictEqual(updated.length, 2); // bidirectional
+			assert.ok(updated.every((e) => e.metadata?.fieldName === 'lead?'));
 		});
 	});
 
@@ -333,8 +381,11 @@ describe('resolveLinkedCaseAudits', () => {
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
+			// Both entries should have caseId and userId
 			assert.strictEqual(entries[0].caseId, CASE_ID);
 			assert.strictEqual(entries[0].userId, USER_ID);
+			assert.strictEqual(entries[1].caseId, '123');
+			assert.strictEqual(entries[1].userId, USER_ID);
 		});
 	});
 });

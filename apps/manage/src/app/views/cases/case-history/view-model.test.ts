@@ -195,4 +195,47 @@ describe('createCaseHistoryViewModel', () => {
 
 		assert.strictEqual(result[0].files, undefined);
 	});
+	it('should replace a linked case ID with the case reference in the rendered details', () => {
+		const linkedCaseId = 'df78cdb2-1fb0-42e4-81b9-798136dac55e';
+		const linkedCaseReference = 'HOU/2025/1059';
+
+		const events = [
+			createMockEvent({
+				action: 'LINKED_CASE_UPDATED',
+				metadata: {
+					entityName: linkedCaseId,
+					fieldName: 'lead?',
+					oldValue: 'No',
+					newValue: 'Yes'
+				}
+			})
+		];
+
+		const caseReferenceMap = new Map([[linkedCaseId, linkedCaseReference]]);
+
+		const result = createCaseHistoryViewModel(events, caseReferenceMap);
+
+		assert.ok(result[0].details.includes(linkedCaseReference));
+		assert.ok(!result[0].details.includes(linkedCaseId));
+	});
+
+	it('should leave the linked case ID unchanged in the rendered details when no case reference is found', () => {
+		const linkedCaseId = 'df78cdb2-1fb0-42e4-81b9-798136dac55e';
+
+		const events = [
+			createMockEvent({
+				action: 'LINKED_CASE_UPDATED',
+				metadata: {
+					entityName: linkedCaseId,
+					fieldName: 'lead?',
+					oldValue: 'No',
+					newValue: 'Yes'
+				}
+			})
+		];
+
+		const result = createCaseHistoryViewModel(events, new Map());
+
+		assert.ok(result[0].details.includes(linkedCaseId));
+	});
 });
