@@ -1,7 +1,7 @@
 {% extends "views/layouts/main.njk" %}
 {% from "govuk/components/table/macro.njk" import govukTable %}
 {% from "govuk/components/pagination/macro.njk" import govukPagination %}
-{% from "govuk/components/accordion/macro.njk" import govukAccordion %}
+{% from "govuk/components/details/macro.njk" import govukDetails %}
 
 {% import "views/pagination/pagination-options.njk" as paginationOptions %}
 
@@ -20,24 +20,52 @@
             <h1 class="govuk-heading-l" data-cy="page-heading">
                 {{ pageHeading }}
             </h1>
+
             <div id="pagination" class="govuk-body">
                 {% if rows | length == 0 %}
-                    <p class="govuk-body" data-cy="no-history-message">There is no case history to display</p>
+                    <p class="govuk-body" data-cy="no-history-message">
+                        There is no case history to display
+                    </p>
                 {% else %}
                     <p class="govuk-body govuk-clearfix">
                         <span class="govuk-body" data-cy="pagination-results-text">
-                            Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalCount > paginationParams.resultsEndNumber else paginationParams.totalCount }}</strong>
+                            Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to
+                            <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalCount > paginationParams.resultsEndNumber else paginationParams.totalCount }}</strong>
                             of <strong>{{ paginationParams.totalCount }}</strong> results
                         </span>
+
                         <span class="pins-pagination-options">
                             {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalCount, paginationParams.pageNumber, paginationParams.searchValue) }}
                         </span>
                     </p>
 
                     {% set tableRows = [] %}
+
                     {% for row in rows %}
-                        {% set detailsHtml %}
+                        {% set rowDetails %}
                             {{ row.details }}
+
+                            {% if row.detailSections and row.detailSections | length > 0 %}
+                                {% set detailListHtml %}
+                                    {% for section in row.detailSections %}
+                                        <h3 class="govuk-heading-s govuk-!-margin-bottom-1">
+                                            {{ section.label }}
+                                        </h3>
+                                        <ul class="govuk-list govuk-list--bullet">
+                                            {% for value in section.values %}
+                                                <li>{{ value }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endfor %}
+                                {% endset %}
+
+                                {{ govukDetails({
+                                    summaryText: "Show details",
+                                    html: detailListHtml,
+                                    classes: "govuk-!-margin-top-2"
+                                }) }}
+                            {% endif %}
+
                             {% if row.files and row.files | length > 0 %}
                                 {% set filesListHtml %}
                                     <ul class="govuk-list govuk-list--bullet">
@@ -47,19 +75,10 @@
                                     </ul>
                                 {% endset %}
 
-                                {{ govukAccordion({
-                                    id: "files-accordion-" + loop.index0,
-                                    classes: "pins-accordion-hide-controls govuk-!-margin-top-2 pins-clean-accordion",
-                                    hideAllSections: true,
-                                    showSectionText: "Show files",
-                                    hideSectionText: "Hide files",
-                                    items: [
-                                        {
-                                            content: {
-                                                html: filesListHtml
-                                            }
-                                        }
-                                    ]
+                                {{ govukDetails({
+                                    summaryText: "Show files",
+                                    html: filesListHtml,
+                                    classes: "govuk-!-margin-top-2"
                                 }) }}
                             {% endif %}
                         {% endset %}
@@ -70,7 +89,7 @@
                                 attributes: { "data-cy": "history-date-" + loop.index0 }
                             },
                             {
-                                html: detailsHtml,
+                                html: rowDetails,
                                 attributes: { "data-cy": "history-details-" + loop.index0 }
                             },
                             {
@@ -91,6 +110,7 @@
                         ],
                         rows: tableRows
                     }) }}
+
                     {% if paginationParams.uiItems.items.length > 1 %}
                         {{ govukPagination(paginationParams.uiItems) }}
                     {% endif %}

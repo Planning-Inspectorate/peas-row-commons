@@ -1,6 +1,8 @@
 import type { ManageService } from '#service';
 import type { Request, Response } from 'express';
 import { AUDIT_ACTIONS } from '../../../audit/index.ts';
+import { resolveLinkedCaseAudits } from '../../../audit/resolvers/index.ts';
+import type { AuditEntry } from '../../../audit/types.ts';
 import { createFolders, findFolders, FOLDER_TEMPLATES_MAP } from '../case-folders/folder-utils.ts';
 import { linkNewCaseToLead } from '../view/linked-cases.ts';
 import { buildReferencePrefix } from './case-codes.ts';
@@ -21,8 +23,10 @@ export function buildSaveController({ db, logger, audit }: ManageService) {
 		}
 
 		const { answers } = journeyResponse;
+		const userId = req?.session?.account?.localAccountId;
 
 		let reference, id;
+		let linkedCaseAuditEntries: AuditEntry[] = [];
 		try {
 			const createdCase = await db.$transaction(async ($tx) => {
 				const { typeId, subtypeId } = resolveCaseTypeIds(answers);
@@ -47,7 +51,44 @@ export function buildSaveController({ db, logger, audit }: ManageService) {
 					answers.isLeadCase === BOOLEAN_OPTIONS.NO &&
 					answers.leadCaseId
 				) {
-					await linkNewCaseToLead($tx, id, answers.leadCaseId);
+					const leadCaseId = answers.leadCaseId as string;
+
+					// Fetch the lead's group before writing the new relationship, so the
+					// audit entries below reflect an accurate "before" snapshot.
+					const leadCase = await $tx.case.findUnique({
+						where: { id: leadCaseId },
+						select: {
+							reference: true,
+							ChildRelationships: { select: { ChildCase: { select: { id: true, reference: true } } } }
+						}
+					});
+
+					await linkNewCaseToLead($tx, id, leadCaseId);
+
+					if (leadCase) {
+						const siblings = leadCase.ChildRelationships.map((rel) => ({
+							id: rel.ChildCase.id,
+							reference: rel.ChildCase.reference ?? ''
+						}));
+
+						// The new case has no prior linked cases, and its final group is the
+						// lead plus any siblings the lead already had - not just what was
+						// submitted - so those existing siblings are correctly diffed as
+						// updates (via mergedLeadOldGroup) rather than brand new additions.
+						linkedCaseAuditEntries = resolveLinkedCaseAudits(
+							id,
+							userId,
+							[{ id, reference }, { id: leadCaseId, reference: leadCase.reference ?? '' }, ...siblings],
+							[],
+							[
+								{ linkedCaseId: leadCaseId, linkedCaseIsLead: BOOLEAN_OPTIONS.YES },
+								...siblings.map((sibling) => ({ linkedCaseId: sibling.id, linkedCaseIsLead: BOOLEAN_OPTIONS.NO }))
+							],
+							siblings.length
+								? { leadCaseId, members: siblings.map((sibling) => ({ caseId: sibling.id, isLead: false })) }
+								: undefined
+						);
+					}
 				}
 
 				logger.info({ reference }, 'created a new case');
@@ -64,9 +105,18 @@ export function buildSaveController({ db, logger, audit }: ManageService) {
 			await audit.record({
 				caseId: createdCase.id,
 				action: AUDIT_ACTIONS.CASE_CREATED,
-				userId: req?.session?.account?.localAccountId,
+				userId,
 				metadata: { reference: createdCase.reference }
 			});
+
+			// Recorded separately, after CASE_CREATED, so it's guaranteed to sort later:
+			// CaseHistory.createdAt is a plain `@default(now())` timestamp with no
+			// secondary tiebreaker, so entries written in the same recordMany() batch
+			// (one createMany statement) can share an identical createdAt, leaving their
+			// relative order in the case history undefined.
+			if (linkedCaseAuditEntries.length) {
+				await audit.recordMany(linkedCaseAuditEntries);
+			}
 		} catch (error: any) {
 			wrapPrismaError({
 				error,

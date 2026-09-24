@@ -12,7 +12,9 @@ describe('buildViewCaseHistory', () => {
 	} as any;
 
 	const mockDb = {
-		case: { findUnique: mock.fn() }
+		case: {
+			findUnique: mock.fn()
+		}
 	} as any;
 
 	const mockAudit = {

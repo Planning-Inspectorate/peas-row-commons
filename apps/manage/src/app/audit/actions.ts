@@ -48,6 +48,11 @@ export const AUDIT_ACTIONS = {
 	LINKED_CASE_UPDATED: 'LINKED_CASE_UPDATED',
 	LINKED_CASE_DELETED: 'LINKED_CASE_DELETED',
 
+	// Group linked cases
+	LINKED_CASE_GROUP_ADDED: 'LINKED_CASE_GROUP_ADDED',
+	LINKED_CASE_GROUP_UPDATED: 'LINKED_CASE_GROUP_UPDATED',
+	LINKED_CASE_GROUP_DELETED: 'LINKED_CASE_GROUP_DELETED',
+
 	// Applicant or appellant
 	APPLICANT_ADDED: 'APPLICANT_ADDED',
 	APPLICANT_UPDATED: 'APPLICANT_UPDATED',
@@ -146,6 +151,11 @@ export const AUDIT_TEMPLATES: Record<AuditAction, string> = {
 		'Linked case reference ({entityName}) {fieldName} was updated from {oldValue} to {newValue}',
 	[AUDIT_ACTIONS.LINKED_CASE_DELETED]: '{reference} was deleted from linked case(s).',
 
+	// Group linked cases
+	[AUDIT_ACTIONS.LINKED_CASE_GROUP_ADDED]: 'Case was added to linked case group.',
+	[AUDIT_ACTIONS.LINKED_CASE_GROUP_UPDATED]: 'Linked cases updated.',
+	[AUDIT_ACTIONS.LINKED_CASE_GROUP_DELETED]: 'Case was removed from a linked case group.',
+
 	// Applicant or appellant
 	[AUDIT_ACTIONS.APPLICANT_ADDED]: '{name} was added to applicant or appellant(s).',
 	[AUDIT_ACTIONS.APPLICANT_UPDATED]:
@@ -193,7 +203,7 @@ export function resolveTemplate(action: AuditAction, metadata?: Record<string, u
 		return template;
 	}
 
-	return template.replace(/\{(\w+)\}/g, (match, key) => {
+	return template.replace(/\{(\w+)}/g, (match, key) => {
 		const value = metadata[key];
 		return value !== undefined && value !== null ? String(value) : match;
 	});

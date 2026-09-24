@@ -12,6 +12,30 @@ export interface LinkedCaseChanges {
 }
 
 /**
+ * The pre-existing group that a newly-designated lead case already led before this
+ * edit.
+ */
+export interface MergedLeadOldGroup {
+	leadCaseId: string;
+	childCaseIds: string[];
+}
+
+/**
+ * The true, final state of a linked-case group after `applyLinkedCaseRelationships`
+ * has run - including any pre-existing members silently carried over during a merge
+ * (see `existingLeadChildIds`/`existingOwnChildIds`) that the submitted
+ * `linkedCaseDetails` answer wouldn't otherwise reveal.
+ *
+ * Callers building audit entries should diff against this rather than the raw
+ * submitted answer, so merged-in cases aren't missed (or wrongly reported as removed).
+ */
+export interface FinalLinkedCaseGroup {
+	leadCaseId: string;
+	childCaseIds: string[];
+	mergedLeadOldGroup?: MergedLeadOldGroup;
+}
+
+/**
  * Type guard narrowing an unknown value to a submitted `linkedCaseDetails` row.
  */
 function isLinkedCaseDetailInput(value: unknown): value is LinkedCaseDetailInput {
@@ -100,26 +124,27 @@ export function buildExistingLeadCaseMap(otherCases: OtherCaseWithParent[]): Map
  * `previousParentCaseId` is this case's parent *before* this update (`null` if it had
  * none, e.g. it was previously the lead itself or unlinked).
  *
- * Two sets of existing relationships are preserved when the group is wiped and rebuilt:
+ * One set of existing relationships is preserved when the group is wiped and rebuilt:
  *   - when `leadCaseId` designates an existing, separate case as lead, that case's own
  *     existing children (siblings not explicitly listed in this edit, e.g. because they
  *     weren't touched by whichever case's edit screen this update came from) - see
  *     `existingLeadChildIds`.
- *   - when the case being edited was previously the lead case, but is being redesignated
- *     as a child, its own old children are carried over to the new lead too,
- *     rather than being orphaned along with the rest of its previous root group - see
- *     `existingOwnChildIds`.
+ *
+ * Returns the resulting `FinalLinkedCaseGroup` (the true final membership, including
+ * any silently-merged-in cases) so callers can build accurate audit entries from it
+ * instead of the raw submitted answer.
  */
 export async function applyLinkedCaseRelationships(
 	$tx: Prisma.TransactionClient,
 	caseId: string,
 	changes: LinkedCaseChanges,
 	previousParentCaseId: string | null
-): Promise<void> {
+): Promise<FinalLinkedCaseGroup> {
 	const { leadCaseId, otherCaseIds } = changes;
 
 	const newParentCaseId = leadCaseId ?? caseId;
 	let childCaseIds = leadCaseId ? [caseId, ...otherCaseIds] : otherCaseIds;
+	let mergedLeadOldGroup: MergedLeadOldGroup | undefined;
 
 	// Only preserve the designated lead case's other existing children when this case
 	// is newly joining that group (previousParentCaseId !== leadCaseId). If this case
@@ -129,41 +154,42 @@ export async function applyLinkedCaseRelationships(
 	// preserving it here would silently undo that removal.
 	const needsLeadChildren = leadCaseId !== null && previousParentCaseId !== leadCaseId;
 
-	// Carry over pre-existing children of the lead case and/or this case (see below),
-	// fetched together in a single query rather than two separate ones.
-	const needsOwnChildren = previousParentCaseId === null && newParentCaseId !== caseId;
-	const parentCaseIdsToFetch = [needsLeadChildren ? leadCaseId : null, needsOwnChildren ? caseId : null].filter(
-		(id): id is string => id !== null
-	);
-
-	if (parentCaseIdsToFetch.length) {
+	if (needsLeadChildren) {
 		const existingChildren = await $tx.caseRelationship.findMany({
-			where: { parentCaseId: { in: parentCaseIdsToFetch } },
+			where: { parentCaseId: leadCaseId as string },
 			select: { parentCaseId: true, childCaseId: true }
 		});
-		const existingChildrenByParent = Map.groupBy(existingChildren, (relationship) => relationship.parentCaseId);
 
-		if (needsLeadChildren) {
-			// Preserve any of the designated lead case's existing children that aren't
-			// already part of this edit, so they remain linked instead of being silently
-			// dropped when the group is wiped and rebuilt below.
-			const existingLeadChildIds = (existingChildrenByParent.get(leadCaseId as string) ?? [])
-				.map((relationship) => relationship.childCaseId)
-				.filter((childCaseId) => childCaseId !== caseId && !childCaseIds.includes(childCaseId));
+		// The lead's true prior membership (minus the case being edited, which was
+		// never one of its children). Used as-is for `mergedLeadOldGroup` below, since
+		// the audit "old" snapshot must reflect the real previous state even when one
+		// of these ids also happens to be explicitly resubmitted via `otherCaseIds`
+		// (e.g. a case building a link to an already-established lead can legitimately
+		// re-list one of that lead's existing children).
+		const existingLeadChildIds = existingChildren
+			.map((relationship) => relationship.childCaseId)
+			.filter((childCaseId) => childCaseId !== caseId);
 
-			childCaseIds = [...childCaseIds, ...existingLeadChildIds];
-		}
+		// Only *append* the subset not already part of this edit, so they remain
+		// linked instead of being silently dropped when the group is wiped and
+		// rebuilt below - ids already in `childCaseIds` don't need appending (and
+		// appending them again would create a duplicate `CaseRelationship` row,
+		// violating the unique constraint on `childCaseId`).
+		const existingLeadChildIdsToAppend = existingLeadChildIds.filter(
+			(childCaseId) => !childCaseIds.includes(childCaseId)
+		);
 
-		if (needsOwnChildren) {
-			// This case was previously unlinked or the lead of its own group, and is now
-			// becoming a child of a different lead - carry over any of its own existing
-			// children to the new lead too, instead of leaving them orphaned when this
-			// case's previous root group is wiped below.
-			const existingOwnChildIds = (existingChildrenByParent.get(caseId) ?? [])
-				.map((relationship) => relationship.childCaseId)
-				.filter((childCaseId) => childCaseId !== newParentCaseId && !childCaseIds.includes(childCaseId));
+		childCaseIds = [...childCaseIds, ...existingLeadChildIdsToAppend];
 
-			childCaseIds = [...childCaseIds, ...existingOwnChildIds];
+		// If the designated lead was a genuinely established lead before this edit
+		// (it already had its own children) - record its own prior group so callers
+		// can build accurate UPDATED audit entries for it and its pre-existing
+		// children when this merge is audited. This uses the full, unfiltered
+		// `existingLeadChildIds` (not the append-only subset) so a pre-existing
+		// child that's also explicitly resubmitted still shows up in the old
+		// snapshot instead of being wrongly reported as newly added.
+		if (existingLeadChildIds.length) {
+			mergedLeadOldGroup = { leadCaseId: leadCaseId as string, childCaseIds: existingLeadChildIds };
 		}
 	}
 
@@ -171,23 +197,32 @@ export async function applyLinkedCaseRelationships(
 	// otherwise this case itself (it may have been the lead, with its own children).
 	const previousRootCaseId = previousParentCaseId ?? caseId;
 
-	// TODO: HRP-611 make sure audit accurately records changes to linked cases and not all wipes/readditions.
-	// Wipe every relationship in both the case's previous group and its new group.
+	// Wipe the previous group and the new target group so the final state is
+	// rebuilt from the submitted linkedCaseDetails instead of resurrecting old
+	// relationships that were previously removed by the user.
 	const rootCaseIdsToWipe = Array.from(new Set([previousRootCaseId, newParentCaseId]));
-	await $tx.caseRelationship.deleteMany({ where: { parentCaseId: { in: rootCaseIdsToWipe } } });
+	await $tx.caseRelationship.deleteMany({
+		where: { parentCaseId: { in: rootCaseIdsToWipe } }
+	});
 
-	// childCaseId is unique (a case can only have one parent), so clear any existing
-	// parent link for every case about to become a child of newParentCaseId - this also
-	// covers clearing this case's own previous parent link if it had one, and pulling in
-	// a case that previously belonged to a different group entirely.
+	// Clear any parent links for cases that are about to be re-parented.
 	const caseIdsToClearParentFor = Array.from(new Set([caseId, ...childCaseIds]));
-	await $tx.caseRelationship.deleteMany({ where: { childCaseId: { in: caseIdsToClearParentFor } } });
+	await $tx.caseRelationship.deleteMany({
+		where: { childCaseId: { in: caseIdsToClearParentFor } }
+	});
 
 	if (childCaseIds.length) {
 		await $tx.caseRelationship.createMany({
-			data: childCaseIds.map((childCaseId) => ({ parentCaseId: newParentCaseId, childCaseId }))
+			data: childCaseIds.map((childCaseId) => ({
+				parentCaseId: newParentCaseId,
+				childCaseId
+			}))
 		});
 	}
+
+	return mergedLeadOldGroup
+		? { leadCaseId: newParentCaseId, childCaseIds, mergedLeadOldGroup }
+		: { leadCaseId: newParentCaseId, childCaseIds };
 }
 
 /**
@@ -214,31 +249,46 @@ export function stripLinkedCaseDetails(flatData: Record<string, any>) {
 }
 
 /**
- * Adapts the previously-fetched `ChildRelationships`/`ParentRelationship`
- * (`CaseRelationship` join records) into the flat `{ id, reference, isLead }`
- * shape `resolveLinkedCaseAudits` expects.
+ * Builds the previous linked-case audit snapshot for the case being edited.
+ *
+ * Returns the other cases in the old linked group:
+ *   - if this case had a parent, the parent is returned as the lead and the
+ *     parent's other children are returned as non-lead siblings
+ *   - otherwise this case's direct child relationships are returned as non-lead cases
+ *
+ * The current case itself is intentionally excluded here; it is added by
+ * `resolveLinkedCaseAudits` when normalising the old/new groups.
  */
 export function buildPreviousLinkedCases(previousValues: Record<string, unknown>): LinkedCaseAuditSource[] {
-	const childRelationships =
-		(previousValues.ChildRelationships as { id: string; ChildCase: { id: string; reference: string | null } }[]) ?? [];
+	const caseId = previousValues.id as string;
+	const childRelationships = (previousValues.ChildRelationships as RelationshipRow[]) ?? [];
 	const parentRelationship = previousValues.ParentRelationship as
-		{ id: string; ParentCase: { id: string; reference: string | null } } | null | undefined;
+		| {
+				id: string;
+				ParentCase: {
+					id: string;
+					reference: string | null;
+					ChildRelationships?: RelationshipRow[];
+				};
+		  }
+		| null
+		| undefined;
 
-	const linkedCases: LinkedCaseAuditSource[] = childRelationships.map((relationship) => ({
-		id: relationship.id,
-		reference: relationship.ChildCase.id,
-		isLead: false
-	}));
-
-	if (parentRelationship) {
-		linkedCases.push({
-			id: parentRelationship.id,
-			reference: parentRelationship.ParentCase.id,
-			isLead: true
-		});
+	if (!parentRelationship) {
+		return childRelationships.map((rel) => ({
+			caseId: rel.ChildCase.id,
+			isLead: false
+		}));
 	}
 
-	return linkedCases;
+	const siblings = (parentRelationship.ParentCase.ChildRelationships ?? [])
+		.filter((rel) => rel.ChildCase.id !== caseId)
+		.map((rel) => ({
+			caseId: rel.ChildCase.id,
+			isLead: false
+		}));
+
+	return [{ caseId: parentRelationship.ParentCase.id, isLead: true }, ...siblings];
 }
 
 /**

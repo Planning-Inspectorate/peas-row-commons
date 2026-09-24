@@ -214,13 +214,9 @@ describe('linked-cases', () => {
 			});
 			const changes = { leadCaseId: 'lead-case', otherCaseIds: ['sibling-1'] };
 
-			await applyLinkedCaseRelationships($tx as any, 'case-1', changes, null);
+			const result = await applyLinkedCaseRelationships($tx as any, 'case-1', changes, null);
 
 			assert.strictEqual($tx.caseRelationship.findMany.mock.calls.length, 1);
-			assert.deepStrictEqual($tx.caseRelationship.findMany.mock.calls[0].arguments[0], {
-				where: { parentCaseId: { in: ['lead-case', 'case-1'] } },
-				select: { parentCaseId: true, childCaseId: true }
-			});
 
 			assert.deepStrictEqual($tx.caseRelationship.createMany.mock.calls[0].arguments[0], {
 				data: [
@@ -228,6 +224,99 @@ describe('linked-cases', () => {
 					{ parentCaseId: 'lead-case', childCaseId: 'sibling-1' },
 					{ parentCaseId: 'lead-case', childCaseId: 'existing-child' }
 				]
+			});
+
+			// The returned final group is ground truth for auditing - it must include
+			// the merged-in existing-child even though it was never part of this edit.
+			// mergedLeadOldGroup must also include sibling-1: it was already one of
+			// lead-case's children *before* this edit, so its true prior group includes
+			// it even though it's also explicitly resubmitted via otherCaseIds - dropping
+			// it here would make the audit resolver wrongly report it as newly added.
+			assert.deepStrictEqual(result, {
+				leadCaseId: 'lead-case',
+				childCaseIds: ['case-1', 'sibling-1', 'existing-child'],
+				mergedLeadOldGroup: { leadCaseId: 'lead-case', childCaseIds: ['existing-child', 'sibling-1'] }
+			});
+		});
+
+		it('should include a resubmitted pre-existing child in mergedLeadOldGroup without duplicating its relationship row', async () => {
+			// lead-case already has children resubmitted-child (explicitly re-listed in
+			// this edit's otherCaseIds) and untouched-child (not mentioned at all).
+			const $tx = createMockTx({
+				'lead-case': [{ childCaseId: 'resubmitted-child' }, { childCaseId: 'untouched-child' }]
+			});
+			const changes = { leadCaseId: 'lead-case', otherCaseIds: ['resubmitted-child'] };
+
+			const result = await applyLinkedCaseRelationships($tx as any, 'case-1', changes, null);
+
+			// Only one CaseRelationship row for resubmitted-child - no duplicate created
+			// for the id that was both pre-existing and resubmitted.
+			assert.deepStrictEqual($tx.caseRelationship.createMany.mock.calls[0].arguments[0], {
+				data: [
+					{ parentCaseId: 'lead-case', childCaseId: 'case-1' },
+					{ parentCaseId: 'lead-case', childCaseId: 'resubmitted-child' },
+					{ parentCaseId: 'lead-case', childCaseId: 'untouched-child' }
+				]
+			});
+
+			// mergedLeadOldGroup reflects the lead's full true prior membership, so
+			// resubmitted-child is diffed as UPDATED (unchanged relationship) rather
+			// than being mistaken for a brand new addition.
+			assert.deepStrictEqual(result.mergedLeadOldGroup, {
+				leadCaseId: 'lead-case',
+				childCaseIds: ['resubmitted-child', 'untouched-child']
+			});
+		});
+
+		it('should not report a mergedLeadOldGroup when the designated lead had no pre-existing children', async () => {
+			// lead-case has no existing children at all - it's not a genuinely established
+			// group, so this is a brand new pairing, not a merge of two existing groups.
+			const $tx = createMockTx({ 'lead-case': [] });
+			const changes = { leadCaseId: 'lead-case', otherCaseIds: ['sibling-1'] };
+
+			const result = await applyLinkedCaseRelationships($tx as any, 'case-1', changes, null);
+
+			assert.deepStrictEqual(result, {
+				leadCaseId: 'lead-case',
+				childCaseIds: ['case-1', 'sibling-1']
+			});
+			assert.strictEqual(Object.hasOwn(result, 'mergedLeadOldGroup'), false);
+		});
+
+		it('should merge two established groups when the case being edited was itself a lead with its own child', async () => {
+			// case-X was previously the lead of its own group with case-Y as its only child.
+			// case-1 is a separate, already-established lead with children case-2 and case-3.
+			// The edit screen for case-X showed its complete own child list (case-Y), which
+			// the user kept, while reassigning the lead to case-1 - merging the two groups.
+			const $tx = createMockTx({
+				'case-X': [{ childCaseId: 'case-Y' }],
+				'case-1': [{ childCaseId: 'case-2' }, { childCaseId: 'case-3' }]
+			});
+			const changes = { leadCaseId: 'case-1', otherCaseIds: ['case-Y'] };
+
+			const result = await applyLinkedCaseRelationships($tx as any, 'case-X', changes, null);
+
+			// Only case-1's existing children need fetching - case-X's own child was
+			// already explicitly kept via otherCaseIds, not re-fetched.
+			assert.strictEqual($tx.caseRelationship.findMany.mock.calls.length, 1);
+			assert.deepStrictEqual($tx.caseRelationship.findMany.mock.calls[0].arguments[0], {
+				where: { parentCaseId: 'case-1' },
+				select: { parentCaseId: true, childCaseId: true }
+			});
+
+			assert.deepStrictEqual($tx.caseRelationship.createMany.mock.calls[0].arguments[0], {
+				data: [
+					{ parentCaseId: 'case-1', childCaseId: 'case-X' },
+					{ parentCaseId: 'case-1', childCaseId: 'case-Y' },
+					{ parentCaseId: 'case-1', childCaseId: 'case-2' },
+					{ parentCaseId: 'case-1', childCaseId: 'case-3' }
+				]
+			});
+
+			assert.deepStrictEqual(result, {
+				leadCaseId: 'case-1',
+				childCaseIds: ['case-X', 'case-Y', 'case-2', 'case-3'],
+				mergedLeadOldGroup: { leadCaseId: 'case-1', childCaseIds: ['case-2', 'case-3'] }
 			});
 		});
 
@@ -273,24 +362,24 @@ describe('linked-cases', () => {
 			assert.strictEqual($tx.caseRelationship.findMany.mock.calls.length, 0);
 		});
 
-		it('should carry over this case own existing children to the new lead when it was previously the root of its own group', async () => {
-			// case-1 was previously the root of its own group with 'old-child' as a child
-			const $tx = createMockTx({ 'case-1': [{ childCaseId: 'old-child' }] });
+		it("should not resurrect this case's own previous children when it was previously the root of its own group", async () => {
+			// case-1 was previously the root of its own group with 'old-child' as a child.
+			// The edit screen showed this complete list, and the user's submitted
+			// otherCaseIds (empty) deliberately dropped 'old-child' - it must not be
+			// carried over to the new lead.
+			const $tx = createMockTx({ 'case-1': [{ childCaseId: 'old-child' }], 'new-lead': [] });
 			const changes = { leadCaseId: 'new-lead', otherCaseIds: [] };
 
 			await applyLinkedCaseRelationships($tx as any, 'case-1', changes, null);
 
 			assert.strictEqual($tx.caseRelationship.findMany.mock.calls.length, 1);
 			assert.deepStrictEqual($tx.caseRelationship.findMany.mock.calls[0].arguments[0], {
-				where: { parentCaseId: { in: ['new-lead', 'case-1'] } },
+				where: { parentCaseId: 'new-lead' },
 				select: { parentCaseId: true, childCaseId: true }
 			});
 
 			assert.deepStrictEqual($tx.caseRelationship.createMany.mock.calls[0].arguments[0], {
-				data: [
-					{ parentCaseId: 'new-lead', childCaseId: 'case-1' },
-					{ parentCaseId: 'new-lead', childCaseId: 'old-child' }
-				]
+				data: [{ parentCaseId: 'new-lead', childCaseId: 'case-1' }]
 			});
 		});
 
@@ -430,8 +519,8 @@ describe('linked-cases', () => {
 			const result = buildPreviousLinkedCases(previousValues);
 
 			assert.deepStrictEqual(result, [
-				{ id: 'rel-1', reference: 'case-2', isLead: false },
-				{ id: 'rel-2', reference: 'case-3', isLead: false }
+				{ caseId: 'case-2', isLead: false },
+				{ caseId: 'case-3', isLead: false }
 			]);
 		});
 
@@ -442,20 +531,27 @@ describe('linked-cases', () => {
 
 			const result = buildPreviousLinkedCases(previousValues);
 
-			assert.deepStrictEqual(result, [{ id: 'rel-parent', reference: 'case-1', isLead: true }]);
+			assert.deepStrictEqual(result, [{ caseId: 'case-1', isLead: true }]);
 		});
 
 		it('should combine ChildRelationships and ParentRelationship, children first', () => {
 			const previousValues = {
-				ChildRelationships: [{ id: 'rel-1', ChildCase: { id: 'case-2', reference: 'REF-002' } }],
-				ParentRelationship: { id: 'rel-parent', ParentCase: { id: 'case-1', reference: 'REF-001' } }
+				id: 'case-0',
+				ParentRelationship: {
+					id: 'rel-parent',
+					ParentCase: {
+						id: 'case-1',
+						reference: 'REF-001',
+						ChildRelationships: [{ id: 'rel-1', ChildCase: { id: 'case-2', reference: 'REF-002' } }]
+					}
+				}
 			};
 
 			const result = buildPreviousLinkedCases(previousValues);
 
 			assert.deepStrictEqual(result, [
-				{ id: 'rel-1', reference: 'case-2', isLead: false },
-				{ id: 'rel-parent', reference: 'case-1', isLead: true }
+				{ caseId: 'case-1', isLead: true },
+				{ caseId: 'case-2', isLead: false }
 			]);
 		});
 	});
