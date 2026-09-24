@@ -13,8 +13,8 @@ import { DECISION_MAKER_TYPES } from '@pins/peas-row-commons-database/src/seed/s
 import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
 import { formatAddress, formatDate, formatDateTime } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
 import { sortLinkedCases, sortRelatedCases } from '@pins/peas-row-commons-lib/util/case-sorting.ts';
-import { getUniqueProcedureFields } from '@pins/peas-row-commons-lib/util/dynamic-sections/procedures-section/procedure-section-builder.ts';
 import { resolveLinkedCaseRelationships } from '../view/linked-cases.ts';
+import { getUniqueProcedureFields } from '../view/questions-procedure.ts';
 import type { CaseDownloadQueryResult } from './query.ts';
 import type {
 	CaseDetailsPdfData,
@@ -83,7 +83,7 @@ function mapProcedure(
 ): PdfProcedure {
 	const MAX_LINE_LENGTH = 100; // Standard max line logic
 	const typeId = procedure.ProcedureType?.id ?? '';
-	const uniqueFields = getUniqueProcedureFields(typeId);
+	const uniqueFields: string[] = getUniqueProcedureFields(typeId);
 
 	/**
 	 * Standard logic to ensure strings don't break PDF layout

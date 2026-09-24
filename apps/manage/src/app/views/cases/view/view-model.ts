@@ -71,8 +71,10 @@ export function sortProceduresChronologically(procedures?: CaseProcedureFields[]
  *
  * Fields we don't want in the UI (internal IDs, timestamps) are stripped.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
-export function mapProceduresToArray(procedures: any[]): Record<string, any>[] | undefined {
+export function mapProceduresToArray(
+	procedures: ReturnType<typeof sortProceduresChronologically>
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
+): Record<string, any>[] | undefined {
 	if (!procedures || !Array.isArray(procedures) || procedures.length === 0) {
 		return undefined;
 	}
@@ -111,6 +113,7 @@ export function mapProceduresToArray(procedures: any[]): Record<string, any>[] |
 		'InquiryOrConference'
 	];
 
+	type ProcKey = keyof (typeof procedures)[number];
 	return procedures.map((proc) => {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 		const mapped: Record<string, any> = {};
@@ -121,7 +124,7 @@ export function mapProceduresToArray(procedures: any[]): Record<string, any>[] |
 				return;
 			}
 
-			const value = proc[key];
+			const value = proc[key as ProcKey];
 			if (value === null || value === undefined) return;
 
 			// Map venue address objects to the UI format
