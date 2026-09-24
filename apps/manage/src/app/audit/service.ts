@@ -79,8 +79,24 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 			if (entries.length === 0) return;
 
 			try {
-				const caseId = entries[0].caseId;
 				const userId = entries[0].userId;
+
+				// Ensure all entries belong to the same user before using one user row.
+				// If  ever broken, the audit batch should not silently mix users.
+				const distinctUserIds = [...new Set(entries.map((entry) => entry.userId))];
+				if (distinctUserIds.length !== 1 || !userId) {
+					logger.error(
+						{
+							caseId: entries[0].caseId,
+							entryCount: entries.length,
+							userIds: distinctUserIds
+						},
+						'recordMany expected a single userId'
+					);
+					return;
+				}
+
+				const distinctCaseIds = [...new Set(entries.map((entry) => entry.caseId))].sort();
 
 				await db.$transaction(async ($tx) => {
 					// Ensure the user exists once, then use the scalar FK for createMany
@@ -99,13 +115,17 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 						}))
 					});
 
-					await $tx.case.update({
-						where: { id: caseId },
-						data: {
-							updatedDate: new Date(),
-							updatedById: user.id
-						}
-					});
+					await Promise.all(
+						distinctCaseIds.map((caseId) =>
+							$tx.case.update({
+								where: { id: caseId },
+								data: {
+									updatedDate: new Date(),
+									updatedById: user.id
+								}
+							})
+						)
+					);
 				});
 			} catch (error) {
 				logger.error(
@@ -199,7 +219,7 @@ export function buildAuditService(db: PrismaClient, logger: Logger) {
 				});
 
 				if (!caseRow) {
-					throw new Error(`No folder found for id: ${caseId}`);
+					throw new Error(`No case found for id: ${caseId}`);
 				}
 
 				const updatedDate = caseRow.updatedDate ? formatDateTime(caseRow.updatedDate) : null;

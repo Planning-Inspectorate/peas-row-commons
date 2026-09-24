@@ -128,7 +128,7 @@ describe('createCaseHistoryViewModel', () => {
 		assert.ok('details' in result[0]);
 		assert.ok('user' in result[0]);
 		assert.ok('files' in result[0]);
-		assert.strictEqual(Object.keys(result[0]).length, 5);
+		assert.strictEqual(Object.keys(result[0]).length, 6);
 	});
 
 	it('should include files array for bulk upload actions with file metadata', () => {
@@ -194,5 +194,124 @@ describe('createCaseHistoryViewModel', () => {
 		const result = createCaseHistoryViewModel(events);
 
 		assert.strictEqual(result[0].files, undefined);
+	});
+	describe('linked case group updates', () => {
+		it('should display linked case changes with previous and new sections', () => {
+			const events = [
+				createMockEvent({
+					action: 'LINKED_CASE_GROUP_UPDATED',
+					metadata: {
+						fieldName: 'linked cases',
+						oldLinkedCases: [{ reference: 'HOU/2025/1059', isLead: true }],
+						newLinkedCases: [
+							{ reference: 'HOU/2025/1059', isLead: true },
+							{ reference: 'HOU/2025/1060', isLead: false }
+						]
+					}
+				})
+			];
+
+			const result = createCaseHistoryViewModel(events);
+
+			assert.strictEqual(result[0].details, 'Linked cases updated.');
+			assert.ok(result[0].detailSections);
+			assert.strictEqual(result[0].detailSections?.length, 2);
+			assert.deepStrictEqual(
+				result[0].detailSections?.map((section) => section.label),
+				['Previous linked cases', 'New linked cases']
+			);
+		});
+
+		it('should format linked cases with lead', () => {
+			const events = [
+				createMockEvent({
+					action: 'LINKED_CASE_GROUP_UPDATED',
+					metadata: {
+						oldLinkedCases: [{ reference: 'REF-001', isLead: true }],
+						newLinkedCases: [{ reference: 'REF-001', isLead: true }]
+					}
+				})
+			];
+
+			const result = createCaseHistoryViewModel(events);
+
+			assert.ok(result[0].detailSections?.[0].values.includes('REF-001 (lead)'));
+			assert.ok(result[0].detailSections?.[1].values.includes('REF-001 (lead)'));
+		});
+
+		it('should display non-lead linked cases without lead ', () => {
+			const events = [
+				createMockEvent({
+					action: 'LINKED_CASE_GROUP_UPDATED',
+					metadata: {
+						newLinkedCases: [
+							{ reference: 'REF-LEAD', isLead: true },
+							{ reference: 'REF-MEMBER', isLead: false }
+						]
+					}
+				})
+			];
+
+			const result = createCaseHistoryViewModel(events);
+
+			assert.ok(result[0].detailSections?.[0].values.includes('REF-MEMBER'));
+			assert.ok(!result[0].detailSections?.[0].values.includes('REF-MEMBER (lead)'));
+		});
+
+		it('should not show detail sections when no linked cases present', () => {
+			const events = [
+				createMockEvent({
+					action: 'LINKED_CASE_GROUP_UPDATED',
+					metadata: {
+						oldLinkedCases: [],
+						newLinkedCases: []
+					}
+				})
+			];
+
+			const result = createCaseHistoryViewModel(events);
+
+			assert.strictEqual(result[0].detailSections, undefined);
+		});
+
+		it('should only show previous linked cases section when old cases exist', () => {
+			const events = [
+				createMockEvent({
+					action: 'LINKED_CASE_GROUP_ADDED',
+					metadata: {
+						newLinkedCases: [
+							{ reference: 'REF-001', isLead: true },
+							{ reference: 'REF-002', isLead: false }
+						]
+					}
+				})
+			];
+
+			const result = createCaseHistoryViewModel(events);
+
+			assert.strictEqual(result[0].detailSections?.length, 1);
+			assert.strictEqual(result[0].detailSections?.[0].label, 'New linked cases');
+			assert.strictEqual(result[0].detailSections?.[0].values.length, 2);
+		});
+
+		it('should only show new linked cases section when old cases do not exist', () => {
+			const events = [
+				createMockEvent({
+					action: 'LINKED_CASE_GROUP_DELETED',
+					metadata: {
+						oldLinkedCases: [
+							{ reference: 'REF-001', isLead: true },
+							{ reference: 'REF-002', isLead: false }
+						]
+					}
+				})
+			];
+
+			const result = createCaseHistoryViewModel(events);
+
+			assert.strictEqual(result[0].detailSections?.length, 1);
+			assert.strictEqual(result[0].detailSections?.[0].label, 'Previous linked cases');
+			assert.strictEqual(result[0].detailSections?.[0].values.length, 2);
+		});
 	});
 });

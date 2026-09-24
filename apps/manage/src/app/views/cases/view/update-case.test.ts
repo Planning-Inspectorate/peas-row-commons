@@ -4,6 +4,7 @@ import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-
 import { mockLogger } from '@planning-inspectorate/core/testing';
 import assert from 'node:assert';
 import { beforeEach, describe, it, mock } from 'node:test';
+import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
 import { buildUpdateCase, handleAbeyancePeriod, mapCasePayload } from './update-case.ts';
 
 const mockFindUnique = mock.fn();
@@ -12,6 +13,15 @@ const mockCaseRelationshipFindMany = mock.fn(() => Promise.resolve([]));
 const mockCaseRelationshipDeleteMany = mock.fn();
 const mockCaseRelationshipCreate = mock.fn();
 const mockCaseRelationshipCreateMany = mock.fn();
+const mockCaseFindMany = mock.fn(() =>
+	Promise.resolve([
+		{ id: 'case-id-1', reference: 'REF-001' },
+		{ id: 'case-id-2', reference: 'REF-002' },
+		{ id: 'case-id-lead', reference: 'REF-LEAD' },
+		{ id: 'case-id-sibling', reference: 'REF-SIBLING' },
+		{ id: 'case-123', reference: 'REF-001' }
+	])
+);
 
 const mockTx = {
 	case: {
@@ -31,15 +41,18 @@ const mockDbTransaction = mock.fn(async (callback) => {
 });
 
 const mockDb = {
-	$transaction: mockDbTransaction
+	$transaction: mockDbTransaction,
+	case: {
+		findMany: mockCaseFindMany
+	}
 };
 
 const mockService = {
 	db: mockDb as any,
 	logger: mockLogger(),
 	audit: {
-		record: mock.fn(() => Promise.resolve()),
-		recordMany: mock.fn(() => Promise.resolve())
+		record: mock.fn((_entry: any) => Promise.resolve()),
+		recordMany: mock.fn((_entries: any[]) => Promise.resolve())
 	},
 	authConfig: {
 		groups: {
@@ -66,7 +79,10 @@ describe('Update Case Controller', () => {
 		mockCaseRelationshipDeleteMany.mock.resetCalls();
 		mockCaseRelationshipCreate.mock.resetCalls();
 		mockCaseRelationshipCreateMany.mock.resetCalls();
+		mockCaseFindMany.mock.resetCalls();
 		mockService.logger.info.mock.resetCalls();
+		mockService.audit.record.mock.resetCalls();
+		mockService.audit.recordMany.mock.resetCalls();
 	});
 
 	describe('buildUpdateCase', () => {
@@ -1186,6 +1202,392 @@ describe('Update Case Controller', () => {
 			assert.strictEqual(mockUpdate.mock.callCount(), 1);
 			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
 			assert.strictEqual(updateArgs.data.description, null);
+		});
+	});
+
+	describe('buildUpdateCase (linked case audits)', () => {
+		it('should record audit entries for all affected cases when linked cases are updated', async () => {
+			const req = { params: { id: 'case-123' }, session: { account: { localAccountId: 'user-123' } } };
+			const data = {
+				answers: {
+					linkedCaseDetails: [
+						{ linkedCaseId: 'case-lead', linkedCaseIsLead: 'yes' },
+						{ linkedCaseId: 'case-sibling', linkedCaseIsLead: 'no' }
+					]
+				}
+			};
+
+			mockFindUnique.mock.mockImplementationOnce(
+				() =>
+					({
+						id: 'case-123',
+						reference: 'REF-001',
+						ParentRelationship: {
+							id: 'rel-1',
+							parentCaseId: 'case-lead',
+							ParentCase: {
+								id: 'case-lead',
+								reference: 'LEAD-REF',
+								ChildRelationships: [
+									{
+										ChildCase: { id: 'case-123', reference: 'REF-001' }
+									}
+								]
+							}
+						}
+					}) as any
+			);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockService.audit.recordMany.mock.callCount(), 1);
+
+			const entries = mockService.audit.recordMany.mock.calls[0].arguments[0] as any[];
+
+			assert.strictEqual(entries.length, 3);
+			assert.ok(entries.some((entry: any) => entry.caseId === 'case-123'));
+			assert.ok(entries.some((entry: any) => entry.caseId === 'case-lead'));
+			assert.ok(entries.some((entry: any) => entry.caseId === 'case-sibling'));
+		});
+
+		it('should not record audit entries when linked cases are unchanged', async () => {
+			const req = { params: { id: 'case-123' }, session: { account: { localAccountId: 'user-123' } } };
+			const data = {
+				answers: {
+					linkedCaseDetails: [
+						{ linkedCaseId: 'case-lead', linkedCaseIsLead: 'yes' },
+						{ linkedCaseId: 'case-sibling', linkedCaseIsLead: 'no' }
+					]
+				}
+			};
+
+			mockFindUnique.mock.mockImplementationOnce(
+				() =>
+					({
+						id: 'case-123',
+						reference: 'REF-001',
+						ParentRelationship: {
+							id: 'rel-parent',
+							ParentCase: {
+								id: 'case-lead',
+								reference: 'LEAD-REF',
+								ChildRelationships: [
+									{
+										id: 'rel-1',
+										ChildCase: { id: 'case-123', reference: 'REF-001' }
+									},
+									{
+										id: 'rel-2',
+										ChildCase: { id: 'case-sibling', reference: 'SIBLING-REF' }
+									}
+								]
+							}
+						}
+					}) as any
+			);
+
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			const entries = mockService.audit.recordMany.mock.calls[0].arguments[0];
+
+			assert.strictEqual(entries.length, 0);
+		});
+
+		it('should record audit entries when all linked cases are removed', async () => {
+			const req = { params: { id: 'case-123' }, session: { account: { localAccountId: 'user-123' } } };
+			const data = { answers: { linkedCaseDetails: [] } };
+
+			mockFindUnique.mock.mockImplementationOnce(
+				() =>
+					({
+						id: 'case-123',
+						reference: 'REF-001',
+						ParentRelationship: {
+							id: 'rel-parent',
+							parentCaseId: 'case-lead',
+							ParentCase: {
+								id: 'case-lead',
+								reference: 'LEAD-REF',
+								ChildRelationships: [
+									{
+										id: 'rel-1',
+										ChildCase: { id: 'case-123', reference: 'REF-001' }
+									},
+									{
+										id: 'rel-2',
+										ChildCase: { id: 'case-sibling', reference: 'SIBLING-REF' }
+									}
+								]
+							}
+						}
+					}) as any
+			);
+
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockService.audit.recordMany.mock.callCount(), 1);
+
+			const entries = mockService.audit.recordMany.mock.calls[0].arguments[0] as any[];
+
+			// Unlinking all cases must still be audited - it must not be silently
+			// skipped just because the submitted linkedCaseDetails is empty.
+			assert.ok(entries.length > 0);
+			assert.ok(entries.some((entry: any) => entry.caseId === 'case-123'));
+			assert.ok(entries.some((entry: any) => entry.caseId === 'case-lead'));
+			assert.ok(entries.some((entry: any) => entry.caseId === 'case-sibling'));
+		});
+
+		it('should record audit entries for every case affected when two existing linked-case groups are merged', async () => {
+			const req = { params: { id: 'case-123' }, session: { account: { localAccountId: 'user-123' } } };
+			// case-123 is the case being edited; its own edit screen shows its existing
+			// child case-y in full, and the user keeps it while designating case-1 as
+			// the new lead. case-1's own children (case-2, case-3) aren't shown on this
+			// screen at all, so they're merged in silently.
+			const data = {
+				answers: {
+					linkedCaseDetails: [
+						{ linkedCaseId: 'case-1', linkedCaseIsLead: 'yes' },
+						{ linkedCaseId: 'case-y', linkedCaseIsLead: 'no' }
+					]
+				}
+			};
+
+			// case-123 was previously the lead of its own group, with one existing
+			// child, case-y.
+			mockFindUnique.mock.mockImplementationOnce(
+				() =>
+					({
+						id: 'case-123',
+						reference: 'REF-X',
+						ParentRelationship: null,
+						ChildRelationships: [{ ChildCase: { id: 'case-y', reference: 'REF-Y' } }]
+					}) as any
+			);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-X' }) as any);
+
+			// case-1 is already the lead of its own separate group, with children
+			// case-2 and case-3 - neither of which appear in the submitted answer above.
+			mockCaseRelationshipFindMany.mock.mockImplementationOnce(({ where }: any) => {
+				const childrenByParent: Record<string, { childCaseId: string }[]> = {
+					'case-1': [{ childCaseId: 'case-2' }, { childCaseId: 'case-3' }]
+				};
+
+				return Promise.resolve(
+					(childrenByParent[where.parentCaseId] ?? []).map((relationship) => ({
+						parentCaseId: where.parentCaseId,
+						...relationship
+					}))
+				);
+			});
+
+			mockCaseFindMany.mock.mockImplementationOnce(() =>
+				Promise.resolve([
+					{ id: 'case-123', reference: 'REF-X' },
+					{ id: 'case-1', reference: 'REF-1' },
+					{ id: 'case-2', reference: 'REF-2' },
+					{ id: 'case-3', reference: 'REF-3' },
+					{ id: 'case-y', reference: 'REF-Y' }
+				])
+			);
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockService.audit.recordMany.mock.callCount(), 1);
+			const entries = mockService.audit.recordMany.mock.calls[0].arguments[0] as any[];
+
+			// Every case in the merged group must get an entry - including case-2 and
+			// case-3, which were silently merged in and never appeared in the submitted
+			// answer.
+			const auditedCaseIds = entries.map((entry: any) => entry.caseId).sort();
+			assert.deepStrictEqual(auditedCaseIds, ['case-1', 'case-123', 'case-2', 'case-3', 'case-y'].sort());
+
+			// All 5 cases are pre-existing group members being merged into one combined
+			// group, not brand new additions - every entry must be UPDATED.
+			assert.ok(
+				entries.every((entry: any) => entry.action === AUDIT_ACTIONS.LINKED_CASE_GROUP_UPDATED),
+				`expected every entry to be LINKED_CASE_GROUP_UPDATED, got: ${entries.map((e: any) => `${e.caseId}:${e.action}`).join(', ')}`
+			);
+
+			// Every entry shares the same final-group metadata, which must reflect the
+			// full, true merged group - not just what was explicitly submitted.
+			for (const entry of entries) {
+				const newMembers = entry.metadata?.newLinkedCases as Array<{ reference: string; isLead: boolean }>;
+				const referencesInGroup = newMembers.map((member) => member.reference).sort();
+
+				assert.deepStrictEqual(referencesInGroup, ['REF-1', 'REF-2', 'REF-3', 'REF-X', 'REF-Y'].sort());
+				assert.strictEqual(newMembers.find((member) => member.isLead)?.reference, 'REF-1');
+			}
+
+			// case-1/case-2/case-3 came from their own pre-existing group (case-1 lead,
+			// case-2/case-3 children) - their oldLinkedCases must reflect that real prior
+			// group, not case-123's.
+			const mergedInEntries = entries.filter((entry: any) => ['case-1', 'case-2', 'case-3'].includes(entry.caseId));
+			assert.strictEqual(mergedInEntries.length, 3);
+			for (const entry of mergedInEntries) {
+				const oldMembers = entry.metadata?.oldLinkedCases as Array<{ reference: string; isLead: boolean }>;
+				assert.deepStrictEqual(oldMembers.map((member) => member.reference).sort(), ['REF-1', 'REF-2', 'REF-3'].sort());
+				assert.strictEqual(oldMembers.find((member) => member.isLead)?.reference, 'REF-1');
+			}
+
+			// case-123/case-y came from case-123's own prior group.
+			const primaryEntries = entries.filter((entry: any) => ['case-123', 'case-y'].includes(entry.caseId));
+			assert.strictEqual(primaryEntries.length, 2);
+			for (const entry of primaryEntries) {
+				const oldMembers = entry.metadata?.oldLinkedCases as Array<{ reference: string; isLead: boolean }>;
+				assert.deepStrictEqual(oldMembers.map((member) => member.reference).sort(), ['REF-X', 'REF-Y'].sort());
+				assert.strictEqual(oldMembers.find((member) => member.isLead)?.reference, 'REF-X');
+			}
+		});
+
+		it('should delete a child case (not merge it in) when the user removes it while reassigning the lead to an established group', async () => {
+			const req = { params: { id: 'case-123' }, session: { account: { localAccountId: 'user-123' } } };
+			// case-123 is the case being edited; its own edit screen showed its existing
+			// child case-y in full, but the user removed it before designating case-1 as
+			// the new lead - case-y must be deleted, not silently carried over.
+			const data = {
+				answers: {
+					linkedCaseDetails: [{ linkedCaseId: 'case-1', linkedCaseIsLead: 'yes' }]
+				}
+			};
+
+			// case-123 was previously the lead of its own group, with one existing
+			// child, case-y.
+			mockFindUnique.mock.mockImplementationOnce(
+				() =>
+					({
+						id: 'case-123',
+						reference: 'REF-X',
+						ParentRelationship: null,
+						ChildRelationships: [{ ChildCase: { id: 'case-y', reference: 'REF-Y' } }]
+					}) as any
+			);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-X' }) as any);
+
+			// case-1 is already the lead of its own separate group, with children
+			// case-2 and case-3 - neither of which appear in the submitted answer above.
+			mockCaseRelationshipFindMany.mock.mockImplementationOnce(({ where }: any) => {
+				const childrenByParent: Record<string, { childCaseId: string }[]> = {
+					'case-1': [{ childCaseId: 'case-2' }, { childCaseId: 'case-3' }]
+				};
+
+				return Promise.resolve(
+					(childrenByParent[where.parentCaseId] ?? []).map((relationship) => ({
+						parentCaseId: where.parentCaseId,
+						...relationship
+					}))
+				);
+			});
+
+			mockCaseFindMany.mock.mockImplementationOnce(() =>
+				Promise.resolve([
+					{ id: 'case-123', reference: 'REF-X' },
+					{ id: 'case-1', reference: 'REF-1' },
+					{ id: 'case-2', reference: 'REF-2' },
+					{ id: 'case-3', reference: 'REF-3' },
+					{ id: 'case-y', reference: 'REF-Y' }
+				])
+			);
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockService.audit.recordMany.mock.callCount(), 1);
+			const entries = mockService.audit.recordMany.mock.calls[0].arguments[0] as any[];
+
+			// case-y must still be an affected case, but as a deletion, not a merge.
+			const auditedCaseIds = entries.map((entry: any) => entry.caseId).sort();
+			assert.deepStrictEqual(auditedCaseIds, ['case-1', 'case-123', 'case-2', 'case-3', 'case-y'].sort());
+
+			const caseYEntry = entries.find((entry: any) => entry.caseId === 'case-y');
+			assert.strictEqual(caseYEntry.action, AUDIT_ACTIONS.LINKED_CASE_GROUP_DELETED);
+			const caseYOldMembers = caseYEntry.metadata?.oldLinkedCases as Array<{ reference: string; isLead: boolean }>;
+			assert.deepStrictEqual(caseYOldMembers.map((member) => member.reference).sort(), ['REF-X', 'REF-Y'].sort());
+			assert.strictEqual(caseYEntry.metadata?.newLinkedCases, undefined);
+
+			// The remaining four cases form the merged group without case-y.
+			const mergedEntries = entries.filter((entry: any) => entry.caseId !== 'case-y');
+			assert.strictEqual(mergedEntries.length, 4);
+			assert.ok(
+				mergedEntries.every((entry: any) => entry.action === AUDIT_ACTIONS.LINKED_CASE_GROUP_UPDATED),
+				`expected every merged entry to be LINKED_CASE_GROUP_UPDATED, got: ${mergedEntries.map((e: any) => `${e.caseId}:${e.action}`).join(', ')}`
+			);
+			for (const entry of mergedEntries) {
+				const newMembers = entry.metadata?.newLinkedCases as Array<{ reference: string; isLead: boolean }>;
+				const referencesInGroup = newMembers.map((member) => member.reference).sort();
+
+				assert.deepStrictEqual(referencesInGroup, ['REF-1', 'REF-2', 'REF-3', 'REF-X'].sort());
+				assert.strictEqual(newMembers.find((member) => member.isLead)?.reference, 'REF-1');
+			}
+		});
+
+		it('should record an add entry (not update) for a case that was not previously linked, when it joins an established group', async () => {
+			const req = { params: { id: 'case-solo' }, session: { account: { localAccountId: 'user-123' } } };
+			// case-solo was standalone before this edit (no ParentRelationship or
+			// ChildRelationships) and designates case-1 (an established lead with
+			// existing children case-2/case-3) as its new lead.
+			const data = {
+				answers: {
+					linkedCaseDetails: [{ linkedCaseId: 'case-1', linkedCaseIsLead: 'yes' }]
+				}
+			};
+
+			mockFindUnique.mock.mockImplementationOnce(
+				() =>
+					({
+						id: 'case-solo',
+						reference: 'REF-SOLO',
+						ParentRelationship: null,
+						ChildRelationships: []
+					}) as any
+			);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-solo', reference: 'REF-SOLO' }) as any);
+
+			mockCaseRelationshipFindMany.mock.mockImplementationOnce(({ where }: any) => {
+				const childrenByParent: Record<string, { childCaseId: string }[]> = {
+					'case-1': [{ childCaseId: 'case-2' }, { childCaseId: 'case-3' }]
+				};
+
+				return Promise.resolve(
+					(childrenByParent[where.parentCaseId] ?? []).map((relationship) => ({
+						parentCaseId: where.parentCaseId,
+						...relationship
+					}))
+				);
+			});
+
+			mockCaseFindMany.mock.mockImplementationOnce(() =>
+				Promise.resolve([
+					{ id: 'case-solo', reference: 'REF-SOLO' },
+					{ id: 'case-1', reference: 'REF-1' },
+					{ id: 'case-2', reference: 'REF-2' },
+					{ id: 'case-3', reference: 'REF-3' }
+				])
+			);
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockService.audit.recordMany.mock.callCount(), 1);
+			const entries = mockService.audit.recordMany.mock.calls[0].arguments[0] as any[];
+
+			assert.strictEqual(entries.length, 4);
+
+			const soloEntry = entries.find((entry: any) => entry.caseId === 'case-solo');
+			assert.ok(soloEntry);
+			assert.strictEqual(soloEntry.action, AUDIT_ACTIONS.LINKED_CASE_GROUP_ADDED);
+
+			const mergedInEntries = entries.filter((entry: any) => ['case-1', 'case-2', 'case-3'].includes(entry.caseId));
+			assert.strictEqual(mergedInEntries.length, 3);
+			assert.ok(mergedInEntries.every((entry: any) => entry.action === AUDIT_ACTIONS.LINKED_CASE_GROUP_UPDATED));
 		});
 	});
 });

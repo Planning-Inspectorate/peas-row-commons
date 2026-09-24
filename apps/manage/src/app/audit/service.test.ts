@@ -250,6 +250,10 @@ describe('Audit Service', () => {
 			assert.strictEqual(info.closedDate, null);
 			assert.strictEqual(info.by, null);
 			assert.strictEqual(logger.error.mock.callCount(), 1);
+			assert.strictEqual(logger.warn.mock.callCount(), 0);
+
+			const errorCall = logger.error.mock.calls[0];
+			assert.strictEqual(errorCall.arguments[1], 'Failed to fetch last modified info');
 		});
 
 		it('should handle a case with null date fields gracefully', async () => {
@@ -334,6 +338,64 @@ describe('Audit Service', () => {
 			const info = await service.getLastModifiedInfo('case-123', userMap);
 
 			assert.strictEqual(info.by, UNKNOWN_USER);
+		});
+	});
+	describe('recordMany', () => {
+		describe('user validation', () => {
+			it('should log error and return when entries have mixed userIds', async () => {
+				const mockDb = createMockDb();
+				const logger = mockLogger();
+				const service = buildAuditService(mockDb as any, logger as any);
+
+				const entries: AuditEntry[] = [
+					{ caseId: 'case-1', action: 'FIELD_UPDATED', userId: 'user-1', metadata: {} },
+					{ caseId: 'case-1', action: 'FIELD_UPDATED', userId: 'user-2', metadata: {} }
+				];
+
+				await service.recordMany(entries);
+
+				assert.strictEqual(mockDb.$transaction.mock.callCount(), 0);
+				assert.strictEqual(logger.error.mock.callCount(), 1);
+				const errorLog = logger.error.mock.calls[0].arguments[0];
+				assert.ok(errorLog.userIds.includes('user-1'));
+				assert.ok(errorLog.userIds.includes('user-2'));
+			});
+
+			it('should log error and return when userId is undefined', async () => {
+				const mockDb = createMockDb();
+				const logger = mockLogger();
+				const service = buildAuditService(mockDb as any, logger as any);
+
+				const entries: AuditEntry[] = [{ caseId: 'case-1', action: 'FIELD_UPDATED', userId: undefined, metadata: {} }];
+
+				await service.recordMany(entries);
+
+				assert.strictEqual(mockDb.$transaction.mock.callCount(), 0);
+				assert.strictEqual(logger.error.mock.callCount(), 1);
+			});
+
+			it('should proceed when all entries have the same userId', async () => {
+				const mockDb = createMockDb();
+				const logger = mockLogger();
+				const service = buildAuditService(mockDb as any, logger as any);
+
+				mockDb.$transaction.mock.mockImplementationOnce(async (callback: any) =>
+					callback({
+						user: { upsert: mock.fn(async () => ({ id: 'user-1' })) },
+						caseHistory: { createMany: mock.fn(async () => ({})) },
+						case: { update: mock.fn(async () => ({})) }
+					})
+				);
+
+				const entries: AuditEntry[] = [
+					{ caseId: 'case-1', action: 'FIELD_UPDATED', userId: 'user-1', metadata: {} },
+					{ caseId: 'case-2', action: 'FIELD_UPDATED', userId: 'user-1', metadata: {} }
+				];
+
+				await service.recordMany(entries);
+
+				assert.strictEqual(mockDb.$transaction.mock.callCount(), 1);
+			});
 		});
 	});
 });

@@ -19,7 +19,7 @@ import { remapFlattenedFieldsToArray } from '@pins/peas-row-commons-lib/util/rem
 import { nullEmptyString } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { AddressItem } from '@pins/peas-row-commons-lib/util/types.ts';
 import { addSessionData } from '@planning-inspectorate/core/util';
-import { clearDataFromSession, yesNoToBoolean } from '@planning-inspectorate/dynamic-forms';
+import { booleanToYesNoValue, clearDataFromSession, yesNoToBoolean } from '@planning-inspectorate/dynamic-forms';
 import type { Request, Response } from 'express';
 import type { Logger } from 'pino';
 import { AUDIT_ACTIONS, type AuditAction, type AuditEntry, type AuditService } from '../../../audit/index.ts';
@@ -41,11 +41,13 @@ import {
 	applyLinkedCaseRelationships,
 	buildPreviousLinkedCases,
 	extractLinkedCaseChanges,
+	type FinalLinkedCaseGroup,
 	getLinkedCaseDetailRows,
 	type LinkedCaseChanges,
 	stripLinkedCaseDetails
 } from './linked-cases.ts';
 import { getFieldDisplayNames } from './question-utils.ts';
+import type { LinkedCaseAuditSource } from './types.ts';
 import { mapProceduresToArray, sortProceduresChronologically } from './view-model.ts';
 
 interface HandlerParams {
@@ -149,6 +151,25 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 
 			const userDisplayNameMap = new Map(groupMembers.allUsers.map((member) => [member.id, member.displayName]));
 
+			// Creating a map so we can record reference instead of ids in the audit history for linked cases.
+			// Only fetches the cases actually affected by this edit (old + final groups).
+			let linkedCasesReferenceMap: { id: string; reference: string }[] = [];
+
+			if (linkedCaseChanges && Object.keys(answersSnapshot).length === 1 && answersSnapshot.linkedCaseDetails) {
+				const previousLinkedCases = buildPreviousLinkedCases(previousValues);
+				const linkedCaseIds = collectLinkedCaseIds(
+					id,
+					previousLinkedCases,
+					answersSnapshot.linkedCaseDetails,
+					result.finalLinkedCaseGroup
+				);
+
+				linkedCasesReferenceMap = await db.case.findMany({
+					where: { id: { in: linkedCaseIds } },
+					select: { id: true, reference: true }
+				});
+			}
+
 			await recordAuditEntries(
 				audit,
 				id,
@@ -157,7 +178,9 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 				answersSnapshot,
 				updatedFieldNames,
 				userDisplayNameMap,
-				logger
+				linkedCasesReferenceMap,
+				logger,
+				result.finalLinkedCaseGroup
 			);
 		}
 
@@ -199,7 +222,7 @@ async function updateCaseData(
 	logger: Logger,
 	formattedAnswersForQuery: Prisma.CaseUpdateInput,
 	linkedCaseChanges?: LinkedCaseChanges
-): Promise<{ previous: Case; updated: Case } | undefined> {
+): Promise<{ previous: Case; updated: Case; finalLinkedCaseGroup?: FinalLinkedCaseGroup } | undefined> {
 	try {
 		return await db.$transaction(async ($tx: Prisma.TransactionClient) => {
 			const caseRow = await $tx.case.findUnique({
@@ -219,7 +242,17 @@ async function updateCaseData(
 					ParentRelationship: {
 						include: {
 							ParentCase: {
-								select: { id: true, reference: true }
+								select: {
+									id: true,
+									reference: true,
+									ChildRelationships: {
+										include: {
+											ChildCase: {
+												select: { id: true, reference: true }
+											}
+										}
+									}
+								}
 							}
 						}
 					},
@@ -270,7 +303,14 @@ async function updateCaseData(
 
 			if (linkedCaseChanges) {
 				const previousParentCaseId = caseRow.ParentRelationship?.parentCaseId ?? null;
-				await applyLinkedCaseRelationships($tx, id, linkedCaseChanges, previousParentCaseId);
+				const finalLinkedCaseGroup = await applyLinkedCaseRelationships(
+					$tx,
+					id,
+					linkedCaseChanges,
+					previousParentCaseId
+				);
+
+				return { previous: caseRow, updated, finalLinkedCaseGroup };
 			}
 
 			return { previous: caseRow, updated };
@@ -818,6 +858,76 @@ function updateClosedDate(flatData: Record<string, unknown>, prismaPayload: Pris
 }
 
 /**
+ * Collects only the case ids actually needed to resolve references for the linked-case
+ * audit diff, so the caller can fetch just those cases instead of the whole `Case` table:
+ *   - the case being edited
+ *   - every case in its old linked-case group (`previousLinkedCases`)
+ *   - either every case in the true final group (`finalLinkedCaseGroup`, including any
+ *     silently-merged-in lead/children) when relationships were actually applied, or -
+ *     when they weren't (e.g. no-op change) - the raw submitted `linkedCaseDetails` ids
+ */
+function collectLinkedCaseIds(
+	caseId: string,
+	previousLinkedCases: LinkedCaseAuditSource[],
+	linkedCaseDetails: unknown,
+	finalLinkedCaseGroup?: FinalLinkedCaseGroup
+): string[] {
+	const ids = new Set<string>([caseId]);
+
+	for (const linkedCase of previousLinkedCases) {
+		ids.add(linkedCase.caseId);
+	}
+
+	if (finalLinkedCaseGroup) {
+		ids.add(finalLinkedCaseGroup.leadCaseId);
+
+		for (const childCaseId of finalLinkedCaseGroup.childCaseIds) {
+			ids.add(childCaseId);
+		}
+
+		if (finalLinkedCaseGroup.mergedLeadOldGroup) {
+			ids.add(finalLinkedCaseGroup.mergedLeadOldGroup.leadCaseId);
+
+			for (const childCaseId of finalLinkedCaseGroup.mergedLeadOldGroup.childCaseIds) {
+				ids.add(childCaseId);
+			}
+		}
+	} else {
+		for (const row of getLinkedCaseDetailRows(linkedCaseDetails)) {
+			ids.add(row.linkedCaseId);
+		}
+	}
+
+	return Array.from(ids);
+}
+
+/**
+ * Builds `linkedCaseDetails`-shaped rows (for `resolveLinkedCaseAudits`) from the true,
+ * final linked-case group returned by `applyLinkedCaseRelationships`, rather than the
+ * raw submitted answer.
+ *
+ * This matters when the group was merged with another pre-existing group (e.g. this
+ * case's newly-designated lead already had its own children): those merged-in cases
+ * are silently carried over by `applyLinkedCaseRelationships` but never appear in the
+ * submitted `linkedCaseDetails` answer, since the edit screen the user submitted from
+ * never listed them. Diffing against the raw answer would therefore miss audit entries
+ * for them entirely (or, for this case's own pre-existing children carried over to a
+ * new lead, wrongly report them as removed).
+ */
+function buildFinalLinkedCaseRows(
+	caseId: string,
+	{ leadCaseId, childCaseIds }: FinalLinkedCaseGroup
+): { linkedCaseId: string; linkedCaseIsLead: string }[] {
+	const otherMemberIds =
+		leadCaseId === caseId ? childCaseIds : [leadCaseId, ...childCaseIds.filter((memberId) => memberId !== caseId)];
+
+	return otherMemberIds.map((linkedCaseId) => ({
+		linkedCaseId,
+		linkedCaseIsLead: booleanToYesNoValue(linkedCaseId === leadCaseId)
+	}));
+}
+
+/**
  * Records all audit entries for a case update.
  *
  * Extracted from buildUpdateCase to keep the main handler focused on
@@ -838,7 +948,9 @@ async function recordAuditEntries(
 	answersSnapshot: Record<string, unknown>,
 	updatedFieldNames: string[],
 	userDisplayNameMap: Map<string, string>,
-	logger: Logger
+	linkedCasesReferenceMap: { id: string; reference: string }[],
+	logger: Logger,
+	finalLinkedCaseGroup?: FinalLinkedCaseGroup
 ): Promise<void> {
 	try {
 		const allAuditEntries: AuditEntry[] = [];
@@ -894,13 +1006,29 @@ async function recordAuditEntries(
 			);
 		}
 
-		if (answersSnapshot.linkedCaseDetails) {
+		const previousLinkedCases = buildPreviousLinkedCases(previousValues);
+		// Works for both the case where linkedCaseDetails is an array and the case where it is empty (i.e. the user has removed all linked cases)
+		const linkedCasesWereSubmitted = Object.hasOwn(answersSnapshot, 'linkedCaseDetails');
+
+		if (linkedCasesWereSubmitted) {
 			allAuditEntries.push(
 				...resolveLinkedCaseAudits(
 					caseId,
 					userId,
-					buildPreviousLinkedCases(previousValues),
-					getLinkedCaseDetailRows(answersSnapshot.linkedCaseDetails)
+					linkedCasesReferenceMap,
+					previousLinkedCases,
+					finalLinkedCaseGroup
+						? buildFinalLinkedCaseRows(caseId, finalLinkedCaseGroup)
+						: getLinkedCaseDetailRows(answersSnapshot.linkedCaseDetails),
+					finalLinkedCaseGroup?.mergedLeadOldGroup
+						? {
+								leadCaseId: finalLinkedCaseGroup.mergedLeadOldGroup.leadCaseId,
+								members: finalLinkedCaseGroup.mergedLeadOldGroup.childCaseIds.map((childCaseId) => ({
+									caseId: childCaseId,
+									isLead: false
+								}))
+							}
+						: undefined
 				)
 			);
 		}
@@ -1001,7 +1129,6 @@ async function recordAuditEntries(
 				)
 			);
 		}
-
 		await audit.recordMany(allAuditEntries);
 	} catch (error: unknown) {
 		// Audit failures should never block the user's operation.
