@@ -71,7 +71,9 @@ export function sortProceduresChronologically(procedures?: CaseProcedureFields[]
  *
  * Fields we don't want in the UI (internal IDs, timestamps) are stripped.
  */
-export function mapProceduresToArray(procedures: any[]): Record<string, any>[] | undefined {
+export function mapProceduresToArray(
+	procedures: ReturnType<typeof sortProceduresChronologically>
+): Record<string, any>[] | undefined {
 	if (!procedures || !Array.isArray(procedures) || procedures.length === 0) {
 		return undefined;
 	}
@@ -110,7 +112,9 @@ export function mapProceduresToArray(procedures: any[]): Record<string, any>[] |
 		'InquiryOrConference'
 	];
 
+	type ProcKey = keyof (typeof procedures)[number];
 	return procedures.map((proc) => {
+		// TODO specific view model type
 		const mapped: Record<string, any> = {};
 
 		Object.keys(proc).forEach((key) => {
@@ -119,7 +123,7 @@ export function mapProceduresToArray(procedures: any[]): Record<string, any>[] |
 				return;
 			}
 
-			const value = proc[key];
+			const value = proc[key as ProcKey];
 			if (value === null || value === undefined) return;
 
 			// Map venue address objects to the UI format

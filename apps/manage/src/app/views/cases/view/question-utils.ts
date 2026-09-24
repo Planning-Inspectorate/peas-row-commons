@@ -2398,7 +2398,7 @@ export function getFieldDisplayNames(fieldNames: string[]): string {
  * Takes a userMap and creates a sorted array of users
  * and prepends an empty option for legacy radio questions that require it.
  */
-function getAndSortLegacyUsers(userMap: UserMap) {
+export function getAndSortLegacyUsers(userMap: UserMap) {
 	return [
 		{ text: '', value: '' },
 		...[...userMap.entries()]
