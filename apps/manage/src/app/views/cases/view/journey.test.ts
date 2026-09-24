@@ -3,20 +3,31 @@ import { Question } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
 import { createJourney, JOURNEY_ID } from './journey.ts';
+import type { InspectorRadioConfig } from './questions-procedure.ts';
 
 describe('case details journey', () => {
+	const mockConfig: InspectorRadioConfig = {
+		selected: [],
+		inspectorGroupMembers: [],
+		userDisplayNames: new Map()
+	};
 	it('should error if used with the wrong router structure', () => {
 		const mockQuestions = { reference: {} };
 		const mockRes = {};
 
 		assert.throws(
-			() => createJourney(mockQuestions, mockRes as any, { params: {}, baseUrl: '/some/path' } as any),
+			() => createJourney(mockQuestions, mockRes as any, { params: {}, baseUrl: '/some/path' } as any, mockConfig),
 			/id must be a single string value/
 		);
 
 		assert.throws(
 			() =>
-				createJourney(mockQuestions, mockRes as any, { params: { id: 'id-1' }, baseUrl: '/some/other/path' } as any),
+				createJourney(
+					mockQuestions,
+					mockRes as any,
+					{ params: { id: 'id-1' }, baseUrl: '/some/other/path' } as any,
+					mockConfig
+				),
 			{ message: `not a valid request for the ${JOURNEY_ID} journey (invalid baseUrl)` }
 		);
 	});
@@ -35,7 +46,7 @@ describe('case details journey', () => {
 			}
 		);
 
-		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any);
+		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any, mockConfig);
 
 		assert.strictEqual(journey.journeyId, JOURNEY_ID);
 		assert.strictEqual(journey.journeyTitle, 'Case details');
@@ -57,7 +68,7 @@ describe('case details journey', () => {
 			}
 		);
 
-		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any);
+		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any, mockConfig);
 
 		const expectedStaticSections = [
 			{
@@ -152,7 +163,7 @@ describe('case details journey', () => {
 			}
 		);
 
-		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any);
+		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any, mockConfig);
 
 		const expectedTrailingSections = [
 			{
@@ -212,7 +223,7 @@ describe('case details journey', () => {
 			}
 		);
 
-		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any);
+		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any, mockConfig);
 
 		const caseDetailsSection = journey.sections.find((s: any) => s.name === 'Case details');
 		assert.ok(caseDetailsSection, 'Case details section should exist');
@@ -231,7 +242,7 @@ describe('case details journey', () => {
 		const mockReq = { params: { id: '123' }, baseUrl: '/case/123/details' };
 		const mockQuestions = new Proxy({}, { get: (_target, prop) => ({ fieldName: prop }) });
 
-		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any);
+		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any, mockConfig);
 
 		const overviewSection = journey.sections.find((s: any) => s.name === 'Overview');
 		const fieldNames = overviewSection.questions.map((q: any) => q.fieldName);
@@ -247,7 +258,7 @@ describe('case details journey', () => {
 		const mockReq = { params: { id: '123' }, baseUrl: '/case/123/details' };
 		const mockQuestions = new Proxy({}, { get: (_target, prop) => ({ fieldName: prop }) });
 
-		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any);
+		const journey: any = createJourney(mockQuestions, mockRes as any, mockReq as any, mockConfig);
 
 		const overviewIdx = journey.sections.findIndex((s: any) => s.name === 'Overview');
 		const outcomeIdx = journey.sections.findIndex((s: any) => s.name === 'Outcome overview');
@@ -276,26 +287,32 @@ describe('case details journey', () => {
 
 		const response: any = {
 			answers: {
-				procedureDetails: [{ id: 'proc-1', procedureType: PROCEDURES_ID.HEARING, procedureHearingVenue: 'Town Hall' }]
+				procedureDetails: [
+					{ id: 'proc-1', procedureTypeId: PROCEDURES_ID.HEARING, hearingVenue: { addressLine1: 'Town Hall' } }
+				]
 			}
 		};
 
-		const journey: any = createJourney(mockQuestions, response, mockReq as any);
+		const journey: any = createJourney(mockQuestions, response, mockReq as any, mockConfig);
 
-		const section = journey.getSection('procedure-1');
+		const section = journey.getSection('proc-1');
 		assert.ok(section, 'dynamic procedure section should exist');
 
-		const question = journey.getQuestionByParams({ section: 'procedure-1', question: 'procedureHearingVenue' });
+		const question = journey.getQuestionByParams({ section: 'proc-1', question: 'hearingVenue' });
 		assert.ok(question, 'the question behind the Change link should resolve');
 		assert.strictEqual(question.isInManageListSection, false);
 
 		const viewModel = question.toViewModel({
-			params: { section: 'procedure-1', question: 'procedureHearingVenue' },
+			params: { section: 'proc-1', question: 'hearingVenue' },
 			section,
 			journey
 		});
 
-		assert.strictEqual(viewModel.answer, 'Town Hall');
-		assert.strictEqual(viewModel.backLink, journey.taskListUrl);
+		assert.strictEqual(viewModel.answer?.addressLine1, 'Town Hall');
+		assert.strictEqual(
+			viewModel.backLink,
+			journey.taskListUrl + '/proc-1/type-of-hearing',
+			'Back link should be previous question'
+		);
 	});
 });
