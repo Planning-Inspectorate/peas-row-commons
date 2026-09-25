@@ -1,6 +1,6 @@
 import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import type { UserDetails } from '@pins/peas-row-commons-lib/graph/cached-entra-client.ts';
-import type { AuthSession, InitEntraClient } from '@pins/peas-row-commons-lib/graph/types.ts';
+import type { AuthSession, GroupMember, InitEntraClient } from '@pins/peas-row-commons-lib/graph/types.ts';
 import type { BaseLogger } from 'pino';
 import type { UserMap } from '../app/views/cases/view/types.ts';
 import type { EntraGroupMembers } from './entra-groups-types.ts';
@@ -35,7 +35,7 @@ export async function getEntraGroupMembers({
 	session,
 	groupIds
 }: GetEntraGroupMembersOptions): Promise<EntraGroupMembers> {
-	const members = {
+	const members: EntraGroupMembers = {
 		allUsers: [],
 		caseOfficers: [],
 		inspectors: []
@@ -54,11 +54,15 @@ export async function getEntraGroupMembers({
 		client.listAllGroupMembers(groupIds.inspectors)
 	]);
 
-	members.allUsers = allUsers;
-	members.caseOfficers = caseOfficers;
-	members.inspectors = inspectors;
+	members.allUsers = allUsers as GroupMember[];
+	members.caseOfficers = caseOfficers as GroupMember[];
+	members.inspectors = inspectors as GroupMember[];
 	logger.info(
-		{ allUsersCount: allUsers.length, caseOfficersCount: caseOfficers.length, inspectorsCount: inspectors.length },
+		{
+			allUsersCount: members.allUsers.length,
+			caseOfficersCount: members.caseOfficers.length,
+			inspectorsCount: members.inspectors.length
+		},
 		'got group members'
 	);
 

@@ -8,8 +8,8 @@ $font-family: arial, helvetica, sans-serif;
 
 // Main gov styles
 @use 'node_modules/govuk-frontend/dist/govuk/index' as govuk;
-@use 'node_modules/@pins/peas-row-commons-lib/ui/header/pins-header';
-@use 'node_modules/@pins/peas-row-commons-lib/ui/footer/pins-footer';
+@use 'node_modules/@planning-inspectorate/core/dist/ui/header/pins-header';
+@use 'node_modules/@planning-inspectorate/core/dist/ui/footer/pins-footer';
 @use 'components/filter-accordion';
 @use 'components/filter-tags';
 

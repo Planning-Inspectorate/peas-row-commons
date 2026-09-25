@@ -1,7 +1,7 @@
 import type { ManageService } from '#service';
 import type { Case, Prisma, PrismaClient, RelatedCase } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { wrapPrismaError } from '@pins/peas-row-commons-lib/util/database.ts';
 import { getRelationForField } from '@pins/peas-row-commons-lib/util/schema-map.ts';
+import { wrapPrismaError } from '@planning-inspectorate/core/util';
 
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
@@ -16,9 +16,9 @@ import { toDateOrNull } from '@pins/peas-row-commons-lib/util/dates.ts';
 import { toFloat } from '@pins/peas-row-commons-lib/util/numbers.ts';
 import { getOptionalStringParam, getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 import { remapFlattenedFieldsToArray } from '@pins/peas-row-commons-lib/util/remap-flattened-fields.ts';
-import { addSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
 import { nullEmptyString } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { AddressItem } from '@pins/peas-row-commons-lib/util/types.ts';
+import { addSessionData } from '@planning-inspectorate/core/util';
 import { clearDataFromSession, yesNoToBoolean } from '@planning-inspectorate/dynamic-forms';
 import type { Request, Response } from 'express';
 import type { Logger } from 'pino';

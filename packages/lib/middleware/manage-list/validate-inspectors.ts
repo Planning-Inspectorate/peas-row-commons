@@ -5,7 +5,7 @@ import {
 } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { INSPECTOR_CONSTANTS } from '@pins/peas-row-commons-lib/constants/inspectors.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
-import { addSessionData, clearSessionData, readSessionData } from '@pins/peas-row-commons-lib/util/session.ts';
+import { addSessionData, clearSessionData, readSessionData } from '@planning-inspectorate/core/util';
 import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js';
 import type { RequestHandler } from 'express';
 

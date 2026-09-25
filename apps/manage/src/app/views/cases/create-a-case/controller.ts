@@ -1,19 +1,13 @@
 import type { ManageService } from '#service';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
-import type { Response } from 'express';
+import type { AsyncRequestHandler } from '@planning-inspectorate/core/util';
 import type { CreateCaseRequest } from './types.ts';
 
-type CreateCaseJourneyMiddleware = (
-	req: CreateCaseRequest,
-	res: Response,
-	next?: (error?: unknown) => void
-) => Promise<void>;
-
-export function buildGetJourneyMiddleware(service: ManageService): CreateCaseJourneyMiddleware {
+export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestHandler {
 	const { logger, getEntraClient, db } = service;
 	const groupIds = service.entraGroupIds;
 
-	return async (req, _, next) => {
+	return async (req: CreateCaseRequest, _, next) => {
 		try {
 			// Not happy about this... Ideally I would append to res.locals
 			// but res isn't passed as a callback param so we don't
