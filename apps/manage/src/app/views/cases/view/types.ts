@@ -118,7 +118,6 @@ export interface LinkedCaseDetailInput {
  * Shape used for auditing linked cases.
  */
 export interface LinkedCaseAuditSource {
-	id: string;
-	reference: string | null;
+	caseId: string;
 	isLead: boolean;
 }

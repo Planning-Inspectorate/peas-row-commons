@@ -9,20 +9,36 @@ import { isDefined } from '@pins/peas-row-commons-lib/util/type-predicate.ts';
 import { getPageData, getPaginationParams } from '../../pagination/pagination-utils.ts';
 import { createCaseHistoryViewModel } from './view-model.ts';
 
+/**
+ * Extracts all case IDs referenced in audit event metadata.
+ * Used to perform a bulk lookup and build a case reference map for rendering.
+ */
 function getLinkedCaseIdsFromMetadata(metadata: Record<string, unknown> | null): string[] {
 	if (!metadata) return [];
 
-	const caseKeys = ['reference', 'entityName', 'linkedCaseId', 'oldValue', 'newValue'];
+	const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 	const ids: string[] = [];
 
-	for (const key of caseKeys) {
+	// Extract from scalar fields
+	for (const key of ['reference', 'entityName', 'linkedCaseId', 'oldValue', 'newValue']) {
 		const value = metadata[key];
-
-		if (
-			typeof value === 'string' &&
-			/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
-		) {
+		if (typeof value === 'string' && uuidPattern.test(value)) {
 			ids.push(value);
+		}
+	}
+
+	// Extract from linked-case group arrays
+	for (const key of ['oldLinkedCases', 'newLinkedCases'] as const) {
+		const arr = metadata[key];
+		if (!Array.isArray(arr)) continue;
+
+		for (const item of arr) {
+			if (item === null || typeof item !== 'object') continue;
+
+			const caseId = (item as Record<string, unknown>).caseId;
+			if (typeof caseId === 'string' && uuidPattern.test(caseId)) {
+				ids.push(caseId);
+			}
 		}
 	}
 

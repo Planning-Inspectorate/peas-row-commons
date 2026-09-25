@@ -128,7 +128,7 @@ describe('createCaseHistoryViewModel', () => {
 		assert.ok('details' in result[0]);
 		assert.ok('user' in result[0]);
 		assert.ok('files' in result[0]);
-		assert.strictEqual(Object.keys(result[0]).length, 5);
+		assert.strictEqual(Object.keys(result[0]).length, 6);
 	});
 
 	it('should include files array for bulk upload actions with file metadata', () => {
@@ -195,7 +195,7 @@ describe('createCaseHistoryViewModel', () => {
 
 		assert.strictEqual(result[0].files, undefined);
 	});
-	it('should replace a linked case ID with the case reference in the rendered details', () => {
+	it('should render linked case references in the accordion sections', () => {
 		const linkedCaseId = 'df78cdb2-1fb0-42e4-81b9-798136dac55e';
 		const linkedCaseReference = 'HOU/2025/1059';
 
@@ -203,10 +203,8 @@ describe('createCaseHistoryViewModel', () => {
 			createMockEvent({
 				action: 'LINKED_CASE_UPDATED',
 				metadata: {
-					entityName: linkedCaseId,
-					fieldName: 'lead?',
-					oldValue: 'No',
-					newValue: 'Yes'
+					oldLinkedCases: [{ caseId: linkedCaseId, isLead: true }],
+					newLinkedCases: [{ caseId: linkedCaseId, isLead: true }]
 				}
 			})
 		];
@@ -215,27 +213,33 @@ describe('createCaseHistoryViewModel', () => {
 
 		const result = createCaseHistoryViewModel(events, caseReferenceMap);
 
-		assert.ok(result[0].details.includes(linkedCaseReference));
-		assert.ok(!result[0].details.includes(linkedCaseId));
+		assert.strictEqual(result[0].details, 'Linked cases were updated.');
+		assert.ok(result[0].accordionSections);
+		assert.deepStrictEqual(
+			result[0].accordionSections?.map((section) => section.label),
+			['Previous linked cases', 'New linked cases']
+		);
+		assert.ok(result[0].accordionSections?.[0].values.includes(`${linkedCaseReference} (lead)`));
+		assert.ok(result[0].accordionSections?.[1].values.includes(`${linkedCaseReference} (lead)`));
 	});
 
-	it('should leave the linked case ID unchanged in the rendered details when no case reference is found', () => {
+	it('should leave the linked case ID unchanged in the accordion when no case reference is found', () => {
 		const linkedCaseId = 'df78cdb2-1fb0-42e4-81b9-798136dac55e';
 
 		const events = [
 			createMockEvent({
 				action: 'LINKED_CASE_UPDATED',
 				metadata: {
-					entityName: linkedCaseId,
-					fieldName: 'lead?',
-					oldValue: 'No',
-					newValue: 'Yes'
+					oldLinkedCases: [{ caseId: linkedCaseId, isLead: true }],
+					newLinkedCases: [{ caseId: linkedCaseId, isLead: true }]
 				}
 			})
 		];
 
 		const result = createCaseHistoryViewModel(events, new Map());
 
-		assert.ok(result[0].details.includes(linkedCaseId));
+		assert.ok(result[0].accordionSections);
+		assert.ok(result[0].accordionSections?.[0].values.includes(`${linkedCaseId} (lead)`));
+		assert.ok(result[0].accordionSections?.[1].values.includes(`${linkedCaseId} (lead)`));
 	});
 });

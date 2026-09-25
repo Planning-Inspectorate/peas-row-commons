@@ -219,7 +219,17 @@ async function updateCaseData(
 					ParentRelationship: {
 						include: {
 							ParentCase: {
-								select: { id: true, reference: true }
+								select: {
+									id: true,
+									reference: true,
+									ChildRelationships: {
+										include: {
+											ChildCase: {
+												select: { id: true, reference: true }
+											}
+										}
+									}
+								}
 							}
 						}
 					},

@@ -12,8 +12,8 @@ function buildOldRelatedCase(id: string, reference: string): RelatedCase {
 	return { id, reference, caseId: CASE_ID } as unknown as RelatedCase;
 }
 
-function buildOldLinkedCase(id: string, reference: string, isLead: boolean): LinkedCaseAuditSource {
-	return { id, reference, isLead };
+function buildOldLinkedCase(caseId: string, isLead: boolean): LinkedCaseAuditSource {
+	return { caseId, isLead };
 }
 
 describe('resolveRelatedCaseAudits', () => {
@@ -150,242 +150,120 @@ describe('resolveRelatedCaseAudits', () => {
 });
 
 describe('resolveLinkedCaseAudits', () => {
-	describe('additions', () => {
-		it('should detect a new linked case without an ID as added', () => {
-			const oldCases: LinkedCaseAuditSource[] = [];
-			const newCases = [{ linkedCaseId: '123456', linkedCaseIsLead: 'yes' }];
-
-			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
-
-			assert.strictEqual(entries.length, 2);
-
-			// Check entry for current case
-			assert.strictEqual(entries[0].caseId, CASE_ID);
-			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.LINKED_CASE_ADDED);
-			assert.strictEqual(entries[0].metadata?.reference, '123456');
-			assert.strictEqual(entries[0].metadata?.linkedCaseId, '123456');
-
-			// Check entry for linked case
-			assert.strictEqual(entries[1].caseId, '123456');
-			assert.strictEqual(entries[1].action, AUDIT_ACTIONS.LINKED_CASE_ADDED);
-			assert.strictEqual(entries[1].metadata?.reference, CASE_ID);
-			assert.strictEqual(entries[1].metadata?.linkedCaseId, CASE_ID);
-		});
-
-		it('should create audit entries on both cases when a new linked case is added', () => {
-			const oldCases = [buildOldLinkedCase('id-1', 'existing', true)];
+	describe('group snapshots', () => {
+		it('should create update entries for every case in the final linked group', () => {
+			const oldCases = [buildOldLinkedCase('case-b', true)];
 			const newCases = [
-				{ id: 'id-1', linkedCaseId: 'existing', linkedCaseIsLead: 'yes' },
-				{ id: 'id-new', linkedCaseId: 'new-ref', linkedCaseIsLead: 'no' }
+				{ linkedCaseId: 'case-b', linkedCaseIsLead: 'yes' },
+				{ linkedCaseId: 'case-c', linkedCaseIsLead: 'no' }
 			];
-
-			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
-
-			assert.strictEqual(entries.length, 2);
-
-			assert.strictEqual(entries[0].caseId, CASE_ID);
-			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.LINKED_CASE_ADDED);
-			assert.strictEqual(entries[0].metadata?.reference, 'new-ref');
-			assert.strictEqual(entries[0].metadata?.linkedCaseId, 'new-ref');
-
-			assert.strictEqual(entries[1].caseId, 'new-ref');
-			assert.strictEqual(entries[1].action, AUDIT_ACTIONS.LINKED_CASE_ADDED);
-			assert.strictEqual(entries[1].metadata?.reference, CASE_ID);
-			assert.strictEqual(entries[1].metadata?.linkedCaseId, CASE_ID);
-		});
-	});
-
-	describe('deletions', () => {
-		it('should detect a linked case being removed', () => {
-			const oldCases = [buildOldLinkedCase('id-1', '123456', true)];
-			const newCases: { id?: string; linkedCaseId: string; linkedCaseIsLead: string }[] = [];
-
-			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
-
-			assert.strictEqual(entries.length, 2);
-
-			// Check entry for current case
-			assert.strictEqual(entries[0].caseId, CASE_ID);
-			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.LINKED_CASE_DELETED);
-			assert.strictEqual(entries[0].metadata?.reference, '123456');
-
-			// Check entry for linked case
-			assert.strictEqual(entries[1].caseId, '123456');
-			assert.strictEqual(entries[1].action, AUDIT_ACTIONS.LINKED_CASE_DELETED);
-			assert.strictEqual(entries[1].metadata?.reference, CASE_ID);
-		});
-
-		it('should create audit entries on both cases when a linked case is removed', () => {
-			const oldCases = [
-				buildOldLinkedCase('id-1', 'first', true),
-				buildOldLinkedCase('id-2', 'second', false),
-				buildOldLinkedCase('id-3', 'third', false)
-			];
-			const newCases = [
-				{ id: 'id-1', linkedCaseId: 'first', linkedCaseIsLead: 'yes' },
-				{ id: 'id-3', linkedCaseId: 'third', linkedCaseIsLead: 'no' }
-			];
-
-			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
-
-			assert.strictEqual(entries.length, 2);
-			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.LINKED_CASE_DELETED);
-			assert.strictEqual(entries[0].metadata?.reference, 'second');
-		});
-	});
-
-	describe('updates — reference change', () => {
-		it('should create audit entries on both cases when a linked case reference is updated', () => {
-			const oldCases = [buildOldLinkedCase('id-1', '123456', true)];
-			const newCases = [{ id: 'id-1', linkedCaseId: '78910', linkedCaseIsLead: 'yes' }];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
 			assert.strictEqual(entries.length, 3);
 
-			assert.strictEqual(entries[0].caseId, CASE_ID);
-			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.LINKED_CASE_UPDATED);
-			assert.strictEqual(entries[0].metadata?.entityName, '123456');
-			assert.strictEqual(entries[0].metadata?.fieldName, 'linked case reference');
-			assert.strictEqual(entries[0].metadata?.oldValue, '123456');
-			assert.strictEqual(entries[0].metadata?.newValue, '78910');
-			assert.strictEqual(entries[0].metadata?.linkedCaseId, '78910');
+			assert.deepStrictEqual(entries.map((entry) => entry.caseId).sort(), [CASE_ID, 'case-b', 'case-c'].sort());
 
-			assert.strictEqual(entries[1].caseId, '123456');
-			assert.strictEqual(entries[1].action, AUDIT_ACTIONS.LINKED_CASE_DELETED);
-			assert.strictEqual(entries[1].metadata?.reference, CASE_ID);
-			assert.strictEqual(entries[1].metadata?.linkedCaseId, CASE_ID);
-
-			assert.strictEqual(entries[2].caseId, '78910');
-			assert.strictEqual(entries[2].action, AUDIT_ACTIONS.LINKED_CASE_ADDED);
-			assert.strictEqual(entries[2].metadata?.reference, CASE_ID);
-			assert.strictEqual(entries[2].metadata?.linkedCaseId, CASE_ID);
-		});
-	});
-
-	describe('updates — isLead change', () => {
-		it('should detect isLead changing from Yes to No', () => {
-			const oldCases = [buildOldLinkedCase('id-1', '123456', true)];
-			const newCases = [{ id: 'id-1', linkedCaseId: '123456', linkedCaseIsLead: 'no' }];
-
-			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
-
-			assert.strictEqual(entries.length, 2);
-
-			// Check entry for current case
-			assert.strictEqual(entries[0].caseId, CASE_ID);
-			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.LINKED_CASE_UPDATED);
-			assert.strictEqual(entries[0].metadata?.entityName, '123456');
-			assert.strictEqual(entries[0].metadata?.fieldName, 'lead?');
-			assert.strictEqual(entries[0].metadata?.oldValue, 'Yes');
-			assert.strictEqual(entries[0].metadata?.newValue, 'No');
-
-			// Check entry for linked case
-			assert.strictEqual(entries[1].caseId, '123456');
-			assert.strictEqual(entries[1].metadata?.entityName, CASE_ID);
-			assert.strictEqual(entries[1].metadata?.oldValue, 'No');
-			assert.strictEqual(entries[1].metadata?.newValue, 'Yes');
+			for (const entry of entries) {
+				assert.strictEqual(entry.action, AUDIT_ACTIONS.LINKED_CASE_UPDATED);
+				assert.strictEqual(entry.metadata?.fieldName, 'linked cases');
+				assert.deepStrictEqual(entry.metadata?.oldLinkedCases, [
+					{ caseId: CASE_ID, isLead: false },
+					{ caseId: 'case-b', isLead: true }
+				]);
+				assert.deepStrictEqual(entry.metadata?.newLinkedCases, [
+					{ caseId: CASE_ID, isLead: false },
+					{ caseId: 'case-b', isLead: true },
+					{ caseId: 'case-c', isLead: false }
+				]);
+			}
 		});
 
-		it('should detect isLead changing from No to Yes', () => {
-			const oldCases = [buildOldLinkedCase('id-1', '123456', false)];
-			const newCases = [{ id: 'id-1', linkedCaseId: '123456', linkedCaseIsLead: 'yes' }];
-
-			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
-
-			assert.strictEqual(entries.length, 2);
-			assert.strictEqual(entries[0].metadata?.oldValue, 'No');
-			assert.strictEqual(entries[0].metadata?.newValue, 'Yes');
-		});
-
-		it('should not produce an entry when isLead has not changed', () => {
-			const oldCases = [buildOldLinkedCase('id-1', '123456', true)];
-			const newCases = [{ id: 'id-1', linkedCaseId: '123456', linkedCaseIsLead: 'yes' }];
-
-			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
-
-			assert.strictEqual(entries.length, 0);
-		});
-	});
-
-	describe('updates — both reference and isLead change', () => {
-		it('should produce two entries when both reference and isLead change', () => {
-			const oldCases = [buildOldLinkedCase('id-1', '123456', true)];
-			const newCases = [{ id: 'id-1', linkedCaseId: '78910', linkedCaseIsLead: 'no' }];
-
-			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
-
-			assert.strictEqual(entries.length, 5);
-
-			const refChange = entries.find((e) => e.metadata?.fieldName === 'linked case reference');
-			const leadChange = entries.find((e) => e.metadata?.fieldName === 'lead?');
-
-			assert.ok(refChange);
-			assert.strictEqual(refChange?.metadata?.oldValue, '123456');
-			assert.strictEqual(refChange?.metadata?.newValue, '78910');
-
-			assert.ok(leadChange);
-			assert.strictEqual(leadChange?.metadata?.oldValue, 'Yes');
-			assert.strictEqual(leadChange?.metadata?.newValue, 'No');
-		});
-	});
-
-	describe('combined operations', () => {
-		it('should detect add, delete, and update in a single diff', () => {
-			const oldCases = [buildOldLinkedCase('id-1', 'first', true), buildOldLinkedCase('id-2', 'second', false)];
+		it('should mark the current case as lead when the old group has no lead case', () => {
+			const oldCases = [buildOldLinkedCase('case-b', false), buildOldLinkedCase('case-c', false)];
 			const newCases = [
-				{ id: 'id-1', linkedCaseId: 'first', linkedCaseIsLead: 'no' },
-				{ linkedCaseId: 'third', linkedCaseIsLead: 'yes' }
+				{ linkedCaseId: 'case-b', linkedCaseIsLead: 'no' },
+				{ linkedCaseId: 'case-c', linkedCaseIsLead: 'no' }
 			];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
-			const added = entries.filter((e) => e.action === AUDIT_ACTIONS.LINKED_CASE_ADDED);
-			const deleted = entries.filter((e) => e.action === AUDIT_ACTIONS.LINKED_CASE_DELETED);
-			const updated = entries.filter((e) => e.action === AUDIT_ACTIONS.LINKED_CASE_UPDATED);
+			assert.strictEqual(entries.length, 3);
 
-			assert.strictEqual(added.length, 2); // bidirectional
-			assert.ok(added.some((e) => e.caseId === CASE_ID && e.metadata?.reference === 'third'));
-			assert.ok(added.some((e) => e.caseId === 'third' && e.metadata?.reference === CASE_ID));
+			const currentCaseEntry = entries.find((entry) => entry.caseId === CASE_ID);
+			assert.ok(currentCaseEntry);
+			assert.deepStrictEqual(currentCaseEntry?.metadata?.oldLinkedCases, [
+				{ caseId: CASE_ID, isLead: true },
+				{ caseId: 'case-b', isLead: false },
+				{ caseId: 'case-c', isLead: false }
+			]);
+			assert.deepStrictEqual(currentCaseEntry?.metadata?.newLinkedCases, [
+				{ caseId: CASE_ID, isLead: true },
+				{ caseId: 'case-b', isLead: false },
+				{ caseId: 'case-c', isLead: false }
+			]);
+		});
+	});
 
-			assert.strictEqual(deleted.length, 2); // bidirectional
-			assert.ok(deleted.some((e) => e.caseId === CASE_ID && e.metadata?.reference === 'second'));
-			assert.ok(deleted.some((e) => e.caseId === 'second' && e.metadata?.reference === CASE_ID));
+	describe('removals', () => {
+		it('should create deletion entries for cases removed from the group', () => {
+			const oldCases = [buildOldLinkedCase('case-b', true), buildOldLinkedCase('case-c', false)];
+			const newCases = [{ linkedCaseId: 'case-b', linkedCaseIsLead: 'yes' }];
 
-			assert.strictEqual(updated.length, 2); // bidirectional
-			assert.ok(updated.every((e) => e.metadata?.fieldName === 'lead?'));
+			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
+
+			assert.strictEqual(entries.length, 3);
+
+			const deletedEntry = entries.find((entry) => entry.caseId === 'case-c');
+			assert.ok(deletedEntry);
+			assert.strictEqual(deletedEntry.action, AUDIT_ACTIONS.LINKED_CASE_DELETED);
+			assert.deepStrictEqual(deletedEntry.metadata, {
+				fieldName: 'linked cases'
+			});
+
+			const updatedEntries = entries.filter((entry) => entry.action === AUDIT_ACTIONS.LINKED_CASE_UPDATED);
+			assert.strictEqual(updatedEntries.length, 2);
+			assert.deepStrictEqual(updatedEntries.map((entry) => entry.caseId).sort(), [CASE_ID, 'case-b'].sort());
+		});
+
+		it('should create deletion entries when the final group collapses to one case', () => {
+			const oldCases = [buildOldLinkedCase('case-b', true)];
+			const newCases: { linkedCaseId: string; linkedCaseIsLead: string }[] = [];
+
+			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
+
+			assert.strictEqual(entries.length, 2);
+			assert.ok(
+				entries.some((entry) => entry.caseId === 'case-b' && entry.action === AUDIT_ACTIONS.LINKED_CASE_DELETED)
+			);
+			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.LINKED_CASE_DELETED);
+			assert.deepStrictEqual(entries[0].metadata, {
+				fieldName: 'linked cases'
+			});
 		});
 	});
 
 	describe('no changes', () => {
-		it('should return no entries when lists are identical', () => {
-			const oldCases = [buildOldLinkedCase('id-1', '123456', true)];
-			const newCases = [{ id: 'id-1', linkedCaseId: '123456', linkedCaseIsLead: 'yes' }];
+		it('should return update entries when the linked group still contains more than one case', () => {
+			const oldCases = [buildOldLinkedCase('case-b', true)];
+			const newCases = [{ linkedCaseId: 'case-b', linkedCaseIsLead: 'yes' }];
 
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
 
-			assert.strictEqual(entries.length, 0);
+			assert.strictEqual(entries.length, 2);
+			assert.deepStrictEqual(entries.map((entry) => entry.caseId).sort(), [CASE_ID, 'case-b'].sort());
+			assert.ok(entries.every((entry) => entry.action === AUDIT_ACTIONS.LINKED_CASE_UPDATED));
 		});
 
-		it('should return no entries when both lists are empty', () => {
+		it('should create a deletion entry for the current case when both groups are empty', () => {
 			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, [], []);
 
-			assert.strictEqual(entries.length, 0);
-		});
-	});
-
-	describe('metadata', () => {
-		it('should include caseId and userId on all entries', () => {
-			const oldCases: LinkedCaseAuditSource[] = [];
-			const newCases = [{ linkedCaseId: '123', linkedCaseIsLead: 'yes' }];
-
-			const entries = resolveLinkedCaseAudits(CASE_ID, USER_ID, oldCases, newCases);
-
-			// Both entries should have caseId and userId
+			assert.strictEqual(entries.length, 1);
 			assert.strictEqual(entries[0].caseId, CASE_ID);
-			assert.strictEqual(entries[0].userId, USER_ID);
-			assert.strictEqual(entries[1].caseId, '123');
-			assert.strictEqual(entries[1].userId, USER_ID);
+			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.LINKED_CASE_DELETED);
+			assert.deepStrictEqual(entries[0].metadata, {
+				fieldName: 'linked cases'
+			});
 		});
 	});
 });

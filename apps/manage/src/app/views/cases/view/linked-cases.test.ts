@@ -409,8 +409,8 @@ describe('linked-cases', () => {
 			const result = buildPreviousLinkedCases(previousValues);
 
 			assert.deepStrictEqual(result, [
-				{ id: 'rel-1', reference: 'case-2', isLead: false },
-				{ id: 'rel-2', reference: 'case-3', isLead: false }
+				{ caseId: 'case-2', isLead: false },
+				{ caseId: 'case-3', isLead: false }
 			]);
 		});
 
@@ -421,20 +421,27 @@ describe('linked-cases', () => {
 
 			const result = buildPreviousLinkedCases(previousValues);
 
-			assert.deepStrictEqual(result, [{ id: 'rel-parent', reference: 'case-1', isLead: true }]);
+			assert.deepStrictEqual(result, [{ caseId: 'case-1', isLead: true }]);
 		});
 
 		it('should combine ChildRelationships and ParentRelationship, children first', () => {
 			const previousValues = {
-				ChildRelationships: [{ id: 'rel-1', ChildCase: { id: 'case-2', reference: 'REF-002' } }],
-				ParentRelationship: { id: 'rel-parent', ParentCase: { id: 'case-1', reference: 'REF-001' } }
+				id: 'case-0',
+				ParentRelationship: {
+					id: 'rel-parent',
+					ParentCase: {
+						id: 'case-1',
+						reference: 'REF-001',
+						ChildRelationships: [{ id: 'rel-1', ChildCase: { id: 'case-2', reference: 'REF-002' } }]
+					}
+				}
 			};
 
 			const result = buildPreviousLinkedCases(previousValues);
 
 			assert.deepStrictEqual(result, [
-				{ id: 'rel-1', reference: 'case-2', isLead: false },
-				{ id: 'rel-parent', reference: 'case-1', isLead: true }
+				{ caseId: 'case-1', isLead: true },
+				{ caseId: 'case-2', isLead: false }
 			]);
 		});
 	});

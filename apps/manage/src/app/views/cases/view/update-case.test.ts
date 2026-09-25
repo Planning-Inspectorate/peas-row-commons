@@ -1208,7 +1208,15 @@ describe('Update Case Controller', () => {
 						ParentRelationship: {
 							id: 'rel-1',
 							parentCaseId: 'case-lead',
-							ParentCase: { id: 'case-lead', reference: 'LEAD-REF' }
+							ParentCase: {
+								id: 'case-lead',
+								reference: 'LEAD-REF',
+								ChildRelationships: [
+									{
+										ChildCase: { id: 'case-123', reference: 'REF-001' }
+									}
+								]
+							}
 						}
 					}) as any
 			);
@@ -1221,7 +1229,7 @@ describe('Update Case Controller', () => {
 
 			const entries = mockService.audit.recordMany.mock.calls[0].arguments[0] as any[];
 
-			assert.strictEqual(entries.length, 4);
+			assert.strictEqual(entries.length, 2);
 			assert.ok(entries.some((entry: any) => entry.caseId === 'case-123'));
 			assert.ok(entries.some((entry: any) => entry.caseId === 'case-lead'));
 		});
@@ -1242,7 +1250,15 @@ describe('Update Case Controller', () => {
 						ParentRelationship: {
 							id: 'rel-1',
 							parentCaseId: 'case-lead',
-							ParentCase: { id: 'case-lead', reference: 'LEAD-REF' }
+							ParentCase: {
+								id: 'case-lead',
+								reference: 'LEAD-REF',
+								ChildRelationships: [
+									{
+										ChildCase: { id: 'case-123', reference: 'REF-001' }
+									}
+								]
+							}
 						}
 					}) as any
 			);

@@ -283,13 +283,23 @@ describe('buildViewCaseHistory', () => {
 			assert.strictEqual(viewData.paginationParams.totalCount, 5);
 		});
 	});
-	describe('getLinkedCaseIdsFromMetadata', () => {
-		it('should look up linked case references from audit metadata and show them in the rendered history', async () => {
+
+	describe('linked case metadata lookup', () => {
+		const generateUuid = () => {
+			return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+				const r = (Math.random() * 16) | 0;
+				const v = c === 'x' ? r : (r & 0x3) | 0x8;
+				return v.toString(16);
+			});
+		};
+
+		it('should fetch case references from linked case metadata', async () => {
 			const req = mockReq();
 			const res = mockRes();
 
-			const linkedCaseId = 'df78cdb2-1fb0-42e4-81b9-798136dac55e';
-			const otherCaseId = 'b7b1c8e2-99b4-49cd-a4cf-123456789abc';
+			const referenceId = generateUuid();
+			const oldValueId = generateUuid();
+			const arrayCaseId = generateUuid();
 
 			mockDb.case.findUnique.mock.mockImplementation(() =>
 				Promise.resolve({ name: 'Test Case', reference: 'REF-001' })
@@ -297,9 +307,9 @@ describe('buildViewCaseHistory', () => {
 
 			mockDb.case.findMany.mock.mockImplementation(({ where }: any) =>
 				Promise.resolve(
-					where.id.in.map((id: string) => ({
+					where.id.in.map((id: string, index: number) => ({
 						id,
-						reference: id === linkedCaseId ? 'HOU/2025/1059' : id === otherCaseId ? 'HOU/2025/1058' : 'UNKNOWN-REF'
+						reference: `HOU/2025/${String(index + 1000)}`
 					}))
 				)
 			);
@@ -308,14 +318,14 @@ describe('buildViewCaseHistory', () => {
 				Promise.resolve([
 					{
 						id: 'evt-1',
-						action: 'LINKED_CASE_UPDATED',
+						action: 'FIELD_UPDATED',
 						User: { idpUserId: 'user-1' },
 						createdAt: '2026-02-11T14:31:00Z',
 						metadata: {
-							entityName: linkedCaseId,
 							fieldName: 'related case',
-							oldValue: otherCaseId,
-							newValue: linkedCaseId
+							reference: referenceId,
+							oldValue: oldValueId,
+							oldLinkedCases: [{ caseId: arrayCaseId, isLead: false }]
 						}
 					}
 				])
@@ -331,7 +341,7 @@ describe('buildViewCaseHistory', () => {
 			assert.deepStrictEqual(findManyArgs, {
 				where: {
 					id: {
-						in: [linkedCaseId, otherCaseId]
+						in: [referenceId, oldValueId, arrayCaseId]
 					}
 				},
 				select: {
@@ -339,15 +349,93 @@ describe('buildViewCaseHistory', () => {
 					reference: true
 				}
 			});
+		});
 
-			assert.strictEqual(res.render.mock.callCount(), 1);
-			const viewData = res.render.mock.calls[0].arguments[1];
+		it('should not fetch linked case references when metadata has no case ids', async () => {
+			const req = mockReq();
+			const res = mockRes();
 
-			assert.strictEqual(viewData.rows.length, 1);
-			assert.ok(viewData.rows[0].details.includes('HOU/2025/1059'));
-			assert.ok(viewData.rows[0].details.includes('HOU/2025/1058'));
-			assert.ok(!viewData.rows[0].details.includes(linkedCaseId));
-			assert.ok(!viewData.rows[0].details.includes(otherCaseId));
+			mockDb.case.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({ name: 'Test Case', reference: 'REF-001' })
+			);
+
+			mockAudit.getAllForCase.mock.mockImplementation(() =>
+				Promise.resolve([
+					{
+						id: 'evt-1',
+						action: 'FILE_UPLOADED',
+						User: { idpUserId: 'user-1' },
+						createdAt: '2026-02-11T14:31:00Z',
+						metadata: { fileName: 'document.pdf', folderName: 'Documents' }
+					}
+				])
+			);
+
+			mockAudit.countForCase.mock.mockImplementation(() => Promise.resolve(1));
+
+			await buildViewCaseHistory(buildService() as any)(req, res);
+
+			assert.strictEqual(mockDb.case.findMany.mock.callCount(), 0);
+		});
+
+		it('should deduplicate linked case ids before fetching references', async () => {
+			const req = mockReq();
+			const res = mockRes();
+
+			const sharedId = generateUuid();
+			const otherId = generateUuid();
+
+			mockDb.case.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({ name: 'Test Case', reference: 'REF-001' })
+			);
+
+			mockDb.case.findMany.mock.mockImplementation(({ where }: any) =>
+				Promise.resolve(
+					where.id.in.map((id: string, index: number) => ({
+						id,
+						reference: `HOU/2025/${String(index + 2000)}`
+					}))
+				)
+			);
+
+			mockAudit.getAllForCase.mock.mockImplementation(() =>
+				Promise.resolve([
+					{
+						id: 'evt-1',
+						action: 'FIELD_UPDATED',
+						User: { idpUserId: 'user-1' },
+						createdAt: '2026-02-11T14:31:00Z',
+						metadata: {
+							fieldName: 'related case',
+							reference: sharedId,
+							oldValue: sharedId,
+							newValue: otherId,
+							oldLinkedCases: [{ caseId: sharedId, isLead: true }],
+							newLinkedCases: [{ caseId: otherId, isLead: false }]
+						}
+					},
+					{
+						id: 'evt-2',
+						action: 'FIELD_UPDATED',
+						User: { idpUserId: 'user-1' },
+						createdAt: '2026-02-10T14:31:00Z',
+						metadata: {
+							fieldName: 'related case',
+							oldValue: sharedId,
+							newValue: otherId
+						}
+					}
+				])
+			);
+
+			mockAudit.countForCase.mock.mockImplementation(() => Promise.resolve(2));
+
+			await buildViewCaseHistory(buildService() as any)(req, res);
+
+			assert.strictEqual(mockDb.case.findMany.mock.callCount(), 1);
+
+			const findManyArgs = mockDb.case.findMany.mock.calls[0].arguments[0];
+			assert.deepStrictEqual(findManyArgs.where.id.in.sort(), [sharedId, otherId].sort());
 		});
 	});
 });
