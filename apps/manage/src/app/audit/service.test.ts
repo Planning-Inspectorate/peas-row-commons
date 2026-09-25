@@ -249,7 +249,8 @@ describe('Audit Service', () => {
 			assert.strictEqual(info.updatedDate, null);
 			assert.strictEqual(info.closedDate, null);
 			assert.strictEqual(info.by, null);
-			assert.strictEqual(logger.error.mock.callCount(), 1);
+			assert.strictEqual(logger.error.mock.callCount(), 0);
+			assert.strictEqual(logger.warn.mock.callCount(), 1);
 		});
 
 		it('should handle a case with null date fields gracefully', async () => {

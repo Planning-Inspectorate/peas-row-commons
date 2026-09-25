@@ -219,7 +219,17 @@ async function updateCaseData(
 					ParentRelationship: {
 						include: {
 							ParentCase: {
-								select: { id: true, reference: true }
+								select: {
+									id: true,
+									reference: true,
+									ChildRelationships: {
+										include: {
+											ChildCase: {
+												select: { id: true, reference: true }
+											}
+										}
+									}
+								}
 							}
 						}
 					},
@@ -818,6 +828,34 @@ function updateClosedDate(flatData: Record<string, unknown>, prismaPayload: Pris
 }
 
 /**
+ * Deduplicates audit entries, grouping by caseId to handle cases where
+ * bidirectional linked case operations might create multiple entries
+ * for the same case in the same operation.
+ *
+ * Preserves all unique combinations of caseId + action + key metadata fields.
+ */
+function deduplicateAuditEntries(entries: AuditEntry[]): AuditEntry[] {
+	const seen = new Set<string>();
+	const deduplicated: AuditEntry[] = [];
+
+	for (const entry of entries) {
+		// Create a unique key combining caseId, action, and key metadata
+		const key = JSON.stringify({
+			caseId: entry.caseId,
+			action: entry.action,
+			metadata: entry.metadata
+		});
+
+		if (!seen.has(key)) {
+			seen.add(key);
+			deduplicated.push(entry);
+		}
+	}
+
+	return deduplicated;
+}
+
+/**
  * Records all audit entries for a case update.
  *
  * Extracted from buildUpdateCase to keep the main handler focused on
@@ -1002,7 +1040,11 @@ async function recordAuditEntries(
 			);
 		}
 
-		await audit.recordMany(allAuditEntries);
+		// Deduplicate audit entries by caseId to avoid conflicts when the same case
+		// has entries from multiple sources (e.g., linked case changes)
+		const deduplicatedEntries = deduplicateAuditEntries(allAuditEntries);
+
+		await audit.recordMany(deduplicatedEntries);
 	} catch (error: unknown) {
 		// Audit failures should never block the user's operation.
 		// The case data has already been saved successfully above.

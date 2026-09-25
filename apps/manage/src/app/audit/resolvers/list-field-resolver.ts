@@ -1,8 +1,15 @@
 import type { RelatedCase } from '@pins/peas-row-commons-database/src/client/client.ts';
-import { formatBoolean, formatYesNo } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import { formatYesNo } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
 import type { LinkedCaseAuditSource, LinkedCaseDetailInput } from '../../views/cases/view/types.ts';
 import { AUDIT_ACTIONS } from '../actions.ts';
 import type { AuditEntry } from '../types.ts';
+
+type LinkedCaseGroupMember = {
+	caseId: string;
+	isLead: boolean;
+};
+
+type LinkedCaseGroupEntry = [string, LinkedCaseGroupMember];
 
 /**
  * Compares old and new related cases and returns audit entries for
@@ -81,13 +88,13 @@ export function resolveRelatedCaseAudits(
  * Compares old and new linked cases and returns audit entries for
  * additions, deletions, and sub-field updates.
  *
- * Linked cases have two fields: `reference` and `isLead`. We use
- * `reference` as the identity key for comparison:
- *
- *   - References in the new list but not the old → LINKED_CASE_ADDED
- *   - References in the old list but not the new → LINKED_CASE_DELETED
- *   - References in both → compare sub-fields for changes:
- *       - If `isLead` changed → LINKED_CASE_UPDATED
+ * Rules:
+ * - Any case still in the final linked group gets LINKED_CASE_UPDATED
+ * with old/new linked-case lists, provided the final group contains
+ * more than one case.
+ * - Any case removed from the final group gets LINKED_CASE_DELETED.
+ * - If the final group collapses to a single unlinked case, no list-style
+ * update entry is recorded for that remaining case.
  */
 export function resolveLinkedCaseAudits(
 	caseId: string,
@@ -97,65 +104,47 @@ export function resolveLinkedCaseAudits(
 ): AuditEntry[] {
 	const entries: AuditEntry[] = [];
 
-	const oldById = new Map(oldLinkedCases.map((lc) => [lc.id, lc]));
-	const newById = new Map(newLinkedCases.filter((lc) => lc.id).map((lc) => [lc.id as string, lc]));
+	// Build normalized groups that always include the current case
+	const oldGroup = new Map<string, LinkedCaseGroupMember>([
+		[caseId, { caseId, isLead: !oldLinkedCases.some((lc) => lc.isLead) }],
+		...oldLinkedCases.map((lc): LinkedCaseGroupEntry => [lc.caseId, { caseId: lc.caseId, isLead: lc.isLead }])
+	]);
 
-	// Added
-	for (const newCase of newLinkedCases) {
-		if (!newCase.id || !oldById.has(newCase.id)) {
+	const leadLinkedCase = newLinkedCases.find((lc) => formatYesNo(lc.linkedCaseIsLead) === 'Yes');
+	const newGroup = new Map<string, LinkedCaseGroupMember>([
+		[caseId, { caseId, isLead: !leadLinkedCase }],
+		...newLinkedCases.map((lc): LinkedCaseGroupEntry => [
+			lc.linkedCaseId,
+			{ caseId: lc.linkedCaseId, isLead: formatYesNo(lc.linkedCaseIsLead) === 'Yes' }
+		])
+	]);
+
+	const affectedCaseIds = new Set([...oldGroup.keys(), ...newGroup.keys()]);
+	const serializeGroup = (group: Map<string, LinkedCaseGroupMember>) =>
+		Array.from(group.values()).map((m) => ({ caseId: m.caseId, isLead: m.isLead }));
+
+	for (const affectedCaseId of affectedCaseIds) {
+		const isInNewGroup = newGroup.has(affectedCaseId);
+		const isInOldGroup = oldGroup.has(affectedCaseId);
+
+		if (isInNewGroup && newGroup.size > 1) {
 			entries.push({
-				caseId,
-				action: AUDIT_ACTIONS.LINKED_CASE_ADDED,
-				userId,
-				metadata: { reference: newCase.linkedCaseId }
-			});
-		}
-	}
-
-	// Deleted
-	for (const [id, oldCase] of oldById) {
-		if (!newById.has(id)) {
-			entries.push({
-				caseId,
-				action: AUDIT_ACTIONS.LINKED_CASE_DELETED,
-				userId,
-				metadata: { reference: oldCase.reference }
-			});
-		}
-	}
-
-	// Updated
-	for (const [id, newCase] of newById) {
-		const oldCase = oldById.get(id);
-		if (!oldCase) continue;
-
-		if (oldCase.reference !== newCase.linkedCaseId) {
-			entries.push({
-				caseId,
+				caseId: affectedCaseId,
 				action: AUDIT_ACTIONS.LINKED_CASE_UPDATED,
 				userId,
 				metadata: {
-					entityName: oldCase.reference,
-					fieldName: 'linked case reference',
-					oldValue: oldCase.reference,
-					newValue: newCase.linkedCaseId
+					fieldName: 'linked cases',
+					oldLinkedCases: serializeGroup(oldGroup),
+					newLinkedCases: serializeGroup(newGroup)
 				}
 			});
-		}
-
-		const oldIsLead = formatBoolean(oldCase.isLead);
-		const newIsLead = formatYesNo(newCase.linkedCaseIsLead);
-
-		if (oldIsLead !== newIsLead) {
+		} else if (isInOldGroup) {
 			entries.push({
-				caseId,
-				action: AUDIT_ACTIONS.LINKED_CASE_UPDATED,
+				caseId: affectedCaseId,
+				action: AUDIT_ACTIONS.LINKED_CASE_DELETED,
 				userId,
 				metadata: {
-					entityName: newCase.linkedCaseId,
-					fieldName: 'lead?',
-					oldValue: oldIsLead,
-					newValue: newIsLead
+					fieldName: 'linked cases'
 				}
 			});
 		}

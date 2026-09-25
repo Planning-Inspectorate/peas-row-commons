@@ -204,31 +204,46 @@ export function stripLinkedCaseDetails(flatData: Record<string, any>) {
 }
 
 /**
- * Adapts the previously-fetched `ChildRelationships`/`ParentRelationship`
- * (`CaseRelationship` join records) into the flat `{ id, reference, isLead }`
- * shape `resolveLinkedCaseAudits` expects.
+ * Builds the previous linked-case audit snapshot for the case being edited.
+ *
+ * Returns the other cases in the old linked group:
+ *   - if this case had a parent, the parent is returned as the lead and the
+ *     parent's other children are returned as non-lead siblings
+ *   - otherwise this case's direct child relationships are returned as non-lead cases
+ *
+ * The current case itself is intentionally excluded here; it is added by
+ * `resolveLinkedCaseAudits` when normalising the old/new groups.
  */
 export function buildPreviousLinkedCases(previousValues: Record<string, unknown>): LinkedCaseAuditSource[] {
-	const childRelationships =
-		(previousValues.ChildRelationships as { id: string; ChildCase: { id: string; reference: string | null } }[]) ?? [];
+	const caseId = previousValues.id as string;
+	const childRelationships = (previousValues.ChildRelationships as RelationshipRow[]) ?? [];
 	const parentRelationship = previousValues.ParentRelationship as
-		{ id: string; ParentCase: { id: string; reference: string | null } } | null | undefined;
+		| {
+				id: string;
+				ParentCase: {
+					id: string;
+					reference: string | null;
+					ChildRelationships?: RelationshipRow[];
+				};
+		  }
+		| null
+		| undefined;
 
-	const linkedCases: LinkedCaseAuditSource[] = childRelationships.map((relationship) => ({
-		id: relationship.id,
-		reference: relationship.ChildCase.id,
-		isLead: false
-	}));
-
-	if (parentRelationship) {
-		linkedCases.push({
-			id: parentRelationship.id,
-			reference: parentRelationship.ParentCase.id,
-			isLead: true
-		});
+	if (!parentRelationship) {
+		return childRelationships.map((rel) => ({
+			caseId: rel.ChildCase.id,
+			isLead: false
+		}));
 	}
 
-	return linkedCases;
+	const siblings = (parentRelationship.ParentCase.ChildRelationships ?? [])
+		.filter((rel) => rel.ChildCase.id !== caseId)
+		.map((rel) => ({
+			caseId: rel.ChildCase.id,
+			isLead: false
+		}));
+
+	return [{ caseId: parentRelationship.ParentCase.id, isLead: true }, ...siblings];
 }
 
 /**

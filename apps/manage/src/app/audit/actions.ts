@@ -141,10 +141,9 @@ export const AUDIT_TEMPLATES: Record<AuditAction, string> = {
 	[AUDIT_ACTIONS.RELATED_CASE_DELETED]: '{reference} was deleted from related case(s).',
 
 	// Linked cases
-	[AUDIT_ACTIONS.LINKED_CASE_ADDED]: '{reference} was added to linked cases.',
-	[AUDIT_ACTIONS.LINKED_CASE_UPDATED]:
-		'Linked case reference ({entityName}) {fieldName} was updated from {oldValue} to {newValue}',
-	[AUDIT_ACTIONS.LINKED_CASE_DELETED]: '{reference} was deleted from linked case(s).',
+	[AUDIT_ACTIONS.LINKED_CASE_ADDED]: 'This case was added to linked cases.',
+	[AUDIT_ACTIONS.LINKED_CASE_UPDATED]: 'Linked cases were updated.',
+	[AUDIT_ACTIONS.LINKED_CASE_DELETED]: 'This case was removed from linked cases.',
 
 	// Applicant or appellant
 	[AUDIT_ACTIONS.APPLICANT_ADDED]: '{name} was added to applicant or appellant(s).',
@@ -193,7 +192,7 @@ export function resolveTemplate(action: AuditAction, metadata?: Record<string, u
 		return template;
 	}
 
-	return template.replace(/\{(\w+)\}/g, (match, key) => {
+	return template.replace(/\{(\w+)}/g, (match, key) => {
 		const value = metadata[key];
 		return value !== undefined && value !== null ? String(value) : match;
 	});

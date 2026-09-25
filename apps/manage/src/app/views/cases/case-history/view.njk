@@ -38,6 +38,39 @@
                     {% for row in rows %}
                         {% set detailsHtml %}
                             {{ row.details }}
+
+                            {% if row.accordionSections and row.accordionSections | length > 0 %}
+                                {% set linkedCasesAccordionItems = [] %}
+
+                                {% for section in row.accordionSections %}
+                                    {% set sectionHtml %}
+                                        <ul class="govuk-list govuk-list--bullet">
+                                            {% for value in section.values %}
+                                                <li>{{ value }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% endset %}
+
+                                    {% set linkedCasesAccordionItems = (linkedCasesAccordionItems.push({
+                                        heading: {
+                                            text: section.label
+                                        },
+                                        content: {
+                                            html: sectionHtml
+                                        }
+                                    }), linkedCasesAccordionItems) %}
+                                {% endfor %}
+
+                                {{ govukAccordion({
+                                    id: "linked-cases-accordion-" + loop.index0,
+                                    classes: "pins-accordion-hide-controls govuk-!-margin-top-2 pins-clean-accordion",
+                                    hideAllSections: true,
+                                    showSectionText: "Show details",
+                                    hideSectionText: "Hide details",
+                                    items: linkedCasesAccordionItems
+                                }) }}
+                            {% endif %}
+
                             {% if row.files and row.files | length > 0 %}
                                 {% set filesListHtml %}
                                     <ul class="govuk-list govuk-list--bullet">
@@ -56,8 +89,8 @@
                                     items: [
                                         {
                                             content: {
-                                                html: filesListHtml
-                                            }
+                                            html: filesListHtml
+                                        }
                                         }
                                     ]
                                 }) }}

@@ -67,6 +67,8 @@ describe('Update Case Controller', () => {
 		mockCaseRelationshipCreate.mock.resetCalls();
 		mockCaseRelationshipCreateMany.mock.resetCalls();
 		mockService.logger.info.mock.resetCalls();
+		mockService.audit.record.mock.resetCalls();
+		mockService.audit.recordMany.mock.resetCalls();
 	});
 
 	describe('buildUpdateCase', () => {
@@ -1186,6 +1188,92 @@ describe('Update Case Controller', () => {
 			assert.strictEqual(mockUpdate.mock.callCount(), 1);
 			const updateArgs = mockUpdate.mock.calls[0].arguments[0];
 			assert.strictEqual(updateArgs.data.description, null);
+		});
+	});
+
+	describe('buildUpdateCase (linked case audits)', () => {
+		it('should record audit entries for both cases when linked cases are updated', async () => {
+			const req = { params: { id: 'case-123' }, session: { account: { localAccountId: 'user-123' } } };
+			const data = {
+				answers: {
+					linkedCaseDetails: [{ linkedCaseId: 'case-lead', linkedCaseIsLead: 'yes' }]
+				}
+			};
+
+			mockFindUnique.mock.mockImplementationOnce(
+				() =>
+					({
+						id: 'case-123',
+						reference: 'REF-001',
+						ParentRelationship: {
+							id: 'rel-1',
+							parentCaseId: 'case-lead',
+							ParentCase: {
+								id: 'case-lead',
+								reference: 'LEAD-REF',
+								ChildRelationships: [
+									{
+										ChildCase: { id: 'case-123', reference: 'REF-001' }
+									}
+								]
+							}
+						}
+					}) as any
+			);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockService.audit.recordMany.mock.callCount(), 1);
+
+			const entries = mockService.audit.recordMany.mock.calls[0].arguments[0] as any[];
+
+			assert.strictEqual(entries.length, 2);
+			assert.ok(entries.some((entry: any) => entry.caseId === 'case-123'));
+			assert.ok(entries.some((entry: any) => entry.caseId === 'case-lead'));
+		});
+
+		it('should record audit entries for both cases when linked cases are cleared', async () => {
+			const req = { params: { id: 'case-123' }, session: { account: { localAccountId: 'user-123' } } };
+			const data = {
+				answers: {
+					linkedCaseDetails: []
+				}
+			};
+
+			mockFindUnique.mock.mockImplementationOnce(
+				() =>
+					({
+						id: 'case-123',
+						reference: 'REF-001',
+						ParentRelationship: {
+							id: 'rel-1',
+							parentCaseId: 'case-lead',
+							ParentCase: {
+								id: 'case-lead',
+								reference: 'LEAD-REF',
+								ChildRelationships: [
+									{
+										ChildCase: { id: 'case-123', reference: 'REF-001' }
+									}
+								]
+							}
+						}
+					}) as any
+			);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123', reference: 'REF-001' }) as any);
+
+			const handler = buildUpdateCase(mockService as any);
+			await handler({ req: req as any, res: {} as any, data });
+
+			assert.strictEqual(mockService.audit.recordMany.mock.callCount(), 1);
+
+			const entries = mockService.audit.recordMany.mock.calls[0].arguments[0] as any[];
+
+			assert.strictEqual(entries.length, 2);
+			assert.ok(entries.some((entry: any) => entry.caseId === 'case-123'));
+			assert.ok(entries.some((entry: any) => entry.caseId === 'case-lead'));
 		});
 	});
 });
