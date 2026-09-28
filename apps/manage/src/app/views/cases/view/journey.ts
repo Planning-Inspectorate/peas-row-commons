@@ -28,7 +28,7 @@ export function createJourney(
 	const outcomeManageList = buildOutcomeManageList(questions);
 	const dynamicOutcomeSections = buildDynamicOutcomeSections(outcomeManageList, response);
 
-	const procedureManageList = buildProcedureManageList(questions);
+	const procedureManageList = buildProcedureManageList(config);
 	const dynamicProcedureSections = getDynamicProcedureSections(
 		config,
 		response?.answers?.procedureDetails as ProcedureDetails
