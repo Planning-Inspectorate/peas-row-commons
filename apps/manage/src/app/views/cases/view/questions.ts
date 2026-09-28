@@ -6,7 +6,6 @@ import {
 	COSTS_QUESTIONS,
 	createOutcomeQuestions,
 	createOverviewQuestions,
-	createProcedureDetailQuestions,
 	createTeamQuestions,
 	DATE_QUESTIONS,
 	DOCUMENTS_QUESTIONS,
@@ -14,7 +13,6 @@ import {
 	OUTCOME_QUESTIONS,
 	OVERVIEW_QUESTIONS,
 	PROCEDURE_MANAGE_LIST_QUESTION,
-	PROCEDURE_QUESTIONS,
 	TEAM_QUESTIONS
 } from './question-utils.ts';
 import type { UserMap } from './types.ts';
@@ -38,12 +36,6 @@ export function getQuestions(
 		answers.inspectorDetails as Record<string, unknown>[]
 	);
 	const generateOverviewQuestions = createOverviewQuestions(OVERVIEW_QUESTIONS, answers, otherCases);
-	const generatedProcedureQuestions = createProcedureDetailQuestions(
-		PROCEDURE_QUESTIONS,
-		groupMembers,
-		answers.inspectorDetails as Record<string, unknown>[],
-		userMap
-	);
 
 	const questions = {
 		// Static questions
@@ -58,7 +50,6 @@ export function getQuestions(
 		...generateOverviewQuestions,
 		...generateOutcomeQuestions,
 		...PROCEDURE_MANAGE_LIST_QUESTION,
-		...generatedProcedureQuestions,
 		...KEY_CONTACTS_QUESTIONS
 	};
 

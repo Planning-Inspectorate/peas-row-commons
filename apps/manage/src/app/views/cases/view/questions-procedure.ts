@@ -481,7 +481,7 @@ const HEARING_PROCEDURE_QUESTIONS = {
 		hint: 'For example, 0.5, 1',
 		fieldName: 'hearingPreparationTimeDays',
 		url: 'hearing-preparation-time',
-		suffix: 'days',
+		suffix: { text: 'days' },
 		validators: [
 			new NumericValidator({
 				regex: /^$|^\d+(\.\d+)?$/,
@@ -497,7 +497,7 @@ const HEARING_PROCEDURE_QUESTIONS = {
 		hint: 'For example, 0.5, 1',
 		fieldName: 'hearingTravelTimeDays',
 		url: 'hearing-travel-time',
-		suffix: 'days',
+		suffix: { text: 'days' },
 		validators: [
 			new NumericValidator({
 				regex: /^$|^\d+(\.\d+)?$/,
@@ -513,7 +513,7 @@ const HEARING_PROCEDURE_QUESTIONS = {
 		hint: 'For example, 0.5, 1',
 		fieldName: 'hearingSittingTimeDays',
 		url: 'hearing-sitting-time',
-		suffix: 'days',
+		suffix: { text: 'days' },
 		validators: [
 			new NumericValidator({
 				regex: /^$|^\d+(\.\d+)?$/,
@@ -529,7 +529,7 @@ const HEARING_PROCEDURE_QUESTIONS = {
 		hint: 'For example, 0.5, 1',
 		fieldName: 'hearingReportingTimeDays',
 		url: 'hearing-reporting-time',
-		suffix: 'days',
+		suffix: { text: 'days' },
 		validators: [
 			new NumericValidator({
 				regex: /^$|^\d+(\.\d+)?$/,
@@ -709,7 +709,7 @@ const INQUIRY_PROCEDURE_QUESTIONS = {
 		hint: 'For example, 0.5, 1',
 		fieldName: 'inquiryPreparationTimeDays',
 		url: 'inquiry-preparation-time',
-		suffix: 'days',
+		suffix: { text: 'days' },
 		validators: [
 			new NumericValidator({
 				regex: /^$|^\d+(\.\d+)?$/,
@@ -725,7 +725,7 @@ const INQUIRY_PROCEDURE_QUESTIONS = {
 		hint: 'For example, 0.5, 1',
 		fieldName: 'inquiryTravelTimeDays',
 		url: 'inquiry-travel-time',
-		suffix: 'days',
+		suffix: { text: 'days' },
 		validators: [
 			new NumericValidator({
 				regex: /^$|^\d+(\.\d+)?$/,
@@ -741,7 +741,7 @@ const INQUIRY_PROCEDURE_QUESTIONS = {
 		hint: 'For example, 0.5, 1',
 		fieldName: 'inquirySittingTimeDays',
 		url: 'inquiry-sitting-time',
-		suffix: 'days',
+		suffix: { text: 'days' },
 		validators: [
 			new NumericValidator({
 				regex: /^$|^\d+(\.\d+)?$/,
@@ -757,7 +757,7 @@ const INQUIRY_PROCEDURE_QUESTIONS = {
 		hint: 'For example, 0.5, 1',
 		fieldName: 'inquiryReportingTimeDays',
 		url: 'inquiry-reporting-time',
-		suffix: 'days',
+		suffix: { text: 'days' },
 		validators: [
 			new NumericValidator({
 				regex: /^$|^\d+(\.\d+)?$/,
