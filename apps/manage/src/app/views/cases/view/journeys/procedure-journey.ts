@@ -5,11 +5,10 @@ import {
 	DynamicSection,
 	type JourneyResponse,
 	ManageListSection,
-	type Question,
 	questionHasAnswer,
+	type Section,
 	whenQuestionHasAnswer
 } from '@planning-inspectorate/dynamic-forms';
-import type { CaseViewQuestions } from '../questions.ts';
 import {
 	getAdminInHouseQuestions,
 	getCreateProcedureQuestions,
@@ -24,30 +23,11 @@ import type { mapProceduresToArray } from '../view-model.ts';
 /**
  * Build the manage list section that defines the "add procedure" flow.
  */
-export function buildProcedureManageList(questions: CaseViewQuestions): ManageListSection {
-	return new ManageListSection()
-		.addQuestion(questions.procedureType)
-		.addQuestion(questions.procedureAdminType)
-		.withCondition(whenQuestionHasAnswer(questions.procedureType, PROCEDURES_ID.ADMIN_IN_HOUSE))
-		.addQuestion(questions.procedureSiteVisitType)
-		.withCondition(whenQuestionHasAnswer(questions.procedureType, PROCEDURES_ID.SITE_VISIT))
-		.addQuestion(questions.procedureInspector)
-		.withCondition((response: JourneyResponse) => {
-			/**
-			 * Inspector is shown for all types EXCEPT Admin when admin type is "case-officer".
-			 * If type is Admin and admin type is case-officer, skip inspector.
-			 * Otherwise (Hearing, Inquiry, Written Reps, Site Visit, Proposal), show it.
-			 */
-			const isAdmin = questionHasAnswer(response, questions.procedureType, PROCEDURES_ID.ADMIN_IN_HOUSE);
-
-			if (!isAdmin) {
-				return true;
-			}
-
-			// For Admin, only show inspector if admin type is "inspector" (not "case-officer")
-			return questionHasAnswer(response, questions.procedureAdminType, ADMIN_PROCEDURES_ID.INSPECTOR);
-		})
-		.addQuestion(questions.procedureStatus);
+export function buildProcedureManageList(config: InspectorRadioConfig): ManageListSection {
+	const section = new ManageListSection();
+	const common = getCreateProcedureQuestions(config);
+	addBaseProcedureQuestions(section, common);
+	return section;
 }
 
 export type ProcedureDetails = ReturnType<typeof mapProceduresToArray>;
@@ -173,14 +153,20 @@ function newProcedureDynamicSection(
 	common: ReturnType<typeof getCreateProcedureQuestions>
 ) {
 	const title = getSectionTitle(procedure, 0);
-	return new DynamicSection(title, procedure.id, 'procedureDetails')
+	const section = new DynamicSection(title, procedure.id, 'procedureDetails');
+	addBaseProcedureQuestions(section, common);
+	return section;
+}
+
+function addBaseProcedureQuestions(section: Section, common: ReturnType<typeof getCreateProcedureQuestions>) {
+	section
 		.addQuestion(common.procedureType)
 		.addQuestion(common.procedureAdminType)
 		.withCondition(whenQuestionHasAnswer(common.procedureType, PROCEDURES_ID.ADMIN_IN_HOUSE))
 		.addQuestion(common.procedureSiteVisitType)
 		.withCondition(whenQuestionHasAnswer(common.procedureType, PROCEDURES_ID.SITE_VISIT))
 		.addQuestion(common.procedureInspector)
-		.withCondition((response) => {
+		.withCondition((response: JourneyResponse) => {
 			/**
 			 * Inspector is shown for all types EXCEPT Admin when admin type is "case-officer".
 			 * If type is Admin and admin type is case-officer, skip inspector.
