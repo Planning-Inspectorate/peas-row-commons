@@ -121,10 +121,20 @@ export async function applyLinkedCaseRelationships(
 	const newParentCaseId = leadCaseId ?? caseId;
 	let childCaseIds = leadCaseId ? [caseId, ...otherCaseIds] : otherCaseIds;
 
+	// Only preserve the designated lead case's other existing children when this case
+	// is newly joining that group (previousParentCaseId !== leadCaseId). If this case
+	// was already one of that lead's children, the edit screen showed the *complete*
+	// sibling list (see resolveLinkedCaseRelationships), so any sibling missing from
+	// `otherCaseIds` was deliberately removed by the user, not merely out of view -
+	// preserving it here would silently undo that removal.
+	const needsLeadChildren = leadCaseId !== null && previousParentCaseId !== leadCaseId;
+
 	// Carry over pre-existing children of the lead case and/or this case (see below),
 	// fetched together in a single query rather than two separate ones.
 	const needsOwnChildren = previousParentCaseId === null && newParentCaseId !== caseId;
-	const parentCaseIdsToFetch = [leadCaseId, needsOwnChildren ? caseId : null].filter((id): id is string => id !== null);
+	const parentCaseIdsToFetch = [needsLeadChildren ? leadCaseId : null, needsOwnChildren ? caseId : null].filter(
+		(id): id is string => id !== null
+	);
 
 	if (parentCaseIdsToFetch.length) {
 		const existingChildren = await $tx.caseRelationship.findMany({
@@ -133,11 +143,11 @@ export async function applyLinkedCaseRelationships(
 		});
 		const existingChildrenByParent = Map.groupBy(existingChildren, (relationship) => relationship.parentCaseId);
 
-		if (leadCaseId) {
+		if (needsLeadChildren) {
 			// Preserve any of the designated lead case's existing children that aren't
 			// already part of this edit, so they remain linked instead of being silently
 			// dropped when the group is wiped and rebuilt below.
-			const existingLeadChildIds = (existingChildrenByParent.get(leadCaseId) ?? [])
+			const existingLeadChildIds = (existingChildrenByParent.get(leadCaseId as string) ?? [])
 				.map((relationship) => relationship.childCaseId)
 				.filter((childCaseId) => childCaseId !== caseId && !childCaseIds.includes(childCaseId));
 

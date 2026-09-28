@@ -231,6 +231,27 @@ describe('linked-cases', () => {
 			});
 		});
 
+		it('should not resurrect a sibling deliberately removed by a case already under the same lead', async () => {
+			// case-1 was already a child of lead-case, alongside siblings removed-sibling and kept-sibling.
+			// The user's edit screen showed the full sibling list and removed 'removed-sibling'.
+			const $tx = createMockTx({
+				'lead-case': [{ childCaseId: 'case-1' }, { childCaseId: 'removed-sibling' }, { childCaseId: 'kept-sibling' }]
+			});
+			const changes = { leadCaseId: 'lead-case', otherCaseIds: ['kept-sibling'] };
+
+			await applyLinkedCaseRelationships($tx as any, 'case-1', changes, 'lead-case');
+
+			// Same lead as before, so no fetch is needed at all - the removed sibling must
+			// not be preserved.
+			assert.strictEqual($tx.caseRelationship.findMany.mock.calls.length, 0);
+			assert.deepStrictEqual($tx.caseRelationship.createMany.mock.calls[0].arguments[0], {
+				data: [
+					{ parentCaseId: 'lead-case', childCaseId: 'case-1' },
+					{ parentCaseId: 'lead-case', childCaseId: 'kept-sibling' }
+				]
+			});
+		});
+
 		it('should not treat the case being edited as its own preserved child', async () => {
 			// case-1 was already a child of lead-case before this edit
 			const $tx = createMockTx({ 'lead-case': [{ childCaseId: 'case-1' }] });
