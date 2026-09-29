@@ -20,7 +20,8 @@ async function run(): Promise<void> {
 		srcDir: config.srcDir,
 		repoRoot,
 		accessibleAutocompleteRoot,
-		copyMoj: true
+		copyMoj: true,
+		generateManifestFile: true
 	});
 }
 
