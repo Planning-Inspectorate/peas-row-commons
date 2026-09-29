@@ -4,7 +4,7 @@ import escape from 'escape-html';
 
 export type LegacyRadioQuestionParams = RadioQuestionParams & {
 	viewFolder?: string;
-	legacyOptions?: SelectableOption[];
+	legacyOptions: SelectableOption[];
 };
 
 /**
@@ -38,7 +38,7 @@ export default class LegacyRadioQuestion extends RadioQuestion {
 		this.label = params.label;
 		this.legend = params.legend;
 		// New array of options that are not allowed to be displayed as selectable.
-		this.legacyOptions = params.legacyOptions ?? [];
+		this.legacyOptions = params.legacyOptions;
 	}
 
 	/**
