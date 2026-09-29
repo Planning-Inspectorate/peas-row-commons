@@ -97,11 +97,6 @@ declare module '@planning-inspectorate/dynamic-forms/src/components/manage-list/
 	}
 }
 
-declare module '@planning-inspectorate/dynamic-forms/src/components/date-period/question.js' {
-	import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-	export default class DatePeriodQuestion extends Question {}
-}
-
 declare module '@planning-inspectorate/dynamic-forms/src/components/date/question.js' {
 	export default class DateQuestion {
 		constructor(params: any);
@@ -331,12 +326,6 @@ declare module '@planning-inspectorate/dynamic-forms/src/validator/conditional-r
 	}
 }
 
-declare module '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js' {
-	export default class StringValidator {
-		constructor(options: any);
-	}
-}
-
 declare module '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js' {
 	import Validator from '@planning-inspectorate/dynamic-forms/src/validator/validator.js';
 	export default class DateValidator extends Validator {
@@ -351,18 +340,6 @@ declare module '@planning-inspectorate/dynamic-forms/src/validator/date-validato
 declare module '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js' {
 	export default class AddressValidator {
 		constructor(options?: any);
-	}
-}
-
-declare module '@planning-inspectorate/dynamic-forms/src/validator/numeric-validator.js' {
-	export default class NumericValidator {
-		constructor(options: any);
-	}
-}
-
-declare module '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js' {
-	export default class MultiFieldInputValidator {
-		constructor(options: any);
 	}
 }
 
