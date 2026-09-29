@@ -2,6 +2,7 @@ import type { ManageService } from '#service';
 import { validateIdFormat } from '@pins/peas-row-commons-lib/middleware/validate-params.ts';
 import { asyncHandler } from '@planning-inspectorate/core/util';
 import { Router as createRouter } from 'express';
+import lusca from 'lusca';
 import multer from 'multer';
 import { createDocumentsController } from './commit-documents/controller.ts';
 import { ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES, MAX_FILE_SIZE, TOTAL_UPLOAD_LIMIT } from './constants.ts';
@@ -30,7 +31,8 @@ export function createRoutes(service: ManageService) {
 	router.get('/', validateIdFormat, asyncHandler(uploadToFoldersView));
 
 	// Uploads files (i.e. saves data to Blob)
-	router.post('/document', handleUploads.array('documents'), validateRequest, uploadDocuments);
+	// validate CSRF after multer has parsed the request
+	router.post('/document', handleUploads.array('documents'), lusca.csrf(), validateRequest, uploadDocuments);
 
 	// Deletes DraftDocument & its Azure blob path
 	router.post('/delete', deleteDocument);

@@ -27,6 +27,7 @@
     "express-validator": "*",
     "govuk-frontend": "*",
     "helmet": "*",
+    "lusca": "*",
     "nunjucks": "*",
     "pino": "*",
     "pino-pretty": "*",

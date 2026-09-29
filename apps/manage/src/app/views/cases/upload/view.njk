@@ -123,7 +123,8 @@
                 if ($multiFileUpload && $mojFormContainer) {
                     new MultiFileUpload($multiFileUpload, {
                         uploadUrl: $mojFormContainer.dataset.uploadUrl,
-                        deleteUrl: $mojFormContainer.dataset.deleteUrl
+                        deleteUrl: $mojFormContainer.dataset.deleteUrl,
+                        csrfToken: '{{ _csrf }}'
                     });
                 }
             </script>
