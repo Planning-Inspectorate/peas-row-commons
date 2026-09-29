@@ -3,7 +3,7 @@ import { SelectQuestion } from '@planning-inspectorate/dynamic-forms';
 import escape from 'escape-html';
 
 export type LegacySelectQuestionParams = SelectQuestionParams & {
-	legacyOptions?: SelectableOption[];
+	legacyOptions: SelectableOption[];
 	viewFolder?: string;
 };
 
@@ -38,7 +38,7 @@ export default class LegacySelectQuestion extends SelectQuestion {
 		this.label = params.label;
 		this.legend = params.legend;
 		// New array of options that are not allowed to be displayed as selectable.
-		this.legacyOptions = params.legacyOptions ?? [];
+		this.legacyOptions = params.legacyOptions;
 	}
 
 	/**

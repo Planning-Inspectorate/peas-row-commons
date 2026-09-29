@@ -1,14 +1,3 @@
-import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
-import CustomDatePeriodValidator from '@pins/peas-row-commons-lib/validators/custom-date-period-validator.ts';
-import type { SummaryFormatterContext } from '@planning-inspectorate/dynamic-forms';
-import { BOOLEAN_OPTIONS, COMPONENT_TYPES, CrossQuestionValidator } from '@planning-inspectorate/dynamic-forms';
-import AddressValidator from '@planning-inspectorate/dynamic-forms/src/validator/address-validator.js';
-import type BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
-import DateValidator from '@planning-inspectorate/dynamic-forms/src/validator/date-validator.js';
-import NumericValidator from '@planning-inspectorate/dynamic-forms/src/validator/numeric-validator.js';
-import RequiredValidator from '@planning-inspectorate/dynamic-forms/src/validator/required-validator.js';
-import StringValidator from '@planning-inspectorate/dynamic-forms/src/validator/string-validator.js';
-
 import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
 import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { AUTHORITIES as AUTHORITIES_DEV } from '@pins/peas-row-commons-database/src/seed/data-authorities-dev.ts';
@@ -18,6 +7,7 @@ import { ADMIN_PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/st
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
 import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/outcome.ts';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
 import {
 	ADMIN_PROCEDURES,
 	ADVERTISED_MODIFICATIONS,
@@ -43,14 +33,27 @@ import { LEGACY_CONTACT_TYPES } from '@pins/peas-row-commons-database/src/seed/s
 import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
 import { INSPECTOR_CONSTANTS } from '@pins/peas-row-commons-lib/constants/inspectors.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
+import type { MpescQuestionProps } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import type TableManageListQuestion from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/question.ts';
 import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/validator.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
+import CustomDatePeriodValidator from '@pins/peas-row-commons-lib/validators/custom-date-period-validator.ts';
 import { ManageListItemsValidator } from '@pins/peas-row-commons-lib/validators/linked-cases-validator.ts';
 import { ManageListCrossFieldValidator } from '@pins/peas-row-commons-lib/validators/manage-list-cross-field-validator.ts';
+import type { BaseValidator, SummaryFormatterContext } from '@planning-inspectorate/dynamic-forms';
+import {
+	AddressValidator,
+	BOOLEAN_OPTIONS,
+	COMPONENT_TYPES,
+	CrossQuestionValidator,
+	DateValidator,
+	MultiFieldInputValidator,
+	NumericValidator,
+	RequiredValidator,
+	StringValidator
+} from '@planning-inspectorate/dynamic-forms';
 import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-import MultiFieldInputValidator from '@planning-inspectorate/dynamic-forms/src/validator/multi-field-input-validator.js';
 import nunjucks from 'nunjucks';
 import { ENVIRONMENT_NAME, loadEnvironmentConfig } from '../../../config.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
@@ -79,7 +82,10 @@ const getAuthorityOptions = () => {
 	}
 	return [
 		{ text: '', value: '' }, // ensure there is a 'null' option so the first LPA isn't selected by default
-		...LPAs.map((t) => ({ text: t.name, value: t.id })).sort((a, b) => a.text.localeCompare(b.text))
+		// the LPAs are expected to have an id, but the type from the database is not guaranteed to have it
+		...LPAs.filter((t): t is typeof t & { id: string } => Boolean(t.id))
+			.map((t) => ({ text: t.name, value: t.id }))
+			.sort((a, b) => a.text.localeCompare(b.text))
 	];
 };
 
@@ -139,9 +145,9 @@ interface DateQuestionProps {
 	 */
 	optional?: boolean;
 	/**
-	 * Additional validators to merge with DateValidator (or overrideValidator if set).
+	 * Additional validators to merge with DateValidator.
 	 */
-	validators?: InstanceType<typeof BaseValidator>[];
+	validators?: BaseValidator[];
 }
 
 export function dateQuestion({
@@ -375,7 +381,7 @@ export const DATE_QUESTIONS = {
 			})
 		]
 	})
-};
+} satisfies Record<string, MpescQuestionProps>;
 
 export const DOCUMENTS_QUESTIONS = {
 	filesLocation: {
@@ -410,7 +416,7 @@ export const DOCUMENTS_QUESTIONS = {
 			})
 		]
 	}
-};
+} satisfies Record<string, MpescQuestionProps>;
 
 export const COSTS_QUESTIONS = {
 	rechargeable: {
@@ -437,6 +443,7 @@ export const COSTS_QUESTIONS = {
 		fieldName: 'finalCost',
 		url: 'final-cost',
 		inputFields: [
+			// @ts-expect-error - TODO: update to single line input once that has been updated to have prefixes in dynamic forms
 			{
 				fieldName: 'finalCost',
 				prefix: { text: '£' },
@@ -493,7 +500,7 @@ export const COSTS_QUESTIONS = {
 			]
 		}
 	}
-};
+} satisfies Record<string, MpescQuestionProps>;
 
 export const CASE_DETAILS_QUESTIONS = {
 	reference: {
@@ -696,7 +703,7 @@ export const CASE_DETAILS_QUESTIONS = {
 			continueButtonText: 'Continue'
 		}
 	})
-};
+} satisfies Record<string, MpescQuestionProps>;
 
 export const OVERVIEW_QUESTIONS = {
 	caseType: {
@@ -717,7 +724,9 @@ export const OVERVIEW_QUESTIONS = {
 		url: '',
 		validators: [],
 		editable: false,
-		options: CASE_SUBTYPES.map((type) => ({ text: type.displayName, value: type.id }))
+		options: CASE_SUBTYPES.map((type) => ({ text: type.displayName, value: type.id })),
+		// populated in createOverviewQuestions
+		legacyOptions: []
 	},
 	act: {
 		type: CUSTOM_COMPONENTS.LEGACY_SELECT,
@@ -874,7 +883,7 @@ export const OVERVIEW_QUESTIONS = {
 		],
 		validators: [new RequiredValidator('Select yes if this is the lead case')]
 	}
-};
+} satisfies Record<string, MpescQuestionProps>;
 
 export const TEAM_QUESTIONS = {
 	caseOfficer: {
@@ -883,7 +892,10 @@ export const TEAM_QUESTIONS = {
 		question: 'Who is the assigned case officer?',
 		fieldName: 'caseOfficerId',
 		url: 'case-officer',
-		validators: [new RequiredValidator('Select a case officer')]
+		validators: [new RequiredValidator('Select a case officer')],
+		// will be populated dynamically based on the entra group members passed in
+		options: [],
+		legacyOptions: []
 	},
 	inspectorDetails: {
 		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
@@ -914,7 +926,10 @@ export const TEAM_QUESTIONS = {
 		viewData: {
 			tableHeader: 'Inspector name',
 			continueButtonText: 'Continue'
-		}
+		},
+		// will be populated dynamically based on the entra group members passed in
+		options: [],
+		legacyOptions: []
 	},
 	inspectorAllocatedDate: dateQuestion({
 		fieldName: 'inspectorAllocatedDate',
@@ -934,7 +949,7 @@ export const TEAM_QUESTIONS = {
 			})
 		]
 	})
-};
+} satisfies Record<string, MpescQuestionProps>;
 
 /**
  * Creates a team questions object, with the extra dynamic options for caseOfficers
@@ -1038,7 +1053,9 @@ export const OUTCOME_QUESTIONS = {
 		validators: [new RequiredValidator('Select the inspector')],
 		viewData: {
 			continueButtonText: 'Continue'
-		}
+		},
+		// will be populated dynamically based on the entra group members passed in
+		options: []
 	},
 	decisionMakerOfficer: {
 		type: COMPONENT_TYPES.SELECT,
@@ -1049,7 +1066,9 @@ export const OUTCOME_QUESTIONS = {
 		validators: [new RequiredValidator('Select the officer')],
 		viewData: {
 			continueButtonText: 'Continue'
-		}
+		},
+		// will be populated dynamically based on the entra group members passed in
+		options: []
 	},
 	outcome: {
 		type: CUSTOM_COMPONENTS.CONDITIONAL_TEXT_OPTIONS,
@@ -1207,7 +1226,7 @@ export const OUTCOME_QUESTIONS = {
 			})
 		]
 	})
-};
+} satisfies Record<string, MpescQuestionProps>;
 
 /**
  * Creates the Outcome questions, adding in the group members from
@@ -1403,7 +1422,7 @@ export const KEY_CONTACTS_QUESTIONS = {
 			continueButtonText: 'Continue'
 		}
 	})
-};
+} satisfies Record<string, MpescQuestionProps>;
 
 /**
  * The manage list "check procedure details" table question.
@@ -1502,7 +1521,7 @@ export const PROCEDURE_MANAGE_LIST_QUESTION = {
 		showAnswersInSummary: true,
 		summaryLimit: 3
 	}
-};
+} satisfies Record<string, MpescQuestionProps>;
 
 /**
  * Unprefixed procedure questions for the manage list add flow.
@@ -1589,7 +1608,10 @@ export const PROCEDURE_QUESTIONS = {
 		validators: [new RequiredValidator('Select an option')],
 		viewData: {
 			continueButtonText: 'Continue'
-		}
+		},
+		// will be populated dynamically based on the entra group members passed in
+		options: [],
+		legacyOptions: []
 	},
 
 	// =========================================================================
@@ -2309,7 +2331,7 @@ export const PROCEDURE_QUESTIONS = {
 			})
 		]
 	})
-};
+} satisfies Record<string, MpescQuestionProps>;
 
 /**
  * Creates the procedure questions with dynamic inspector options injected.
