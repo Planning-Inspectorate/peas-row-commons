@@ -18,6 +18,7 @@
     "@pins/peas-row-commons-lib": "^0.0.0",
     "@ministryofjustice/frontend": "*",
     "@planning-inspectorate/dynamic-forms": "*",
+    "@planning-inspectorate/core": "*",
     "accessible-autocomplete": "*",
     "archiver": "*",
     "body-parser": "*",
