@@ -46,7 +46,6 @@ import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/proced
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import type TableManageListQuestion from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/question.ts';
 import ManageListItemsCompleteValidator from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/validator.ts';
-import OptionalDateValidator from '@pins/peas-row-commons-lib/forms/custom-components/optional-date-component/validator.ts';
 import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.ts';
 import { ManageListItemsValidator } from '@pins/peas-row-commons-lib/validators/linked-cases-validator.ts';
 import { ManageListCrossFieldValidator } from '@pins/peas-row-commons-lib/validators/manage-list-cross-field-validator.ts';
@@ -135,9 +134,10 @@ interface DateQuestionProps {
 	url?: string;
 	isDateTime?: boolean;
 	/**
-	 * Replaces DateValidator entirely. Needed when we want dates to be optional.
+	 * When true, the date is optional: if none of the day/month/year fields
+	 * are filled in the DateValidator checks are skipped entirely.
 	 */
-	overrideValidator?: typeof BaseValidator;
+	optional?: boolean;
 	/**
 	 * Additional validators to merge with DateValidator (or overrideValidator if set).
 	 */
@@ -153,7 +153,7 @@ export function dateQuestion({
 	question,
 	url,
 	isDateTime = false,
-	overrideValidator,
+	optional = false,
 	validators = []
 }: DateQuestionProps) {
 	if (!title) {
@@ -167,7 +167,7 @@ export function dateQuestion({
 		hint: hint,
 		fieldName: fieldName,
 		url: url || camelCaseToKebabCase(fieldName),
-		validators: [overrideValidator ? new overrideValidator(title) : new DateValidator(title), ...validators],
+		validators: [new DateValidator(title, { optional }), ...validators],
 		editable: editable,
 		viewData
 	};
@@ -1106,7 +1106,7 @@ export const OUTCOME_QUESTIONS = {
 		title: 'Outcome received date',
 		question: 'When was the outcome received? (optional)',
 		hint: 'Required if the decision was determined external to PINS. For example 27 3 2007.',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			continueButtonText: 'Continue'
 		},
@@ -1603,7 +1603,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Site visit date',
 		question: 'When is the site visit date? (optional)',
 		url: 'site-visit-date',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'site-visit-date/remove' }]
 		},
@@ -1623,7 +1623,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Target hearing date',
 		question: 'When is the target hearing date? (optional)',
 		url: 'target-hearing-date',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'target-hearing-date/remove' }]
 		},
@@ -1641,7 +1641,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Date parties must be notified of hearing',
 		question: 'When must parties be notified of the hearing? (optional)',
 		url: 'party-notified-hearing-date',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'party-notified-hearing-date/remove' }
@@ -1661,7 +1661,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Earliest potential hearing date',
 		question: 'When is the earliest possible hearing date? (optional)',
 		url: 'earliest-potential-hearing-date',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'earliest-potential-hearing-date/remove' }
@@ -1682,7 +1682,7 @@ export const PROCEDURE_QUESTIONS = {
 		question: 'What is the hearing date? (optional)',
 		url: 'confirmed-hearing-date',
 		isDateTime: true,
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'confirmed-hearing-date/remove' }]
 		},
@@ -1720,7 +1720,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Date parties notified of hearing date',
 		question: 'When were parties notified of the hearing date? (optional)',
 		url: 'date-notified-of-hearing-date',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'date-notified-of-hearing-date/remove' }
@@ -1740,7 +1740,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Date parties notified of hearing venue',
 		question: 'When were parties notified of the hearing venue? (optional)',
 		url: 'date-notified-of-hearing-venue',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'date-notified-of-hearing-venue/remove' }
@@ -1760,7 +1760,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Date hearing closed',
 		question: 'When did the hearing close? (optional)',
 		url: 'date-hearing-closed',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'date-hearing-closed/remove' }]
 		},
@@ -1844,7 +1844,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Inquiry target date',
 		question: 'When is the target inquiry date? (optional)',
 		url: 'target-inquiry-date',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'target-inquiry-date/remove' }]
 		},
@@ -1862,7 +1862,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Date parties must be notified of inquiry',
 		question: 'When must parties be notified of the inquiry? (optional)',
 		url: 'party-notified-inquiry-date',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'party-notified-inquiry-date/remove' }
@@ -1882,7 +1882,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Earliest potential inquiry date',
 		question: 'When is the earliest possible inquiry date? (optional)',
 		url: 'earliest-potential-inquiry-date',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'earliest-potential-inquiry-date/remove' }
@@ -1902,7 +1902,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Confirmed inquiry date',
 		question: 'What is the inquiry date? (optional)',
 		url: 'inquiry-date-confirmed',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'inquiry-date-confirmed/remove' }]
 		},
@@ -1940,7 +1940,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Date parties notified of inquiry date',
 		question: 'When were parties notified of the inquiry date? (optional)',
 		url: 'date-notified-of-inquiry-date',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'date-notified-of-inquiry-date/remove' }
@@ -1960,7 +1960,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Date parties notified of inquiry venue',
 		question: 'When were parties notified of the inquiry venue? (optional)',
 		url: 'date-notified-of-inquiry-venue',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'date-notified-of-inquiry-venue/remove' }
@@ -1980,7 +1980,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Date inquiry closed',
 		question: 'When did the inquiry close? (optional)',
 		url: 'date-inquiry-closed',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'date-inquiry-closed/remove' }]
 		},
@@ -2064,7 +2064,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Proofs of evidence received',
 		question: 'When were all the proofs of evidence received? (optional)',
 		url: 'proofs-received-date',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'proofs-received-date/remove' }]
 		},
@@ -2082,7 +2082,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Statements of case received',
 		question: 'When were all the statements of case received? (optional)',
 		url: 'statements-received-date',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'statements-received-date/remove' }]
 		},
@@ -2101,7 +2101,7 @@ export const PROCEDURE_QUESTIONS = {
 		question: 'When did the case officer verify the documents? (optional)',
 		hint: 'Have all the necessary Statements of Case, Written Reps procedures, Notices, Proof of Posting and Proofs of Evidence been received and have the statutory targets in terms of notifications have been complied with?',
 		url: 'case-officer-verification-case',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'case-officer-verification-case/remove' }
@@ -2138,7 +2138,7 @@ export const PROCEDURE_QUESTIONS = {
 		question: 'When is the pre inquiry meeting? (optional)',
 		url: 'pre-inquiry-meeting-date',
 		isDateTime: true,
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'pre-inquiry-meeting-date/remove' }]
 		},
@@ -2171,7 +2171,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Pre inquiry meeting note sent',
 		question: 'When was the pre inquiry meeting note sent? (optional)',
 		url: 'pre-inquiry-note-sent',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'pre-inquiry-note-sent/remove' }]
 		},
@@ -2190,7 +2190,7 @@ export const PROCEDURE_QUESTIONS = {
 		question: 'When is the case management conference? (optional)',
 		url: 'cmc-date',
 		isDateTime: true,
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'cmc-date/remove' }]
 		},
@@ -2233,7 +2233,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Case management conference note sent',
 		question: 'When was the case management note sent? (optional)',
 		url: 'case-management-conference-note-sent',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'case-management-conference-note-sent/remove' }
@@ -2255,7 +2255,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'In house date',
 		question: 'When was Admin in house procedure done? (optional)',
 		url: 'in-house-date',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'in-house-date/remove' }]
 		},
@@ -2274,7 +2274,7 @@ export const PROCEDURE_QUESTIONS = {
 		title: 'Date offer for written representations',
 		question: 'When was the date offered for written representations? (optional)',
 		url: 'date-offer-written-representations',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [
 				{ text: 'Remove and save', type: 'submit', formaction: 'date-offer-written-representations/remove' }
@@ -2296,7 +2296,7 @@ export const PROCEDURE_QUESTIONS = {
 		question: 'What is the deadline for consent? (optional)',
 		hint: 'For example, 27 3 2007',
 		url: 'deadline-consent',
-		overrideValidator: OptionalDateValidator,
+		optional: true,
 		viewData: {
 			extraActionButtons: [{ text: 'Remove and save', type: 'submit', formaction: 'deadline-consent/remove' }]
 		},
