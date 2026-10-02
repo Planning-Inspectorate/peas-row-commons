@@ -2,7 +2,7 @@ import type { ManageService } from '#service';
 import { validateIdFormat } from '@pins/peas-row-commons-lib/middleware/validate-params.ts';
 import { asyncHandler } from '@planning-inspectorate/core/util';
 import { Router as createRouter } from 'express';
-import { buildValidateFolderRename } from '../validation/validation.ts';
+import { buildValidateFolderRename } from '../validation/folder-validation.ts';
 import { buildRenameFolder, buildRenameFolderView } from './controller.ts';
 
 export function createRoutes(service: ManageService) {
@@ -19,7 +19,7 @@ export function createRoutes(service: ManageService) {
 }
 
 /**
- * Creates the middlewares needed for the get and post for creating folders
+ * Creates the middlewares needed for the get and post for renaming a folder.
  */
 function createMiddlewares(service: ManageService) {
 	return [buildRenameFolderView(service), buildRenameFolder(service), buildValidateFolderRename(service)];

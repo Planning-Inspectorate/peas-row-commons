@@ -2,7 +2,7 @@ import type { ManageService } from '#service';
 import { validateIdFormat } from '@pins/peas-row-commons-lib/middleware/validate-params.ts';
 import { asyncHandler } from '@planning-inspectorate/core/util';
 import { Router as createRouter } from 'express';
-import { buildValidateFolderCreate } from '../validation/validation.ts';
+import { buildValidateFolderCreate } from '../validation/folder-validation.ts';
 import { buildCreateFolders, buildViewCreateFolders } from './controller.ts';
 
 export function createRoutes(service: ManageService) {

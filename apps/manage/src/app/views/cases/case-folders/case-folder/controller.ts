@@ -44,6 +44,7 @@ export function buildViewCaseFolder(
 			folderRenamed,
 			filesMoved,
 			filesDeleted,
+			renamedFileName,
 			errorSummary,
 			createdFolderName,
 			createdFolderId
@@ -194,7 +195,8 @@ export function buildViewCaseFolder(
 					folderDeleted,
 					folderRenamed,
 					filesMoved,
-					filesDeleted
+					filesDeleted,
+					renamedFileName
 				},
 				errorSummary,
 				breadcrumbItems,
@@ -277,6 +279,7 @@ function readAndClearSessionData(req: Request) {
 	const folderDeleted = readSessionData(req, id, 'deleted', false, 'folder');
 	const createdFolderName = readSessionData(req, id, 'createdFolderName', '', 'folder');
 	const createdFolderId = readSessionData(req, id, 'createdFolderId', '', 'folder');
+	const renamedFileName = readSessionData(req, folderId, 'renamedFileName', null, 'folder');
 	const errorSummary = readSessionData(req, id, 'filesErrors', false, 'folder');
 
 	clearSessionData(req, folderId, 'updated', 'folder');
@@ -285,6 +288,7 @@ function readAndClearSessionData(req: Request) {
 	clearSessionData(req, id, 'filesDeleted', 'folder');
 	clearSessionData(req, id, 'created', 'folder');
 	clearSessionData(req, id, 'deleted', 'folder');
+	clearSessionData(req, folderId, ['fileRenamed', 'renamedFileName'], 'folder');
 
 	clearSessionData(req, id, 'filesErrors', 'folder');
 
@@ -295,6 +299,7 @@ function readAndClearSessionData(req: Request) {
 		folderRenamed,
 		filesMoved,
 		filesDeleted,
+		renamedFileName,
 		errorSummary,
 		createdFolderName,
 		createdFolderId

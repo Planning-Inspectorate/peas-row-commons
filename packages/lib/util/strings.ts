@@ -96,6 +96,15 @@ export function escapeHtml(unsafe: string): string {
 		.replace(/'/g, '&#039;');
 }
 
+/**
+ * Trims whitespace from beginning and end and replaces
+ * multiple spaces in the middle with only 1.
+ */
+export function sanitisePath(name: string): string {
+	if (typeof name !== 'string') return '';
+	return name.trim().replace(/\s\s+/g, ' ');
+}
+
 export function nullEmptyString<T>(value: T): T extends string ? T | null : T {
 	if (typeof value === 'string') {
 		const trimmed = value.trim();
