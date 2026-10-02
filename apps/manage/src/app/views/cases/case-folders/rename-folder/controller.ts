@@ -64,6 +64,8 @@ export function buildRenameFolder(service: ManageService): AsyncRequestHandlerWi
 				select: { displayName: true }
 			});
 
+			const oldFolderName = existingFolder?.displayName ?? '-';
+
 			await renameFolderRecord(db, {
 				name: folderName,
 				folderId
@@ -79,7 +81,17 @@ export function buildRenameFolder(service: ManageService): AsyncRequestHandlerWi
 				}
 			});
 
-			addSessionData(req, folderId, { renamed: true }, 'folder');
+			addSessionData(
+				req,
+				folderId,
+				{
+					renamed: {
+						oldName: oldFolderName,
+						newName: folderName
+					}
+				},
+				'folder'
+			);
 
 			const returnUrl = req.baseUrl.replace(/\/rename-folder\/?$/, '');
 

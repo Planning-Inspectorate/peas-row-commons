@@ -50,10 +50,11 @@
             type: "success"
         }) }}
     {% endif %}
-    {% if folderUpdates.folderRenamed %}
+    {% if folderUpdates.folderRenamed and folderUpdates.folderRenamed.oldName and folderUpdates.folderRenamed.newName %}
+        {% set folderRenameText = 'Folder renamed from “' + folderUpdates.folderRenamed.oldName + '” to “' + folderUpdates.folderRenamed.newName + '”' %}
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
-            text: "Folder renamed",
+            text: folderRenameText,
             type: "success"
         }) }}
     {% endif %}
