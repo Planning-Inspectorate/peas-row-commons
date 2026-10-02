@@ -37,8 +37,16 @@ export function buildViewCaseFolder(
 		if (!userId) {
 			throw new Error('userId required for folder documents');
 		}
-		const [folderUpdated, folderCreated, folderDeleted, folderRenamed, filesMoved, filesDeleted, errorSummary] =
-			readAndClearSessionData(req);
+		const [
+			folderUpdated,
+			folderCreated,
+			folderDeleted,
+			folderRenamed,
+			filesMoved,
+			filesDeleted,
+			renamedFileName,
+			errorSummary
+		] = readAndClearSessionData(req);
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
@@ -178,7 +186,8 @@ export function buildViewCaseFolder(
 					folderDeleted,
 					folderRenamed,
 					filesMoved,
-					filesDeleted
+					filesDeleted,
+					renamedFileName
 				},
 				errorSummary,
 				breadcrumbItems,
@@ -259,6 +268,7 @@ function readAndClearSessionData(req: Request) {
 	const filesDeleted = readSessionData(req, id, 'filesDeleted', 0, 'folder');
 	const folderCreated = readSessionData(req, id, 'created', false, 'folder');
 	const folderDeleted = readSessionData(req, id, 'deleted', false, 'folder');
+	const renamedFileName = readSessionData(req, folderId, 'renamedFileName', null, 'folder');
 
 	const errorSummary = readSessionData(req, id, 'filesErrors', false, 'folder');
 
@@ -268,10 +278,20 @@ function readAndClearSessionData(req: Request) {
 	clearSessionData(req, id, 'filesDeleted', 'folder');
 	clearSessionData(req, id, 'created', 'folder');
 	clearSessionData(req, id, 'deleted', 'folder');
+	clearSessionData(req, folderId, ['fileRenamed', 'renamedFileName'], 'folder');
 
 	clearSessionData(req, id, 'filesErrors', 'folder');
 
-	return [folderUpdated, folderCreated, folderDeleted, folderRenamed, filesMoved, filesDeleted, errorSummary];
+	return [
+		folderUpdated,
+		folderCreated,
+		folderDeleted,
+		folderRenamed,
+		filesMoved,
+		filesDeleted,
+		renamedFileName,
+		errorSummary
+	];
 }
 
 /**

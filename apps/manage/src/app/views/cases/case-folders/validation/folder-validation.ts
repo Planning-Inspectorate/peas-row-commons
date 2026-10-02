@@ -1,10 +1,10 @@
 import type { ManageService } from '#service';
 import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { getOptionalStringParam, getStringParam, getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
+import { sanitisePath } from '@pins/peas-row-commons-lib/util/strings.ts';
 import { addSessionData } from '@planning-inspectorate/core/util';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
-
-type SetSessionDataFn = typeof addSessionData;
+import { FOLDER_NAMES_REGEX } from '../../upload/constants.ts';
 
 /**
  * Validates that a folder being created has a valid name.
@@ -12,23 +12,30 @@ type SetSessionDataFn = typeof addSessionData;
  */
 export function buildValidateFolderCreate(
 	service: ManageService,
-	setSessionData: SetSessionDataFn = addSessionData
+	setSessionData: typeof addSessionData = addSessionData
 ): RequestHandler {
 	const { db } = service;
 
 	return async (req: Request, res: Response, next: NextFunction) => {
 		const caseId = getStringParam(req.params, 'id');
 		const parentFolderId = getOptionalStringParam(req.params, 'folderId');
-		const folderName = sanitiseFolderName(req.body.folderName);
+		const parentFolderName = getOptionalStringParam(req.params, 'folderName');
+		const folderName = sanitisePath(req.body.folderName);
 
-		const syntaxError = getSyntaxError(folderName);
+		// Rebuild return URL for security
+		const returnUrl =
+			parentFolderId && parentFolderName
+				? `/cases/${caseId}/case-folders/${parentFolderId}/${encodeURIComponent(parentFolderName)}/create-folder`
+				: `/cases/${caseId}/case-folders/create-folder`;
+
+		const syntaxError = getFolderSyntaxError(folderName);
 		if (syntaxError) {
-			return handleValidationError(req, res, setSessionData, caseId, folderName, syntaxError);
+			return handleFolderValidationError(req, res, setSessionData, caseId, folderName, syntaxError, returnUrl);
 		}
 
 		const duplicateError = await getDuplicateErrorsCreate(db, caseId, parentFolderId, folderName);
 		if (duplicateError) {
-			return handleValidationError(req, res, setSessionData, caseId, folderName, duplicateError);
+			return handleFolderValidationError(req, res, setSessionData, caseId, folderName, duplicateError, returnUrl);
 		}
 
 		req.body.folderName = folderName;
@@ -42,23 +49,28 @@ export function buildValidateFolderCreate(
  */
 export function buildValidateFolderRename(
 	service: ManageService,
-	setSessionData: SetSessionDataFn = addSessionData
+	setSessionData: typeof addSessionData = addSessionData
 ): RequestHandler {
 	const { db } = service;
 
 	return async (req: Request, res: Response, next: NextFunction) => {
-		const { id: caseId, folderId } = getStringParams(req.params, ['id', 'folderId']);
-		const folderName = sanitiseFolderName(req.body.folderName);
+		const {
+			id: caseId,
+			folderId,
+			folderName: currentFolderName
+		} = getStringParams(req.params, ['id', 'folderId', 'folderName']);
+		const folderName = sanitisePath(req.body.folderName);
+		const returnUrl = `/cases/${caseId}/case-folders/${folderId}/${encodeURIComponent(currentFolderName)}/rename-folder`;
 
-		const syntaxError = getSyntaxError(folderName);
+		const syntaxError = getFolderSyntaxError(folderName);
 		if (syntaxError) {
-			return handleValidationError(req, res, setSessionData, caseId, folderName, syntaxError);
+			return handleFolderValidationError(req, res, setSessionData, caseId, folderName, syntaxError, returnUrl);
 		}
 
 		try {
 			const duplicateError = await getDuplicateErrorsRename(db, caseId, folderId, folderName);
 			if (duplicateError) {
-				return handleValidationError(req, res, setSessionData, caseId, folderName, duplicateError);
+				return handleFolderValidationError(req, res, setSessionData, caseId, folderName, duplicateError, returnUrl);
 			}
 		} catch (err) {
 			return next(err);
@@ -70,15 +82,16 @@ export function buildValidateFolderRename(
 }
 
 /**
- * Handles validation errors by storing them in session and redirecting.
+ * Handles folder validation errors by storing them in session and redirecting.
  */
-function handleValidationError(
+export function handleFolderValidationError(
 	req: Request,
 	res: Response,
-	setSessionData: SetSessionDataFn,
+	setSessionData: typeof addSessionData,
 	caseId: string,
 	folderName: string,
-	error: { text: string; href: string }
+	error: { text: string; href: string },
+	returnUrl: string
 ): void {
 	setSessionData(
 		req,
@@ -90,23 +103,16 @@ function handleValidationError(
 		'folders'
 	);
 
-	res.redirect(req.originalUrl);
-}
-
-/**
- * Trims whitespace from beginning and end and replaces
- * multiple spaces in the middle with only 1.
- */
-export function sanitiseFolderName(name: string): string {
-	if (typeof name !== 'string') return '';
-	return name.trim().replace(/\s\s+/g, ' ');
+	// returnUrl is rebuilt from the route's own params rather than
+	// request-controlled URL data, so it's always a known, local path.
+	res.redirect(returnUrl);
 }
 
 /**
  * Checks for basic syntax errors like too long, too short, obscure
  * characters
  */
-export function getSyntaxError(folderName: string) {
+export function getFolderSyntaxError(folderName: string) {
 	if (!folderName || folderName.length < 3 || folderName.length > 255) {
 		return {
 			text: 'Folder name must be between 3 and 255 characters',
@@ -114,8 +120,7 @@ export function getSyntaxError(folderName: string) {
 		};
 	}
 
-	const validCharsRegex = /^(?!.*'')[a-zA-Z0-9 .\-_()&'/]+$/;
-	if (!validCharsRegex.test(folderName)) {
+	if (!FOLDER_NAMES_REGEX.test(folderName)) {
 		return {
 			text: 'Folder name must only include letters a to z, numbers and special characters such as spaces, underscores, hyphens, ampersand, brackets, forward slashes and single apostrophes',
 			href: '#folderName'
