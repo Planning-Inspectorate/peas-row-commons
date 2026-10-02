@@ -1,12 +1,11 @@
-import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
 import type {
 	ActionLink,
+	Journey,
 	Question,
 	QuestionViewModel,
-	SummaryListItem
-} from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-import { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+	SummaryRow
+} from '@planning-inspectorate/dynamic-forms';
+import { DateQuestion, Section } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
 import TableManageListQuestion from './question.ts';
@@ -157,8 +156,8 @@ describe('TableManageListQuestion', () => {
 			tableQuestion.section!.questions[0].shouldDisplay = () => true;
 			tableQuestion.section!.questions[1].shouldDisplay = () => true;
 
-			tableQuestion.section!.questions[0].formatAnswerForSummary = () => [{ value: 'Ans 1' } as SummaryListItem];
-			tableQuestion.section!.questions[1].formatAnswerForSummary = () => [{ value: 'Ans 2' } as SummaryListItem];
+			tableQuestion.section!.questions[0].formatAnswerForSummary = () => [{ value: 'Ans 1' } as SummaryRow];
+			tableQuestion.section!.questions[1].formatAnswerForSummary = () => [{ value: 'Ans 2' } as SummaryRow];
 
 			tableQuestion.addCustomDataToViewModel(mockViewModel);
 

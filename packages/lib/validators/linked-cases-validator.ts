@@ -1,5 +1,9 @@
-import { type JourneyResponse, type Question, BaseValidator } from '@planning-inspectorate/dynamic-forms';
-import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js';
+import {
+	type JourneyResponse,
+	type Question,
+	BaseValidator,
+	MANAGE_LIST_ACTIONS
+} from '@planning-inspectorate/dynamic-forms';
 import { body } from 'express-validator';
 
 /**

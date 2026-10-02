@@ -1,7 +1,6 @@
 import { DECISION_TYPES } from '@pins/peas-row-commons-database/src/seed/static-data/decision-type.ts';
 import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/decision-maker-type.ts';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import type { JourneyResponse, Section } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
 import { OutcomeSectionBuilder } from './outcomes-section-builder.ts';

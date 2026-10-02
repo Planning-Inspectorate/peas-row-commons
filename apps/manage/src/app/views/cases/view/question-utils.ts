@@ -41,7 +41,7 @@ import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.t
 import CustomDatePeriodValidator from '@pins/peas-row-commons-lib/validators/custom-date-period-validator.ts';
 import { ManageListItemsValidator } from '@pins/peas-row-commons-lib/validators/linked-cases-validator.ts';
 import { ManageListCrossFieldValidator } from '@pins/peas-row-commons-lib/validators/manage-list-cross-field-validator.ts';
-import type { BaseValidator, SummaryFormatterContext } from '@planning-inspectorate/dynamic-forms';
+import type { BaseValidator, Question, SummaryFormatterContext } from '@planning-inspectorate/dynamic-forms';
 import {
 	AddressValidator,
 	BOOLEAN_OPTIONS,
@@ -53,7 +53,6 @@ import {
 	RequiredValidator,
 	StringValidator
 } from '@planning-inspectorate/dynamic-forms';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
 import nunjucks from 'nunjucks';
 import { ENVIRONMENT_NAME, loadEnvironmentConfig } from '../../../config.ts';
 import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts';
