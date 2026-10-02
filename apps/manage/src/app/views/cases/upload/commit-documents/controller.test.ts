@@ -189,7 +189,7 @@ describe('Create Documents Logic', () => {
 			assert.strictEqual(res.redirect.mock.callCount(), 1);
 			assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/case-folders/case-123/folder-123');
 
-			assert.deepStrictEqual(req.session.folder['folder-123'], { updated: true });
+			assert.deepStrictEqual(req.session.folder['folder-123'], { filesAdded: 1 });
 
 			// Verify single-file audit was recorded
 			assert.strictEqual(mockAudit.record.mock.callCount(), 1);

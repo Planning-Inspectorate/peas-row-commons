@@ -335,5 +335,40 @@ describe('buildViewCaseFolder', () => {
 				caseId: 'case-123'
 			});
 		});
+		it('should render folder updated as a number', async () => {
+			const req = mockReq({
+				session: {
+					account: { localAccountId: 'user-456' },
+					folder: {
+						'folder-456': {
+							filesAdded: 3
+						}
+					}
+				}
+			});
+			const res = mockRes();
+			const next = mock.fn();
+
+			const mockFolderData = {
+				id: 'folder-456',
+				displayName: 'My Folder',
+				parentFolderId: null,
+				caseId: 'case-123',
+				ChildFolders: [],
+				ParentFolder: null
+			};
+
+			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve(mockFolderData));
+			mockDb.$queryRaw.mock.mockImplementation(() => Promise.resolve([{ totalFolders: 0, totalDocuments: 10 }]));
+
+			await buildViewCaseFolder(service as any)(req, res, next);
+
+			assert.strictEqual(res.render.mock.callCount(), 1);
+
+			const [, viewData] = res.render.mock.calls[0].arguments;
+
+			assert.strictEqual(viewData.folderUpdates.folderUpdated, 3);
+			assert.strictEqual(viewData.folderName, 'My Folder');
+		});
 	});
 });
