@@ -107,6 +107,26 @@ describe('Rename Folder Controller', () => {
 				await handler(mockReq, mockRes, mockNext);
 			});
 		});
+		it('should store the old and new folder names when renaming succeeds', async () => {
+			mockReq.body.folderName = 'New Name';
+			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve({ displayName: 'Old Name' }));
+			mockDb.folder.update.mock.mockImplementation(() => Promise.resolve({}));
+
+			const handler = buildRenameFolder(mockService);
+			await handler(mockReq, mockRes, mockNext);
+
+			assert.strictEqual(mockDb.folder.findUnique.mock.callCount(), 1);
+			assert.strictEqual(mockDb.folder.update.mock.calls[0].arguments[0].data.displayName, 'New Name');
+
+			// assert session payload contains both values
+			assert.deepStrictEqual(mockReq.session.folder['folder-456'].renamed, {
+				oldName: 'Old Name',
+				newName: 'New Name'
+			});
+
+			assert.strictEqual(mockRes.redirect.mock.callCount(), 1);
+			assert.strictEqual(mockRes.redirect.mock.calls[0].arguments[0], '/cases/123/case-folders/456');
+		});
 	});
 
 	describe('renameFolderRecord', () => {
