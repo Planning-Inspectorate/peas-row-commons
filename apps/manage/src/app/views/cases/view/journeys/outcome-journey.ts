@@ -4,11 +4,11 @@ import {
 	ManageListSection,
 	whenQuestionHasAnswer,
 	type JourneyResponse,
-	type Question,
 	type Section
 } from '@planning-inspectorate/dynamic-forms';
+import type { CaseViewQuestions } from '../questions.ts';
 
-export function buildOutcomeManageList(questions: Record<string, Question>): ManageListSection {
+export function buildOutcomeManageList(questions: CaseViewQuestions): ManageListSection {
 	return (
 		new ManageListSection()
 			.addQuestion(questions.decisionType)

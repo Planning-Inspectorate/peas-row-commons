@@ -1,6 +1,6 @@
-import { createQuestions } from '@planning-inspectorate/dynamic-forms/src/questions/create-questions.js';
-import { questionClasses } from '@planning-inspectorate/dynamic-forms/src/questions/questions.js';
-
+import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
+import { CUSTOM_COMPONENT_CLASSES } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
+import { createQuestions, questionClasses } from '@planning-inspectorate/dynamic-forms';
 import {
 	CASE_DETAILS_QUESTIONS,
 	COSTS_QUESTIONS,
@@ -17,9 +17,6 @@ import {
 	PROCEDURE_QUESTIONS,
 	TEAM_QUESTIONS
 } from './question-utils.ts';
-
-import type { EntraGroupMembers } from '#util/entra-groups-types.ts';
-import { CUSTOM_COMPONENT_CLASSES } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import type { UserMap } from './types.ts';
 
 export function getQuestions(
@@ -79,3 +76,5 @@ export function getQuestions(
 
 	return createQuestions(questions, classes, {}, textOverrides);
 }
+
+export type CaseViewQuestions = ReturnType<typeof getQuestions>;

@@ -1,9 +1,15 @@
 import { Journey, Section, type JourneyResponse } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
+import type { MoveFileQuestions } from './questions.ts';
 
 export const JOURNEY_ID = 'move';
 
-export function createJourney(journeyType: string, questions: any, response: JourneyResponse, req: Request) {
+export function createJourney(
+	journeyType: string,
+	questions: MoveFileQuestions,
+	response: JourneyResponse,
+	req: Request
+) {
 	if (!req.baseUrl.endsWith('/' + journeyType)) {
 		throw new Error(`not a valid request for the ${journeyType} journey`);
 	}

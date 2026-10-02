@@ -11,10 +11,11 @@ import {
 	buildProcedureAllQuestionsSection,
 	buildProcedureManageList
 } from './journeys/procedure-journey.ts';
+import type { CaseViewQuestions } from './questions.ts';
 
 export const JOURNEY_ID = 'case-details';
 
-export function createJourney(questions: Record<string, any>, response: JourneyResponse, req: Request) {
+export function createJourney(questions: CaseViewQuestions, response: JourneyResponse, req: Request) {
 	const id = getStringParam(req.params, 'id');
 
 	if (!req.baseUrl?.includes(id)) {
