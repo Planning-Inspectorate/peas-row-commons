@@ -1,8 +1,5 @@
-import type { QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
-import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type { Journey, JourneyResponse, Question, QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
+import { DateQuestion } from '@planning-inspectorate/dynamic-forms';
 import type { TableManageListQuestionParams } from '../question.ts';
 import TableManageListQuestion from '../question.ts';
 import type { TableHeadCell, TableManageListQuestionView, TableRowCell } from '../types.ts';
@@ -133,7 +130,7 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 			response: { answers: item },
 			getCurrentQuestionUrl: () => '',
 			answers: item
-		} as Journey;
+		} as unknown as Journey;
 
 		const getQuestion = (fieldName: string) =>
 			this.section?.questions?.find((q: Question) => q.fieldName === fieldName);

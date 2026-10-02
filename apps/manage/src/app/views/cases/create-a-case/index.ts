@@ -2,15 +2,17 @@ import type { ManageService } from '#service';
 import { bounceRemoveCancellation } from '@pins/peas-row-commons-lib/middleware/manage-list/track-removes.ts';
 import { asyncHandler } from '@planning-inspectorate/core/util';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms';
-import { buildSave, list, question } from '@planning-inspectorate/dynamic-forms/src/controller.js';
 import {
+	buildGetJourney,
 	buildGetJourneyResponseFromSession,
-	saveDataToSession
-} from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
-import { buildGetJourney } from '@planning-inspectorate/dynamic-forms/src/middleware/build-get-journey.js';
-import { redirectToUnansweredQuestion } from '@planning-inspectorate/dynamic-forms/src/middleware/redirect-to-unanswered-question.js';
-import { validationErrorHandler } from '@planning-inspectorate/dynamic-forms/src/validator/validation-error-handler.js';
-import validate from '@planning-inspectorate/dynamic-forms/src/validator/validator.js';
+	buildSave,
+	list,
+	question,
+	redirectToUnansweredQuestion,
+	saveDataToSession,
+	validate,
+	validationErrorHandler
+} from '@planning-inspectorate/dynamic-forms';
 import type { IRouter } from 'express';
 import { Router as createRouter } from 'express';
 import { buildGetJourneyMiddleware } from './controller.ts';

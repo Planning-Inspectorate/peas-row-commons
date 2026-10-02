@@ -1,6 +1,6 @@
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
-import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
+import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
 import { mapAnswersToCaseInput, resolveCaseTypeIds } from './case-mapper.ts';

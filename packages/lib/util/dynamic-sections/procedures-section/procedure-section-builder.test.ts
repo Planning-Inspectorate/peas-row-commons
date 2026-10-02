@@ -1,9 +1,7 @@
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
 import { PROCEDURES, PROCEDURE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
-import { ManageListSection } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-section.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import type { JourneyResponse, Section } from '@planning-inspectorate/dynamic-forms';
+import { ManageListSection, Question } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
 import { ProcedureSectionBuilder } from './procedure-section-builder.ts';

@@ -1,5 +1,5 @@
 import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/procedures.ts';
-import { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import { Question } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
 import { createJourney, JOURNEY_ID } from './journey.ts';

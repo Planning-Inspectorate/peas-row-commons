@@ -1,5 +1,4 @@
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import type { QuestionParameters } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type { JourneyResponse, QuestionParameters } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';

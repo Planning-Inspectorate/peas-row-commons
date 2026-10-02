@@ -1,7 +1,5 @@
 import type { AsyncRequestHandlerWithBody } from '@planning-inspectorate/core/util';
-import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
-import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js';
-import { question } from '@planning-inspectorate/dynamic-forms/src/controller.js';
+import { BOOLEAN_OPTIONS, MANAGE_LIST_ACTIONS, question } from '@planning-inspectorate/dynamic-forms';
 import type { RequestHandler } from 'express';
 
 type RemoveHandler = AsyncRequestHandlerWithBody<{ remove?: string }>;
@@ -29,7 +27,8 @@ export const bounceRemoveCancellation: RemoveHandler = async (req, res, next) =>
 			res.locals = res.locals || {};
 			res.locals.errorSummary = [{ text: errorMessage, href: '#remove' }];
 
-			return question(req, res, next);
+			question(req, res, next!);
+			return;
 		}
 
 		if (remove === BOOLEAN_OPTIONS.NO) {
