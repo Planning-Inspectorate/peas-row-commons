@@ -6,14 +6,14 @@ import {
 	questionHasAnswer,
 	whenQuestionHasAnswer,
 	type JourneyResponse,
-	type Question,
 	type Section
 } from '@planning-inspectorate/dynamic-forms';
+import type { CaseViewQuestions } from '../questions.ts';
 
 /**
  * Build the manage list section that defines the "add procedure" flow.
  */
-export function buildProcedureManageList(questions: Record<string, Question>): ManageListSection {
+export function buildProcedureManageList(questions: CaseViewQuestions): ManageListSection {
 	return new ManageListSection()
 		.addQuestion(questions.procedureType)
 		.addQuestion(questions.procedureAdminType)
@@ -60,7 +60,7 @@ export function buildDynamicProcedureSections(
 /**
  * Build the "all questions" manage list section used by ProcedureSectionBuilder.
  */
-export function buildProcedureAllQuestionsSection(questions: Record<string, Question>): ManageListSection {
+export function buildProcedureAllQuestionsSection(questions: CaseViewQuestions): ManageListSection {
 	return (
 		new ManageListSection()
 			// Create-flow fields

@@ -25,3 +25,5 @@ export function getQuestions(folderStructure: Record<string, any>) {
 
 	return createQuestions(questions, classes, {});
 }
+
+export type MoveFileQuestions = ReturnType<typeof getQuestions>;

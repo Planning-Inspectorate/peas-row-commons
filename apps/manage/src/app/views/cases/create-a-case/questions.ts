@@ -323,5 +323,4 @@ export function getQuestions(groupMembers: EntraGroupMembers, otherCases: OtherC
 	return createQuestions(questions, classes, {});
 }
 
-/** Type representing the questions returned by getQuestions */
 export type CreateCaseQuestions = ReturnType<typeof getQuestions>;
