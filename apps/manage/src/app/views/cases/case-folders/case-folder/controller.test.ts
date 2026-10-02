@@ -335,5 +335,50 @@ describe('buildViewCaseFolder', () => {
 				caseId: 'case-123'
 			});
 		});
+		it('should pass created subfolder name and url to the view when subfolder is created', async () => {
+			const req = mockReq({
+				params: { id: 'case-123', folderId: 'folder-456' },
+				session: {
+					account: { localAccountId: 'user-123' },
+					folder: {
+						'case-123': {
+							created: true,
+							createdFolderName: 'Test Subfolder',
+							createdFolderId: 'folder-789'
+						}
+					}
+				}
+			});
+			const res = mockRes();
+			const next = mock.fn();
+
+			const mockFolderData = {
+				id: 'folder-456',
+				displayName: 'Parent Folder',
+				parentFolderId: null,
+				caseId: 'case-123',
+				ChildFolders: [],
+				ParentFolder: null
+			};
+
+			mockDb.case.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({ name: 'Test Case', reference: 'REF-001', statusId: 1, legacyCaseId: null })
+			);
+			mockDb.folder.findUnique.mock.mockImplementation(() => Promise.resolve(mockFolderData));
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve([]));
+			mockDb.document.count.mock.mockImplementation(() => Promise.resolve(0));
+			mockDb.$queryRaw.mock.mockImplementation(() => Promise.resolve([{ totalFolders: 0, totalDocuments: 0 }]));
+
+			await buildViewCaseFolder(service as any)(req, res, next);
+
+			assert.strictEqual(res.render.mock.callCount(), 1);
+
+			const [viewPath, viewData] = res.render.mock.calls[0].arguments;
+
+			assert.strictEqual(viewPath, 'views/cases/case-folders/case-folder/view.njk');
+			assert.strictEqual(viewData.folderUpdates.folderCreated, true);
+			assert.strictEqual(viewData.createdFolderName, 'Test Subfolder');
+			assert.strictEqual(viewData.createdFolderUrl, '/cases/case-123/case-folders/folder-789/test-subfolder');
+		});
 	});
 });
