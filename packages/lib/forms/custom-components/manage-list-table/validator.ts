@@ -1,8 +1,5 @@
-import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js';
-import type ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-import BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
+import type { JourneyResponse, ManageListQuestion, Question } from '@planning-inspectorate/dynamic-forms';
+import { BaseValidator, MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms';
 import { body } from 'express-validator';
 
 /**
@@ -42,7 +39,7 @@ export default class ManageListItemsCompleteValidator extends BaseValidator {
 				return true;
 			}
 
-			const listItems = journeyResponse?.answers?.[questionObj.fieldName] || [];
+			const listItems = (journeyResponse?.answers?.[questionObj.fieldName] as Record<string, unknown>[]) || [];
 
 			if (listItems.length === 0) {
 				return true;

@@ -1,7 +1,5 @@
-import DateQuestion from '@planning-inspectorate/dynamic-forms/src/components/date/question.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import type { JourneyResponse, Question, Section } from '@planning-inspectorate/dynamic-forms';
+import { DateQuestion } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
 import type { QuestionViewModel } from '../types.js';

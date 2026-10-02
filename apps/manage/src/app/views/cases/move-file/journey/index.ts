@@ -1,15 +1,15 @@
 import type { ManageService } from '#service';
 import { asyncHandler } from '@planning-inspectorate/core/util';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms';
-import { buildSave, question } from '@planning-inspectorate/dynamic-forms/src/controller.js';
 import {
+	buildGetJourney,
 	buildGetJourneyResponseFromSession,
-	saveDataToSession
-} from '@planning-inspectorate/dynamic-forms/src/lib/session-answer-store.js';
-import { buildGetJourney } from '@planning-inspectorate/dynamic-forms/src/middleware/build-get-journey.js';
-import { redirectToUnansweredQuestion } from '@planning-inspectorate/dynamic-forms/src/middleware/redirect-to-unanswered-question.js';
-import { validationErrorHandler } from '@planning-inspectorate/dynamic-forms/src/validator/validation-error-handler.js';
-import validate from '@planning-inspectorate/dynamic-forms/src/validator/validator.js';
+	buildSave,
+	question,
+	redirectToUnansweredQuestion,
+	saveDataToSession,
+	validate,
+	validationErrorHandler
+} from '@planning-inspectorate/dynamic-forms';
 import type { IRouter, Request } from 'express';
 import { Router as createRouter } from 'express';
 import { buildListController, buildLoadCaseData, buildSaveController } from './controller.ts';
@@ -58,8 +58,8 @@ export function createRoutes(service: ManageService): IRouter {
  */
 function createMiddlewares(service: ManageService) {
 	return [
-		buildGetJourney((req: Request & { folderStructure: Record<string, any> }, journeyResponse: JourneyResponse) => {
-			const folderStructure = req.folderStructure;
+		buildGetJourney((req, journeyResponse) => {
+			const folderStructure = (req as Request & { folderStructure: Record<string, any> }).folderStructure;
 			const questions = getQuestions(folderStructure);
 			return createJourney(JOURNEY_ID, questions, journeyResponse, req);
 		}),

@@ -1,5 +1,5 @@
 import type { JourneyResponse, Question } from '@planning-inspectorate/dynamic-forms';
-import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js';
+import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms';
 import assert from 'assert';
 import { describe, it } from 'node:test';
 import { ManageListItemsValidator } from './linked-cases-validator.ts';

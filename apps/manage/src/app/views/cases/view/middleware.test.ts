@@ -5,7 +5,7 @@ import { beforeEach, describe, it } from 'node:test';
 import { loadQuestionSpecificErrors, loadQuestionSpecificValidation } from './middleware.ts';
 
 import { INSPECTOR_CONSTANTS } from '@pins/peas-row-commons-lib/constants/inspectors.ts';
-import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js';
+import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms';
 
 describe('Question Specific Loaders (Middleware Routing)', () => {
 	let mockReq: Partial<Request>;

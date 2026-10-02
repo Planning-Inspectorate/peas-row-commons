@@ -1,5 +1,4 @@
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
-import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import type { Journey, Section } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
 import NestedFolderQuestion, { type FolderNode } from './question.ts';

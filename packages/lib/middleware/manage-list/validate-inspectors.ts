@@ -6,7 +6,7 @@ import {
 import { INSPECTOR_CONSTANTS } from '@pins/peas-row-commons-lib/constants/inspectors.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 import { addSessionData, clearSessionData, readSessionData } from '@planning-inspectorate/core/util';
-import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms/src/components/manage-list/manage-list-actions.js';
+import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms';
 import type { RequestHandler } from 'express';
 
 const SESSION_ERROR_KEY = 'removalError';
