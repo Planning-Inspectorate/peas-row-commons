@@ -86,6 +86,39 @@ describe('buildViewCaseFolders', () => {
 			assert.strictEqual(viewData.folders.length, 2);
 			assert.strictEqual(viewData.backLinkUrl, '/cases/case-123');
 		});
+		it('should pass created folder name and url to the view when folder is created', async () => {
+			const req = mockReq({
+				session: {
+					folder: {
+						'case-123': {
+							created: true,
+							createdFolderName: 'Test Folder',
+							createdFolderId: 'folder-99'
+						}
+					}
+				},
+				originalUrl: '/cases/case-123/case-folders'
+			});
+			const res = mockRes();
+
+			mockDb.case.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({ name: 'Test Case', reference: 'REF-001' })
+			);
+			mockDb.folder.findMany.mock.mockImplementation(() =>
+				Promise.resolve([{ id: 'folder-1', displayName: 'Folder One' }])
+			);
+
+			await buildViewCaseFolders(service as any)(req, res);
+
+			assert.strictEqual(res.render.mock.callCount(), 1);
+
+			const [viewPath, viewData] = res.render.mock.calls[0].arguments;
+
+			assert.strictEqual(viewPath, 'views/cases/case-folders/view.njk');
+			assert.strictEqual(viewData.folderCreated, true);
+			assert.strictEqual(viewData.folderName, 'Test Folder');
+			assert.strictEqual(viewData.createdFolderUrl, '/cases/case-123/case-folders/folder-99/test-folder');
+		});
 	});
 
 	describe('Error Handling', () => {
