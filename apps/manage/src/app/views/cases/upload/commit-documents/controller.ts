@@ -59,7 +59,7 @@ export function createDocumentsController(service: ManageService) {
 				});
 			}
 
-			addSessionData(req, folderId, { updated: true }, 'folder');
+			addSessionData(req, folderId, { filesAdded: createdLength }, 'folder');
 
 			const folderUrl = req.baseUrl.replace(/\/upload\/?$/, '');
 			return res.redirect(folderUrl);

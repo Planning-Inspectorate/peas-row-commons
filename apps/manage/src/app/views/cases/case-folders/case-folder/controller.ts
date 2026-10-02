@@ -253,7 +253,7 @@ export async function getFolderPath(db: PrismaClient, folderId: string, caseId?:
 function readAndClearSessionData(req: Request) {
 	const { id, folderId } = getStringParams(req.params, ['id', 'folderId']);
 
-	const folderUpdated = readSessionData(req, folderId, 'updated', false, 'folder');
+	const folderUpdated = readSessionData(req, folderId, 'filesAdded', 0, 'folder');
 	const folderRenamed = readSessionData(req, folderId, 'renamed', false, 'folder');
 	const filesMoved = readSessionData(req, folderId, 'filesMoved', 0, 'folder');
 	const filesDeleted = readSessionData(req, id, 'filesDeleted', 0, 'folder');

@@ -17,10 +17,12 @@
 {% endblock %}
 
 {% block content %}
-    {% if folderUpdates.folderUpdated %}
+    {% set filesAddedCount = folderUpdates.folderUpdated | int %}
+    {% if filesAddedCount > 0 %}
+        {% set addedFileText = filesAddedCount + " file" + (" has" if filesAddedCount == 1 else "s have") + " been uploaded to " + folderName %}
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
-            text: "Folder has been updated",
+            text: addedFileText,
             type: "success",
             attributes: { "data-cy": "notification-folder-updated" }
         }) }}
