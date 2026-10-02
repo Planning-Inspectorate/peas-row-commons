@@ -5,6 +5,7 @@ import {
 	checkRequiredAnswer,
 	nl2br,
 	nullEmptyString,
+	sanitisePath,
 	shouldTruncateComment,
 	stringToKebab,
 	toCamelCase,
@@ -171,6 +172,26 @@ describe('String Utils', () => {
 
 		it('should default to 100 if no max passed in', () => {
 			assert.strictEqual(truncateComment('test comment', '/cases'), 'test comment');
+		});
+	});
+
+	describe('sanitisePath', () => {
+		it('should return empty string if input is not a string', () => {
+			assert.strictEqual(sanitisePath(null as any), '');
+			assert.strictEqual(sanitisePath(undefined as any), '');
+			assert.strictEqual(sanitisePath(123 as any), '');
+		});
+
+		it('should trim whitespace from start and end', () => {
+			assert.strictEqual(sanitisePath('  My Folder  '), 'My Folder');
+		});
+
+		it('should replace multiple internal spaces with a single space', () => {
+			assert.strictEqual(sanitisePath('My    Great   Folder'), 'My Great Folder');
+		});
+
+		it('should handle both trimming and internal spacing simultaneously', () => {
+			assert.strictEqual(sanitisePath('  Wait   For    It  '), 'Wait For It');
 		});
 	});
 

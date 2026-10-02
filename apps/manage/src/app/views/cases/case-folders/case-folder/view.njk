@@ -57,6 +57,14 @@
             type: "success"
         }) }}
     {% endif %}
+    {% if folderUpdates.renamedFileName %}
+        {{ govukNotificationBanner({
+            classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
+            text: "File renamed to " + folderUpdates.renamedFileName,
+            type: "success",
+            attributes: { "data-cy": "notification-file-renamed" }
+        }) }}
+    {% endif %}
     {% set deletedCount = folderUpdates.filesDeleted | int %}
     {% if deletedCount > 0 %}
         {% set filesDeletedText = deletedCount + " selected file" + ("s" if deletedCount != 1 else "") + " deleted" %}

@@ -27,6 +27,7 @@ export const AUDIT_ACTIONS = {
 	FILE_MOVED: 'FILE_MOVED',
 	FILE_DELETED: 'FILE_DELETED',
 	FILES_DELETED: 'FILES_DELETED',
+	FILE_RENAMED: 'FILE_RENAMED',
 
 	// Folders
 	FOLDER_CREATED: 'FOLDER_CREATED',
@@ -124,6 +125,7 @@ export const AUDIT_TEMPLATES: Record<AuditAction, string> = {
 	[AUDIT_ACTIONS.FILE_DOWNLOADED]: '{fileName} was downloaded',
 	[AUDIT_ACTIONS.FILE_MOVED]: '{fileName} was moved from {oldFolderName} to {folderName}',
 	[AUDIT_ACTIONS.FILE_DELETED]: '{fileName} was removed',
+	[AUDIT_ACTIONS.FILE_RENAMED]: '{fileName} was renamed from {oldFileName} to {fileName}',
 
 	// Files – bulk (file list is stored in metadata.files and rendered by the frontend)
 	[AUDIT_ACTIONS.FILES_UPLOADED]: 'Files were uploaded',
