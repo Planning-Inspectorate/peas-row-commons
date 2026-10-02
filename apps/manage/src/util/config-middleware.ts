@@ -13,7 +13,7 @@ export function addLocalsConfiguration(manifest: Manifest, changeAuthorityEmail?
 			footerLinks: [
 				{
 					text: 'Report a problem',
-					link: 'https://mhclg.service-now.com/sp/?id=landing'
+					href: 'https://mhclg.service-now.com/sp/?id=landing'
 				}
 			]
 		};
