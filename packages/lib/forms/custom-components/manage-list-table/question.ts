@@ -1,10 +1,13 @@
-import type { ManageListQuestionParams, QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
-import { DateQuestion } from '@planning-inspectorate/dynamic-forms';
-import ManageListQuestion from '@planning-inspectorate/dynamic-forms/src/components/manage-list/question.js';
-import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms/src/journey/journey-response.js';
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
-import type { Section } from '@planning-inspectorate/dynamic-forms/src/section.js';
+import type {
+	Journey,
+	JourneyResponse,
+	ManageListQuestionParams,
+	Question,
+	QuestionViewModel,
+	RouteParams,
+	Section
+} from '@planning-inspectorate/dynamic-forms';
+import { DateQuestion, ManageListQuestion } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
 import nunjucks from 'nunjucks';
 import type { TableHeadCell, TableManageListQuestionView, TableRowCell } from './types.ts';
@@ -46,14 +49,14 @@ export default class TableManageListQuestion extends ManageListQuestion {
 		req: Request,
 		section: Section,
 		journey: Journey,
-		manageListQuestion: Question
+		manageListQuestion?: ManageListQuestion
 	): QuestionViewModel | undefined {
 		const { body = {}, originalUrl } = req;
 		const { errors = {}, errorSummary = [] } = body;
 
 		if (Object.keys(errors).length > 0) {
 			return this.toViewModel({
-				params: req.params,
+				params: req.params as RouteParams,
 				section,
 				journey,
 				customViewData: {
@@ -63,7 +66,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 				},
 				// Use stored answers instead of body for Manage List repopulation
 				payload: journey.response.answers,
-				question: manageListQuestion
+				manageListQuestion
 			});
 		}
 	}
@@ -153,7 +156,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 			response: { answers: item },
 			getCurrentQuestionUrl: () => '',
 			answers: item
-		};
+		} as unknown as Journey;
 
 		if (question.shouldDisplay && !question.shouldDisplay({ answers: item } as JourneyResponse)) {
 			return { text: '—' };
@@ -254,7 +257,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 				answers: answer
 			},
 			answers: answer
-		};
+		} as unknown as Journey;
 
 		return this.section.questions
 			.filter((q: Question) => (q.shouldDisplay ? q.shouldDisplay({ answers: answer } as JourneyResponse) : true))

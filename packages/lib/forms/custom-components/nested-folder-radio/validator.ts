@@ -1,4 +1,4 @@
-import BaseValidator from '@planning-inspectorate/dynamic-forms/src/validator/base-validator.js';
+import { BaseValidator } from '@planning-inspectorate/dynamic-forms';
 import { body } from 'express-validator';
 
 export default class NestedRequiredValidator extends BaseValidator {

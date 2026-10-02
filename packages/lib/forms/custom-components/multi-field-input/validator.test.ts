@@ -1,4 +1,4 @@
-import type { Question } from '@planning-inspectorate/dynamic-forms/src/questions/question.js';
+import type { Question } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
 import { validationResult } from 'express-validator';
 import assert from 'node:assert';

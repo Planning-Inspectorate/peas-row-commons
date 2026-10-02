@@ -1,4 +1,4 @@
-import type { Journey } from '@planning-inspectorate/dynamic-forms/src/journey/journey.js';
+import type { Journey } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
 import LegacySelectQuestion from './question.ts';

@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { mockLogger } from '@planning-inspectorate/core/testing';
-import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms/src/components/boolean/question.js';
+import { BOOLEAN_OPTIONS } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
 import { beforeEach, describe, it, mock } from 'node:test';
 import { AUDIT_ACTIONS } from '../../../audit/index.ts';
