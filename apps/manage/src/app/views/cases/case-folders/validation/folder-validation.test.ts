@@ -5,51 +5,30 @@ import {
 	buildValidateFolderRename,
 	getDuplicateErrorsCreate,
 	getDuplicateErrorsRename,
-	getSyntaxError,
-	sanitiseFolderName
-} from './validation.ts';
+	getFolderSyntaxError
+} from './folder-validation.ts';
 
 describe('Folder Validation Utils', () => {
-	describe('sanitiseFolderName', () => {
-		it('should return empty string if input is not a string', () => {
-			assert.strictEqual(sanitiseFolderName(null as any), '');
-			assert.strictEqual(sanitiseFolderName(undefined as any), '');
-			assert.strictEqual(sanitiseFolderName(123 as any), '');
-		});
-
-		it('should trim whitespace from start and end', () => {
-			assert.strictEqual(sanitiseFolderName('  My Folder  '), 'My Folder');
-		});
-
-		it('should replace multiple internal spaces with a single space', () => {
-			assert.strictEqual(sanitiseFolderName('My    Great   Folder'), 'My Great Folder');
-		});
-
-		it('should handle both trimming and internal spacing simultaneously', () => {
-			assert.strictEqual(sanitiseFolderName('  Wait   For    It  '), 'Wait For It');
-		});
-	});
-
-	describe('getSyntaxError', () => {
+	describe('getFolderSyntaxError', () => {
 		it('should return null for valid folder names', () => {
-			assert.strictEqual(getSyntaxError('Valid Name'), null);
-			assert.strictEqual(getSyntaxError('Folder-123_Test'), null);
-			assert.strictEqual(getSyntaxError("O'Connor Project's"), null);
-			assert.strictEqual(getSyntaxError('Test & Folder'), null);
-			assert.strictEqual(getSyntaxError('Test.Folder'), null);
-			assert.strictEqual(getSyntaxError('Test(Folder new)'), null);
-			assert.strictEqual(getSyntaxError('We / Allow / Slashes'), null);
+			assert.strictEqual(getFolderSyntaxError('Valid Name'), null);
+			assert.strictEqual(getFolderSyntaxError('Folder-123_Test'), null);
+			assert.strictEqual(getFolderSyntaxError("O'Connor Project's"), null);
+			assert.strictEqual(getFolderSyntaxError('Test & Folder'), null);
+			assert.strictEqual(getFolderSyntaxError('Test.Folder'), null);
+			assert.strictEqual(getFolderSyntaxError('Test(Folder new)'), null);
+			assert.strictEqual(getFolderSyntaxError('We / Allow / Slashes'), null);
 		});
 
 		it('should return error if name is too short (< 3)', () => {
-			const result = getSyntaxError('AB');
+			const result = getFolderSyntaxError('AB');
 			assert.ok(result);
 			assert.match(result.text, /between 3 and 255/);
 		});
 
 		it('should return error if name is too long (> 255)', () => {
 			const longName = 'a'.repeat(256);
-			const result = getSyntaxError(longName);
+			const result = getFolderSyntaxError(longName);
 			assert.ok(result);
 			assert.match(result.text, /between 3 and 255/);
 		});
@@ -58,7 +37,7 @@ describe('Folder Validation Utils', () => {
 			const invalidNames = ['Folder@', 'Folder!', 'Folder?', "Folder''"];
 
 			invalidNames.forEach((name) => {
-				const result = getSyntaxError(name);
+				const result = getFolderSyntaxError(name);
 				assert.ok(result);
 				assert.match(result.text, /special characters/);
 			});
@@ -165,7 +144,7 @@ describe('buildValidateFolderCreate Middleware', () => {
 
 	beforeEach(() => {
 		mockReq = {
-			params: { id: 'case-123', folderId: 'folder-456' },
+			params: { id: 'case-123', folderId: 'folder-456', folderName: 'Parent Folder' },
 			body: { folderName: '  My Folder  ' },
 			originalUrl: '/current/url'
 		};
@@ -244,7 +223,7 @@ describe('buildValidateFolderRename Middleware', () => {
 
 	beforeEach(() => {
 		mockReq = {
-			params: { id: 'case-123', folderId: 'folder-to-edit-123' },
+			params: { id: 'case-123', folderId: 'folder-to-edit-123', folderName: 'Old Name' },
 			body: { folderName: 'New Name' },
 			originalUrl: '/current/url'
 		};

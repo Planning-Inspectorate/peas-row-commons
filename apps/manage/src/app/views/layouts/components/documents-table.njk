@@ -65,36 +65,48 @@
         {% set rowItems = (rowItems.push({ html: statusHtml }), rowItems) %}
 
         {% set actionsHtml %}
+            <ul class="govuk-list govuk-!-margin-bottom-0">
             {% if not showFolderLink %}
-                <button 
-                    type="submit" 
-                    form="inline-action-form" 
-                    name="markReadToggle" 
-                    value="{{ doc.id }}" 
-                    class="govuk-button-as-link govuk-!-margin-bottom-2" 
-                    data-cy="action-read-{{ doc.id }}">
-                    {% if doc.isRead %}Unread{% else %}Read{% endif %}
-                </button>
-                <br>
-                
-                <button 
-                    type="submit" 
-                    form="inline-action-form" 
-                    name="flagToggle" 
-                    value="{{ doc.id }}" 
-                    class="govuk-button-as-link govuk-!-margin-bottom-2" 
-                    data-cy="action-flag-{{ doc.id }}">
-                    {% if doc.isFlagged %}Unflag{% else %}Flag{% endif %}
-                </button>
-                <br>
+                <li class="govuk-!-margin-bottom-2">
+                    <button
+                        type="submit"
+                        form="inline-action-form"
+                        name="markReadToggle"
+                        value="{{ doc.id }}"
+                        class="govuk-button-as-link"
+                        data-cy="action-read-{{ doc.id }}">
+                        {% if doc.isRead %}Unread{% else %}Read{% endif %}
+                    </button>
+                </li>
+
+                <li class="govuk-!-margin-bottom-2">
+                    <button
+                        type="submit"
+                        form="inline-action-form"
+                        name="flagToggle"
+                        value="{{ doc.id }}"
+                        class="govuk-button-as-link"
+                        data-cy="action-flag-{{ doc.id }}">
+                        {% if doc.isFlagged %}Unflag{% else %}Flag{% endif %}
+                    </button>
+                </li>
+
             {% endif %}
-            
-            <a class='govuk-link govuk-!-margin-bottom-2' href="{{ doc.downloadHref }}" data-cy="download-file-{{ doc.id }}">Download</a>
+
+            <li class="govuk-!-margin-bottom-2">
+                <a class='govuk-link' href="/cases/{{ doc.caseId }}/case-folders/{{ doc.folder.id }}/{{ doc.folder.displayName }}/{{ doc.id }}/rename-file" data-cy="rename-file-{{ doc.id }}">Rename</a>
+            </li>
+
+            <li class="{% if showFolderLink %}govuk-!-margin-bottom-2{% endif %}">
+                <a class='govuk-link' href="{{ doc.downloadHref }}" data-cy="download-file-{{ doc.id }}">Download</a>
+            </li>
 
             {% if showFolderLink %}
-                <br>
-                <a class='govuk-link' href="/cases/{{ doc.caseId }}/case-folders/{{ doc.folder.id }}/{{ doc.folder.displayName }}" data-cy="view-folder-{{ doc.id }}">View folder</a>
+                <li>
+                    <a class='govuk-link' href="/cases/{{ doc.caseId }}/case-folders/{{ doc.folder.id }}/{{ doc.folder.displayName }}" data-cy="view-folder-{{ doc.id }}">View folder</a>
+                </li>
             {% endif %}
+            </ul>
         {% endset %}
 
         {% set rowItems = (rowItems.push({ html: actionsHtml }), rowItems) %}

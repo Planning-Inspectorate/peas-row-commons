@@ -91,3 +91,5 @@ export const TOTAL_UPLOAD_LIMIT = 1073741824; // 1GB
 export const FILE_NAME_MAX_LENGTH = 255;
 // Allows: a-z, A-Z, 0-9, dot, hyphen, underscore, space, (), &, ' and prevents consecutive apostrophes which can cause issues with some file systems
 export const FILE_NAMES_REGEX = /^(?!.*'')[a-zA-Z0-9.\-_ ()&']+$/;
+// Same as above but allows forward slashes
+export const FOLDER_NAMES_REGEX = /^(?!.*'')[a-zA-Z0-9 .\-_()&'/]+$/;

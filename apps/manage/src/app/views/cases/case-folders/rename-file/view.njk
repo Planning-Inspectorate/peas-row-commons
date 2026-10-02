@@ -1,0 +1,51 @@
+{% extends "views/layouts/main.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+
+{% set pageTitle = "Rename a file" %}
+
+{% block content %}
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            
+            <form method="post" novalidate>
+                <input type="hidden" name="_csrf" value="{{ _csrf }}">
+                <span class="govuk-caption-l" data-cy="page-caption">Rename file</span>
+
+                {{ govukInput({
+                    label: {
+                        text: "File name",
+                        classes: "govuk-label--l",
+                        isPageHeading: true
+                    },
+                    id: "fileName",
+                    name: "fileName",
+                    suffix: {
+                        text: fileExtension
+                    },
+                    value: currentFileName,
+                    errorMessage: { text: errorSummary[0].text } if errorSummary,                    attributes: {
+                        "data-cy": "file-name-input"
+                    }
+                }) }}
+
+                <div class="govuk-button-group">
+                    {{ govukButton({
+                        text: "Save",
+                        attributes: {
+                            "data-cy": "save-button"
+                        }
+                    }) }}
+                </div>
+
+                <p class="govuk-body">
+                    <a class="govuk-link" href="{{ backLinkUrl }}" data-cy="cancel-link">
+                        Cancel and return to file
+                    </a>
+                </p>
+
+            </form>
+
+        </div>
+    </div>
+{% endblock %}
