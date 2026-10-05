@@ -12,6 +12,30 @@ describe('getFileSyntaxError', () => {
 	it('should return null for a valid file name', () => {
 		assert.strictEqual(getFileSyntaxError('My File'), null);
 	});
+
+	it('should return null for a file name exactly 255 characters long', () => {
+		const fileName = 'a'.repeat(255);
+		assert.strictEqual(getFileSyntaxError(fileName), null);
+	});
+
+	it('should return an error for a file name longer than 255 characters', () => {
+		const fileName = 'a'.repeat(256);
+		const result = getFileSyntaxError(fileName);
+		assert.ok(result);
+		assert.strictEqual(result.text, 'File name must be 255 characters or less');
+	});
+
+	it('should include the extension length in the 255 character limit', () => {
+		// 251 + '.' + 'jpg' (3) = 255 total characters, which is valid
+		const fileName = 'a'.repeat(251);
+		assert.strictEqual(getFileSyntaxError(fileName, 'jpg'), null);
+
+		// 252 + '.' + 'jpg' (3) = 256 total characters, which is too long
+		const tooLongFileName = 'a'.repeat(252);
+		const result = getFileSyntaxError(tooLongFileName, 'jpg');
+		assert.ok(result);
+		assert.strictEqual(result.text, 'File name must be 255 characters or less');
+	});
 });
 
 describe('buildValidateFileRename Middleware', () => {
@@ -31,7 +55,7 @@ describe('buildValidateFileRename Middleware', () => {
 			redirect: mock.fn()
 		};
 		mockNext = mock.fn();
-		mockService = { db: {} };
+		mockService = { db: { document: { findUnique: mock.fn(() => Promise.resolve({ fileName: 'Old-Name.jpg' })) } } };
 		mockSessionFn = mock.fn();
 	});
 
