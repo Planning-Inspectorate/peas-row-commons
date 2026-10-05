@@ -41,7 +41,7 @@
     "@azure/msal-node": "^6.0.1",
     "@azure/storage-blob": "^12.33.0",
     "@eslint/js": "^10.0.1",
-    "@ministryofjustice/frontend": "^11.0.1",
+    "@ministryofjustice/frontend": "^11.1.0",
     "@planning-inspectorate/core": "^1.14.2",
     "@planning-inspectorate/dynamic-forms": "^3.20.3",
     "@prisma/adapter-mssql": "^7.10.0",
