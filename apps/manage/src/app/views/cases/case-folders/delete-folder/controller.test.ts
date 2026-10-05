@@ -1,3 +1,4 @@
+import { readSessionData } from '@planning-inspectorate/core/util';
 import assert from 'node:assert';
 import { describe, it, mock } from 'node:test';
 import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
@@ -178,9 +179,6 @@ describe('Delete Folder Controller', () => {
 			assert.strictEqual(res.render.mock.callCount(), 1);
 			assert.strictEqual(res.locals.errorSummary[0].text, 'Failed to delete folder, please try again.');
 		});
-	});
-
-	describe('buildDeleteFolderController (audit recording)', () => {
 		it('should record audit event when folder is deleted', async () => {
 			let recordedAudit: any = null;
 
@@ -227,6 +225,46 @@ describe('Delete Folder Controller', () => {
 			assert.strictEqual(recordedAudit.action, AUDIT_ACTIONS.FOLDER_DELETED);
 			assert.strictEqual(recordedAudit.userId, 'user-456');
 			assert.deepStrictEqual(recordedAudit.metadata, { folderName: 'Target Folder' });
+		});
+		it('should pass the deleted folder name to session data', async () => {
+			const mockService = {
+				db: {
+					folder: {
+						findUnique: () =>
+							Promise.resolve({
+								id: 'folder-123',
+								displayName: 'Target Folder',
+								caseId: 'case-1',
+								ParentFolder: null
+							}),
+						update: () => Promise.resolve({})
+					}
+				},
+				audit: {
+					record: () => Promise.resolve()
+				},
+				logger: {
+					error: () => {},
+					info: () => {}
+				}
+			};
+
+			const req = {
+				params: { id: 'case-1', folderId: 'folder-123' },
+				session: { account: { localAccountId: 'user-456' } }
+			};
+
+			const res = {
+				redirect: () => {},
+				render: () => {},
+				locals: {}
+			};
+
+			const handler = buildDeleteFolderController(mockService as any);
+			await handler(req as any, res as any);
+
+			// Assuming that the session data is set in the request object after deletion
+			assert.strictEqual(readSessionData(req, req.params.id, 'deleted', undefined, 'folder'), 'Target Folder');
 		});
 	});
 });

@@ -23,7 +23,7 @@
     {% if folderDeleted %}
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
-            text: "Folder deleted",
+            text: folderDeleted ~ " deleted",
             type: "success",
             attributes: {
                 "data-cy": "notification-banner-deleted"

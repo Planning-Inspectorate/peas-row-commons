@@ -104,7 +104,7 @@ export function buildDeleteFolderController(service: ManageService) {
 
 			// We add it with the id of the 'case' but not the folder, because we
 			// need to check this from outside of the folder's page (its parent)
-			addSessionData(req, id, { deleted: true }, 'folder');
+			addSessionData(req, id, { deleted: context.folder.displayName }, 'folder');
 
 			const returnUrl = getRedirectUrl(context.folder);
 

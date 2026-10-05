@@ -1,3 +1,4 @@
+import { addSessionData } from '@planning-inspectorate/core/util';
 import assert from 'node:assert/strict';
 import { beforeEach, describe, it, mock } from 'node:test';
 import { buildViewCaseFolders } from './controller.ts';
@@ -85,6 +86,28 @@ describe('buildViewCaseFolders', () => {
 			assert.strictEqual(viewData.reference, 'REF-001');
 			assert.strictEqual(viewData.folders.length, 2);
 			assert.strictEqual(viewData.backLinkUrl, '/cases/case-123');
+		});
+		it('should show a confirmation message if a folder was deleted', async () => {
+			const req = mockReq();
+			const res = mockRes();
+
+			req.session = {};
+
+			mockDb.case.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({ name: 'Test Case', reference: 'REF-001' })
+			);
+			mockDb.folder.findMany.mock.mockImplementation(() =>
+				Promise.resolve([{ id: 'folder-1', displayName: 'Folder One' }])
+			);
+
+			addSessionData(req, 'case-123', { deleted: 'Test Case' }, 'folder');
+
+			await buildViewCaseFolders(service as any)(req, res);
+
+			assert.strictEqual(res.render.mock.callCount(), 1);
+
+			const renderedViewData = res.render.mock.calls[0].arguments[1];
+			assert.strictEqual(renderedViewData.folderDeleted, 'Test Case');
 		});
 	});
 

@@ -63,7 +63,7 @@ function readAndClearSessionData(req: Request) {
 	const id = getStringParam(req.params, 'id');
 
 	const folderCreated = readSessionData(req, id, 'created', false, 'folder');
-	const folderDeleted = readSessionData(req, id, 'deleted', false, 'folder');
+	const folderDeleted = readSessionData(req, id, 'deleted', undefined, 'folder');
 
 	clearSessionData(req, id, 'created', 'folder');
 	clearSessionData(req, id, 'deleted', 'folder');
