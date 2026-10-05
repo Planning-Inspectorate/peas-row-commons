@@ -1,9 +1,14 @@
 import type { ManageService } from '#service';
+import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 import { sanitisePath } from '@pins/peas-row-commons-lib/util/strings.ts';
 import { addSessionData } from '@planning-inspectorate/core/util';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { FILE_NAME_MAX_LENGTH, FILE_NAMES_REGEX } from '../../upload/constants.ts';
+import {
+	checkFileNameConflict,
+	getExistingFileNamesInFolder
+} from '../../upload/upload-documents/file-duplicate-validation.ts';
 
 /**
  * Validates that a file being renamed has a valid name.
@@ -22,6 +27,8 @@ export function buildValidateFileRename(
 			fileId
 		} = getStringParams(req.params, ['id', 'folderId', 'folderName', 'fileId']);
 		const fileName = sanitisePath(req.body.fileName);
+		// Rebuild return URL for security
+		const returnUrl = `/cases/${caseId}/case-folders/${folderId}/${encodeURIComponent(folderName)}/${fileId}/rename-file`;
 
 		const existingFile = await db.document.findUnique({
 			where: { id: fileId, caseId, folderId, deletedAt: null },
@@ -31,11 +38,13 @@ export function buildValidateFileRename(
 
 		const syntaxError = getFileSyntaxError(fileName, fileExtension);
 		if (syntaxError) {
-			// Rebuild return URL for security
-			const returnUrl = `/cases/${caseId}/case-folders/${folderId}/${encodeURIComponent(folderName)}/${fileId}/rename-file`;
 			return handleFileValidationError(req, res, setSessionData, caseId, fileName, syntaxError, returnUrl);
 		}
-		// TODO HRP-648 validate duplicates in the same folder
+
+		const duplicateError = await getDuplicateFileNameError(db, folderId, fileId, fileName, fileExtension);
+		if (duplicateError) {
+			return handleFileValidationError(req, res, setSessionData, caseId, fileName, duplicateError, returnUrl);
+		}
 
 		next();
 	};
@@ -93,6 +102,32 @@ export function getFileSyntaxError(fileName: string, fileExtension?: string) {
 	if (fullFileNameLength > FILE_NAME_MAX_LENGTH) {
 		return {
 			text: `File name must be ${FILE_NAME_MAX_LENGTH} characters or less`,
+			href: '#fileName'
+		};
+	}
+
+	return null;
+}
+
+/**
+ * Checks that renaming a file would not result in a duplicate file name (including
+ * extension) within the same folder. Files with the same name are fine so long as
+ * they are in different folders.
+ */
+export async function getDuplicateFileNameError(
+	db: PrismaClient,
+	folderId: string,
+	fileId: string,
+	fileName: string,
+	fileExtension?: string
+) {
+	const fullFileName = fileExtension ? `${fileName}.${fileExtension}` : fileName;
+	const existingFileNames = await getExistingFileNamesInFolder(db, folderId, fileId);
+	const error = checkFileNameConflict(fullFileName, new Set(existingFileNames));
+
+	if (error) {
+		return {
+			text: 'A file with this name already exists in this folder',
 			href: '#fileName'
 		};
 	}

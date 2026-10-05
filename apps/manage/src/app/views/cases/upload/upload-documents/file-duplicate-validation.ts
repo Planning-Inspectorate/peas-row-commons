@@ -4,14 +4,21 @@ import type { ValidationError } from './validation-middleware.ts';
 
 /**
  * Checks if file names already exist in a folder (database)
- * Used for both upload and move operations
+ * Used for upload, move and rename operations
  */
-export async function getExistingFileNamesInFolder(db: PrismaClient, folderId: string): Promise<string[]> {
+export async function getExistingFileNamesInFolder(
+	db: PrismaClient,
+	folderId: string,
+	excludeDocumentId?: string
+): Promise<string[]> {
 	const folder = await db.folder.findUnique({
 		where: { id: folderId },
 		include: {
 			Documents: {
-				where: { deletedAt: null }, // Do not worry if a soft deleted file as only live files are relevant
+				where: {
+					deletedAt: null, // Do not worry if a soft deleted file as only live files are relevant
+					...(excludeDocumentId ? { NOT: { id: excludeDocumentId } } : {})
+				},
 				select: { fileName: true }
 			}
 		}

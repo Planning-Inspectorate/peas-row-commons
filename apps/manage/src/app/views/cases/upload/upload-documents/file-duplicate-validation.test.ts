@@ -115,6 +115,49 @@ describe('Duplicate validation', () => {
 			assert.strictEqual(mockDb.folder.findUnique.mock.callCount(), 1);
 			assert.deepStrictEqual(existingFileNames, []);
 		});
+
+		it('should exclude the given document id from the query when excludeDocumentId is provided', async () => {
+			const mockDb = {
+				folder: {
+					findUnique: mock.fn((_args) =>
+						Promise.resolve({
+							id: 'folder-123',
+							displayName: 'test',
+							Documents: [{ fileName: 'first.pdf' }]
+						})
+					)
+				}
+			};
+
+			const existingFileNames = await getExistingFileNamesInFolder(mockDb as any, 'folder-123', 'file-456');
+
+			assert.strictEqual(mockDb.folder.findUnique.mock.callCount(), 1);
+			const queryArgs = mockDb.folder.findUnique.mock.calls[0].arguments[0];
+			assert.deepStrictEqual(queryArgs.include.Documents.where, {
+				deletedAt: null,
+				NOT: { id: 'file-456' }
+			});
+			assert.deepStrictEqual(existingFileNames, ['first.pdf']);
+		});
+
+		it('should not add a NOT filter when excludeDocumentId is not provided', async () => {
+			const mockDb = {
+				folder: {
+					findUnique: mock.fn((_args) =>
+						Promise.resolve({
+							id: 'folder-123',
+							displayName: 'test',
+							Documents: []
+						})
+					)
+				}
+			};
+
+			await getExistingFileNamesInFolder(mockDb as any, 'folder-123');
+
+			const queryArgs = mockDb.folder.findUnique.mock.calls[0].arguments[0];
+			assert.deepStrictEqual(queryArgs.include.Documents.where, { deletedAt: null });
+		});
 	});
 
 	describe('checkFileNameConflict', () => {

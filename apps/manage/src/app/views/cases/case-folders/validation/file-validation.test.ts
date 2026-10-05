@@ -55,7 +55,20 @@ describe('buildValidateFileRename Middleware', () => {
 			redirect: mock.fn()
 		};
 		mockNext = mock.fn();
-		mockService = { db: { document: { findUnique: mock.fn(() => Promise.resolve({ fileName: 'Old-Name.jpg' })) } } };
+		mockService = {
+			db: {
+				document: { findUnique: mock.fn(() => Promise.resolve({ fileName: 'Old-Name.jpg' })) },
+				folder: {
+					findUnique: mock.fn(() =>
+						Promise.resolve({
+							id: 'folder-789',
+							displayName: 'My Folder',
+							Documents: []
+						})
+					)
+				}
+			}
+		};
 		mockSessionFn = mock.fn();
 	});
 
@@ -97,5 +110,65 @@ describe('buildValidateFileRename Middleware', () => {
 		await assert.rejects(async () => await middleware(mockReq, mockRes, mockNext), {
 			message: 'fileId must be a single string value'
 		});
+	});
+
+	it('should redirect with a duplicate error if another file in the same folder has the same name', async () => {
+		mockReq.body.fileName = 'Existing File';
+		mockService.db.folder.findUnique = mock.fn(() =>
+			Promise.resolve({
+				id: 'folder-789',
+				displayName: 'My Folder',
+				Documents: [{ fileName: 'Existing File.jpg' }]
+			})
+		);
+
+		const middleware = buildValidateFileRename(mockService, mockSessionFn);
+		await middleware(mockReq, mockRes, mockNext);
+
+		assert.strictEqual(mockRes.redirect.mock.callCount(), 1);
+		assert.strictEqual(mockNext.mock.callCount(), 0);
+		assert.strictEqual(mockSessionFn.mock.callCount(), 1);
+		const args = mockSessionFn.mock.calls[0].arguments;
+		assert.strictEqual(args[2].renameFileErrors[0].text, 'A file with this name already exists in this folder');
+		assert.strictEqual(args[2].renameFileErrors[0].href, '#fileName');
+	});
+
+	it('should pass validation if a file with the same name exists in a different folder', async () => {
+		mockReq.body.fileName = 'Existing File';
+		// folder.findUnique is scoped to the current folderId, so documents from
+		// other folders are never included in the result in the first place.
+		mockService.db.folder.findUnique = mock.fn(() =>
+			Promise.resolve({
+				id: 'folder-789',
+				displayName: 'My Folder',
+				Documents: []
+			})
+		);
+
+		const middleware = buildValidateFileRename(mockService, mockSessionFn);
+		await middleware(mockReq, mockRes, mockNext);
+
+		assert.strictEqual(mockNext.mock.callCount(), 1);
+		assert.strictEqual(mockRes.redirect.mock.callCount(), 0);
+	});
+
+	it('should pass validation when renaming a file to its own current name', async () => {
+		mockReq.body.fileName = 'Old-Name';
+		mockService.db.folder.findUnique = mock.fn(() =>
+			Promise.resolve({
+				id: 'folder-789',
+				displayName: 'My Folder',
+				// The file being renamed (fileId: 'file-456') is excluded from the
+				// existing-names query via the excludeDocumentId param, so this
+				// list represents what the DB would return after that exclusion.
+				Documents: []
+			})
+		);
+
+		const middleware = buildValidateFileRename(mockService, mockSessionFn);
+		await middleware(mockReq, mockRes, mockNext);
+
+		assert.strictEqual(mockNext.mock.callCount(), 1);
+		assert.strictEqual(mockRes.redirect.mock.callCount(), 0);
 	});
 });
