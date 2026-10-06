@@ -45,15 +45,15 @@ const allJourneys: Journeys[] = [...planningJourneys, ...rightsOfWayJourneys];
  *   --env journeyNames=...
  *   --env journeyTags=...
  */
-const RUN_JOURNEYS: JourneyName[] = Cypress.env('journeyNames')
-	? [Cypress.env('journeyNames') as JourneyName]
+const RUN_JOURNEYS: JourneyName[] = Cypress.expose('journeyNames')
+	? [Cypress.expose('journeyNames') as JourneyName]
 	: [
 			// 'Planning > Drought > Drought Permits',
 			// 'Planning > Purchase Notices'
 		];
 
-const RUN_TAGS: JourneyTag[] = Cypress.env('journeyTags')
-	? [Cypress.env('journeyTags') as JourneyTag]
+const RUN_TAGS: JourneyTag[] = cy.env(['journeyTags'])
+	? [Cypress.expose('journeyTags') as JourneyTag]
 	: [
 			// 'smoke',
 			// 'regression'
@@ -63,7 +63,7 @@ const RUN_TAGS: JourneyTag[] = Cypress.env('journeyTags')
  * Prevent accidental commits of local filters.
  * Allows local filtering in Cypress open mode only.
  */
-const isRunMode = Cypress.config('isInteractive') === false;
+const isRunMode = !Cypress.config('isInteractive');
 
 if (isRunMode && (RUN_JOURNEYS.length > 0 || RUN_TAGS.length > 0)) {
 	throw new Error('RUN_JOURNEYS or RUN_TAGS contains values. Clear local filters before running in CI/cypress run.');
