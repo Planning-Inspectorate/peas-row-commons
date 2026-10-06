@@ -5,7 +5,7 @@ import type { JourneyTag } from '../types/journeys.ts';
  * based on configured tag filters.
  */
 export function shouldRunTest(tags: JourneyTag[]): boolean {
-	const runTags: JourneyTag[] = Cypress.env('journeyTags') ? [Cypress.env('journeyTags') as JourneyTag] : [];
+	const runTags: JourneyTag[] = Cypress.expose('journeyTags') ? [Cypress.expose('journeyTags') as JourneyTag] : [];
 
 	return runTags.length === 0 || tags.some((tag) => runTags.includes(tag));
 }
