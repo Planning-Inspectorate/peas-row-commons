@@ -184,6 +184,42 @@ describe('buildViewCaseFolder', () => {
 			assert.ok(!viewData.backLinkUrl.includes('null'));
 			assert.match(viewData.backLinkUrl, /\/cases\/case-123\/case-folders$/);
 		});
+		it('should pass the old and new folder names to the view when a rename has occurred', async () => {
+			const req = mockReq({
+				session: {
+					account: { localAccountId: 'user-456' },
+					folder: {
+						'folder-456': {
+							renamed: { oldName: 'Old Name', newName: 'New Name' }
+						}
+					}
+				}
+			});
+
+			const res = mockRes();
+
+			mockDb.$queryRaw.mock.mockImplementation(() => Promise.resolve([{ totalFolders: 0, totalDocuments: 0 }]));
+
+			mockDb.folder.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({
+					id: 'folder-456',
+					displayName: 'My Folder',
+					parentFolderId: null,
+					caseId: 'case-123',
+					ChildFolders: [],
+					ParentFolder: null
+				})
+			);
+
+			await buildViewCaseFolder(service as any)(req, res, mock.fn());
+
+			const viewData = res.render.mock.calls[0].arguments[1];
+
+			assert.deepStrictEqual(viewData.folderUpdates.folderRenamed, {
+				oldName: 'Old Name',
+				newName: 'New Name'
+			});
+		});
 	});
 
 	describe('Error Handling', () => {
