@@ -84,6 +84,42 @@ describe('Create Folders Helpers', () => {
 			assert.strictEqual(capturedData.displayOrder, 500);
 			assert.strictEqual(capturedData.isCustom, true);
 		});
+		it('should store created folder name in session when folder is created', async () => {
+			const mockService = {
+				db: {
+					folder: {
+						aggregate: () => Promise.resolve({ _max: { displayOrder: 0 } }),
+						create: () => Promise.resolve({ id: 'new-folder-id' })
+					}
+				},
+				audit: {
+					record: () => Promise.resolve()
+				}
+			};
+
+			const req = {
+				params: { id: 'case-1', folderId: null },
+				body: { folderName: 'Test Folder' },
+				session: {
+					account: { localAccountId: 'user-123' },
+					folder: {}
+				}
+			};
+
+			const res = {
+				redirect: () => {}
+			};
+
+			const controller = buildCreateFolders(mockService as any);
+
+			await controller(req as any, res as any, () => {});
+
+			assert.deepStrictEqual((req.session as any).folder['case-1'], {
+				created: true,
+				createdFolderId: 'new-folder-id',
+				createdFolderName: 'Test Folder'
+			});
+		});
 	});
 
 	describe('getRedirectUrl', () => {

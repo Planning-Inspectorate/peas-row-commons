@@ -37,8 +37,17 @@ export function buildViewCaseFolder(
 		if (!userId) {
 			throw new Error('userId required for folder documents');
 		}
-		const [folderUpdated, folderCreated, folderDeleted, folderRenamed, filesMoved, filesDeleted, errorSummary] =
-			readAndClearSessionData(req);
+		const [
+			folderUpdated,
+			folderCreated,
+			folderDeleted,
+			folderRenamed,
+			filesMoved,
+			filesDeleted,
+			errorSummary,
+			createdFolderName,
+			createdFolderId
+		] = readAndClearSessionData(req);
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
@@ -155,6 +164,11 @@ export function buildViewCaseFolder(
 
 			const baseFoldersUrl = `/cases/${id}/case-folders`;
 
+			const createdFolderUrl =
+				folderCreated && createdFolderId && createdFolderName
+					? `${baseFoldersUrl}/${createdFolderId}/${stringToKebab(createdFolderName as string)}`
+					: '';
+
 			// Makes sure that we don't have any lingering session data from half-completed MOVE journeys
 			clearDataFromSession({ req, journeyId: JOURNEY_ID });
 
@@ -172,6 +186,8 @@ export function buildViewCaseFolder(
 				documents: documentsViewModel,
 				paginationParams,
 				filterData: filterViewModel,
+				createdFolderName,
+				createdFolderUrl,
 				folderUpdates: {
 					folderUpdated,
 					folderCreated,
@@ -259,7 +275,8 @@ function readAndClearSessionData(req: Request) {
 	const filesDeleted = readSessionData(req, id, 'filesDeleted', 0, 'folder');
 	const folderCreated = readSessionData(req, id, 'created', false, 'folder');
 	const folderDeleted = readSessionData(req, id, 'deleted', false, 'folder');
-
+	const createdFolderName = readSessionData(req, id, 'createdFolderName', '', 'folder');
+	const createdFolderId = readSessionData(req, id, 'createdFolderId', '', 'folder');
 	const errorSummary = readSessionData(req, id, 'filesErrors', false, 'folder');
 
 	clearSessionData(req, folderId, 'updated', 'folder');
@@ -271,7 +288,17 @@ function readAndClearSessionData(req: Request) {
 
 	clearSessionData(req, id, 'filesErrors', 'folder');
 
-	return [folderUpdated, folderCreated, folderDeleted, folderRenamed, filesMoved, filesDeleted, errorSummary];
+	return [
+		folderUpdated,
+		folderCreated,
+		folderDeleted,
+		folderRenamed,
+		filesMoved,
+		filesDeleted,
+		errorSummary,
+		createdFolderName,
+		createdFolderId
+	];
 }
 
 /**

@@ -30,7 +30,7 @@
     {% if folderUpdates.folderCreated %}
         {{ govukNotificationBanner({
             classes: "govuk-notification-banner__heading govuk-grid-column-two-thirds",
-            text: "Folder created",
+            html: '<a class="govuk-notification-banner__link" href="' + createdFolderUrl + '">' + createdFolderName + '</a> folder created',
             type: "success",
             attributes: { "data-cy": "notification-folder-created" }
         }) }}

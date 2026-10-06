@@ -53,7 +53,7 @@ export function buildCreateFolders(service: ManageService): AsyncRequestHandlerW
 
 			const nextDisplayOrder = await getNextDisplayOrder(db, folderId, id);
 
-			await createFolderRecord(db, {
+			const createdFolder = await createFolderRecord(db, {
 				name: folderName,
 				parentId: folderId,
 				caseId: id,
@@ -67,7 +67,16 @@ export function buildCreateFolders(service: ManageService): AsyncRequestHandlerW
 				metadata: { folderName }
 			});
 
-			addSessionData(req, id, { created: true }, 'folder');
+			addSessionData(
+				req,
+				id,
+				{
+					created: true,
+					createdFolderName: folderName,
+					createdFolderId: createdFolder.id
+				},
+				'folder'
+			);
 
 			const returnUrl = getRedirectUrl(id, parentFolder, folderId);
 
@@ -145,7 +154,7 @@ export async function createFolderRecord(
 		order: number;
 	}
 ) {
-	await db.folder.create({
+	return db.folder.create({
 		data: {
 			displayName: params.name,
 			parentFolderId: params.parentId,
