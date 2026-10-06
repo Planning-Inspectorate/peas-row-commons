@@ -1,5 +1,6 @@
 import type { ManageService } from '#service';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
+import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import { notFoundHandler } from '@planning-inspectorate/core/middleware';
 import type { AsyncRequestHandler } from '@planning-inspectorate/core/util';
 import { clearSessionData, readSessionData, wrapPrismaError } from '@planning-inspectorate/core/util';
@@ -11,8 +12,7 @@ export function buildViewCaseFolders(service: ManageService): AsyncRequestHandle
 	return async (req, res) => {
 		const id = getStringParam(req.params, 'id');
 
-		const [folderCreated, folderDeleted] = readAndClearSessionData(req);
-
+		const [folderCreated, folderDeleted, createdFolderName, createdFolderId] = readAndClearSessionData(req);
 		let caseRow, folders;
 		try {
 			[caseRow, folders] = await Promise.all([
@@ -41,6 +41,10 @@ export function buildViewCaseFolders(service: ManageService): AsyncRequestHandle
 		}
 
 		const foldersViewModel = createFoldersViewModel(folders);
+		const createdFolderUrl =
+			folderCreated && createdFolderId && createdFolderName
+				? `${req.originalUrl}/${createdFolderId}/${stringToKebab(createdFolderName as string)}`
+				: '';
 
 		return res.render('views/cases/case-folders/view.njk', {
 			pageHeading: caseRow?.name,
@@ -50,7 +54,9 @@ export function buildViewCaseFolders(service: ManageService): AsyncRequestHandle
 			folders: foldersViewModel,
 			currentUrl: req.originalUrl,
 			folderCreated,
-			folderDeleted
+			folderDeleted,
+			folderName: createdFolderName,
+			createdFolderUrl
 		});
 	};
 }
@@ -63,10 +69,14 @@ function readAndClearSessionData(req: Request) {
 	const id = getStringParam(req.params, 'id');
 
 	const folderCreated = readSessionData(req, id, 'created', false, 'folder');
+	const createdFolderName = readSessionData(req, id, 'createdFolderName', '', 'folder');
+	const createdFolderId = readSessionData(req, id, 'createdFolderId', '', 'folder');
 	const folderDeleted = readSessionData(req, id, 'deleted', undefined, 'folder');
 
 	clearSessionData(req, id, 'created', 'folder');
+	clearSessionData(req, id, 'createdFolderName', 'folder');
+	clearSessionData(req, id, 'createdFolderId', 'folder');
 	clearSessionData(req, id, 'deleted', 'folder');
 
-	return [folderCreated, folderDeleted];
+	return [folderCreated, folderDeleted, createdFolderName, createdFolderId];
 }
