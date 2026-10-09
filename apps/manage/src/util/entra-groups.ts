@@ -1,6 +1,7 @@
-import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import { REMOVED_USER, UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import type { UserDetails } from '@pins/peas-row-commons-lib/graph/cached-entra-client.ts';
 import type { AuthSession, GroupMember, InitEntraClient } from '@pins/peas-row-commons-lib/graph/types.ts';
+import { isValidUuidFormat } from '@pins/peas-row-commons-lib/util/uuid.ts';
 import type { BaseLogger } from 'pino';
 import type { UserMap } from '../app/views/cases/view/types.ts';
 import type { EntraGroupMembers } from './entra-groups-types.ts';
@@ -118,7 +119,7 @@ export async function buildUserDisplayNameMap(
 		// Add any still-unresolved IDs with the unknown-user fallback
 		for (const id of unresolvedIds) {
 			if (!userMap.has(id)) {
-				userMap.set(id, UNKNOWN_USER);
+				userMap.set(id, isValidUuidFormat(id) ? REMOVED_USER : UNKNOWN_USER);
 			}
 		}
 	}
@@ -151,12 +152,16 @@ export async function getUserDisplayNames(
 
 /**
  * Gets a user's display name from the user map, with a fallback
+ * return REMOVED_USER for valid UUIDs that aren't found,
+ *  or UNKNOWN_USER for invalid/missing IDs.
  */
 export function getUserDisplayName(
 	userMap: UserMap,
 	userId: string | null | undefined,
 	fallback = UNKNOWN_USER
 ): string {
-	if (!userId) return fallback;
-	return userMap.get(userId) || fallback;
+	if (!userId || !isValidUuidFormat(userId)) {
+		return fallback;
+	}
+	return userMap.get(userId) ?? REMOVED_USER;
 }

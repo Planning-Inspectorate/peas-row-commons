@@ -1,6 +1,7 @@
 import { Client } from '@microsoft/microsoft-graph-client';
-import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import { REMOVED_USER, UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import type { MapCache } from '@planning-inspectorate/core/util';
+import { isValidUuidFormat } from '../util/uuid.ts';
 import { EntraClient } from './entra.ts';
 import type { GroupMember, InitEntraClient } from './types.ts';
 
@@ -80,7 +81,7 @@ export class CachedEntraClient {
 				misses.push(id);
 			} else if (cached === null) {
 				// Cached 404 - return placeholder
-				users.push({ id, displayName: UNKNOWN_USER });
+				users.push({ id, displayName: isValidUuidFormat(id) ? REMOVED_USER : UNKNOWN_USER });
 			} else {
 				// Found in cache
 				users.push(cached as UserDetails);
@@ -99,7 +100,7 @@ export class CachedEntraClient {
 				// but only if they weren't found in the successful fetch
 				if (!foundIds.has(id)) {
 					this.#cache.set(USER_CACHE_PREFIX + id, null);
-					users.push({ id, displayName: UNKNOWN_USER });
+					users.push({ id, displayName: isValidUuidFormat(id) ? REMOVED_USER : UNKNOWN_USER });
 				}
 			}
 		}
