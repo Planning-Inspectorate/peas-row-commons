@@ -5,7 +5,7 @@
 {% from "views/layouts/components/accessible-autocomplete.njk" import accessibleAutocomplete %}
 
 {% block head %}
-    <link rel="stylesheet" href="/assets/css/accessible-autocomplete.min.css"/>
+    <link rel="stylesheet" href="/assets/css/{{ config.manifest.autocompleteStyleFile }}"/>
     {{ super() }}
 {% endblock %}
 
@@ -37,5 +37,5 @@
             </form>
         </div>
     </div>
-    <script src="/assets/js/accessible-autocomplete.min.js"></script>
+    <script src="/assets/js/{{ config.manifest.autocompleteJsFile }}"></script>
 {% endblock %}
