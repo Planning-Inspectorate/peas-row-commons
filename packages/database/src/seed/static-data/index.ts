@@ -20,4 +20,4 @@ export { SITE_VISITS } from './site-visit-types.ts';
 export { CASE_STATUSES } from './status.ts';
 export { CASE_SUBTYPES } from './subtypes.ts';
 export { CASE_TYPES } from './types.ts';
-export { UNKNOWN_USER } from './users.ts';
+export { REMOVED_USER, UNKNOWN_USER } from './users.ts';
