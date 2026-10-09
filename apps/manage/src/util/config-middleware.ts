@@ -1,6 +1,7 @@
 import type { Manifest } from '@pins/peas-row-commons-lib/util/manifest.ts';
 import type { Handler } from 'express';
 
+type manifestKeys = keyof Manifest;
 /**
  * Add configuration values to locals.
  */
@@ -14,16 +15,24 @@ export function addLocalsConfiguration(manifest: Manifest, changeAuthorityEmail?
 					link: 'https://mhclg.service-now.com/sp/?id=landing'
 				}
 			],
-			manifest: {
-				styleFile: manifest['style.css'] ?? 'style.css',
-				govukJsFile: manifest['govuk-frontend.min.js'] ?? 'govuk-frontend.min.js',
-				mojJsFile: manifest['moj-frontend.min.js'] ?? 'moj-frontend.min.js',
-				autocompleteStyleFile: manifest['accessible-autocomplete.min.css'] ?? 'accessible-autocomplete.min.css',
-				autocompleteJsFile: manifest['accessible-autocomplete.min.js'] ?? 'accessible-autocomplete.min.js'
-			}
+			manifest: mapManifest(manifest)
 		};
 		// set a global variable for Nunjucks, used by the select-authority component
 		res.locals.changeAuthorityEmail = changeAuthorityEmail;
 		next();
+	};
+}
+
+function mapManifest(manifest: Manifest) {
+	function resolveManifest(manifest: Manifest, key: manifestKeys): string {
+		return manifest[key] ?? key;
+	}
+
+	return {
+		styleFile: resolveManifest(manifest, 'style.css'),
+		govukJsFile: resolveManifest(manifest, 'govuk-frontend.min.js'),
+		mojJsFile: resolveManifest(manifest, 'moj-frontend.min.js'),
+		autocompleteStyleFile: resolveManifest(manifest, 'accessible-autocomplete.min.css'),
+		autocompleteJsFile: resolveManifest(manifest, 'accessible-autocomplete.min.js')
 	};
 }
