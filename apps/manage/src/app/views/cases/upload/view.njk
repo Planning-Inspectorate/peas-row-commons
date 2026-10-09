@@ -67,7 +67,7 @@
             </form>
 
             <script type="module" {% if cspNonce %}nonce="{{ cspNonce }}"{% endif %}>
-                import { MultiFileUpload } from '/assets/js/moj-frontend.min.js';
+                import { MultiFileUpload } from '/assets/js/{{ config.manifest.mojJsFile }}';
 
                 const $mojFormContainer = document.querySelector('#upload-form-container');
                 const $mainSubmitForm = document.querySelector('#main-submit-form');

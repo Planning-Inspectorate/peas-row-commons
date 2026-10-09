@@ -4,6 +4,10 @@ import type { Logger } from 'pino';
 
 export interface Manifest {
 	'style.css'?: string;
+	'govuk-frontend.min.js'?: string;
+	'moj-frontend.min.js'?: string;
+	'accessible-autocomplete.min.js'?: string;
+	'accessible-autocomplete.min.css'?: string;
 }
 
 /**
