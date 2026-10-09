@@ -21,7 +21,8 @@ async function run(): Promise<void> {
 		repoRoot,
 		accessibleAutocompleteRoot,
 		copyMoj: true,
-		generateManifestFile: true
+		generateManifestFile: true,
+		applyAssetVersioning: true
 	});
 }
 
