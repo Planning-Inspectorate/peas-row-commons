@@ -282,7 +282,7 @@ function readAndClearSessionData(req: Request) {
 	const renamedFileName = readSessionData(req, folderId, 'renamedFileName', null, 'folder');
 	const errorSummary = readSessionData(req, id, 'filesErrors', false, 'folder');
 
-	clearSessionData(req, folderId, 'updated', 'folder');
+	clearSessionData(req, folderId, 'filesAdded', 'folder');
 	clearSessionData(req, folderId, 'renamed', 'folder');
 	clearSessionData(req, folderId, 'filesMoved', 'folder');
 	clearSessionData(req, id, 'filesDeleted', 'folder');
