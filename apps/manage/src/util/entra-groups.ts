@@ -1,6 +1,7 @@
-import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import { REMOVED_USER, UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import type { UserDetails } from '@pins/peas-row-commons-lib/graph/cached-entra-client.ts';
 import type { AuthSession, GroupMember, InitEntraClient } from '@pins/peas-row-commons-lib/graph/types.ts';
+import { isValidUuidFormat } from '@pins/peas-row-commons-lib/util/uuid.ts';
 import type { BaseLogger } from 'pino';
 import type { UserMap } from '../app/views/cases/view/types.ts';
 import type { EntraGroupMembers } from './entra-groups-types.ts';
@@ -77,9 +78,13 @@ export async function getNonEntraGroupUsers({
 	initClient,
 	session,
 	userIds
-}: GetNonEntraGroupUsersOptions): Promise<UserDetails[]> {
+}: GetNonEntraGroupUsersOptions): Promise<UserDetails[] | null> {
 	const client = initClient(session);
-	if (!client || !userIds.length) {
+	if (!client) {
+		logger.warn('skipping inactive user lookup, no Entra client');
+		return null;
+	}
+	if (!userIds.length) {
 		return [];
 	}
 
@@ -89,7 +94,7 @@ export async function getNonEntraGroupUsers({
 		return users;
 	} catch (error) {
 		logger.error({ error }, 'failed to fetch inactive users from graph');
-		return [];
+		return null;
 	}
 }
 
@@ -106,19 +111,31 @@ export async function buildUserDisplayNameMap(
 	const unresolvedIds = [...new Set(missingUserIds)].filter((id) => !userMap.has(id));
 
 	if (unresolvedIds.length) {
-		const inactiveUsers = await getNonEntraGroupUsers({
+		const lookupResult = await getNonEntraGroupUsers({
 			logger: opts.logger,
 			initClient: opts.initClient,
 			session: opts.session,
 			userIds: unresolvedIds
 		});
-		for (const user of inactiveUsers) {
-			userMap.set(user.id, user.displayName);
-		}
-		// Add any still-unresolved IDs with the unknown-user fallback
-		for (const id of unresolvedIds) {
-			if (!userMap.has(id)) {
-				userMap.set(id, UNKNOWN_USER);
+
+		if (lookupResult === null) {
+			// Lookup could not be attempted or failed (no client / Graph error).
+			// fall back to UNKNOWN_USER to avoid false "removed" reports.
+			for (const id of unresolvedIds) {
+				if (!userMap.has(id)) {
+					userMap.set(id, UNKNOWN_USER);
+				}
+			}
+		} else {
+			for (const user of lookupResult) {
+				userMap.set(user.id, user.displayName);
+			}
+			// Lookup succeeded - any IDs still unresolved here were confirmed
+			// not found by Entra, so a valid-format UUID is genuinely removed.
+			for (const id of unresolvedIds) {
+				if (!userMap.has(id)) {
+					userMap.set(id, isValidUuidFormat(id) ? REMOVED_USER : UNKNOWN_USER);
+				}
 			}
 		}
 	}
@@ -151,12 +168,16 @@ export async function getUserDisplayNames(
 
 /**
  * Gets a user's display name from the user map, with a fallback
+ * return REMOVED_USER for valid UUIDs that aren't found,
+ *  or UNKNOWN_USER for invalid/missing IDs.
  */
 export function getUserDisplayName(
 	userMap: UserMap,
 	userId: string | null | undefined,
 	fallback = UNKNOWN_USER
 ): string {
-	if (!userId) return fallback;
-	return userMap.get(userId) || fallback;
+	if (!userId || !isValidUuidFormat(userId)) {
+		return fallback;
+	}
+	return userMap.get(userId) ?? REMOVED_USER;
 }
