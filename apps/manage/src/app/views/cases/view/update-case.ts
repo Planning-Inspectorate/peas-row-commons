@@ -229,7 +229,7 @@ async function updateCaseData(
 				where: { id },
 				include: {
 					Dates: true,
-					SiteAddress: true,
+					SiteAddresses: { include: { Address: true } },
 					Abeyance: true,
 					RelatedCases: true,
 					ChildRelationships: {
@@ -329,7 +329,7 @@ async function updateCaseData(
  * Takes a flat object of keys, and creates the correct nested structure needed for
  * DB upsert.
  *
- * It explicitly handles complex multi-field objects (Applicant, Authority, SiteAddress)
+ * It explicitly handles complex multi-field objects (Applicant, Authority, site addresses)
  * first, then passes any remaining keys to the generic mapping logic.
  */
 export function mapCasePayload(flatData: Record<string, unknown>): Prisma.CaseUpdateInput {
@@ -395,7 +395,7 @@ function generateNestedQuery(mainTableData: Record<string, any>, nestedData: Rec
  */
 function handleUniqueDataCases(flatData: Record<string, unknown>, prismaPayload: Prisma.CaseUpdateInput) {
 	handleAuthority(flatData, prismaPayload);
-	handleAddress(flatData, prismaPayload);
+	handleSiteAddresses(flatData, prismaPayload);
 	handleAbeyancePeriod(flatData, prismaPayload);
 	handleInspectors(flatData, prismaPayload);
 	handleContacts(flatData, prismaPayload, CONTACT_MAPPINGS);
@@ -776,29 +776,42 @@ function handleAuthority(flatData: Record<string, any>, prismaPayload: Prisma.Ca
 }
 
 /**
- * Handles mapping address data fields to db fields.
+ * Handles the creation, update, and deletion of site addresses.
  */
-function handleAddress(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
-	if (!flatData.siteAddress) return;
+function handleSiteAddresses(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
+	if (!Object.hasOwn(flatData, 'siteAddressDetails') || !Array.isArray(flatData.siteAddressDetails)) return;
 
-	const address = flatData.siteAddress;
+	const upserts: Prisma.CaseToAddressUpsertWithWhereUniqueWithoutCaseInput[] = [];
+	const providedIds: string[] = [];
 
-	const addressData = {
-		line1: address.addressLine1,
-		line2: address.addressLine2,
-		townCity: address.townCity,
-		county: address.county,
-		postcode: address.postcode
-	};
+	for (const item of flatData.siteAddressDetails as Record<string, any>[]) {
+		const itemId = item.id as string | undefined;
+		if (!itemId || !item.siteAddress) continue;
 
-	prismaPayload.SiteAddress = {
-		upsert: {
-			create: addressData,
-			update: addressData
+		const addressData = mapAddressViewModelToDb(item.siteAddress);
+
+		providedIds.push(itemId);
+
+		upserts.push({
+			where: { id: itemId },
+			create: {
+				id: itemId,
+				Address: { create: addressData }
+			},
+			update: {
+				Address: { update: addressData }
+			}
+		});
+	}
+
+	prismaPayload.SiteAddresses = {
+		...(upserts.length > 0 && { upsert: upserts }),
+		deleteMany: {
+			id: { notIn: providedIds }
 		}
 	};
 
-	delete flatData.siteAddress;
+	delete flatData.siteAddressDetails;
 }
 
 /**

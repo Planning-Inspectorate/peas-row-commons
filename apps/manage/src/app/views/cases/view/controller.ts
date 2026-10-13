@@ -17,7 +17,9 @@ import { getQuestions } from './questions.ts';
 import { caseToViewModel } from './view-model.ts';
 
 const caseToViewInclude = {
-	SiteAddress: true,
+	SiteAddresses: {
+		include: { Address: true }
+	},
 	SubType: true,
 	Type: true,
 	Dates: true,

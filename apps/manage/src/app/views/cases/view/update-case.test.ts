@@ -367,26 +367,45 @@ describe('Update Case Controller', () => {
 			assert.strictEqual((result as any).authorityName, undefined);
 		});
 
-		it('should transform siteAddress object into SiteAddress upsert payload with correct key mapping', () => {
+		it('should transform siteAddressDetails array into SiteAddresses upsert/deleteMany payload', () => {
 			const input = {
-				siteAddress: {
-					addressLine1: '1 High St',
-					addressLine2: 'Village',
-					townCity: 'London',
-					county: 'Greater London',
-					postcode: 'SW1 1AA'
-				}
+				siteAddressDetails: [
+					{
+						id: 'cta-1',
+						siteAddress: {
+							addressLine1: '1 High St',
+							addressLine2: 'Village',
+							townCity: 'London',
+							county: 'Greater London',
+							postcode: 'SW1 1AA'
+						}
+					}
+				]
 			};
 			const result = mapCasePayload(input);
 
-			const addressUpdate = (result as any).SiteAddress;
-			assert.ok(addressUpdate, 'Should have SiteAddress property');
+			const siteAddressesUpdate = (result as any).SiteAddresses;
+			assert.ok(siteAddressesUpdate, 'Should have SiteAddresses property');
 
-			assert.strictEqual(addressUpdate.upsert.create.line1, '1 High St');
-			assert.strictEqual(addressUpdate.upsert.create.townCity, 'London');
-			assert.strictEqual(addressUpdate.upsert.create.postcode, 'SW1 1AA');
+			assert.strictEqual(siteAddressesUpdate.upsert[0].where.id, 'cta-1');
+			assert.strictEqual(siteAddressesUpdate.upsert[0].create.id, 'cta-1');
+			assert.strictEqual(siteAddressesUpdate.upsert[0].create.Address.create.line1, '1 High St');
+			assert.strictEqual(siteAddressesUpdate.upsert[0].create.Address.create.townCity, 'London');
+			assert.strictEqual(siteAddressesUpdate.upsert[0].create.Address.create.postcode, 'SW1 1AA');
+			assert.strictEqual(siteAddressesUpdate.upsert[0].update.Address.update.line1, '1 High St');
+			assert.deepStrictEqual(siteAddressesUpdate.deleteMany, { id: { notIn: ['cta-1'] } });
 
-			assert.strictEqual((result as any).siteAddress, undefined);
+			assert.strictEqual((result as any).siteAddressDetails, undefined);
+		});
+
+		it('should remove all site addresses when siteAddressDetails is submitted as an empty array', () => {
+			const input = { siteAddressDetails: [] };
+			const result = mapCasePayload(input);
+
+			const siteAddressesUpdate = (result as any).SiteAddresses;
+			assert.ok(siteAddressesUpdate, 'Should have SiteAddresses property');
+			assert.strictEqual(siteAddressesUpdate.upsert, undefined);
+			assert.deepStrictEqual(siteAddressesUpdate.deleteMany, { id: { notIn: [] } });
 		});
 
 		it('should skip applicant transformation if fields are incomplete', () => {

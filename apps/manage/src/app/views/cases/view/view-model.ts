@@ -225,12 +225,15 @@ export function caseToViewModel(caseRow: CaseListFields, userMap: UserMap, logge
 
 	const sanitisedData: Record<string, any> = {};
 	for (const key in mergedData) {
-		if (key !== 'SiteAddress') {
+		if (key !== 'SiteAddresses') {
 			sanitisedData[key] = formatValue(mergedData[key]);
 		}
 	}
 
-	const siteAddress = mapAddressDbToViewModel(caseRow.SiteAddress);
+	const siteAddressDetails = (caseRow.SiteAddresses ?? []).map((caseToAddress) => ({
+		id: caseToAddress.id,
+		siteAddress: mapAddressDbToViewModel(caseToAddress.Address)
+	}));
 
 	const mappedNotes = mapNotes(caseRow.Notes || [], userMap, caseRow.id);
 
@@ -261,7 +264,7 @@ export function caseToViewModel(caseRow: CaseListFields, userMap: UserMap, logge
 	return {
 		...sanitisedData,
 		...mappedNotes,
-		siteAddress,
+		siteAddressDetails,
 		receivedDateDisplay: formatInTimeZone(caseRow.receivedDate, 'Europe/London', 'dd MMM yyyy'),
 		receivedDateSortable: new Date(caseRow.receivedDate)?.getTime(),
 		inspectorDetails: inspectors,

@@ -18,7 +18,9 @@ export const caseListSelect = {
 	SubType: {
 		select: { displayName: true }
 	},
-	SiteAddress: true,
+	SiteAddresses: {
+		include: { Address: true }
+	},
 	Notes: {
 		where: { deletedAt: null },
 		include: {
