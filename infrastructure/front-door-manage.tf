@@ -325,6 +325,11 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
       exclusion {
         match_variable = "RequestBodyPostArgNames"
         operator       = "Equals"
+        selector       = "fileName"
+      }
+      exclusion {
+        match_variable = "RequestBodyPostArgNames"
+        operator       = "Equals"
         selector       = "healthAndSafetyIssue"
       }
       exclusion {
@@ -343,6 +348,31 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "manage" {
         selector       = "submitterComment"
       }
     }
+
+    #--------------------------------------------------------------------------
+    # MS Threat Intel SQLI (99031xxx)
+    #--------------------------------------------------------------------------
+    override {
+      rule_group_name = "MS-ThreatIntel-SQLI"
+      # SQL Injection Attack
+      rule {
+        action  = "Log"
+        rule_id = "99031003"
+        enabled = true
+      }
+      # Group-level exclusions (alphabetical by selector)
+      exclusion {
+        match_variable = "RequestBodyPostArgNames"
+        operator       = "Equals"
+        selector       = "_csrf"
+      }
+      exclusion {
+        match_variable = "RequestBodyPostArgNames"
+        operator       = "Equals"
+        selector       = "fileName"
+      }
+    }
+
   }
 
   managed_rule {
