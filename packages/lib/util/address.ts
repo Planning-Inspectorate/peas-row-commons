@@ -10,7 +10,7 @@ export function mapAddressDbToViewModel(address: any) {
 		addressLine2: address.line2,
 		townCity: address.townCity,
 		county: address.county,
-		postcode: address.postcode
+		postcode: formatPostcode(address.postcode)
 	};
 }
 
@@ -24,6 +24,24 @@ export function mapAddressViewModelToDb(addressData: Record<string, any>) {
 		line2: addressData.addressLine2 || '',
 		townCity: addressData.townCity || '',
 		county: addressData.county || '',
-		postcode: addressData.postcode || ''
+		postcode: formatPostcode(addressData.postcode) || ''
 	};
+}
+
+/**
+ * Standardises a postcode to uppercase with a single space before the inward code.
+ * Examples: sw1a2aa  -> SW1A 2AA - ne301dp  -> NE30 1DP
+ */
+export function formatPostcode(postcode: string | undefined | null): string {
+	if (!postcode) return '';
+
+	const compact = postcode.replace(/\s+/g, '').toUpperCase();
+
+	// Fallback for malformed or partial postcodes from legacy database data.
+	// Normal input should be validated at the boundary.
+	if (compact.length <= 3) {
+		return compact;
+	}
+
+	return `${compact.slice(0, -3)} ${compact.slice(-3)}`;
 }

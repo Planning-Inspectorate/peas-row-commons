@@ -62,6 +62,16 @@ describe('Audit Formatters', () => {
 
 			assert.strictEqual(formatAddress(address), 'DB Line 1, London, SW1');
 		});
+
+		it('should format postcode when building an address string', () => {
+			const address = {
+				addressLine1: 'Buckingham Palace',
+				townCity: 'London',
+				postcode: 'sw1a1aa'
+			};
+
+			assert.strictEqual(formatAddress(address), 'Buckingham Palace, London, SW1A 1AA');
+		});
 	});
 
 	describe('formatDate', () => {
