@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
-import { mapAddressDbToViewModel, mapAddressViewModelToDb } from './address.ts';
+import { formatPostcode, mapAddressDbToViewModel, mapAddressViewModelToDb } from './address.ts';
 
 describe('Address Utils', () => {
 	describe('mapAddressDbToViewModel', () => {
@@ -68,6 +68,26 @@ describe('Address Utils', () => {
 			});
 		});
 
+		it('should format postcode when mapping ViewModel fields to DB fields', () => {
+			const viewAddress = {
+				addressLine1: '221B Baker St',
+				addressLine2: 'Marylebone',
+				townCity: 'London',
+				county: '',
+				postcode: 'nw16xe'
+			};
+
+			const result = mapAddressViewModelToDb(viewAddress);
+
+			assert.deepStrictEqual(result, {
+				line1: '221B Baker St',
+				line2: 'Marylebone',
+				townCity: 'London',
+				county: '',
+				postcode: 'NW1 6XE'
+			});
+		});
+
 		it('should provide default empty strings for missing fields', () => {
 			const viewAddress = {
 				addressLine1: 'The Burrow'
@@ -91,6 +111,22 @@ describe('Address Utils', () => {
 
 		it('should return undefined if input is not an object', () => {
 			assert.strictEqual(mapAddressViewModelToDb('string' as any), undefined);
+		});
+	});
+	describe('formatPostcode', () => {
+		it('should uppercase and add a space before the last 3 characters', () => {
+			assert.strictEqual(formatPostcode('sw1a2aa'), 'SW1A 2AA');
+			assert.strictEqual(formatPostcode('ne301dp'), 'NE30 1DP');
+		});
+
+		it('should remove extra spaces before formatting', () => {
+			assert.strictEqual(formatPostcode('  s w1a  2aa '), 'SW1A 2AA');
+		});
+
+		it('should return empty string for empty values', () => {
+			assert.strictEqual(formatPostcode(''), '');
+			assert.strictEqual(formatPostcode(undefined), '');
+			assert.strictEqual(formatPostcode(null), '');
 		});
 	});
 });

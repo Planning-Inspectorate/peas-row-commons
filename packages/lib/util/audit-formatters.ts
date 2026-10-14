@@ -1,4 +1,5 @@
 import { formatInTimeZone } from 'date-fns-tz';
+import { formatPostcode } from './address.ts';
 import { dateISOStringToDisplayDate, dateISOStringToDisplayDateAndTime } from './dates.ts';
 
 /**
@@ -7,12 +8,14 @@ import { dateISOStringToDisplayDate, dateISOStringToDisplayDateAndTime } from '.
 export function formatAddress(address: Record<string, unknown> | null | undefined): string {
 	if (!address) return '-';
 
+	const postcode = typeof address.postcode === 'string' ? formatPostcode(address.postcode) : '';
+
 	const parts = [
 		address.line1 || address.addressLine1,
 		address.line2 || address.addressLine2,
 		address.townCity,
 		address.county,
-		address.postcode
+		postcode
 	].filter(Boolean);
 
 	return parts.length > 0 ? parts.join(', ') : '-';
