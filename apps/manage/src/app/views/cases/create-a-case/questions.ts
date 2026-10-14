@@ -220,6 +220,21 @@ export function getQuestions(groupMembers: EntraGroupMembers, otherCases: OtherC
 				})
 			]
 		},
+		siteAddressDetails: {
+			type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
+			title: 'Site addresses',
+			question: 'Check site addresses',
+			fieldName: 'siteAddressDetails',
+			url: 'manage-site-addresses',
+			viewData: {
+				emptyName: 'site address',
+				emptyNamePlural: 'site addresses'
+			},
+			titleSingular: 'site address',
+			showAnswersInSummary: true,
+			hideRemoveOnLastItem: false,
+			indexColumnHeader: 'Plot'
+		},
 		siteAddress: {
 			type: COMPONENT_TYPES.ADDRESS,
 			title: 'What is the site address? (optional)',
