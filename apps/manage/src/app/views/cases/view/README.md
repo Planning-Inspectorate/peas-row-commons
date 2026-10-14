@@ -20,7 +20,7 @@
 4. The case is updated within a transaction. The previous state is captured for audit comparison.
 
 ## Key Handlers in update-case.ts
-- **`handleProcedureDetails`** — upserts procedures using frontend-generated GUIDs. Relation fields (formats, inspector) use connect/disconnect on update and connect-only on create. All dates use `toDateOrNull` to handle empty form submissions.
+- **`handleProcedureUpdates`** — applies create/update/delete operations for manage-list edits and targeted updates for Dynamic Section edits. Relation fields use connect/disconnect, and dates use `toDateOrNull` to handle empty form submissions.
 - **`handleOutcomes`** — similar upsert pattern for case decisions.
 - **`handleContacts`** — shared handler for applicants, objectors, and generic contacts via `CONTACT_MAPPINGS`.
 - **`handleAbeyancePeriod`** — maps the composite date period field to individual start/end dates.
