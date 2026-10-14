@@ -84,35 +84,89 @@ describe('Case Mapper', () => {
 			assert.strictEqual(result.SubType?.connectOrCreate?.where?.id, 'some-weird-name-with-camel-case');
 		});
 
-		it('should map the site address if at least one field is provided', () => {
+		it('should map site addresses if at least one field is provided', () => {
 			const answers = {
 				...getBaseAnswers(),
-				siteAddress: {
-					addressLine1: '123 Fake St',
-					townCity: 'London'
-				}
+				siteAddressDetails: [
+					{
+						id: 'cta-1',
+						siteAddress: {
+							addressLine1: '123 Fake St',
+							townCity: 'London'
+						}
+					}
+				]
 			};
 
 			const result = mapAnswersToCaseInput(answers, 'REF-004');
 
-			assert.ok(result.SiteAddress?.create);
-			assert.strictEqual(result.SiteAddress.create.line1, '123 Fake St');
-			assert.strictEqual(result.SiteAddress.create.townCity, 'London');
-			assert.strictEqual(result.SiteAddress.create.county, undefined);
+			assert.ok(result.SiteAddresses?.create);
+			const created = result.SiteAddresses.create as any[];
+			assert.strictEqual(created.length, 1);
+			assert.strictEqual(created[0].Address.create.line1, '123 Fake St');
+			assert.strictEqual(created[0].Address.create.townCity, 'London');
+			assert.strictEqual(created[0].Address.create.county, undefined);
 		});
 
-		it('should ignore site address entirely if the object is empty', () => {
+		it('should map multiple site addresses', () => {
 			const answers = {
 				...getBaseAnswers(),
-				siteAddress: {
-					addressLine1: '',
-					townCity: null
-				}
+				siteAddressDetails: [
+					{ id: 'cta-1', siteAddress: { addressLine1: '123 Fake St', townCity: 'London' } },
+					{ id: 'cta-2', siteAddress: { addressLine1: '456 Other Rd', townCity: 'Manchester' } }
+				]
+			};
+
+			const result = mapAnswersToCaseInput(answers, 'REF-004B');
+
+			assert.strictEqual((result.SiteAddresses?.create as any[]).length, 2);
+		});
+
+		it('should ignore site addresses entirely if the array is empty', () => {
+			const answers = {
+				...getBaseAnswers(),
+				siteAddressDetails: []
 			};
 
 			const result = mapAnswersToCaseInput(answers, 'REF-005');
 
-			assert.strictEqual(result.SiteAddress, undefined);
+			assert.strictEqual(result.SiteAddresses, undefined);
+		});
+
+		it('should ignore a site address row with an empty address', () => {
+			const answers = {
+				...getBaseAnswers(),
+				siteAddressDetails: [
+					{
+						id: 'cta-1',
+						siteAddress: {
+							addressLine1: '',
+							townCity: null
+						}
+					}
+				]
+			};
+
+			const result = mapAnswersToCaseInput(answers, 'REF-006');
+
+			assert.strictEqual(result.SiteAddresses, undefined);
+		});
+
+		it('should reindex answerIndex when empty site address rows are filtered', () => {
+			const answers = {
+				...getBaseAnswers(),
+				siteAddressDetails: [
+					{ id: 'cta-1', siteAddress: { addressLine1: '', townCity: null } },
+					{ id: 'cta-2', siteAddress: { addressLine1: '456 Other Rd', townCity: 'Manchester' } }
+				]
+			};
+
+			const result = mapAnswersToCaseInput(answers, 'REF-006B');
+
+			assert.ok(result.SiteAddresses?.create);
+			const created = result.SiteAddresses.create as any[];
+			assert.strictEqual(created.length, 1);
+			assert.strictEqual(created[0].answerIndex, 0);
 		});
 
 		it('should map applicant details to contacts correctly', () => {

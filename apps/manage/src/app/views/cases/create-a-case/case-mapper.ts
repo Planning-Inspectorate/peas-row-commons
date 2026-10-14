@@ -46,9 +46,10 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 		};
 	}
 
-	if (hasSiteAddress(answers)) {
-		input.SiteAddress = {
-			create: mapAddressInput(answers.siteAddress)
+	const siteAddresses = mapSiteAddresses(answers.siteAddressDetails);
+	if (siteAddresses.length) {
+		input.SiteAddresses = {
+			create: siteAddresses
 		};
 	}
 
@@ -122,8 +123,19 @@ function resolveCaseSubType(caseType: string | null, answers: Record<string, any
 	return answers[subtypeField] || null;
 }
 
-function hasSiteAddress(answers: Record<string, any>): boolean {
-	const address = answers.siteAddress;
+function mapSiteAddresses(siteAddressDetails: unknown): Prisma.CaseToAddressCreateWithoutCaseInput[] {
+	if (!Array.isArray(siteAddressDetails)) return [];
+
+	return siteAddressDetails
+		.filter((item) => hasSiteAddress(item))
+		.map((item, answerIndex) => ({
+			answerIndex,
+			Address: { create: mapAddressInput(item.siteAddress) }
+		}));
+}
+
+function hasSiteAddress(item: Record<string, any>): boolean {
+	const address = item?.siteAddress;
 	return address && typeof address === 'object' && Object.values(address).some((val) => Boolean(val));
 }
 
