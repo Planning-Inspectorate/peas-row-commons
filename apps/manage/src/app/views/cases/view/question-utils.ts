@@ -633,10 +633,19 @@ export const CASE_DETAILS_QUESTIONS = {
 		type: COMPONENT_TYPES.ADDRESS,
 		title: 'Site address',
 		question: 'What is the site address?',
-		hint: 'Optional',
 		fieldName: 'siteAddress',
 		url: 'site-address',
-		validators: [new AddressValidator()]
+		validators: [
+			new AddressValidator({
+				requiredFields: {
+					addressLine1: true,
+					addressLine2: false,
+					townCity: true,
+					county: false,
+					postcode: true
+				}
+			})
+		]
 	},
 	location: {
 		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,
