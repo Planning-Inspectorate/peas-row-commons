@@ -14,6 +14,7 @@ import {
 	formatDateTime,
 	formatNumber
 } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import type { ExistingProcedures } from '../../views/cases/view/update-procedures.ts';
 import { AUDIT_ACTIONS } from '../actions.ts';
 import type { AuditEntry } from '../types.ts';
 
@@ -169,6 +170,7 @@ function checkTypeChange(
 	newProc: Record<string, unknown>,
 	ctx: ProcedureAuditContext
 ): AuditEntry | null {
+	if (!('procedureTypeId' in newProc)) return null; // not edited
 	const oldTypeId = oldProc.procedureTypeId;
 	const newTypeId = newProc.procedureTypeId as string;
 
@@ -196,6 +198,7 @@ function checkStatusChange(
 	newProc: Record<string, unknown>,
 	ctx: ProcedureAuditContext
 ): AuditEntry | null {
+	if (!('procedureStatusId' in newProc)) return null; // not edited
 	const oldStatusId = oldProc.procedureStatusId;
 	const newStatusId = newProc.procedureStatusId as string;
 
@@ -420,16 +423,23 @@ export function resolveProcedureAudits(
 	userId: string | undefined,
 	oldProcedures: ProcedureWithRelations[],
 	newProcedures: Record<string, unknown>[],
-	userDisplayNameMap: Map<string, string>
+	userDisplayNameMap: Map<string, string>,
+	// if there are existingProcedures passed, its a manage list edit
+	existingProcedures?: ExistingProcedures
 ): AuditEntry[] {
 	const entries: AuditEntry[] = [];
 
 	const oldById = new Map(oldProcedures.map((p) => [p.id, p]));
 	const newById = new Map(newProcedures.map((p) => [p.id as string, p]));
 
-	// Added — ID in new but not in old
-	for (const [id, newProc] of newById) {
-		if (!oldById.has(id)) {
+	if (existingProcedures) {
+		// add and delete is only possible when editing the manage list
+
+		// Added — ID in new but not in old
+		for (const [id, newProc] of newById) {
+			if (oldById.has(id)) {
+				continue;
+			}
 			const typeName = PROCEDURES.find((p) => p.id === newProc.procedureTypeId)?.displayName ?? '-';
 			entries.push({
 				caseId,
@@ -438,11 +448,12 @@ export function resolveProcedureAudits(
 				metadata: { procedureName: typeName }
 			});
 		}
-	}
 
-	// Deleted — ID in old but not in new
-	for (const [id, oldProc] of oldById) {
-		if (!newById.has(id)) {
+		// Deleted — ID in old but not in new
+		for (const [id, oldProc] of oldById) {
+			if (newById.has(id)) {
+				continue;
+			}
 			const typeName = oldProc.ProcedureType?.displayName ?? '-';
 			entries.push({
 				caseId,

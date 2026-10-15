@@ -173,7 +173,8 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false): Sa
 				userDisplayNameMap,
 				linkedCasesReferenceMap,
 				logger,
-				result.finalLinkedCaseGroup
+				result.finalLinkedCaseGroup,
+				existingProcedures
 			);
 		}
 
@@ -803,7 +804,8 @@ async function recordAuditEntries(
 	userDisplayNameMap: Map<string, string>,
 	linkedCasesReferenceMap: { id: string; reference: string }[],
 	logger: Logger,
-	finalLinkedCaseGroup?: FinalLinkedCaseGroup
+	finalLinkedCaseGroup?: FinalLinkedCaseGroup,
+	existingProcedures?: ExistingProcedures
 ): Promise<void> {
 	try {
 		const allAuditEntries: AuditEntry[] = [];
@@ -966,7 +968,8 @@ async function recordAuditEntries(
 					userId,
 					(previousValues.Procedures as ProcedureWithRelations[]) ?? [],
 					answersSnapshot.procedureDetails as Record<string, unknown>[],
-					userDisplayNameMap
+					userDisplayNameMap,
+					existingProcedures
 				)
 			);
 		}
