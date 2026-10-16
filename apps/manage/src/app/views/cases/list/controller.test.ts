@@ -247,6 +247,30 @@ describe('Cumulative case search and filters', () => {
 		}
 	});
 
+	it('should pass search criteria with special characters unchanged to the template', async () => {
+		const searchCriteria = 'A&B + "plot" = /?';
+		const { data } = await listCases({ searchCriteria, status: CASE_STATUS_ID.IN_PROGRESS });
+		assert.strictEqual(data.searchValue, searchCriteria);
+	});
+
+	it('should preserve special characters in search criteria across pagination links', async () => {
+		const searchCriteria = 'A&B + "plot" = /?';
+		const { data } = await listCases({
+			searchCriteria,
+			status: CASE_STATUS_ID.IN_PROGRESS,
+			page: '3'
+		});
+		const { items, previous, next } = data.paginationParams.uiItems;
+		const links = [...items, previous, next];
+		assert.strictEqual(links.length, 6);
+		for (const link of links) {
+			assert.ok(link && 'href' in link);
+			const params = new URL(link.href!, 'https://example.test').searchParams;
+			assert.strictEqual(params.get('searchCriteria'), searchCriteria);
+			assert.strictEqual(params.get('status'), CASE_STATUS_ID.IN_PROGRESS);
+		}
+	});
+
 	it('should pass a clear search URL retaining filters when there are no results', async () => {
 		const { data } = await listCases({ searchCriteria: 'will-not-be-found', status: CASE_STATUS_ID.IN_PROGRESS }, 0);
 		assert.deepStrictEqual(data.cases, []);

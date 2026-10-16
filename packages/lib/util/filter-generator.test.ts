@@ -67,6 +67,20 @@ describe('FilterGenerator Integration Tests', () => {
 		}
 	});
 
+	it('should preserve special characters in search criteria when building filter links', () => {
+		const searchCriteria = 'A&B + "plot" = /?';
+		const result = generator.generateFilters({ searchCriteria, type: CASE_TYPES_ID.RIGHTS_OF_WAY }, baseUrl, {});
+		const links = [
+			result.selectedCategories.clearLinkHref,
+			...result.selectedCategories.categories.flatMap((category) => category.items.map((item) => item.href))
+		];
+		assert.strictEqual(links.length, 2);
+		for (const link of links) {
+			const params = new URL(link, 'https://example.test').searchParams;
+			assert.deepStrictEqual([...params], [['searchCriteria', searchCriteria]]);
+		}
+	});
+
 	describe('getAllSelectedValues Edge Cases', () => {
 		it('should filter out empty strings from array query params', () => {
 			const query = { type: ['', CASE_TYPES_ID.RIGHTS_OF_WAY, ''] };
