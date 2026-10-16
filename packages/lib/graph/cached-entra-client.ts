@@ -1,6 +1,7 @@
 import { Client } from '@microsoft/microsoft-graph-client';
-import { UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
+import { REMOVED_USER, UNKNOWN_USER } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import type { MapCache } from '@planning-inspectorate/core/util';
+import { isValidUuidFormat } from '../util/uuid.ts';
 import { EntraClient } from './entra.ts';
 import type { GroupMember, InitEntraClient } from './types.ts';
 
@@ -80,7 +81,7 @@ export class CachedEntraClient {
 				misses.push(id);
 			} else if (cached === null) {
 				// Cached 404 - return placeholder
-				users.push({ id, displayName: UNKNOWN_USER });
+				users.push({ id, displayName: isValidUuidFormat(id) ? REMOVED_USER : UNKNOWN_USER });
 			} else {
 				// Found in cache
 				users.push(cached as UserDetails);
@@ -88,17 +89,29 @@ export class CachedEntraClient {
 		}
 
 		if (misses.length) {
-			const fetched = await this.#client.listUsersByIds(misses);
-			const foundIds = new Set(fetched.map((user) => user.id));
+			const { users: fetched, notFoundIds, failedIds } = await this.#client.listUsersByIds(misses);
+
 			for (const user of fetched) {
 				this.#cache.set(USER_CACHE_PREFIX + user.id, user);
 				users.push(user);
 			}
+
+			for (const id of notFoundIds) {
+				// Graph confirmed this user doesn't exist - safe to negative-cache
+				this.#cache.set(USER_CACHE_PREFIX + id, null);
+				users.push({ id, displayName: isValidUuidFormat(id) ? REMOVED_USER : UNKNOWN_USER });
+			}
+
+			for (const id of failedIds) {
+				// Transient/auth/rate-limit failure - do NOT cache (so it's retried later),
+				// and don't claim the user was "removed" based on an inconclusive result
+				users.push({ id, displayName: UNKNOWN_USER });
+			}
+
+			// IDs skipped entirely before even reaching Graph (e.g. invalid UUID format)
+			const handledIds = new Set([...fetched.map((u) => u.id), ...notFoundIds, ...failedIds]);
 			for (const id of misses) {
-				// Add missing IDs to cache as null to avoid repeated fetches for non-existent users
-				// but only if they weren't found in the successful fetch
-				if (!foundIds.has(id)) {
-					this.#cache.set(USER_CACHE_PREFIX + id, null);
+				if (!handledIds.has(id)) {
 					users.push({ id, displayName: UNKNOWN_USER });
 				}
 			}

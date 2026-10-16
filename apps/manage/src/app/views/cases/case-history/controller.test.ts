@@ -132,6 +132,7 @@ describe('buildViewCaseHistory', () => {
 		it('should resolve user display names from entra group members', async () => {
 			const req = mockReq();
 			const res = mockRes();
+			const janeSmithId = 'e3b0c442-98fc-1c14-9afb-ab1234567891';
 
 			mockDb.case.findUnique.mock.mockImplementation(() =>
 				Promise.resolve({ name: 'Test Case', reference: 'REF-001' })
@@ -142,7 +143,7 @@ describe('buildViewCaseHistory', () => {
 					{
 						id: 'evt-1',
 						action: 'CASE_CREATED',
-						User: { idpUserId: 'user-1' },
+						User: { idpUserId: janeSmithId },
 						createdAt: '2026-02-11T14:31:00Z',
 						metadata: { reference: 'REF-001' }
 					}
@@ -150,7 +151,16 @@ describe('buildViewCaseHistory', () => {
 			);
 			mockAudit.countForCase.mock.mockImplementation(() => Promise.resolve(1));
 
-			await buildViewCaseHistory(buildService() as any)(req, res);
+			const service = buildService({
+				getEntraClient: () => ({
+					listAllGroupMembers: async () => [
+						{ id: janeSmithId, displayName: 'Jane Smith' },
+						{ id: 'e3b0c442-98fc-1c14-9afb-ab1234567892', displayName: 'John Doe' }
+					]
+				})
+			});
+
+			await buildViewCaseHistory(service as any)(req, res);
 
 			const viewData = res.render.mock.calls[0].arguments[1];
 			assert.strictEqual(viewData.rows[0].user, 'Jane Smith');
