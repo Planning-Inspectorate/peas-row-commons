@@ -3,11 +3,11 @@
 {% macro searchBar(options, searchValue) %}
     <div class="govuk-form-group">
         {% if not options.input.label.hidden %}
-            <h1 class="govuk-label-wrapper">
+            <h2 class="govuk-label-wrapper">
                 <label class="{{ options.input.label.classes or "govuk-label govuk-label--m" }}" id="search-label" for="search-input">
                     {{ options.input.label.text or "Search" }}
                 </label>
-            </h1>
+            </h2>
         {% endif %}
         {% if not options.input.hint.hidden %}
             <div id="search-hint" class="govuk-hint">
