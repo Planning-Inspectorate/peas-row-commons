@@ -5,6 +5,7 @@ import {
 	CASEWORK_AREAS
 } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import type { ParsedQs } from 'qs';
+import { UrlBuilder } from './url-builder.ts';
 
 interface FilterItem {
 	value: string;
@@ -119,11 +120,15 @@ export class FilterGenerator {
 			query,
 			baseUrl
 		);
+		const clearFiltersUrl = new UrlBuilder(baseUrl);
+		this.getSelectedValues(query, 'searchCriteria').forEach((value) =>
+			clearFiltersUrl.addQueryParam('searchCriteria', value)
+		);
 
 		return {
 			checkboxGroups: checkboxGroups,
 			selectedCategories: {
-				clearLinkHref: baseUrl,
+				clearLinkHref: clearFiltersUrl.toString(),
 				categories: [
 					...selectedAreaCategories,
 					...selectedTypeCategories,
@@ -191,6 +196,7 @@ export class FilterGenerator {
 	/**
 	 * Builds a URL that removes a specific item from the current query params.
 	 * Used to generate "remove filter" links in selected category tags.
+	 * Resets page to 1 when removing a filter.
 	 */
 	private buildRemovalUrl(
 		itemId: string,
@@ -202,7 +208,7 @@ export class FilterGenerator {
 		const params = new URLSearchParams();
 
 		Object.keys(query).forEach((key) => {
-			if (key !== queryParamKey) {
+			if (key !== queryParamKey && key !== 'page') {
 				const vals = this.getSelectedValues(query, key);
 				vals.forEach((value) => params.append(key, value));
 			}

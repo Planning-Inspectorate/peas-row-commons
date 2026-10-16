@@ -106,6 +106,7 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			currentPath,
 			paginationParams,
 			filters,
+			clearSearchUrl: currentFiltersString ? `${currentPath}?${currentFiltersString.slice(1)}` : currentPath,
 			searchValue: searchString
 		});
 	};
@@ -200,8 +201,7 @@ function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerato
 	]);
 
 	return {
-		...searchCriteria,
-		...typeFilterWhereClause
+		AND: [...(searchCriteria?.AND || []), ...(typeFilterWhereClause?.AND || [])]
 	};
 }
 
@@ -266,13 +266,14 @@ export function getCurrentFiltersAndGenerateString(filterGenerator: FilterGenera
  * query string.
  */
 export function createFilterValuesString(currentFilters: CurrentFilters) {
-	let string = '';
+	const params = new URLSearchParams();
 
 	for (const [key, value] of Object.entries(currentFilters)) {
 		value.forEach((item) => {
-			string += `&${key}=${item}`;
+			params.append(key, item);
 		});
 	}
 
-	return string;
+	const queryString = params.toString();
+	return queryString ? `&${queryString}` : '';
 }
