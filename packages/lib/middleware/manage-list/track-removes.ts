@@ -27,7 +27,7 @@ export const bounceRemoveCancellation: RemoveHandler = async (req, res, next) =>
 			res.locals = res.locals || {};
 			res.locals.errorSummary = [{ text: errorMessage, href: '#remove' }];
 
-			question(req, res, next!);
+			await question(req, res);
 			return;
 		}
 

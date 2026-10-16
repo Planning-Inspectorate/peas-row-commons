@@ -1,5 +1,5 @@
 import type { SelectableOption, SelectQuestionParams } from '@planning-inspectorate/dynamic-forms';
-import { SelectQuestion } from '@planning-inspectorate/dynamic-forms';
+import { findSelectableOptionByValue, SelectQuestion } from '@planning-inspectorate/dynamic-forms';
 import escape from 'escape-html';
 
 export type LegacySelectQuestionParams = SelectQuestionParams & {
@@ -50,15 +50,15 @@ export default class LegacySelectQuestion extends SelectQuestion {
 			return this.notStartedText;
 		}
 
-		const selectedOption = this.getOptionByValue(answer as string);
+		const selectedOption = this.optionByValue(answer as string);
 		return escape(selectedOption?.text ?? '');
 	}
 
 	/**
 	 * Combines real values with legacy ones to be viewable.
 	 */
-	getOptionByValue(value: string) {
+	override optionByValue(value: string) {
 		const allOptions = [...this.options, ...this.legacyOptions];
-		return allOptions.find((option) => option.value === value);
+		return allOptions.find(findSelectableOptionByValue(value));
 	}
 }

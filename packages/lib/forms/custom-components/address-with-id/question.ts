@@ -1,4 +1,4 @@
-import type { JourneyResponse, SiteAddressQuestionParams } from '@planning-inspectorate/dynamic-forms';
+import type { SiteAddressQuestionParams } from '@planning-inspectorate/dynamic-forms';
 import { AddressQuestion } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
 
@@ -24,8 +24,8 @@ export default class AddressWithIdQuestion extends AddressQuestion {
 	 * used by the saving function to identify whether the save should
 	 * be a new save or an update.
 	 */
-	async getDataToSave(req: Request, journeyResponse: JourneyResponse): Promise<{ answers: Record<string, unknown> }> {
-		const result = await super.getDataToSave(req, journeyResponse);
+	override async getDataToSave(req: Request) {
+		const result = await super.getDataToSave(req);
 
 		const addressId = req.body[`${this.fieldName}_hiddenId`];
 		const addressAnswer = result.answers[this.fieldName];
