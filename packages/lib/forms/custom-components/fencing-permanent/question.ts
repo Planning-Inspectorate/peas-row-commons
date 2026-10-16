@@ -15,8 +15,7 @@ export default class FencingPermanentQuestion extends ConditionalOptionsQuestion
 	 * 'Free text added' if no selected + text added
 	 */
 	override formatAnswerForSummary(sectionSegment: string, journey: Journey, answer: string | null) {
-		const options = this.options;
-		const selectedOption = options.find((opt) => opt.value === answer);
+		const selectedOption = this.optionByValue(answer as string);
 
 		if (!selectedOption || !answer) {
 			return [

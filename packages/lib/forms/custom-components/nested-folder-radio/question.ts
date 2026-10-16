@@ -1,4 +1,4 @@
-import type { CommonQuestionParams } from '@planning-inspectorate/dynamic-forms';
+import type { BaseQuestionViewData, CommonQuestionParams } from '@planning-inspectorate/dynamic-forms';
 import { Question, type Journey, type QuestionViewModel, type Section } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
 
@@ -13,14 +13,8 @@ export interface FolderNode extends FlatFolder {
 	children: FolderNode[];
 }
 
-interface NestedFolderPreppedQuestion {
+interface NestedFolderPreppedQuestion extends BaseQuestionViewData {
 	value: string | null;
-	question: string;
-	fieldName: string;
-	pageTitle: string;
-	description?: string;
-	html?: string;
-	hint?: string;
 	folderList: FolderNode[];
 	selectedPath: string[] | null;
 }

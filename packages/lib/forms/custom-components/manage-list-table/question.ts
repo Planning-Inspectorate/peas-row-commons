@@ -7,7 +7,7 @@ import type {
 	RouteParams,
 	Section
 } from '@planning-inspectorate/dynamic-forms';
-import { DateQuestion, ManageListQuestion } from '@planning-inspectorate/dynamic-forms';
+import { DateQuestion, JourneyForDisplay, ManageListQuestion } from '@planning-inspectorate/dynamic-forms';
 import type { Request } from 'express';
 import nunjucks from 'nunjucks';
 import type { TableHeadCell, TableManageListQuestionView, TableRowCell } from './types.ts';
@@ -98,7 +98,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	 * its own button text.
 	 */
 	private addButtonText(viewModel: QuestionViewModel<TableManageListQuestionView>): void {
-		viewModel.continueButtonText = this.viewData.continueOnly ? 'Continue' : 'Save and continue';
+		viewModel.continueButtonText = this.viewData?.continueOnly ? 'Continue' : 'Save and continue';
 		viewModel.addMoreButtonText = 'Add details';
 		viewModel.cancelButtonText = 'Cancel';
 	}
@@ -152,11 +152,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	}
 
 	createCell(question: Question, item: Record<string, unknown>): TableRowCell {
-		const mockJourney = {
-			response: { answers: item },
-			getCurrentQuestionUrl: () => '',
-			answers: item
-		} as unknown as Journey;
+		const mockJourney = new JourneyForDisplay(item);
 
 		if (question.shouldDisplay && !question.shouldDisplay({ answers: item } as JourneyResponse)) {
 			return { text: '—' };
@@ -249,15 +245,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 			return [];
 		}
 
-		const mockJourney = {
-			getCurrentQuestionUrl() {
-				return '';
-			},
-			response: {
-				answers: answer
-			},
-			answers: answer
-		} as unknown as Journey;
+		const mockJourney = new JourneyForDisplay(answer);
 
 		return this.section.questions
 			.filter((q: Question) => (q.shouldDisplay ? q.shouldDisplay({ answers: answer } as JourneyResponse) : true))

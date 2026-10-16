@@ -43,7 +43,7 @@
     "@eslint/js": "^10.0.1",
     "@ministryofjustice/frontend": "^11.1.0",
     "@planning-inspectorate/core": "^1.15.0",
-    "@planning-inspectorate/dynamic-forms": "^3.20.4",
+    "@planning-inspectorate/dynamic-forms": "^5.1.0",
     "@prisma/adapter-mssql": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "accessible-autocomplete": "^3.0.2",
