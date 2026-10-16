@@ -220,7 +220,11 @@ export function buildGetJourneyMiddleware(service: ManageService): AsyncRequestH
 		// put these on locals for the list controller
 		res.locals.originalAnswers = { ...answers };
 		res.locals.journeyResponse = new JourneyResponse(JOURNEY_ID, 'ref', finalAnswers);
-		res.locals.journey = createJourney(questions, res.locals.journeyResponse as JourneyResponse, req);
+		res.locals.journey = createJourney(questions, res.locals.journeyResponse as JourneyResponse, req, {
+			inspectorGroupMembers: groupMembers.inspectors,
+			selected: answers.inspectorDetails,
+			userDisplayNames: userMap
+		});
 
 		// Set backlink to case details page when on a normal question only
 		// (not a manage list)

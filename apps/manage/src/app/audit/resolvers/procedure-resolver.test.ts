@@ -75,11 +75,33 @@ describe('resolveProcedureAudits', () => {
 			const oldProcedures: ProcedureWithRelations[] = [];
 			const newProcedures = [{ id: 'proc-new', procedureTypeId: 'hearing' }];
 
-			const entries = resolveProcedureAudits(CASE_ID, USER_ID, oldProcedures, newProcedures, userDisplayNameMap);
+			const entries = resolveProcedureAudits(
+				CASE_ID,
+				USER_ID,
+				oldProcedures,
+				newProcedures,
+				userDisplayNameMap,
+				oldProcedures
+			);
 
 			assert.strictEqual(entries.length, 1);
 			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.PROCEDURE_ADDED);
 			assert.strictEqual(entries[0].metadata?.procedureName, 'Hearing');
+		});
+		it('should not check for creates without existing procedures', () => {
+			const oldProcedures: ProcedureWithRelations[] = [];
+			const newProcedures = [{ id: 'proc-new', procedureTypeId: 'hearing' }];
+
+			const entries = resolveProcedureAudits(
+				CASE_ID,
+				USER_ID,
+				oldProcedures,
+				newProcedures,
+				userDisplayNameMap,
+				undefined
+			);
+
+			assert.strictEqual(entries.length, 0);
 		});
 	});
 
@@ -88,23 +110,46 @@ describe('resolveProcedureAudits', () => {
 			const oldProcedures = [buildOldProcedure()];
 			const newProcedures: Record<string, unknown>[] = [];
 
-			const entries = resolveProcedureAudits(CASE_ID, USER_ID, oldProcedures, newProcedures, userDisplayNameMap);
+			const entries = resolveProcedureAudits(
+				CASE_ID,
+				USER_ID,
+				oldProcedures,
+				newProcedures,
+				userDisplayNameMap,
+				oldProcedures
+			);
 
 			assert.strictEqual(entries.length, 1);
 			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.PROCEDURE_DELETED);
 			assert.strictEqual(entries[0].metadata?.procedureName, 'Hearing');
+		});
+		it('should not check for deletes without existing procedures', () => {
+			const oldProcedures = [buildOldProcedure()];
+			const newProcedures: Record<string, unknown>[] = [];
+
+			const entries = resolveProcedureAudits(
+				CASE_ID,
+				USER_ID,
+				oldProcedures,
+				newProcedures,
+				userDisplayNameMap,
+				undefined
+			);
+
+			assert.strictEqual(entries.length, 0);
 		});
 	});
 
 	describe('updates — type', () => {
 		it('should detect a procedure type change', () => {
 			const oldProcedures = [buildOldProcedure()];
-			const newProcedures = [{ id: 'proc-1', procedureTypeId: 'inquiry', procedureStatusId: 'active' }];
+			const newProcedures = [{ id: 'proc-1', procedureTypeId: 'inquiry' }];
 
 			const entries = resolveProcedureAudits(CASE_ID, USER_ID, oldProcedures, newProcedures, userDisplayNameMap);
 
 			const typeEntry = entries.find((e) => e.metadata?.fieldName === 'type');
 
+			assert.strictEqual(entries.length, 1);
 			assert.ok(typeEntry);
 			assert.strictEqual(typeEntry?.metadata?.procedureName, 'Hearing');
 			assert.strictEqual(typeEntry?.metadata?.procedureStatus, 'Active');
@@ -116,12 +161,13 @@ describe('resolveProcedureAudits', () => {
 	describe('updates — status', () => {
 		it('should detect a procedure status change', () => {
 			const oldProcedures = [buildOldProcedure()];
-			const newProcedures = [{ id: 'proc-1', procedureTypeId: 'hearing', procedureStatusId: 'cancelled' }];
+			const newProcedures = [{ id: 'proc-1', procedureStatusId: 'cancelled' }];
 
 			const entries = resolveProcedureAudits(CASE_ID, USER_ID, oldProcedures, newProcedures, userDisplayNameMap);
 
 			const statusEntry = entries.find((e) => e.metadata?.fieldName === 'status');
 
+			assert.strictEqual(entries.length, 1);
 			assert.ok(statusEntry);
 			assert.strictEqual(statusEntry?.metadata?.procedureName, 'Hearing');
 			assert.strictEqual(statusEntry?.metadata?.procedureStatus, 'Active');
@@ -131,14 +177,13 @@ describe('resolveProcedureAudits', () => {
 	describe('updates — inspector', () => {
 		it('should detect an inspector change with display names', () => {
 			const oldProcedures = [buildOldProcedure({ Inspector: { idpUserId: 'entra-1' } })];
-			const newProcedures = [
-				{ id: 'proc-1', procedureTypeId: 'hearing', procedureStatusId: 'active', inspectorId: 'entra-2' }
-			];
+			const newProcedures = [{ id: 'proc-1', inspectorId: 'entra-2' }];
 
 			const entries = resolveProcedureAudits(CASE_ID, USER_ID, oldProcedures, newProcedures, userDisplayNameMap);
 
 			const inspectorEntry = entries.find((e) => e.metadata?.fieldName === 'inspector');
 
+			assert.strictEqual(entries.length, 1);
 			assert.ok(inspectorEntry);
 			assert.strictEqual(inspectorEntry?.metadata?.oldValue, 'Charlotte Morphet');
 			assert.strictEqual(inspectorEntry?.metadata?.newValue, 'Sophie Coates');
