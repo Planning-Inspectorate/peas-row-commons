@@ -1,6 +1,11 @@
+import type { ManageService } from '#service';
+import type { FilterViewModel } from '@pins/peas-row-commons-lib/util/filter-generator.ts';
+import type { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 import { mockLogger } from '@planning-inspectorate/core/testing';
+import type { Request, Response } from 'express';
 import assert from 'node:assert';
 import { describe, it, mock } from 'node:test';
+import type { ParsedQs } from 'qs';
 import { configureNunjucks } from '../../../nunjucks.ts';
 import {
 	buildListCases,
@@ -16,6 +21,7 @@ import {
 	CASE_TYPES_ID
 } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
+import type { CaseListViewModel } from './types.ts';
 
 const PAGINATION_TEST_CASES = [
 	{
@@ -136,6 +142,156 @@ const createMockCases = (count: number) => {
 	return cases;
 };
 
+async function listCases(query: ParsedQs, totalCases = 100) {
+	const db = {
+		case: {
+			findMany: mock.fn((_args: { where: Record<string, unknown> }) => createMockCases(totalCases ? 1 : 0)),
+			count: mock.fn((_args: { where: Record<string, unknown> }) => totalCases),
+			groupBy: mock.fn(() => [])
+		}
+	};
+	const res = {
+		render: mock.fn(
+			(
+				_view: string,
+				_data: {
+					cases: CaseListViewModel[];
+					searchValue: string;
+					clearSearchUrl: string;
+					filters: FilterViewModel;
+					paginationParams: { filtersValue: string; uiItems: ReturnType<typeof getPaginationModel> };
+				}
+			) => {}
+		)
+	};
+	const handler = buildListCases({ db, logger: mockLogger() } as unknown as ManageService);
+	await handler(
+		{ query, originalUrl: '/cases?page=3', baseUrl: '', path: '/cases' } as Request,
+		res as unknown as Response,
+		() => {}
+	);
+	assert.strictEqual(res.render.mock.callCount(), 1);
+	const [view, data] = res.render.mock.calls[0].arguments;
+	assert.strictEqual(view, 'views/cases/list/view.njk');
+	return { data, db };
+}
+
+describe('Cumulative case search and filters', () => {
+	for (const hasSearch of [false, true]) {
+		for (const hasFilters of [false, true]) {
+			it(`should combine conditions with search=${hasSearch} and filters=${hasFilters}`, async () => {
+				const query = {
+					...(hasSearch ? { searchCriteria: 'Test phrase' } : {}),
+					...(hasFilters ? { type: CASE_TYPES_ID.RIGHTS_OF_WAY, status: CASE_STATUS_ID.IN_PROGRESS } : {})
+				};
+				const { db } = await listCases(query);
+				const where = db.case.findMany.mock.calls[0].arguments[0].where;
+				assert.deepStrictEqual(where, db.case.count.mock.calls[0].arguments[0].where);
+				assert.ok(Array.isArray(where.AND));
+				assert.strictEqual(where.AND.length, (hasSearch ? 1 : 0) + (hasFilters ? 2 : 0));
+				if (hasSearch) {
+					assert.deepStrictEqual(where.AND[0].OR[0], {
+						OR: ['reference', 'name', 'historicalReference'].map((field) => ({
+							[field]: { contains: 'Test phrase' }
+						}))
+					});
+				}
+				if (hasFilters) {
+					assert.deepStrictEqual(where.AND.slice(hasSearch ? 1 : 0), [
+						{ OR: [{ typeId: { in: [CASE_TYPES_ID.RIGHTS_OF_WAY] } }] },
+						{ statusId: { in: [CASE_STATUS_ID.IN_PROGRESS] } }
+					]);
+				}
+			});
+		}
+	}
+
+	it('should pass the search value and all selected filters to the template', async () => {
+		const searchCriteria = 'footpath';
+		const query = {
+			area: [CASEWORK_AREAS_ID.RIGHTS_OF_WAY_COMMON_LAND, CASEWORK_AREAS_ID.PLANNING_ENVIRONMENTAL_APPLICATIONS],
+			type: [CASE_TYPES_ID.RIGHTS_OF_WAY, CASE_TYPES_ID.COMMON_LAND],
+			subType: [CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL, CASE_SUBTYPES_ID.OPPOSED_DMMO],
+			status: CASE_STATUS_ID.IN_PROGRESS,
+			searchCriteria,
+			page: '3'
+		};
+		const { data } = await listCases(query);
+		assert.strictEqual(data.searchValue, searchCriteria);
+		const filterParams = new URLSearchParams(data.paginationParams.filtersValue);
+		const clearParams = new URL(data.clearSearchUrl, 'https://example.test').searchParams;
+		for (const key of ['area', 'type', 'subType', 'status'] as const) {
+			const selectedValues = data.filters.checkboxGroups
+				.flat()
+				.filter((group) => group.name === key)
+				.flatMap((group) => group.items.filter((item) => item.checked).map((item) => item.value));
+			assert.deepStrictEqual(selectedValues.sort(), [query[key]].flat().sort());
+			assert.deepStrictEqual(filterParams.getAll(key), [query[key]].flat());
+			assert.deepStrictEqual(clearParams.getAll(key), [query[key]].flat());
+		}
+		assert.ok(!clearParams.has('searchCriteria'));
+		assert.ok(!clearParams.has('page'));
+		assert.ok(!filterParams.has('searchCriteria'));
+		assert.ok(!filterParams.has('page'));
+
+		const { items, previous, next } = data.paginationParams.uiItems;
+		const paginationLinks = [...items, previous, next];
+		assert.strictEqual(paginationLinks.length, 6);
+		for (const link of paginationLinks) {
+			assert.ok(link && 'href' in link);
+			const params = new URL(link.href!, 'https://example.test').searchParams;
+			assert.strictEqual(params.get('searchCriteria'), searchCriteria);
+			for (const key of ['area', 'type', 'subType', 'status'] as const) {
+				assert.deepStrictEqual(params.getAll(key), [query[key]].flat());
+			}
+		}
+	});
+
+	it('should pass search criteria with special characters unchanged to the template', async () => {
+		const searchCriteria = 'A&B + "plot" = /?';
+		const { data } = await listCases({ searchCriteria, status: CASE_STATUS_ID.IN_PROGRESS });
+		assert.strictEqual(data.searchValue, searchCriteria);
+	});
+
+	it('should preserve special characters in search criteria across pagination links', async () => {
+		const searchCriteria = 'A&B + "plot" = /?';
+		const { data } = await listCases({
+			searchCriteria,
+			status: CASE_STATUS_ID.IN_PROGRESS,
+			page: '3'
+		});
+		const { items, previous, next } = data.paginationParams.uiItems;
+		const links = [...items, previous, next];
+		assert.strictEqual(links.length, 6);
+		for (const link of links) {
+			assert.ok(link && 'href' in link);
+			const params = new URL(link.href!, 'https://example.test').searchParams;
+			assert.strictEqual(params.get('searchCriteria'), searchCriteria);
+			assert.strictEqual(params.get('status'), CASE_STATUS_ID.IN_PROGRESS);
+		}
+	});
+
+	it('should pass a clear search URL retaining filters when there are no results', async () => {
+		const { data } = await listCases({ searchCriteria: 'will-not-be-found', status: CASE_STATUS_ID.IN_PROGRESS }, 0);
+		assert.deepStrictEqual(data.cases, []);
+		assert.strictEqual(data.searchValue, 'will-not-be-found');
+		assert.strictEqual(data.clearSearchUrl, `/cases?status=${CASE_STATUS_ID.IN_PROGRESS}`);
+	});
+
+	it('should pass an empty search value and unfiltered clear search URL before searching', async () => {
+		const { data } = await listCases({});
+		assert.strictEqual(data.searchValue, '');
+		assert.strictEqual(data.clearSearchUrl, '/cases');
+	});
+
+	it('should pass an empty search value and clear filters URL for filter-only no-results', async () => {
+		const { data } = await listCases({ status: CASE_STATUS_ID.IN_PROGRESS }, 0);
+		assert.deepStrictEqual(data.cases, []);
+		assert.strictEqual(data.searchValue, '');
+		assert.strictEqual(data.filters.selectedCategories.clearLinkHref, '/cases');
+	});
+});
+
 describe('Case Controller', () => {
 	class MockFilterGenerator {
 		constructor(_options: any) {}
@@ -191,8 +347,7 @@ describe('Case Controller', () => {
 				query: {},
 				originalUrl: '/cases',
 				baseUrl: 'https://localhost:4000',
-				path: '/cases',
-				query: {}
+				path: '/cases'
 			};
 
 			const mockDb = {
@@ -459,7 +614,7 @@ describe('Case Controller', () => {
 
 				assert.strictEqual(
 					result,
-					'&area=North&type=Commercial&subType=Specific Sub&status=' + CASE_STATUS_ID.IN_PROGRESS
+					'&area=North&type=Commercial&subType=Specific+Sub&status=' + CASE_STATUS_ID.IN_PROGRESS
 				);
 			});
 

@@ -8,9 +8,9 @@
             {% if size == selectedItemsPerPage %}
                 <span class="govuk-body">{{ size }}</span>
             {% elif searchValue and filtersValue %}
-                <a class="govuk-link--no-visited-state" href="{{ currentUrl }}?itemsPerPage={{ size }}&searchCriteria={{ searchValue | replace(" ", "+") }}{{ filtersValue }}" data-pagination="{{ size }}">{{ size }}</a>
+                <a class="govuk-link--no-visited-state" href="{{ currentUrl }}?itemsPerPage={{ size }}&searchCriteria={{ searchValue | urlencode }}{{ filtersValue }}" data-pagination="{{ size }}">{{ size }}</a>
             {% elif searchValue %}
-                <a class="govuk-link--no-visited-state" href="{{ currentUrl }}?itemsPerPage={{ size }}&searchCriteria={{ searchValue | replace(" ", "+") }}" data-pagination="{{ size }}">{{ size }}</a>
+                <a class="govuk-link--no-visited-state" href="{{ currentUrl }}?itemsPerPage={{ size }}&searchCriteria={{ searchValue | urlencode }}" data-pagination="{{ size }}">{{ size }}</a>
             {% elif filtersValue %}
                 <a class="govuk-link--no-visited-state" href="{{ currentUrl }}?itemsPerPage={{ size }}{{ filtersValue }}" data-pagination="{{ size }}">{{ size }}</a>
             {% else %}

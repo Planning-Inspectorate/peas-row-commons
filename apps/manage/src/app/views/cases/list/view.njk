@@ -20,6 +20,16 @@
         </div>
         <div class="govuk-grid-column-two-thirds">
             <form id="search-bar-form" method="GET">
+                {# Ensure active filters are preserved when searching #}
+                {% for groups in filters.checkboxGroups %}
+                    {% for group in groups %}
+                        {% for item in group.items %}
+                            {% if item.checked %}
+                                <input type="hidden" name="{{ group.name }}" value="{{ item.value }}">
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                {% endfor %}
                 {{ searchBar({
                     input: {
                         label: {
@@ -30,6 +40,7 @@
                         },
                         classes: "govuk-input govuk-input--width-30"
                     },
+                    clearLink: clearSearchUrl if searchValue,
                     button: {
                         text: "Search",
                         classes: "govuk-button"
@@ -49,7 +60,11 @@
 
                 {% if cases|length == 0 %}
                     <p class="govuk-body">No results were found.</p>
-                    <p class="govuk-body"><a href="/cases" class="govuk-link govuk-link--no-visited-state">Clear search</a> to view all cases.</p>
+                    {% if searchValue %}
+                        <p class="govuk-body"><a href="{{ clearSearchUrl }}" class="govuk-link govuk-link--no-visited-state">Clear search</a> to view {{ "cases matching your filters" if filters.selectedCategories.categories.length > 0 else "all cases" }}.</p>
+                    {% elif filters.selectedCategories.categories.length > 0 %}
+                        <p class="govuk-body"><a href="{{ filters.selectedCategories.clearLinkHref }}" class="govuk-link govuk-link--no-visited-state">Clear filters</a> to view all cases.</p>
+                    {% endif %}
                 {% else %}
                     {{ casesTable(cases) }}
                 {% endif %}

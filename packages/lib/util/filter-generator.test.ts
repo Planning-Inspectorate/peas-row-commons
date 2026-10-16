@@ -33,6 +33,54 @@ describe('FilterGenerator Integration Tests', () => {
 	});
 	const baseUrl = '/cases';
 
+	it('should clear filters without clearing search or retaining the old page', () => {
+		const searchCriteria = 'footpath';
+		const result = generator.generateFilters(
+			{ searchCriteria, type: CASE_TYPES_ID.RIGHTS_OF_WAY, status: CASE_STATUS_ID.IN_PROGRESS, page: '3' },
+			baseUrl,
+			{}
+		);
+		const url = new URL(result.selectedCategories.clearLinkHref, 'https://example.test');
+		assert.deepStrictEqual([...url.searchParams], [['searchCriteria', searchCriteria]]);
+	});
+
+	it('should remove one filter while keeping search and other selections and resetting the page', () => {
+		const searchCriteria = 'footpath';
+		const result = generator.generateFilters(
+			{
+				searchCriteria,
+				type: [CASE_TYPES_ID.RIGHTS_OF_WAY, CASE_TYPES_ID.COMMON_LAND],
+				status: CASE_STATUS_ID.IN_PROGRESS,
+				page: '3'
+			},
+			baseUrl,
+			{}
+		);
+		const category = result.selectedCategories.categories.find((category) => category.heading.text === 'Case type');
+		assert.ok(category);
+		for (const item of category.items) {
+			const params = new URL(item.href, 'https://example.test').searchParams;
+			assert.strictEqual(params.get('searchCriteria'), searchCriteria);
+			assert.strictEqual(params.get('status'), CASE_STATUS_ID.IN_PROGRESS);
+			assert.strictEqual(params.getAll('type').length, 1);
+			assert.ok(!params.has('page'));
+		}
+	});
+
+	it('should preserve special characters in search criteria when building filter links', () => {
+		const searchCriteria = 'A&B + "plot" = /?';
+		const result = generator.generateFilters({ searchCriteria, type: CASE_TYPES_ID.RIGHTS_OF_WAY }, baseUrl, {});
+		const links = [
+			result.selectedCategories.clearLinkHref,
+			...result.selectedCategories.categories.flatMap((category) => category.items.map((item) => item.href))
+		];
+		assert.strictEqual(links.length, 2);
+		for (const link of links) {
+			const params = new URL(link, 'https://example.test').searchParams;
+			assert.deepStrictEqual([...params], [['searchCriteria', searchCriteria]]);
+		}
+	});
+
 	describe('getAllSelectedValues Edge Cases', () => {
 		it('should filter out empty strings from array query params', () => {
 			const query = { type: ['', CASE_TYPES_ID.RIGHTS_OF_WAY, ''] };
@@ -335,7 +383,7 @@ describe('FilterGenerator Integration Tests', () => {
 			assert.ok(areaTag, 'Area tag should exist');
 
 			assert.ok(areaTag?.href.includes(`subtype=${CASE_SUBTYPES_ID.SCHEDULE_14_APPEAL}`), 'Should keep subtype filter');
-			assert.ok(areaTag?.href.includes('page=2'), 'Should keep page parameter');
+			assert.ok(!areaTag?.href.includes('page='), 'Should reset page parameter');
 			assert.ok(!areaTag?.href.includes(`area=`), 'Should remove area filter');
 		});
 
@@ -356,7 +404,7 @@ describe('FilterGenerator Integration Tests', () => {
 			assert.ok(inProgressTag);
 			assert.ok(!inProgressTag?.href.includes(`status=${CASE_STATUS_ID.IN_PROGRESS}`));
 			assert.ok(inProgressTag?.href.includes(`status=${CASE_STATUS_ID.CLOSED}`));
-			assert.ok(inProgressTag?.href.includes('page=2'));
+			assert.ok(!inProgressTag?.href.includes('page='));
 		});
 
 		it('should handle removing one item from an array selection', () => {
