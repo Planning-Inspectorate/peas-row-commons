@@ -87,7 +87,7 @@ describe('case details journey', () => {
 					'abeyancePeriod',
 					'advertisedModificationStatus',
 					'applicantDetails',
-					'siteAddress',
+					'siteAddressDetails',
 					'location',
 					'authority'
 				]

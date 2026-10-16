@@ -65,7 +65,7 @@ export function createJourney(questions: CaseViewQuestions, response: JourneyRes
 						.addQuestion(questions.applicantAddress)
 						.addQuestion(questions.applicantContactDetails)
 				)
-				.addQuestion(questions.siteAddress)
+				.addQuestion(questions.siteAddressDetails, new ManageListSection().addQuestion(questions.siteAddress))
 				.addQuestion(questions.location)
 				.addQuestion(questions.authority),
 			new Section('Team', 'team')

@@ -64,6 +64,26 @@ describe('TableManageListQuestion', () => {
 			assert.strictEqual(headers[2].text, 'Actions');
 			assert.strictEqual(headers[2].classes, 'govuk-!-width-one-quarter');
 		});
+
+		it('should prepend a sortable index column header when indexColumnHeader is set', () => {
+			tableQuestion.indexColumnHeader = 'Plot';
+
+			const headers = tableQuestion.createHeaders();
+
+			assert.strictEqual(headers.length, 4);
+			assert.strictEqual(headers[0].text, 'Plot');
+			assert.deepStrictEqual(headers[0].attributes, { 'aria-sort': 'none' });
+			assert.strictEqual(headers[1].text, 'Full Name');
+		});
+
+		it('should not add an index column header when indexColumnHeader is not set', () => {
+			const headers = tableQuestion.createHeaders();
+
+			assert.strictEqual(
+				headers.some((h) => h.text === 'Plot'),
+				false
+			);
+		});
 	});
 
 	describe('createCell()', () => {
@@ -105,6 +125,62 @@ describe('TableManageListQuestion', () => {
 
 			assert.strictEqual(result.html, '1990-01-01');
 			assert.strictEqual(result.attributes?.['data-sort-value'], new Date('1990-01-01').getTime());
+		});
+	});
+
+	describe('createIndexCell()', () => {
+		it('should return undefined when indexColumnHeader is not set', () => {
+			const result = tableQuestion.createIndexCell(0);
+
+			assert.strictEqual(result, undefined);
+		});
+
+		it('should return a 1-based "{header} {n}" cell with a numeric data-sort-value', () => {
+			tableQuestion.indexColumnHeader = 'Plot';
+
+			const result = tableQuestion.createIndexCell(0);
+
+			assert.strictEqual(result?.text, 'Plot 1');
+			assert.strictEqual(result?.classes, 'govuk-table__cell');
+			assert.deepStrictEqual(result?.attributes, { 'data-sort-value': 1 });
+		});
+
+		it('should number subsequent rows correctly', () => {
+			tableQuestion.indexColumnHeader = 'Plot';
+
+			const result = tableQuestion.createIndexCell(9);
+
+			assert.strictEqual(result?.text, 'Plot 10');
+			assert.deepStrictEqual(result?.attributes, { 'data-sort-value': 10 });
+		});
+	});
+
+	describe('createRow()', () => {
+		it('should not prepend an index cell when indexColumnHeader is not set', () => {
+			tableQuestion.section!.questions[0].shouldDisplay = () => true;
+			tableQuestion.section!.questions[1].shouldDisplay = () => true;
+			tableQuestion.section!.questions[0].formatAnswerForSummary = () => [{ value: 'Ans 1' } as SummaryRow];
+			tableQuestion.section!.questions[1].formatAnswerForSummary = () => [{ value: 'Ans 2' } as SummaryRow];
+
+			const row = tableQuestion.createRow(mockViewModel, { id: 'uuid-1' }, 0);
+
+			assert.strictEqual(row.length, 3);
+			assert.strictEqual(row[0].html, 'Ans 1');
+		});
+
+		it('should prepend an index cell when indexColumnHeader is set', () => {
+			tableQuestion.indexColumnHeader = 'Plot';
+			tableQuestion.section!.questions[0].shouldDisplay = () => true;
+			tableQuestion.section!.questions[1].shouldDisplay = () => true;
+			tableQuestion.section!.questions[0].formatAnswerForSummary = () => [{ value: 'Ans 1' } as SummaryRow];
+			tableQuestion.section!.questions[1].formatAnswerForSummary = () => [{ value: 'Ans 2' } as SummaryRow];
+
+			const row = tableQuestion.createRow(mockViewModel, { id: 'uuid-1' }, 2);
+
+			assert.strictEqual(row.length, 4);
+			assert.strictEqual(row[0].text, 'Plot 3');
+			assert.deepStrictEqual(row[0].attributes, { 'data-sort-value': 3 });
+			assert.strictEqual(row[1].html, 'Ans 1');
 		});
 	});
 

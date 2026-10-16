@@ -613,14 +613,39 @@ export const CASE_DETAILS_QUESTIONS = {
 			]
 		}
 	},
+	siteAddressDetails: {
+		type: CUSTOM_COMPONENTS.TABLE_MANAGE_LIST,
+		title: 'Site addresses',
+		question: 'Check site addresses',
+		fieldName: 'siteAddressDetails',
+		url: 'site-addresses',
+		viewData: {
+			emptyName: 'site address',
+			emptyNamePlural: 'site addresses',
+			hideBackLink: true
+		},
+		titleSingular: 'site address',
+		showAnswersInSummary: true,
+		hideRemoveOnLastItem: false,
+		indexColumnHeader: 'Plot'
+	},
 	siteAddress: {
 		type: COMPONENT_TYPES.ADDRESS,
 		title: 'Site address',
 		question: 'What is the site address?',
-		hint: 'Optional',
 		fieldName: 'siteAddress',
 		url: 'site-address',
-		validators: [new AddressValidator()]
+		validators: [
+			new AddressValidator({
+				requiredFields: {
+					addressLine1: true,
+					addressLine2: false,
+					townCity: true,
+					county: false,
+					postcode: true
+				}
+			})
+		]
 	},
 	location: {
 		type: COMPONENT_TYPES.SINGLE_LINE_INPUT,

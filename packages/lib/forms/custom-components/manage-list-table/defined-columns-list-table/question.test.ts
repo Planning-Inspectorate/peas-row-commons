@@ -64,6 +64,17 @@ describe('DefinedColumnsTableQuestion', () => {
 			assert.strictEqual(headers[2].text, 'Decision Date');
 			assert.strictEqual(headers[3].text, 'Actions');
 		});
+
+		it('should prepend a sortable index column header when indexColumnHeader is set', () => {
+			question.indexColumnHeader = 'Plot';
+
+			const headers = question.createHeaders();
+
+			assert.strictEqual(headers.length, 5);
+			assert.strictEqual(headers[0].text, 'Plot');
+			assert.deepStrictEqual(headers[0].attributes, { 'aria-sort': 'none' });
+			assert.strictEqual(headers[1].text, 'Reference');
+		});
 	});
 
 	describe('createRow()', () => {
@@ -95,6 +106,17 @@ describe('DefinedColumnsTableQuestion', () => {
 			const rows = question.createRow(mockViewModel, item);
 
 			assert.strictEqual(rows[0].html, '-');
+		});
+
+		it('should prepend an index cell when indexColumnHeader is set', () => {
+			question.indexColumnHeader = 'Plot';
+			const item = { id: '1', caseRef: 'ABC' };
+
+			const rows = question.createRow(mockViewModel, item, 1);
+
+			assert.strictEqual(rows[0].text, 'Plot 2');
+			assert.deepStrictEqual(rows[0].attributes, { 'data-sort-value': 2 });
+			assert.strictEqual(rows[1].html, 'ABC');
 		});
 	});
 

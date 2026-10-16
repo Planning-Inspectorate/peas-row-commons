@@ -15,6 +15,12 @@ import type { TableHeadCell, TableManageListQuestionView, TableRowCell } from '.
 export interface TableManageListQuestionParams extends ManageListQuestionParams {
 	summaryLimit?: number;
 	hideRemoveOnLastItem?: boolean;
+	/**
+	 * When set, adds an extra leading column whose cells show
+	 * `${indexColumnHeader} ${rowIndex + 1}`, numbering each row in the
+	 * table. Only affects the table view, not the showAnswersInSummary list.
+	 */
+	indexColumnHeader?: string;
 }
 
 export interface TableManageListQuestionProps extends TableManageListQuestionParams {
@@ -26,6 +32,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	summaryLimit: number;
 	showAnswersInSummary: boolean;
 	hideRemoveOnLastItem: boolean;
+	indexColumnHeader?: string;
 
 	constructor(params: TableManageListQuestionParams) {
 		super(params);
@@ -33,6 +40,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 		this.summaryLimit = params.summaryLimit || 2;
 		this.showAnswersInSummary = params.showAnswersInSummary || false;
 		this.hideRemoveOnLastItem = params.hideRemoveOnLastItem || false;
+		this.indexColumnHeader = params.indexColumnHeader;
 
 		this.viewFolder = 'custom-components/manage-list-table';
 	}
@@ -109,8 +117,8 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	private createRows(viewModel: QuestionViewModel<TableManageListQuestionView>): TableRowCell[][] {
 		const answers = viewModel.question.value || [];
 
-		return answers.map((item) => {
-			return this.createRow(viewModel, item);
+		return answers.map((item, index) => {
+			return this.createRow(viewModel, item, index);
 		});
 	}
 
@@ -119,11 +127,17 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	 */
 	protected createRow(
 		viewModel: QuestionViewModel<TableManageListQuestionView>,
-		item: Record<string, unknown>
+		item: Record<string, unknown>,
+		index: number = 0
 	): TableRowCell[] {
 		const cells = this.section?.questions.map((question: Question) => {
 			return this.createCell(question, item);
 		});
+
+		const indexCell = this.createIndexCell(index);
+		if (indexCell) {
+			cells.unshift(indexCell);
+		}
 
 		const actionsHtml = this.generateActionsHtml(viewModel, item);
 
@@ -143,12 +157,54 @@ export default class TableManageListQuestion extends ManageListQuestion {
 			}
 		})) as unknown as TableHeadCell[];
 
+		const indexHeader = this.createIndexHeaderCell();
+		if (indexHeader) {
+			headers.unshift(indexHeader);
+		}
+
 		headers.push({
 			text: 'Actions',
 			classes: 'govuk-!-width-one-quarter' // So that Actions always has enough room for its buttons
 		});
 
 		return headers;
+	}
+
+	/**
+	 * When `indexColumnHeader` is set, builds the head cell for the leading
+	 * numbering column. Sortable like the other columns.
+	 */
+	protected createIndexHeaderCell(): TableHeadCell | undefined {
+		if (!this.indexColumnHeader) {
+			return undefined;
+		}
+
+		return {
+			text: this.indexColumnHeader,
+			attributes: {
+				'aria-sort': 'none'
+			}
+		};
+	}
+
+	/**
+	 * When `indexColumnHeader` is set, builds the row cell for the leading
+	 * numbering column. `index` is 0-based; displayed and sorted as 1-based.
+	 */
+	protected createIndexCell(index: number): TableRowCell | undefined {
+		if (!this.indexColumnHeader) {
+			return undefined;
+		}
+
+		const rowNumber = index + 1;
+
+		return {
+			text: `${this.indexColumnHeader} ${rowNumber}`,
+			classes: 'govuk-table__cell',
+			attributes: {
+				'data-sort-value': rowNumber
+			}
+		};
 	}
 
 	createCell(question: Question, item: Record<string, unknown>): TableRowCell {
