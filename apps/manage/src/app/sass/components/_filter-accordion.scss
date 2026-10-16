@@ -12,14 +12,14 @@
 
 .pins-filter__header {
 	padding: govuk.govuk-spacing(3) govuk.govuk-spacing(4);
-	background-color: govuk.govuk-colour('mid-grey');
+	background-color: govuk.govuk-colour('black', $variant: 'tint-80');
 }
 
 // Selected Filters Section
 
 .pins-filter__selected-section {
 	padding: govuk.govuk-spacing(4);
-	background-color: govuk.govuk-colour('light-grey');
+	background-color: govuk.govuk-colour('black', $variant: 'tint-95');
 	border-bottom: 1px solid govuk.$govuk-border-colour;
 }
 
