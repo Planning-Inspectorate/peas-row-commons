@@ -177,7 +177,7 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 
 		// Handle `{ value, conditional }` answers built by formatAnswerForSummary
 		const answerObj = answer as { value: string; conditional?: Record<string, string> };
-		const selectedOption = this.options.find((option) => option.value === answerObj.value);
+		const selectedOption = this.optionByValue(answerObj.value);
 		const optionText = escape(selectedOption?.text ?? answerObj.value);
 
 		const conditionalValue = answerObj.conditional?.[answerObj.value];

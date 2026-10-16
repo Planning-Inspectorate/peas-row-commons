@@ -1,5 +1,5 @@
 import type { Journey, JourneyResponse, Question, QuestionViewModel } from '@planning-inspectorate/dynamic-forms';
-import { DateQuestion } from '@planning-inspectorate/dynamic-forms';
+import { DateQuestion, JourneyForDisplay } from '@planning-inspectorate/dynamic-forms';
 import type { TableManageListQuestionParams } from '../question.ts';
 import TableManageListQuestion from '../question.ts';
 import type { TableHeadCell, TableManageListQuestionView, TableRowCell } from '../types.ts';
@@ -126,11 +126,7 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 	private getFormattedColumnValue(col: TableColumn, item: Record<string, any>, linkedQuestion?: Question): string {
 		const rawValue = item[col.fieldName];
 
-		const mockJourney = {
-			response: { answers: item },
-			getCurrentQuestionUrl: () => '',
-			answers: item
-		} as unknown as Journey;
+		const mockJourney = new JourneyForDisplay(item);
 
 		const getQuestion = (fieldName: string) =>
 			this.section?.questions?.find((q: Question) => q.fieldName === fieldName);

@@ -1,5 +1,5 @@
 import type { RadioQuestionParams, SelectableOption } from '@planning-inspectorate/dynamic-forms';
-import { RadioQuestion } from '@planning-inspectorate/dynamic-forms';
+import { findSelectableOptionByValue, RadioQuestion } from '@planning-inspectorate/dynamic-forms';
 import escape from 'escape-html';
 
 export type LegacyRadioQuestionParams = RadioQuestionParams & {
@@ -52,13 +52,13 @@ export default class LegacyRadioQuestion extends RadioQuestion {
 
 		// Handle simple string answers
 		if (typeof answer !== 'object' || (answer as { value?: string }).value === undefined) {
-			const option = this.getOptionByValue(answer as string);
+			const option = this.optionByValue(answer as string);
 			return escape(option?.text ?? '');
 		}
 
 		// Handle object answers with conditional fields
 		const answerObj = answer as { value: string; conditional?: Record<string, string> };
-		const option = this.getOptionByValue(answerObj.value);
+		const option = this.optionByValue(answerObj.value);
 		const optionText = escape(option?.text ?? '');
 
 		const conditionalValue = answerObj.conditional?.[answerObj.value];
@@ -69,11 +69,9 @@ export default class LegacyRadioQuestion extends RadioQuestion {
 		return optionText;
 	}
 
-	/**
-	 * Combines real values with legacy ones to be viewable.
-	 */
-	getOptionByValue(value: string) {
+	override optionByValue(value: string) {
+		// legacy options are also viewable
 		const allOptions = [...this.options, ...this.legacyOptions];
-		return allOptions.find((option) => option.value === value);
+		return allOptions.find(findSelectableOptionByValue(value));
 	}
 }

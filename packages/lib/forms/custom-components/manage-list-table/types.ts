@@ -1,3 +1,5 @@
+import type { BaseQuestionViewData } from '@planning-inspectorate/dynamic-forms';
+
 export interface TableHeadCell {
 	text?: string;
 	html?: string;
@@ -18,11 +20,8 @@ export interface TableRowCell {
 	attributes?: Record<string, any>;
 }
 
-export interface TableManageListQuestionView {
+export interface TableManageListQuestionView extends BaseQuestionViewData {
 	value: Record<string, unknown>[];
-	question: string;
-	fieldName: string;
-	pageTitle: string;
 	firstQuestionUrl?: string;
 	tableHead?: TableHeadCell[];
 	tableRows?: TableRowCell[][];

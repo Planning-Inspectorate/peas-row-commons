@@ -41,19 +41,19 @@ describe('Legacy Select Question', () => {
 		question.getAction = () => ({ href: '#', text: 'Change' });
 	});
 
-	describe('getOptionByValue', () => {
+	describe('optionByValue', () => {
 		it('should find an option from the standard options array', () => {
-			const result = question.getOptionByValue('active');
+			const result = question.optionByValue('active');
 			assert.strictEqual(result?.text, 'Active Option');
 		});
 
 		it('should find an option from the legacy options array', () => {
-			const result = question.getOptionByValue('retired');
+			const result = question.optionByValue('retired');
 			assert.strictEqual(result?.text, 'Retired Option');
 		});
 
 		it('should return undefined if the value does not exist in either array', () => {
-			const result = question.getOptionByValue('does-not-exist');
+			const result = question.optionByValue('does-not-exist');
 			assert.strictEqual(result, undefined);
 		});
 	});
