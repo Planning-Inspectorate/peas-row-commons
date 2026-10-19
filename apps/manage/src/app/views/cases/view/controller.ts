@@ -17,7 +17,10 @@ import { getQuestions } from './questions.ts';
 import { caseToViewModel } from './view-model.ts';
 
 const caseToViewInclude = {
-	SiteAddress: true,
+	SiteAddresses: {
+		include: { Address: true },
+		orderBy: { answerIndex: 'asc' }
+	},
 	SubType: true,
 	Type: true,
 	Dates: true,

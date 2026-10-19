@@ -1,7 +1,7 @@
 process.env.ENVIRONMENT = 'dev';
 
 import { ManageListCrossFieldValidator } from '@pins/peas-row-commons-lib/validators/manage-list-cross-field-validator.ts';
-import { COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
+import { AddressValidator, COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
 import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import nunjucks from 'nunjucks';
@@ -128,6 +128,19 @@ describe('questions utils', () => {
 
 	describe('Question Configuration Data', () => {
 		const getDuplicates = (arr: string[]) => arr.filter((item, index) => arr.indexOf(item) !== index);
+
+		it('should require the core site address fields', () => {
+			const siteAddress = ALL_QUESTIONS.siteAddress;
+			const addressValidator = siteAddress.validators[0] as AddressValidator;
+
+			assert.deepStrictEqual(addressValidator.requiredFields, {
+				addressLine1: true,
+				addressLine2: false,
+				townCity: true,
+				county: false,
+				postcode: true
+			});
+		});
 
 		it('should have unique URLs for every question', () => {
 			const questions = Object.values(ALL_QUESTIONS);
