@@ -44,8 +44,10 @@ model Case {
   /// historical reference, if existing case from Horizon
   historicalReference      String?
   name                     String
+  /// TODO HRP-657 remove old site address structure
   siteAddressId            String?                       @db.UniqueIdentifier
   SiteAddress              Address?                      @relation(fields: [siteAddressId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  SiteAddresses            CaseToAddress[]
   location                 String?
   caseOfficerId            String?                       @db.UniqueIdentifier
   CaseOfficer              User?                         @relation("caseOfficer", fields: [caseOfficerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -101,6 +103,21 @@ model Case {
   ParentRelationship       CaseRelationship?             @relation("ChildCase")
   /// User read statuses for this case's files
   UserDocuments            UserDocument[]
+}
+
+/// CaseToAddress represents the relationship between Cases and Addresses
+/// This is a many-to-many relationship for future-proofing, as addresses may be made unique and sharable
+model CaseToAddress {
+  id          String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  caseId      String  @db.UniqueIdentifier
+  Case        Case    @relation(fields: [caseId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  addressId   String  @db.UniqueIdentifier
+  Address     Address @relation(fields: [addressId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  /// Zero-based answer order within the case
+  answerIndex Int
+
+  @@unique([caseId, addressId])
+  @@index([addressId])
 }
 
 model Act {
@@ -164,7 +181,7 @@ model CaseSubType {
 /// Address represents an address of a property or place
 model Address {
   /// internal identifier
-  id                  String      @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  id                  String          @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   line1               String?
   line2               String?
   townCity            String?
@@ -173,10 +190,11 @@ model Address {
   Case                Case[]
   /// Legacy Case ID for migration, will be removed after
   legacyCaseId        String?
-  ConferenceProcedure Procedure[] @relation("ProcedureConferenceVenue")
-  HearingProcedure    Procedure[] @relation("ProcedureHearingVenue")
-  InquiryProcedure    Procedure[] @relation("ProcedureInquiryVenue")
+  ConferenceProcedure Procedure[]     @relation("ProcedureConferenceVenue")
+  HearingProcedure    Procedure[]     @relation("ProcedureHearingVenue")
+  InquiryProcedure    Procedure[]     @relation("ProcedureInquiryVenue")
   Contact             Contact[]
+  caseToAddresses     CaseToAddress[]
 }
 
 /// Dates that are associated with a case, a couple more generic ones are
