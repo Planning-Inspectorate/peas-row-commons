@@ -1,3 +1,4 @@
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { mockLogger } from '@planning-inspectorate/core/testing';
 import assert from 'node:assert';
 import { describe, it, mock } from 'node:test';
@@ -86,7 +87,7 @@ describe('Case Controller', () => {
 				$transaction: mock.fn(async (promises) => Promise.all(promises)),
 				case: {
 					findMany: mock.fn(() => []),
-					findUnique: mock.fn(() => ({
+					findUnique: mock.fn((_query: Prisma.CaseFindUniqueArgs) => ({
 						id: 'case-1',
 						receivedDate: Date.now()
 					}))
@@ -120,6 +121,10 @@ describe('Case Controller', () => {
 				}
 			} as any);
 			await assert.doesNotReject(() => middleware(mockReq, mockRes, next));
+			assert.deepStrictEqual(mockDb.case.findUnique.mock.calls[0].arguments[0].include?.SiteAddresses, {
+				include: { Address: true },
+				orderBy: { answerIndex: 'asc' }
+			});
 			assert.strictEqual(next.mock.callCount(), 1);
 			assert.ok(mockRes.locals.journey);
 			assert.strictEqual(mockRes.locals.backLinkUrl, '/case-1');

@@ -97,40 +97,45 @@ describe('view-model', () => {
 			assert.strictEqual(result.Authority, undefined);
 		});
 
-		it('should map nested SiteAddress object to UI compatible siteAddress object', () => {
+		it('should map nested SiteAddresses array to UI compatible siteAddressDetails array', () => {
 			const input = {
 				id: '123',
 				receivedDate: new Date(),
-				SiteAddress: {
-					line1: '1 High St',
-					line2: 'Village',
-					townCity: 'London',
-					county: 'Greater London',
-					postcode: 'SW1 1AA'
-				}
+				SiteAddresses: [
+					{
+						id: 'cta-1',
+						Address: {
+							line1: '1 High St',
+							line2: 'Village',
+							townCity: 'London',
+							county: 'Greater London',
+							postcode: 'SW1 1AA'
+						}
+					}
+				]
 			};
 
 			const result: any = caseToViewModel(input as any, userMap);
 
-			assert.ok(result.siteAddress);
-			assert.strictEqual(result.siteAddress.addressLine1, '1 High St');
-			assert.strictEqual(result.siteAddress.addressLine2, 'Village');
-			assert.strictEqual(result.siteAddress.townCity, 'London');
-			assert.strictEqual(result.siteAddress.county, 'Greater London');
-			assert.strictEqual(result.siteAddress.postcode, 'SW1 1AA');
+			assert.strictEqual(result.siteAddressDetails.length, 1);
+			assert.strictEqual(result.siteAddressDetails[0].id, 'cta-1');
+			assert.strictEqual(result.siteAddressDetails[0].siteAddress.addressLine1, '1 High St');
+			assert.strictEqual(result.siteAddressDetails[0].siteAddress.addressLine2, 'Village');
+			assert.strictEqual(result.siteAddressDetails[0].siteAddress.townCity, 'London');
+			assert.strictEqual(result.siteAddressDetails[0].siteAddress.county, 'Greater London');
+			assert.strictEqual(result.siteAddressDetails[0].siteAddress.postcode, 'SW1 1AA');
 
-			assert.strictEqual(result.line1, undefined);
-			assert.strictEqual(result.SiteAddress, undefined);
+			assert.strictEqual(result.SiteAddresses, undefined);
 		});
 
-		it('should return null for siteAddress if no SiteAddress data exists', () => {
+		it('should return an empty array for siteAddressDetails if no SiteAddresses data exists', () => {
 			const input = {
 				id: '123',
 				receivedDate: new Date()
 			};
 
 			const result: any = caseToViewModel(input as any, userMap);
-			assert.strictEqual(result.siteAddress, null);
+			assert.deepStrictEqual(result.siteAddressDetails, []);
 		});
 
 		it('should pass through Inspectors data to inspectorDetails', () => {
