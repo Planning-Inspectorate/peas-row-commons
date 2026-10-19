@@ -49,6 +49,11 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 			}
 		})) as TableHeadCell[];
 
+		const indexHeader = this.createIndexHeaderCell();
+		if (indexHeader) {
+			headers.unshift(indexHeader);
+		}
+
 		headers.push({
 			text: 'Actions',
 			classes: 'govuk-!-width-one-quarter'
@@ -62,7 +67,8 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 	 */
 	override createRow(
 		viewModel: QuestionViewModel<TableManageListQuestionView>,
-		item: Record<string, any>
+		item: Record<string, any>,
+		index: number = 0
 	): TableRowCell[] {
 		const cells = this.columns.map((col) => {
 			const linkedQuestion = this.section?.questions?.find((q: Question) => q.fieldName === col.fieldName);
@@ -81,6 +87,11 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 				}
 			};
 		}) as TableRowCell[];
+
+		const indexCell = this.createIndexCell(index);
+		if (indexCell) {
+			cells.unshift(indexCell);
+		}
 
 		const actionsHtml = this.generateActionsHtml(viewModel, item);
 		cells.push({ html: actionsHtml });
