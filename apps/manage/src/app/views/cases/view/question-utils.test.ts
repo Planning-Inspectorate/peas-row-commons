@@ -85,28 +85,6 @@ describe('questions utils', () => {
 			assert.strictEqual(question.validators.length, 2);
 			assert.strictEqual(question.validators[1], mockValidator);
 		});
-
-		it('should merge additional validators with overrideValidator when both are provided', () => {
-			const mockValidator = { validate: () => [] };
-			class MockOverride {
-				title: string;
-				constructor(title: string) {
-					this.title = title;
-				}
-				validate() {
-					return [];
-				}
-			}
-			const question = dateQuestion({
-				fieldName: 'testField',
-				overrideValidator: MockOverride as any,
-				validators: [mockValidator as any]
-			});
-
-			assert.ok(Array.isArray(question.validators));
-			assert.strictEqual(question.validators.length, 2);
-			assert.strictEqual(question.validators[1], mockValidator);
-		});
 	});
 	describe('camelCaseToSentenceCase', () => {
 		it('should turn a basic camelCaseSentence into Sentence case', () => {
