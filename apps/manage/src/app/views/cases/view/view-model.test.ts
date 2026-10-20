@@ -266,6 +266,9 @@ describe('view-model', () => {
 	});
 
 	describe('mapNotes', () => {
+		const USER_ID = 'e3b0c442-98fc-1c14-9afb-ab1234567891';
+		const userMap: Map<string, string> = new Map<string, string>();
+		userMap.set(USER_ID, 'Oscar');
 		it('should map fields and sort notes by createdAt in descending order', async () => {
 			const dateOld = new Date('2023-01-01T10:00:00.000Z');
 			const dateNew = new Date('2024-01-01T10:00:00.000Z');
@@ -275,19 +278,19 @@ describe('view-model', () => {
 					createdAt: dateOld,
 					comment: 'Old note',
 					Author: {
-						idpUserId: '123'
+						idpUserId: USER_ID
 					}
 				},
 				{
 					createdAt: dateNew,
 					comment: 'New note',
 					Author: {
-						idpUserId: 'user_2'
+						idpUserId: 'user_2' // intentionally invalid format -> Unknown user
 					}
 				}
 			];
 
-			const result = mapNotes(input as any, userMap, '123');
+			const result = mapNotes(input as any, userMap, USER_ID);
 
 			assert.ok(result.caseNotes);
 			assert.strictEqual(result.caseNotes.length, 2);

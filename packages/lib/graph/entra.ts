@@ -15,6 +15,14 @@ export const ODATA = Object.freeze({
 	USER_TYPE: '#microsoft.graph.user'
 });
 
+export interface ListUsersByIdsResult {
+	users: UserDetails[];
+	/** IDs the Graph API explicitly confirmed do not exist (404) - safe to treat as "removed" */
+	notFoundIds: string[];
+	/** IDs where the batch request failed for a reason other than 404 (401/429/5xx/etc) - must NOT be treated as removed */
+	failedIds: string[];
+}
+
 export class EntraClient {
 	#client;
 
@@ -48,14 +56,18 @@ export class EntraClient {
 	}
 
 	/**
-	 * Batch query graph for entra ids
+	 * Batch query graph for entra ids. Distinguishes confirmed 404s (notFoundIds) from
+	 * any other failure status (failedIds), so callers don't mistake a transient
+	 * error for confirmation that a user has been removed.
 	 */
-	async listUsersByIds(ids: string[]): Promise<UserDetails[]> {
+	async listUsersByIds(ids: string[]): Promise<ListUsersByIdsResult> {
 		// Batching graph query to get user details for a list of IDs.
 
 		const uniqueIds = [...new Set(ids.filter(isValidUuidFormat))];
 
-		if (uniqueIds.length === 0) return [];
+		if (uniqueIds.length === 0) {
+			return { users: [], notFoundIds: [], failedIds: [] };
+		}
 
 		// Cannot batch more than 20 (MAX_BATCH_SIZE): https://learn.microsoft.com/en-gb/graph/json-batching
 		const chunks: string[][] = [];
@@ -63,7 +75,9 @@ export class EntraClient {
 			chunks.push(uniqueIds.slice(i, i + MAX_BATCH_SIZE));
 		}
 
-		const users: Array<{ id: string; displayName: string }> = [];
+		const users: UserDetails[] = [];
+		const notFoundIds: string[] = [];
+		const failedIds: string[] = [];
 
 		for (const chunk of chunks) {
 			const requests = chunk.map((userId, index) => ({
@@ -72,17 +86,29 @@ export class EntraClient {
 				url: `/users/${encodeURIComponent(userId)}?$select=id,displayName`
 			}));
 
+			// map batch response "id" (1-based index) back to the requested userId,
+			// so a failure can be attributed to the right ID even without item.body
+			const idByRequestId = new Map(requests.map((req, index) => [req.id, chunk[index]]));
+
 			const response = await this.#client.api('/$batch').post({ requests });
 			for (const item of response.responses ?? []) {
-				if (item.status === 200 && item.body?.id) {
+				const requestedId = idByRequestId.get(item.id);
+				if (item.status === 200 && item.body?.id && requestedId) {
 					// Users fetched are not part of the Entra groups (otherwise they would have been fetched in listAllGroupMembers),
 					// so we can assume they are inactive users. Appending (Inactive) to their display name to indicate this in the UI.
 					const inactiveUserDisplayName = `${item.body.displayName || item.body.id} (Inactive)`;
-					users.push({ id: item.body.id, displayName: inactiveUserDisplayName });
+					users.push({ id: requestedId, displayName: inactiveUserDisplayName });
+				} else if (item.status === 404 && requestedId) {
+					// Confirmed by Graph: this user does not exist - safe to treat as "removed"
+					notFoundIds.push(requestedId);
+				} else if (requestedId) {
+					// Any other non-200 status (401, 429, 5xx, etc) is a failure, not confirmation
+					// of absence - must not be negative-cached or reported as "removed"
+					failedIds.push(requestedId);
 				}
 			}
 		}
-		return users;
+		return { users, notFoundIds, failedIds };
 	}
 
 	/**

@@ -123,7 +123,7 @@ describe('EntraClient', () => {
 				};
 			}) as any);
 			const entra = new EntraClient(client as any);
-			const users = await entra.listUsersByIds([
+			const { users, notFoundIds, failedIds } = await entra.listUsersByIds([
 				'9f3b7d4e-2c61-4a85-8d1f-5b7c9e2a14f0',
 				'3c8a1f92-6e47-4d3b-b2f8-1a9e5c7d6041'
 			]);
@@ -137,6 +137,8 @@ describe('EntraClient', () => {
 				id: '3c8a1f92-6e47-4d3b-b2f8-1a9e5c7d6041',
 				displayName: 'Simon Declares (Inactive)'
 			});
+			assert.deepStrictEqual(notFoundIds, []);
+			assert.deepStrictEqual(failedIds, []);
 		});
 
 		it('should handle more than 20 unique ids', async () => {
@@ -166,7 +168,7 @@ describe('EntraClient', () => {
 			}) as any);
 
 			const entra = new EntraClient(client as any);
-			const users = await entra.listUsersByIds(ids);
+			const { users } = await entra.listUsersByIds(ids);
 
 			assert.strictEqual(client.post.mock.callCount(), 2);
 			assert.strictEqual(batchBodies.length, 2);
@@ -212,7 +214,7 @@ describe('EntraClient', () => {
 				};
 			}) as any);
 			const entra = new EntraClient(client as any);
-			const users = await entra.listUsersByIds([
+			const { users } = await entra.listUsersByIds([
 				'9f3b7d4e-2c61-4a85-8d1f-5b7c9e2a14f0',
 				'3c8a1f92-6e47-4d3b-b2f8-1a9e5c7d6041'
 			]);
@@ -228,7 +230,7 @@ describe('EntraClient', () => {
 			});
 		});
 
-		it('should return only users from successful (200) batch responses', async () => {
+		it('should separate confirmed 404s into notFoundIds, excluded from users', async () => {
 			const client = mockClient();
 			client.post.mock.mockImplementation((() => {
 				return {
@@ -261,7 +263,7 @@ describe('EntraClient', () => {
 				};
 			}) as any);
 			const entra = new EntraClient(client as any);
-			const users = await entra.listUsersByIds([
+			const { users, notFoundIds, failedIds } = await entra.listUsersByIds([
 				'9f3b7d4e-2c61-4a85-8d1f-5b7c9e2a14f0',
 				'3c8a1f92-6e47-4d3b-b2f8-1a9e5c7d6041'
 			]);
@@ -271,6 +273,41 @@ describe('EntraClient', () => {
 				id: '9f3b7d4e-2c61-4a85-8d1f-5b7c9e2a14f0',
 				displayName: 'Simon Says (Inactive)'
 			});
+			assert.deepStrictEqual(notFoundIds, ['3c8a1f92-6e47-4d3b-b2f8-1a9e5c7d6041']);
+			assert.deepStrictEqual(failedIds, []);
+		});
+
+		it('should separate non-404 failures (e.g. 401/429/5xx) into failedIds, excluded from users and notFoundIds', async () => {
+			const client = mockClient();
+			client.post.mock.mockImplementation((() => {
+				return {
+					responses: [
+						{
+							id: '1',
+							status: 200,
+							body: {
+								id: '9f3b7d4e-2c61-4a85-8d1f-5b7c9e2a14f0',
+								displayName: 'Simon Says'
+							}
+						},
+						{
+							id: '2',
+							status: 429,
+							body: {
+								error: { code: 'TooManyRequests', message: 'Rate limited' }
+							}
+						}
+					]
+				};
+			}) as any);
+			const entra = new EntraClient(client as any);
+			const { users, notFoundIds, failedIds } = await entra.listUsersByIds([
+				'9f3b7d4e-2c61-4a85-8d1f-5b7c9e2a14f0',
+				'3c8a1f92-6e47-4d3b-b2f8-1a9e5c7d6041'
+			]);
+			assert.strictEqual(users.length, 1);
+			assert.deepStrictEqual(notFoundIds, []);
+			assert.deepStrictEqual(failedIds, ['3c8a1f92-6e47-4d3b-b2f8-1a9e5c7d6041']);
 		});
 
 		it('should return only users with a valid uuid', async () => {
@@ -302,12 +339,14 @@ describe('EntraClient', () => {
 			);
 		});
 
-		it('should return an empty array if no valid uuid is provided', async () => {
+		it('should return an empty result if no valid uuid is provided', async () => {
 			const client = mockClient();
 			const entra = new EntraClient(client as any);
-			const users = await entra.listUsersByIds(['not-a-uuid', 'also-not-a-uuid']);
+			const { users, notFoundIds, failedIds } = await entra.listUsersByIds(['not-a-uuid', 'also-not-a-uuid']);
 			assert.strictEqual(client.post.mock.callCount(), 0);
 			assert.strictEqual(users.length, 0);
+			assert.strictEqual(notFoundIds.length, 0);
+			assert.strictEqual(failedIds.length, 0);
 		});
 	});
 	describe('extractSkipToken', () => {

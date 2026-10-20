@@ -213,11 +213,12 @@ describe('Audit Service', () => {
 	describe('getLastModifiedInfo', () => {
 		it('should return formatted dates and user display name', async () => {
 			const mockDb = createMockDb();
+			const userId = 'e3b0c442-98fc-1c14-9afb-ab1234567890';
 			mockDb.case.findUnique.mock.mockImplementationOnce(() =>
 				Promise.resolve({
 					updatedDate: new Date('2025-01-15T14:30:00Z'),
 					closedDate: new Date('2025-01-20T14:30:00Z'),
-					UpdatedBy: { idpUserId: 'user-123' }
+					UpdatedBy: { idpUserId: userId }
 				})
 			);
 
@@ -225,7 +226,7 @@ describe('Audit Service', () => {
 			const service = buildAuditService(mockDb as any, logger as any);
 
 			const userMap: Map<string, string> = new Map<string, string>();
-			userMap.set('user-123', 'John Smith');
+			userMap.set(userId, 'John Smith');
 
 			const info = await service.getLastModifiedInfo('case-123', userMap);
 
@@ -262,15 +263,15 @@ describe('Audit Service', () => {
 				Promise.resolve({
 					updatedDate: null,
 					closedDate: null,
-					UpdatedBy: { idpUserId: 'user-123' }
+					UpdatedBy: { idpUserId: userId }
 				})
 			);
 
 			const logger = mockLogger();
 			const service = buildAuditService(mockDb as any, logger as any);
-
+			const userId = 'e3b0c442-98fc-1c14-9afb-ab1234567890';
 			const userMap: Map<string, string> = new Map<string, string>();
-			userMap.set('user-123', 'John Smith');
+			userMap.set(userId, 'John Smith');
 
 			const info = await service.getLastModifiedInfo('case-123', userMap);
 
