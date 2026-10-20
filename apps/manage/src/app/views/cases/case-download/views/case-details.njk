@@ -179,14 +179,13 @@
 
     <hr class="section-break">
 
-    {# Site address — stays under Case details, but Site location and Authority
-       are now rendered as their own clearly-labelled rows (not bundled with
-       the address block) to mirror the case details page. #}
     <h3>Site</h3>
     <table class="details-grid">
+        {% for item in siteAddressDetails %}
         <tr>
-            <th>Site address</th>
+            <th>Site address{% if siteAddressDetails.length > 1 %} {{ loop.index }}{% endif %}</th>
             <td class="address-block">
+                {% set siteAddress = item.siteAddress %}
                 {% if siteAddress %}
                     {% if siteAddress.addressLine1 %}{{ siteAddress.addressLine1 }}<br>{% endif %}
                     {% if siteAddress.addressLine2 %}{{ siteAddress.addressLine2 }}<br>{% endif %}
@@ -198,6 +197,12 @@
                 {% endif %}
             </td>
         </tr>
+        {% else %}
+        <tr>
+            <th>Site addresses</th>
+            <td>-</td>
+        </tr>
+        {% endfor %}
         <tr>
             <th>Site location</th>
             <td>{{ location | fallback('-') }}</td>

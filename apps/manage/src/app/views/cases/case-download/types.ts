@@ -131,7 +131,10 @@ export interface CaseDetailsPdfData {
 		start?: Date | string;
 		end?: Date | string;
 	};
-	siteAddress?: PdfAddress;
+	siteAddressDetails: Array<{
+		id: string;
+		siteAddress?: PdfAddress;
+	}>;
 	location?: string;
 	applicants: PdfContact[];
 

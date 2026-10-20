@@ -34,7 +34,10 @@ export async function fetchCaseForDownload(db: PrismaClient, caseId: string) {
 			Status: true,
 			Priority: true,
 			Authority: true,
-			SiteAddress: true,
+			SiteAddresses: {
+				include: { Address: true },
+				orderBy: { answerIndex: 'asc' }
+			},
 			Dates: true,
 			CaseOfficer: true,
 			InspectorBand: true,
