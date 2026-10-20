@@ -178,16 +178,19 @@ describe('mappers', () => {
 		});
 
 		it('should resolve inspector names from the lookup map', () => {
+			const inspector1Id = 'e3b0c442-98fc-1c14-9afb-ab1234567891';
+			const inspector2Id = 'e3b0c442-98fc-1c14-9afb-ab1234567892';
+
 			const caseData = createBaseCaseData({
 				Inspectors: [
-					{ Inspector: { idpUserId: 'entra-1' }, inspectorAllocatedDate: new Date('2025-01-01') },
-					{ Inspector: { idpUserId: 'entra-2' }, inspectorAllocatedDate: new Date('2025-02-01') }
+					{ Inspector: { idpUserId: inspector1Id }, inspectorAllocatedDate: new Date('2025-01-01') },
+					{ Inspector: { idpUserId: inspector2Id }, inspectorAllocatedDate: new Date('2025-02-01') }
 				]
 			});
 
 			const inspectorNames = new Map([
-				['entra-1', 'Alice Inspector'],
-				['entra-2', 'Bob Inspector']
+				[inspector1Id, 'Alice Inspector'],
+				[inspector2Id, 'Bob Inspector']
 			]);
 
 			const result = mapCaseDetailsData(caseData as any, undefined, inspectorNames);
@@ -350,6 +353,7 @@ describe('mappers', () => {
 		});
 
 		it('should map outcomes with decision maker resolution', () => {
+			const decisionMakerId = 'e3b0c442-98fc-1c14-9afb-ab1234567891';
 			const caseData = createBaseCaseData({
 				Outcome: {
 					partiesNotifiedDate: new Date('2025-06-01'),
@@ -361,7 +365,7 @@ describe('mappers', () => {
 							DecisionType: { displayName: 'Interim' },
 							DecisionMakerType: { displayName: 'Inspector' },
 							decisionMakerTypeId: 'inspector',
-							DecisionMaker: { idpUserId: 'entra-1' },
+							DecisionMaker: { idpUserId: decisionMakerId },
 							Outcome: { displayName: 'Allow' },
 							outcomeDate: new Date('2025-05-01'),
 							decisionReceivedDate: null
@@ -370,7 +374,7 @@ describe('mappers', () => {
 				}
 			});
 
-			const inspectorNames = new Map([['entra-1', 'Decision Inspector']]);
+			const inspectorNames = new Map([[decisionMakerId, 'Decision Inspector']]);
 			const result = mapCaseDetailsData(caseData as any, undefined, inspectorNames);
 
 			assert.strictEqual(result.outcomes.length, 1);
