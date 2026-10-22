@@ -1,3 +1,4 @@
+import { questionClasses } from '@planning-inspectorate/dynamic-forms';
 import AddressWithIdQuestion from './address-with-id/question.ts';
 import BooleanWithExtraActions from './boolean-with-extra-actions/question.ts';
 import ConditionalOptionsQuestion from './conditional-text-input/question.ts';
@@ -42,3 +43,8 @@ export const CUSTOM_COMPONENT_CLASSES = Object.freeze({
 	[CUSTOM_COMPONENTS.BOOLEAN_WITH_EXTRA_ACTIONS]: BooleanWithExtraActions,
 	[CUSTOM_COMPONENTS.DATE_PERIOD_WITH_EXTRA_ACTIONS]: DatePeriodWithExtraActions
 });
+
+export const ALL_QUESTION_CLASSES = {
+	...CUSTOM_COMPONENT_CLASSES,
+	...questionClasses
+};

@@ -1,7 +1,7 @@
 import type { ManageService } from '#service';
 import type { Case, Prisma, PrismaClient, RelatedCase } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { getRelationForField } from '@pins/peas-row-commons-lib/util/schema-map.ts';
-import { wrapPrismaError } from '@planning-inspectorate/core/util';
+import { addSessionData, wrapPrismaError } from '@planning-inspectorate/core/util';
 
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
 import { ACT_SECTIONS } from '@pins/peas-row-commons-database/src/seed/static-data/act-sections.ts';
@@ -9,18 +9,17 @@ import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 import { LIST_FIELDS } from '@pins/peas-row-commons-lib/constants/audit.ts';
-import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
-import { mapAddressViewModelToDb } from '@pins/peas-row-commons-lib/util/address.ts';
 import { CONTACT_MAPPINGS, handleContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
 import { toDateOrNull } from '@pins/peas-row-commons-lib/util/dates.ts';
 import { toFloat } from '@pins/peas-row-commons-lib/util/numbers.ts';
 import { getOptionalStringParam, getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
-import { remapFlattenedFieldsToArray } from '@pins/peas-row-commons-lib/util/remap-flattened-fields.ts';
 import { nullEmptyString } from '@pins/peas-row-commons-lib/util/strings.ts';
-import type { AddressItem } from '@pins/peas-row-commons-lib/util/types.ts';
-import { addSessionData } from '@planning-inspectorate/core/util';
-import { booleanToYesNoValue, clearDataFromSession, yesNoToBoolean } from '@planning-inspectorate/dynamic-forms';
-import type { Request, Response } from 'express';
+import {
+	booleanToYesNoValue,
+	clearDataFromSession,
+	type SaveDataFn,
+	yesNoToBoolean
+} from '@planning-inspectorate/dynamic-forms';
 import type { Logger } from 'pino';
 import { AUDIT_ACTIONS, type AuditAction, type AuditEntry, type AuditService } from '../../../audit/index.ts';
 import {
@@ -48,16 +47,21 @@ import {
 } from './linked-cases.ts';
 import { getFieldDisplayNames } from './question-utils.ts';
 import type { LinkedCaseAuditSource } from './types.ts';
-import { mapProceduresToArray, sortProceduresChronologically } from './view-model.ts';
+import {
+	type ExistingProcedures,
+	existingProceduresForCase,
+	handleProcedureDynamicSectionEdits,
+	handleProcedureManageListEdits
+} from './update-procedures.ts';
 
-interface HandlerParams {
-	req: Request;
-	res: Response;
-	data: Record<string, any>;
-}
-
-export function buildUpdateCase(service: ManageService, clearAnswer = false) {
-	return async ({ req, data }: HandlerParams) => {
+/**
+ * Handle updating a case
+ * - When a question is saved from an edit page
+ * - When an answer is created/updated/deleted from a ManageList question
+ */
+export function buildUpdateCase(service: ManageService, clearAnswer = false): SaveDataFn {
+	return async (params) => {
+		const { req, data, isDynamicSection, dynamicSectionId, dynamicSectionFieldName } = params;
 		const { db, logger, audit, getEntraClient } = service;
 		const id = getStringParam(req.params, 'id');
 		const section = getOptionalStringParam(req.params, 'section') || undefined;
@@ -76,7 +80,6 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 
 		if (updatedFieldNames.length === 0) {
 			logger.info({ id }, 'no case updates to apply');
-
 			return;
 		}
 
@@ -86,33 +89,23 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 			});
 		}
 
-		// Fetch existing procedures if any flattened procedure fields are present
-		const hasFlattenedProcedureFields = Object.keys(rawAnswers).some((key) => /^procedureDetails_\d+_/.test(key));
+		// if set, then sync the procedures - this is a manage list question update
+		let existingProcedures: ExistingProcedures | undefined;
 
-		if (hasFlattenedProcedureFields) {
-			const existingCase = await db.case.findUnique({
-				where: { id },
-				include: {
-					Procedures: {
-						orderBy: {
-							createdDate: 'asc'
-						},
-						include: {
-							Inspector: true,
-							ProcedureType: true
-						}
-					}
-				}
-			});
-
-			const sortedProcedures = sortProceduresChronologically(existingCase?.Procedures);
-
-			remapFlattenedFieldsToArray(
-				rawAnswers,
-				mapProceduresToArray(sortedProcedures || []) || [],
-				/^procedureDetails_(\d+)_(.+)$/,
-				'procedureDetails'
-			);
+		// handle procedure edits - put them into the procedureDetails array for handleProcedureUpdates
+		if (isDynamicSection && dynamicSectionFieldName === 'procedureDetails' && dynamicSectionId) {
+			// all rawAnswers edits apply to the procedure, move them into the procedure object
+			const procedure: Record<string, string> = { id: dynamicSectionId };
+			for (const key of Object.keys(rawAnswers)) {
+				procedure[key] = rawAnswers[key];
+				delete rawAnswers[key];
+			}
+			rawAnswers.procedureDetails = [procedure];
+		} else if ('procedureDetails' in rawAnswers) {
+			// if not a dynamic section and `procedureDetails` has edits, this is the manage list question
+			// this requires syncing all procedures, as the manage list question can include create/update/delete changes
+			// but only for the manage list fields (5 of), not all procedure fields
+			existingProcedures = await existingProceduresForCase(db, id);
 		}
 
 		if (Object.keys(rawAnswers).length === 0) {
@@ -129,7 +122,7 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 		// cases (e.g. siblings being reparented), not just the case currently being edited.
 		const linkedCaseChanges = extractLinkedCaseChanges(rawAnswers);
 
-		const formattedAnswersForQuery = mapCasePayload(rawAnswers);
+		const formattedAnswersForQuery = mapCasePayload(rawAnswers, existingProcedures);
 
 		logger.info({ fields: updatedFieldNames }, 'update case input');
 
@@ -180,7 +173,8 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false) {
 				userDisplayNameMap,
 				linkedCasesReferenceMap,
 				logger,
-				result.finalLinkedCaseGroup
+				result.finalLinkedCaseGroup,
+				existingProcedures
 			);
 		}
 
@@ -335,10 +329,13 @@ async function updateCaseData(
  * It explicitly handles complex multi-field objects (Applicant, Authority, site addresses)
  * first, then passes any remaining keys to the generic mapping logic.
  */
-export function mapCasePayload(flatData: Record<string, unknown>): Prisma.CaseUpdateInput {
+export function mapCasePayload(
+	flatData: Record<string, unknown>,
+	existingProcedures?: ExistingProcedures
+): Prisma.CaseUpdateInput {
 	const prismaPayload: Prisma.CaseUpdateInput = {};
 
-	handleUniqueDataCases(flatData, prismaPayload);
+	handleUniqueDataCases(flatData, prismaPayload, existingProcedures);
 
 	const [mainTableData, nestedData] = parseDataToCorrectTable(flatData);
 	const genericPayload = generateNestedQuery(mainTableData, nestedData);
@@ -396,7 +393,11 @@ function generateNestedQuery(mainTableData: Record<string, any>, nestedData: Rec
 /**
  * Handles all the unique data cases that require creating new tables or deleting the tables.
  */
-function handleUniqueDataCases(flatData: Record<string, unknown>, prismaPayload: Prisma.CaseUpdateInput) {
+function handleUniqueDataCases(
+	flatData: Record<string, unknown>,
+	prismaPayload: Prisma.CaseUpdateInput,
+	existingProcedures?: ExistingProcedures
+) {
 	handleAuthority(flatData, prismaPayload);
 	handleSiteAddresses(flatData, prismaPayload);
 	handleAbeyancePeriod(flatData, prismaPayload);
@@ -404,7 +405,7 @@ function handleUniqueDataCases(flatData: Record<string, unknown>, prismaPayload:
 	handleContacts(flatData, prismaPayload, CONTACT_MAPPINGS);
 	handleRelatedCases(flatData, prismaPayload);
 	stripLinkedCaseDetails(flatData);
-	handleProcedureDetails(flatData, prismaPayload);
+	handleProcedureUpdates(flatData, prismaPayload, existingProcedures);
 	handleBooleans(flatData);
 	handleCaseOfficer(flatData, prismaPayload);
 	handleOutcomes(flatData, prismaPayload);
@@ -517,182 +518,35 @@ export function handleOutcomes(flatData: Record<string, unknown>, prismaPayload:
 }
 
 /**
- * Handles the creation, deletion, and updating of Procedures
- * Uses FE generated GUIDs for the ID to perform smart upserts just like the above handleOutcomes,
- * which means we can do upserts and deletions relatively simply
+ * Handles the updating of Procedures
  */
-export function handleProcedureDetails(flatData: Record<string, unknown>, prismaPayload: Prisma.CaseUpdateInput) {
+export function handleProcedureUpdates(
+	flatData: Record<string, unknown>,
+	prismaPayload: Prisma.CaseUpdateInput,
+	existingProcedures?: ExistingProcedures
+) {
 	if (!Object.hasOwn(flatData, 'procedureDetails') || !Array.isArray(flatData.procedureDetails)) {
 		delete flatData.procedureDetails;
 		return;
 	}
 
-	const upserts = [];
-	// Used for deleting, if an id has not been provided then we can assume it has been removed,
-	// as the entire array of items is passed in for updating every save.
-	const providedIds = [];
-
-	for (const proc of flatData.procedureDetails) {
-		const procedureData = {
-			...(proc.procedureTypeId && {
-				ProcedureType: { connect: { id: proc.procedureTypeId } }
-			}),
-			...(proc.procedureStatusId && {
-				ProcedureStatus: { connect: { id: proc.procedureStatusId } }
-			}),
-			...(proc.adminProcedureType && {
-				AdminProcedureType: { connect: { id: proc.adminProcedureType } }
-			}),
-			...(proc.siteVisitTypeId && {
-				SiteVisitType: { connect: { id: proc.siteVisitTypeId } }
-			}),
-
-			// Scalar date fields
-			siteVisitDate: toDateOrNull(proc.siteVisitDate),
-			caseOfficerVerificationDate: toDateOrNull(proc.caseOfficerVerificationDate),
-
-			// Hearing fields
-			hearingTargetDate: toDateOrNull(proc.hearingTargetDate),
-			earliestHearingDate: toDateOrNull(proc.earliestHearingDate),
-			confirmedHearingDate: toDateOrNull(proc.confirmedHearingDate),
-			hearingClosedDate: toDateOrNull(proc.hearingClosedDate),
-			hearingDateNotificationDate: toDateOrNull(proc.hearingDateNotificationDate),
-			hearingVenueNotificationDate: toDateOrNull(proc.hearingVenueNotificationDate),
-			partiesNotifiedOfHearingDate: toDateOrNull(proc.partiesNotifiedOfHearingDate),
-			// '||' because we get an empty string here, not undefined and the DB is 'Decimal?' so can't take empty string (null fine)
-			hearingPreparationTimeDays: proc.hearingPreparationTimeDays || null,
-			hearingTravelTimeDays: proc.hearingTravelTimeDays || null,
-			hearingSittingTimeDays: proc.hearingSittingTimeDays || null,
-			hearingReportingTimeDays: proc.hearingReportingTimeDays || null,
-
-			// Inquiry fields
-			inquiryTargetDate: toDateOrNull(proc.inquiryTargetDate),
-			earliestInquiryDate: toDateOrNull(proc.earliestInquiryDate),
-			confirmedInquiryDate: toDateOrNull(proc.confirmedInquiryDate),
-			inquiryClosedDate: toDateOrNull(proc.inquiryClosedDate),
-			inquiryDateNotificationDate: toDateOrNull(proc.inquiryDateNotificationDate),
-			inquiryVenueNotificationDate: toDateOrNull(proc.inquiryVenueNotificationDate),
-			partiesNotifiedOfInquiryDate: toDateOrNull(proc.partiesNotifiedOfInquiryDate),
-			// '||' because we get an empty string here, not undefined and the DB is 'Decimal?' so can't take empty string (null fine)
-			inquiryPreparationTimeDays: proc.inquiryPreparationTimeDays || null,
-			inquiryTravelTimeDays: proc.inquiryTravelTimeDays || null,
-			inquirySittingTimeDays: proc.inquirySittingTimeDays || null,
-			inquiryReportingTimeDays: proc.inquiryReportingTimeDays || null,
-
-			// Conference / pre-inquiry fields
-			conferenceDate: toDateOrNull(proc.conferenceDate),
-			conferenceNoteSentDate: toDateOrNull(proc.conferenceNoteSentDate),
-			preInquiryMeetingDate: toDateOrNull(proc.preInquiryMeetingDate),
-			preInquiryNoteSentDate: toDateOrNull(proc.preInquiryNoteSentDate),
-
-			// Document dates
-			proofsOfEvidenceReceivedDate: toDateOrNull(proc.proofsOfEvidenceReceivedDate),
-			statementsOfCaseReceivedDate: toDateOrNull(proc.statementsOfCaseReceivedDate),
-			inHouseDate: toDateOrNull(proc.inHouseDate),
-			offerForWrittenRepresentationsDate: toDateOrNull(proc.offerForWrittenRepresentationsDate),
-			deadlineForConsentDate: toDateOrNull(proc.deadlineForConsentDate)
-		};
-
-		const RELATION_FIELDS = [
-			{ key: 'hearingFormatId', relation: 'HearingFormat' },
-			{ key: 'inquiryFormatId', relation: 'InquiryFormat' },
-			{ key: 'conferenceFormatId', relation: 'ConferenceFormat' },
-			{ key: 'preInquiryMeetingFormatId', relation: 'PreInquiryMeetingFormat' },
-			{ key: 'inquiryOrConferenceId', relation: 'InquiryOrConference' }
-		];
-
-		const relationCreate: Record<string, unknown> = {};
-		const relationUpdate: Record<string, unknown> = {};
-
-		for (const { key, relation } of RELATION_FIELDS) {
-			if (proc[key]) {
-				const payload = { [relation]: { connect: { id: proc[key] } } };
-				Object.assign(relationCreate, payload);
-				Object.assign(relationUpdate, payload);
-			} else {
-				Object.assign(relationUpdate, { [relation]: { disconnect: true } });
-			}
+	if (existingProcedures) {
+		// if existingProcedures is passed, then procedures need syncing for manage list edits
+		const updates = handleProcedureManageListEdits(flatData.procedureDetails, existingProcedures);
+		if (Object.keys(updates).length > 0) {
+			prismaPayload.Procedures = updates;
 		}
-
-		const hearingPayload = getVenuePayload(proc.hearingVenue);
-		const inquiryPayload = getVenuePayload(proc.inquiryVenue);
-		const conferencePayload = getVenuePayload(proc.conferenceVenue);
-
-		providedIds.push(proc.id);
-
-		upserts.push({
-			where: { id: proc.id },
-			update: {
-				...procedureData,
-				...relationUpdate,
-				...(proc.inspectorId && proc.inspectorId !== PROCEDURE_CONSTANTS.NOT_ALLOCATED
-					? {
-							Inspector: {
-								connectOrCreate: {
-									where: { idpUserId: proc.inspectorId },
-									create: { idpUserId: proc.inspectorId }
-								}
-							}
-						}
-					: { Inspector: { disconnect: true } }),
-				...(hearingPayload.updateVenue && { HearingVenue: hearingPayload.updateVenue }),
-				...(inquiryPayload.updateVenue && { InquiryVenue: inquiryPayload.updateVenue }),
-				...(conferencePayload.updateVenue && { ConferenceVenue: conferencePayload.updateVenue })
-			},
-			create: {
-				...procedureData,
-				id: proc.id,
-				...relationCreate,
-				...(proc.inspectorId &&
-					proc.inspectorId !== PROCEDURE_CONSTANTS.NOT_ALLOCATED && {
-						Inspector: {
-							connectOrCreate: {
-								where: { idpUserId: proc.inspectorId },
-								create: { idpUserId: proc.inspectorId }
-							}
-						}
-					}),
-				...(hearingPayload.createVenue && { HearingVenue: hearingPayload.createVenue }),
-				...(inquiryPayload.createVenue && { InquiryVenue: inquiryPayload.createVenue }),
-				...(conferencePayload.createVenue && { ConferenceVenue: conferencePayload.createVenue })
-			}
-		});
+	} else {
+		// else we are dealing with dynamic section question edits for a single procedure
+		const updates = handleProcedureDynamicSectionEdits(flatData.procedureDetails);
+		if (updates.length > 0) {
+			prismaPayload.Procedures = {
+				update: updates
+			};
+		}
 	}
-
-	// Just in case nothing is provided and we get an `[undefined]`
-	const validIds = providedIds.filter(Boolean);
-
-	prismaPayload.Procedures = {
-		...(upserts.length > 0 && { upsert: upserts }),
-
-		deleteMany: {
-			id: { notIn: validIds }
-		}
-	};
 
 	delete flatData.procedureDetails;
-}
-
-/**
- * Determines whether to return a create / update based on
- * whether we already have an ID for the address
- */
-function getVenuePayload(venue: AddressItem) {
-	if (!venue) return { createVenue: undefined, updateVenue: undefined };
-
-	const mappedVenue = mapAddressViewModelToDb(venue);
-
-	if (venue.id) {
-		return {
-			createVenue: { connect: { id: venue.id } },
-			updateVenue: { update: mappedVenue }
-		};
-	}
-
-	return {
-		createVenue: { create: mappedVenue },
-		updateVenue: { create: mappedVenue }
-	};
 }
 
 /**
@@ -969,7 +823,8 @@ async function recordAuditEntries(
 	userDisplayNameMap: Map<string, string>,
 	linkedCasesReferenceMap: { id: string; reference: string }[],
 	logger: Logger,
-	finalLinkedCaseGroup?: FinalLinkedCaseGroup
+	finalLinkedCaseGroup?: FinalLinkedCaseGroup,
+	existingProcedures?: ExistingProcedures
 ): Promise<void> {
 	try {
 		const allAuditEntries: AuditEntry[] = [];
@@ -1132,7 +987,8 @@ async function recordAuditEntries(
 					userId,
 					(previousValues.Procedures as ProcedureWithRelations[]) ?? [],
 					answersSnapshot.procedureDetails as Record<string, unknown>[],
-					userDisplayNameMap
+					userDisplayNameMap,
+					existingProcedures
 				)
 			);
 		}
