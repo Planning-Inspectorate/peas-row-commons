@@ -31,7 +31,7 @@ function createBaseCaseData(overrides: Record<string, unknown> = {}) {
 		Status: { id: 'new', displayName: 'New case' },
 		Priority: null,
 		Authority: null,
-		SiteAddress: null,
+		SiteAddresses: [],
 		Dates: null,
 		CaseOfficer: null,
 		InspectorBand: null,
@@ -108,28 +108,62 @@ describe('mappers', () => {
 
 		it('should map site address', () => {
 			const caseData = createBaseCaseData({
-				SiteAddress: {
-					line1: '10 Downing Street',
-					line2: null,
-					townCity: 'London',
-					county: null,
-					postcode: 'SW1A 2AA'
-				}
+				SiteAddresses: [
+					{
+						id: 'site-1',
+						Address: {
+							line1: '10 Downing Street',
+							line2: null,
+							townCity: 'London',
+							county: null,
+							postcode: 'SW1A 2AA'
+						}
+					}
+				]
 			});
 
 			const result = mapCaseDetailsData(caseData as any, undefined, new Map());
 
-			assert.strictEqual(result.siteAddress?.addressLine1, '10 Downing Street');
-			assert.strictEqual(result.siteAddress?.townCity, 'London');
-			assert.strictEqual(result.siteAddress?.postcode, 'SW1A 2AA');
-			assert.strictEqual(result.siteAddress?.addressLine2, undefined);
+			assert.deepStrictEqual(result.siteAddressDetails, [
+				{
+					id: 'site-1',
+					siteAddress: {
+						addressLine1: '10 Downing Street',
+						addressLine2: undefined,
+						townCity: 'London',
+						county: undefined,
+						postcode: 'SW1A 2AA'
+					}
+				}
+			]);
 		});
 
-		it('should return undefined siteAddress when no address exists', () => {
-			const caseData = createBaseCaseData({ SiteAddress: null });
+		it('should return an empty address list without falling back to the legacy address', () => {
+			const caseData = createBaseCaseData({ SiteAddress: { line1: 'Legacy address' } });
 			const result = mapCaseDetailsData(caseData as any, undefined, new Map());
 
-			assert.strictEqual(result.siteAddress, undefined);
+			assert.deepStrictEqual(result.siteAddressDetails, []);
+		});
+
+		it('should map every site address in query order', () => {
+			const caseData = createBaseCaseData({
+				SiteAddresses: [
+					{ id: 'site-2', Address: { line1: 'First address' } },
+					{ id: 'site-1', Address: { line1: 'Second address', line2: 'Second line', county: 'Somerset' } }
+				]
+			});
+			const result = mapCaseDetailsData(caseData as any, undefined, new Map());
+
+			assert.deepStrictEqual(
+				result.siteAddressDetails.map(({ id }) => id),
+				['site-2', 'site-1']
+			);
+			assert.deepStrictEqual(
+				result.siteAddressDetails.map(({ siteAddress }) => siteAddress?.addressLine1),
+				['First address', 'Second address']
+			);
+			assert.strictEqual(result.siteAddressDetails[1].siteAddress?.addressLine2, 'Second line');
+			assert.strictEqual(result.siteAddressDetails[1].siteAddress?.county, 'Somerset');
 		});
 
 		it('should map location when present', () => {
