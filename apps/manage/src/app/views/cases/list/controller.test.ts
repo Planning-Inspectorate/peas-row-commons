@@ -478,7 +478,8 @@ describe('Case Controller', () => {
 					selectedItemsPerPage: itemsPerPage,
 					totalCases: totalItems,
 					totalPages: expected.totalPages,
-					filtersValue: ''
+					filtersValue: '',
+					sortValue: '&sortBy=receivedDate&order=desc' // Default sort params
 				});
 
 				const uiPagination = nestedUiItems;
