@@ -162,35 +162,51 @@ describe('getSortHeaders', () => {
 	});
 
 	describe('aria-sort and arrow indicators', () => {
-		it('should mark only the active column with aria-sort and an arrow', () => {
+		it('should set aria-sort on the active column header and "none" on others', () => {
 			const req = createMockReq();
 			const headers = getSortHeaders(req, COLUMNS, {
 				sortField: 'receivedDate',
 				sortOrder: Prisma.SortOrder.desc
 			});
 
-			// inactive
-			const referenceHeader = findHeaderByKey(headers, 'reference');
-			assert.match(referenceHeader.html, /aria-sort="none"/);
-			assert.doesNotMatch(referenceHeader.html, /aria-hidden/);
+			// active column → aria-sort on the <th> cell, descending arrow in html
+			const active = findHeaderByKey(headers, 'receivedDate');
+			assert.strictEqual(active.attributes?.['aria-sort'], 'descending');
+			assert.match(active.html, /▼/);
+			assert.match(active.html, /aria-hidden="true"/);
+			// no longer on the link
+			assert.doesNotMatch(active.html, /aria-sort/);
 
-			// active
-			const receivedDateHeader = findHeaderByKey(headers, 'receivedDate');
-			assert.match(receivedDateHeader.html, /aria-sort="descending"/);
-			assert.match(receivedDateHeader.html, /aria-hidden="true"/);
-			assert.match(receivedDateHeader.html, /▼/);
+			// inactive column → aria-sort "none", no arrow
+			const inactive = findHeaderByKey(headers, 'reference');
+			assert.strictEqual(inactive.attributes?.['aria-sort'], 'none');
+			assert.doesNotMatch(inactive.html, /aria-hidden/);
+			assert.doesNotMatch(inactive.html, /aria-sort/);
 		});
 
-		it('should show ascending arrow when the active column is ascending', () => {
+		it('should set aria-sort ascending and show the up arrow when active column is ascending', () => {
 			const req = createMockReq();
 			const headers = getSortHeaders(req, COLUMNS, {
 				sortField: 'receivedDate',
 				sortOrder: Prisma.SortOrder.asc
 			});
 
-			const receivedDateHeader = findHeaderByKey(headers, 'receivedDate');
-			assert.match(receivedDateHeader.html, /aria-sort="ascending"/);
-			assert.match(receivedDateHeader.html, /▲/);
+			const active = findHeaderByKey(headers, 'receivedDate');
+			assert.strictEqual(active.attributes?.['aria-sort'], 'ascending');
+			assert.match(active.html, /▲/);
+		});
+
+		it('should set aria-sort "none" on every header when no column is active', () => {
+			const req = createMockReq();
+			const headers = getSortHeaders(req, COLUMNS, {
+				// a column not in COLUMNS → none are active
+				sortField: 'somethingElse',
+				sortOrder: Prisma.SortOrder.asc
+			});
+
+			for (const header of headers) {
+				assert.strictEqual(header.attributes?.['aria-sort'], 'none');
+			}
 		});
 	});
 
