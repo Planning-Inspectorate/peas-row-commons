@@ -1,0 +1,6 @@
+.pins-case-history-table {
+	// May need to handle very long filenames, so wrap
+	.govuk-table__cell {
+		overflow-wrap: anywhere;
+	}
+}

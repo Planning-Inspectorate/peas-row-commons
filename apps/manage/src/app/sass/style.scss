@@ -10,8 +10,15 @@ $font-family: arial, helvetica, sans-serif;
 @use 'node_modules/govuk-frontend/dist/govuk/index' as govuk;
 @use 'node_modules/@planning-inspectorate/core/dist/ui/header/pins-header';
 @use 'node_modules/@planning-inspectorate/core/dist/ui/footer/pins-footer';
+
+// Global overrides
+@use 'overrides/govuk-notification-banner';
+
+// Custom components
 @use 'components/filter-accordion';
 @use 'components/filter-tags';
+@use 'components/pins-case-history-table';
+@use 'components/pins-documents-table';
 
 // TODO HRP-578 split this one file into multiple files for better maintainability, e.g. one per page or component
 // Use this pattern for any new additions
@@ -118,13 +125,6 @@ $font-family: arial, helvetica, sans-serif;
 
 	&:focus {
 		@include govuk.govuk-focused-text;
-	}
-}
-
-// Table header for documents table need to be centred for checkbox alignment
-.govuk-table.pins-documents-table {
-	.govuk-table__header {
-		vertical-align: middle;
 	}
 }
 

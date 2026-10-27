@@ -1,0 +1,11 @@
+.govuk-table.pins-documents-table {
+	// Table header for documents table need to be centred for checkbox alignment
+	.govuk-table__header {
+		vertical-align: middle;
+	}
+
+	// May need to handle very long filenames, so wrap
+	.govuk-table__cell {
+		overflow-wrap: anywhere;
+	}
+}
