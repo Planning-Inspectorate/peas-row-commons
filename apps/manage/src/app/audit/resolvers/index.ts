@@ -4,3 +4,4 @@ export { resolveInspectorAudits, type InspectorWithUser } from './inspector-reso
 export { resolveLinkedCaseAudits, resolveRelatedCaseAudits } from './list-field-resolver.ts';
 export { resolveOutcomeAudits, type DecisionWithRelations } from './outcome-resolver.ts';
 export { resolveProcedureAudits, type ProcedureWithRelations } from './procedure-resolver.ts';
+export { resolveSiteAddressAudits, type CaseToAddressWithAddress } from './site-address-resolver.ts';

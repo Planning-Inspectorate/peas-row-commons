@@ -7,12 +7,7 @@ import {
 	INSPECTOR_BANDS,
 	PRIORITIES
 } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
-import {
-	formatAddress,
-	formatDate,
-	formatMonetaryValue,
-	formatValue
-} from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import { formatDate, formatMonetaryValue, formatValue } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
 import { ENVIRONMENT_NAME, loadEnvironmentConfig } from '../../config.ts';
 
 interface ResolverContext {
@@ -141,22 +136,6 @@ const FIELD_RESOLVERS: Record<string, FieldResolver> = {
 			return {
 				oldValue: oldAuthority?.name ?? '-',
 				newValue: newAuthority?.name ?? '-'
-			};
-		}
-	},
-
-	/**
-	 * Site address — the form submits an address object, the DB stores it
-	 * as a relation. Formats both as a comma-separated address string.
-	 */
-	siteAddress: {
-		resolve(previousCase, newAnswer) {
-			const oldAddress = previousCase.SiteAddress as Record<string, unknown> | null;
-			const newAddress = newAnswer as Record<string, unknown> | null;
-
-			return {
-				oldValue: formatAddress(oldAddress),
-				newValue: formatAddress(newAddress)
 			};
 		}
 	},

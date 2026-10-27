@@ -196,61 +196,6 @@ describe('resolveFieldValues', () => {
 		});
 	});
 
-	describe('siteAddress resolver', () => {
-		it('should format DB-shaped address to display string', () => {
-			const previousCase = {
-				SiteAddress: {
-					line1: '221b Baker Street',
-					line2: null,
-					townCity: 'London',
-					county: null,
-					postcode: 'NW1 6XE'
-				}
-			};
-			const newAnswer = {
-				addressLine1: 'Buckingham Palace',
-				addressLine2: null,
-				townCity: 'London',
-				county: null,
-				postcode: 'SW1'
-			};
-
-			const result = resolveFieldValues('siteAddress', previousCase, newAnswer);
-
-			assert.strictEqual(result.oldValue, '221b Baker Street, London, NW1 6XE');
-			assert.strictEqual(result.newValue, 'Buckingham Palace, London, SW1');
-		});
-
-		it('should return "-" when old address is null', () => {
-			const previousCase = { SiteAddress: null };
-			const newAnswer = {
-				addressLine1: '10 Downing Street',
-				townCity: 'London',
-				postcode: 'SW1A 2AA'
-			};
-
-			const result = resolveFieldValues('siteAddress', previousCase, newAnswer);
-
-			assert.strictEqual(result.oldValue, '-');
-			assert.strictEqual(result.newValue, '10 Downing Street, London, SW1A 2AA');
-		});
-
-		it('should return "-" when new address is null', () => {
-			const previousCase = {
-				SiteAddress: {
-					line1: '221b Baker Street',
-					townCity: 'London',
-					postcode: 'NW1 6XE'
-				}
-			};
-
-			const result = resolveFieldValues('siteAddress', previousCase, null);
-
-			assert.strictEqual(result.oldValue, '221b Baker Street, London, NW1 6XE');
-			assert.strictEqual(result.newValue, '-');
-		});
-	});
-
 	describe('caseOfficerId resolver', () => {
 		const userDisplayNameMap = new Map([
 			['entra-1', 'John Doe'],

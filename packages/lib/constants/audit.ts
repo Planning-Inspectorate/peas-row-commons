@@ -8,7 +8,8 @@ export const LIST_FIELDS = new Set([
 	'objectorDetails',
 	'contactDetails',
 	'procedureDetails',
-	'outcomeDetails'
+	'outcomeDetails',
+	'siteAddressDetails'
 ]);
 
 /**
