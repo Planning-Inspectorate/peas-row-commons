@@ -114,7 +114,8 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			resultsEndNumber,
 			totalCases,
 			filtersValue: currentFiltersString,
-			uiItems: paginationItems
+			uiItems: paginationItems,
+			sortValue
 		};
 
 		return res.render('views/cases/list/view.njk', {
