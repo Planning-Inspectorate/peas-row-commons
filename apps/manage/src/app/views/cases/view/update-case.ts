@@ -24,6 +24,7 @@ import type { Request, Response } from 'express';
 import type { Logger } from 'pino';
 import { AUDIT_ACTIONS, type AuditAction, type AuditEntry, type AuditService } from '../../../audit/index.ts';
 import {
+	type CaseToAddressWithAddress,
 	type ContactWithAddress,
 	type DecisionWithRelations,
 	type InspectorWithUser,
@@ -34,7 +35,8 @@ import {
 	resolveLinkedCaseAudits,
 	resolveOutcomeAudits,
 	resolveProcedureAudits,
-	resolveRelatedCaseAudits
+	resolveRelatedCaseAudits,
+	resolveSiteAddressAudits
 } from '../../../audit/resolvers/index.ts';
 import { JOURNEY_ID } from './journey.ts';
 import {
@@ -1145,6 +1147,17 @@ async function recordAuditEntries(
 					(previousValues.Outcome as { CaseDecisions?: DecisionWithRelations[] })?.CaseDecisions ?? [],
 					answersSnapshot.outcomeDetails as Record<string, unknown>[],
 					userDisplayNameMap
+				)
+			);
+		}
+
+		if (answersSnapshot.siteAddressDetails) {
+			allAuditEntries.push(
+				...resolveSiteAddressAudits(
+					caseId,
+					userId,
+					(previousValues.SiteAddresses as CaseToAddressWithAddress[]) ?? [],
+					answersSnapshot.siteAddressDetails as { id: string; siteAddress?: Record<string, unknown> | null }[]
 				)
 			);
 		}

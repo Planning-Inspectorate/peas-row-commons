@@ -82,7 +82,12 @@ export const AUDIT_ACTIONS = {
 	// Outcome
 	OUTCOME_ADDED: 'OUTCOME_ADDED',
 	OUTCOME_UPDATED: 'OUTCOME_UPDATED',
-	OUTCOME_DELETED: 'OUTCOME_DELETED'
+	OUTCOME_DELETED: 'OUTCOME_DELETED',
+
+	// Site address
+	SITE_ADDRESS_ADDED: 'SITE_ADDRESS_ADDED',
+	SITE_ADDRESS_UPDATED: 'SITE_ADDRESS_UPDATED',
+	SITE_ADDRESS_DELETED: 'SITE_ADDRESS_DELETED'
 } as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[keyof typeof AUDIT_ACTIONS];
@@ -189,7 +194,12 @@ export const AUDIT_TEMPLATES: Record<AuditAction, string> = {
 	// Outcome
 	[AUDIT_ACTIONS.OUTCOME_ADDED]: '{outcomeName} was added to outcome(s).',
 	[AUDIT_ACTIONS.OUTCOME_UPDATED]: 'Outcome ({outcomeName}) {fieldName} was updated from {oldValue} to {newValue}',
-	[AUDIT_ACTIONS.OUTCOME_DELETED]: '{outcomeName} was deleted from outcome(s).'
+	[AUDIT_ACTIONS.OUTCOME_DELETED]: '{outcomeName} was deleted from outcome(s).',
+
+	// Site address
+	[AUDIT_ACTIONS.SITE_ADDRESS_ADDED]: '{newValue} was added to site addresses.',
+	[AUDIT_ACTIONS.SITE_ADDRESS_UPDATED]: 'Site address was updated from {oldValue} to {newValue}',
+	[AUDIT_ACTIONS.SITE_ADDRESS_DELETED]: '{oldValue} was deleted from site addresses.'
 };
 
 /**
