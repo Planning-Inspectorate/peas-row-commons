@@ -16,6 +16,9 @@ export interface SortableColumn {
 export interface SortHeaderViewModel {
 	html: string;
 	classes?: string;
+	attributes: {
+		'aria-sort': 'none' | 'ascending' | 'descending';
+	};
 }
 
 export function getSortHeaders(
@@ -46,12 +49,11 @@ export function getSortHeaders(
 		const arrow = isActive ? (current.sortOrder === Prisma.SortOrder.asc ? '▲' : '▼') : '';
 
 		const html =
-			`<a class="govuk-link govuk-link--no-visited-state" ` +
-			`href="${href}" aria-sort="${ariaSort}">` +
+			`<a class="govuk-link govuk-link--no-visited-state" href="${href}">` +
 			`${column.label}` +
 			(arrow ? ` <span aria-hidden="true">${arrow}</span>` : '') +
 			`</a>`;
 
-		return { html, classes: column.classes };
+		return { html, classes: column.classes, attributes: { 'aria-sort': ariaSort } };
 	});
 }
