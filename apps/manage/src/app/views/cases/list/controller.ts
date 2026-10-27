@@ -54,6 +54,11 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			allowedFields: ['receivedDate', 'reference', 'name', 'statusId']
 		});
 
+		const sortParams = new URLSearchParams();
+		sortParams.set('sortBy', sanitisedOrderByQuery.sortField);
+		sortParams.set('order', sanitisedOrderByQuery.sortOrder);
+		const sortValue = `&${sortParams.toString()}`;
+
 		const query = generateQuery(db, skipSize, pageSize, whereClause, sanitisedOrderByQuery);
 
 		let cases, totalCases, typeCountsGrouped, subTypeCountsGrouped, statusCountsGrouped;
@@ -238,7 +243,9 @@ function generateQuery(
 ) {
 	return [
 		db.case.findMany({
-			orderBy: { [orderBy.sortField]: orderBy.sortOrder },
+			// Secondary ordering on id ensures that tied cases are returned consistently across skip/take
+			// This is important for pagination, otherwise the same case could appear on multiple pages if the sort field is not unique
+			orderBy: [{ [orderBy.sortField]: orderBy.sortOrder }, { id: 'asc' }],
 			include: {
 				Type: { select: { displayName: true } },
 				SubType: { select: { displayName: true } },
