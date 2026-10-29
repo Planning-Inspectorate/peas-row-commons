@@ -52,7 +52,8 @@ export type CustomComponentQuestionProps =
  * ```ts
  * export const MY_QUESTIONS = {
  *   ...
- * } satisfies Record<string, MpescQuestionProps>;
+ * } satisfies MpescQuestions;
  * ```
  */
 export type MpescQuestionProps = QuestionProps | CustomComponentQuestionProps;
+export type MpescQuestions = Record<string, MpescQuestionProps>;
