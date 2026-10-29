@@ -11,6 +11,8 @@ import type { CaseListFields, CaseListViewModel, CurrentFilters } from './types.
 
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/contact-type.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
+import { getSortHeaders } from '@pins/peas-row-commons-lib/util/sort-headers.ts';
+import { getSortQueries } from '@pins/peas-row-commons-lib/util/sort-queries.ts';
 import { formatInTimeZone } from 'date-fns-tz';
 import type { Request } from 'express';
 
@@ -46,7 +48,18 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 
 		const whereClause = createCombinedWhereClause(req, filterGenerator, searchString);
 
-		const query = generateQuery(db, skipSize, pageSize, whereClause);
+		const sanitisedOrderByQuery = getSortQueries<Prisma.CaseOrderByWithRelationInput>(req, {
+			sortBy: 'receivedDate',
+			sortOrder: 'desc',
+			allowedFields: ['receivedDate', 'reference', 'name', 'statusId']
+		});
+
+		const sortParams = new URLSearchParams();
+		sortParams.set('sortBy', sanitisedOrderByQuery.sortField);
+		sortParams.set('order', sanitisedOrderByQuery.sortOrder);
+		const sortValue = `&${sortParams.toString()}`;
+
+		const query = generateQuery(db, skipSize, pageSize, whereClause, sanitisedOrderByQuery);
 
 		let cases, totalCases, typeCountsGrouped, subTypeCountsGrouped, statusCountsGrouped;
 
@@ -84,7 +97,18 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			pageNumber
 		);
 
-		// We now generate this in TS rather than inside of Nunjucls
+		const sortHeaders = getSortHeaders(
+			req,
+			[
+				{ key: 'reference', label: 'Reference', classes: 'govuk-!-width-one-fifth' },
+				{ key: 'name', label: 'Case name', classes: 'govuk-!-width-one-quarter' },
+				{ key: 'receivedDate', label: 'Received', classes: 'govuk-!-width-one-quarter' },
+				{ key: 'statusId', label: 'Status', classes: 'govuk-!-width-one-quarter' }
+			],
+			sanitisedOrderByQuery
+		);
+
+		// We now generate this in TS rather than inside of Nunjucks
 		const paginationItems = getPaginationModel(req, totalPages, pageNumber);
 
 		const paginationParams = {
@@ -95,7 +119,8 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			resultsEndNumber,
 			totalCases,
 			filtersValue: currentFiltersString,
-			uiItems: paginationItems
+			uiItems: paginationItems,
+			sortValue
 		};
 
 		return res.render('views/cases/list/view.njk', {
@@ -107,7 +132,8 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			paginationParams,
 			filters,
 			clearSearchUrl: currentFiltersString ? `${currentPath}?${currentFiltersString.slice(1)}` : currentPath,
-			searchValue: searchString
+			searchValue: searchString,
+			sortHeaders
 		});
 	};
 }
@@ -208,10 +234,18 @@ function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerato
 /**
  * Creates the query we will use to get the Case data
  */
-function generateQuery(db: PrismaClient, skipSize: number, pageSize: number, whereClause: Record<string, any>) {
+function generateQuery(
+	db: PrismaClient,
+	skipSize: number,
+	pageSize: number,
+	whereClause: Record<string, any>,
+	orderBy: { sortField: string; sortOrder: 'asc' | 'desc' }
+) {
 	return [
 		db.case.findMany({
-			orderBy: { receivedDate: 'desc' },
+			// Secondary ordering on id ensures that tied cases are returned consistently across skip/take
+			// This is important for pagination, otherwise the same case could appear on multiple pages if the sort field is not unique
+			orderBy: [{ [orderBy.sortField]: orderBy.sortOrder }, { id: 'asc' }],
 			include: {
 				Type: { select: { displayName: true } },
 				SubType: { select: { displayName: true } },

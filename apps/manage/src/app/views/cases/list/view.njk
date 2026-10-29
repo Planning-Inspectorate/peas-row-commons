@@ -54,7 +54,7 @@
                         of <strong>{{ paginationParams.totalCases }}</strong> results
                     </span>
                     <span class="pins-pagination-options">
-                        {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalCases, paginationParams.pageNumber, searchValue, paginationParams.filtersValue) }}
+                        {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalCases, paginationParams.pageNumber, searchValue, paginationParams.filtersValue, paginationParams.sortValue) }}
                     </span>
                 </p>
 
@@ -85,19 +85,13 @@
     {% for case in caseRows %}
         {% set cases = (cases.push([
             {
-                html: "<a class='govuk-link' target='_blank' href='/cases/" +  case.id +"'>" + case.reference + "</a>",
-                attributes: {
-                    "data-sort-value": case.reference
-                }
+                html: "<a class='govuk-link' target='_blank' href='/cases/" +  case.id +"'>" + case.reference + "</a>"
             },
             {
                 text: case.name
             },
             {
-                text: case.receivedDate,
-                attributes: {
-                    "data-sort-value": case.receivedDateSortable
-                }
+                text: case.receivedDate
             },
             {
                 text: case.Status.displayName
@@ -105,42 +99,8 @@
         ]), cases) %}
     {% endfor %}
 
-    {% set headers = [
-        {
-            text: 'Reference',
-            classes: "govuk-!-width-one-fifth",
-            attributes: {
-                "aria-sort": "none"
-            }
-        },
-        {
-            text: 'Case name',
-            classes: "govuk-!-width-one-quarter",
-            attributes: {
-                "aria-sort": "none"
-            }
-        },
-        {
-            text: 'Received',
-            classes: "govuk-!-width-one-quarter",
-            attributes: {
-                "aria-sort": "descending"
-            }
-        },
-        {
-            text: 'Status',
-            classes: "govuk-!-width-one-quarter",
-            attributes: {
-                "aria-sort": "none"
-            }
-        }
-    ] %}
-
     {{ govukTable({
-        attributes: {
-            "data-module": "moj-sortable-table"
-        },
-        head: headers,
+        head: sortHeaders,
         rows: cases
     }) }}
 {% endmacro %}
