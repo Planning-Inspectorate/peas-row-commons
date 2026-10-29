@@ -48,7 +48,7 @@
     "@prisma/client": "^7.10.1",
     "accessible-autocomplete": "^3.0.2",
     "archiver": "^8.0.0",
-    "body-parser": "^2.3.0",
+    "body-parser": "^2.4.0",
     "cfb": "^1.2.2",
     "connect-redis": "^10.0.0",
     "date-fns": "^4.4.0",
