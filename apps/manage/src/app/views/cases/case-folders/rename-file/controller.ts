@@ -109,7 +109,7 @@ export function buildRenameFile(service: ManageService): AsyncRequestHandlerWith
 			addSessionData(req, folderId, { fileRenamed: true, renamedFileName: newFileName }, 'folder');
 
 			return res.redirect(returnUrl);
-		} catch (error: any) {
+		} catch (error) {
 			wrapPrismaError({
 				error,
 				logger,

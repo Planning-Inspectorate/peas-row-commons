@@ -2,6 +2,7 @@ import { readSessionData } from '@planning-inspectorate/core/util';
 import assert from 'node:assert';
 import { describe, it, mock } from 'node:test';
 import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
+import type { FolderContext } from './controller.ts';
 import { buildDeleteFolderController, buildDeleteFolderView, getRedirectUrl } from './controller.ts';
 
 describe('Delete Folder Controller', () => {
@@ -10,7 +11,7 @@ describe('Delete Folder Controller', () => {
 			const folder = {
 				caseId: 'case-1',
 				ParentFolder: null
-			};
+			} as FolderContext['folder'];
 
 			const result = getRedirectUrl(folder);
 			assert.strictEqual(result, '/cases/case-1/case-folders');
@@ -23,7 +24,7 @@ describe('Delete Folder Controller', () => {
 					id: 'parent-99',
 					displayName: 'My Parent Folder'
 				}
-			};
+			} as FolderContext['folder'];
 
 			const result = getRedirectUrl(folder);
 			assert.strictEqual(result, '/cases/case-1/case-folders/parent-99/my-parent-folder');
@@ -67,6 +68,32 @@ describe('Delete Folder Controller', () => {
 			const context = res.render.mock.calls[0].arguments[1];
 			assert.strictEqual(context.pageHeading, 'Delete folder');
 			assert.strictEqual(context.folders[0].displayName, 'Target Folder');
+		});
+
+		it('should throw an error if the folder is not linked to a case', async () => {
+			const mockService = {
+				db: {
+					folder: {
+						findUnique: () =>
+							Promise.resolve({
+								id: 'folder-123',
+								displayName: 'Target Folder',
+								caseId: null,
+								ParentFolder: null
+							})
+					}
+				},
+				logger: { error: () => {} }
+			};
+			const req = { params: { folderId: 'folder-123', id: 'case-1' } };
+			const res = {};
+
+			const handler = buildDeleteFolderView(mockService as any);
+
+			await assert.rejects(
+				async () => await handler(req as any, res as any),
+				'Folder folder-123 is not linked to a case'
+			);
 		});
 
 		it('should throw error if folderId param is missing', async () => {

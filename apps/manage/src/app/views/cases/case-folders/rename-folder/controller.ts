@@ -96,7 +96,7 @@ export function buildRenameFolder(service: ManageService): AsyncRequestHandlerWi
 			const returnUrl = req.baseUrl.replace(/\/rename-folder\/?$/, '');
 
 			return res.redirect(returnUrl);
-		} catch (error: any) {
+		} catch (error) {
 			wrapPrismaError({
 				error,
 				logger,

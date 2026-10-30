@@ -3,15 +3,30 @@ import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/cl
 import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import { addSessionData, clearSessionData, readSessionData, wrapPrismaError } from '@planning-inspectorate/core/util';
+import type { GovUkErrorList } from '@planning-inspectorate/dynamic-forms';
 import type { Request, Response } from 'express';
 import { AUDIT_ACTIONS } from '../../../../audit/actions.ts';
+
+export type FolderContext = {
+	folder: {
+		id: string;
+		displayName: string;
+		caseId: string;
+		ParentFolder?: {
+			id: string;
+			displayName: string;
+		} | null;
+	};
+	backLinkUrl: string;
+	currentUrl: string;
+};
 
 /**
  * Grabs folder and metadata for displaying,
  * used inside the main view but also when
  * re-rendering after an error with POST-ing
  */
-async function getFolderContext(db: PrismaClient, folderId: string) {
+async function getFolderContext(db: PrismaClient, folderId: string): Promise<FolderContext> {
 	const folder = await db.folder.findUnique({
 		select: {
 			id: true,
@@ -31,18 +46,24 @@ async function getFolderContext(db: PrismaClient, folderId: string) {
 		throw new Error(`No folder found for id: ${folderId}`);
 	}
 
+	const { caseId } = folder;
+
+	if (caseId === null) {
+		throw new Error(`Folder ${folderId} is not linked to a case`);
+	}
+
 	const backLinkUrl = `/cases/${folder.caseId}/case-folders/${folder.id}/${stringToKebab(folder.displayName)}`;
 
 	const currentUrl = `${backLinkUrl}/delete-folder`;
 
-	return { folder, backLinkUrl, currentUrl };
+	return { folder: { ...folder, caseId }, backLinkUrl, currentUrl };
 }
 
 /**
  * Renders the page that asks for confirmation, used on load and if an
  * error occurs during POST-ing
  */
-function renderConfirmationView(res: Response, context: any, errorSummary?: any[] | null) {
+function renderConfirmationView(res: Response, context: FolderContext, errorSummary?: GovUkErrorList | null) {
 	if (errorSummary) {
 		res.locals.errorSummary = errorSummary;
 	}
@@ -67,7 +88,7 @@ export function buildDeleteFolderView(service: ManageService) {
 			const errorSummary = getSessionErrors(req, id);
 
 			return renderConfirmationView(res, context, errorSummary);
-		} catch (error: any) {
+		} catch (error) {
 			wrapPrismaError({
 				error,
 				logger,
@@ -123,7 +144,7 @@ export function buildDeleteFolderController(service: ManageService) {
  * Generates a redirect url based on whether we are inside of a folder
  * or on the base overview page.
  */
-export function getRedirectUrl(folder: any) {
+export function getRedirectUrl(folder: FolderContext['folder']) {
 	const baseUrl = `/cases/${folder.caseId}/case-folders`;
 
 	if (folder.ParentFolder && folder.ParentFolder.displayName) {

@@ -21,7 +21,7 @@ describe('DefinedColumnsTableQuestion', () => {
 					fieldName: 'officer',
 					format: (val: string) => `Formatted: ${val}`
 				},
-				{ header: 'Decision Date', fieldName: 'date', sortType: 'date' }
+				{ header: 'Decision Date', fieldName: 'date' }
 			]
 		});
 
@@ -115,26 +115,29 @@ describe('DefinedColumnsTableQuestion', () => {
 			const rows = question.createRow(mockViewModel, item, 1);
 
 			assert.strictEqual(rows[0].text, 'Plot 2');
-			assert.deepStrictEqual(rows[0].attributes, { 'data-sort-value': 2 });
+			assert.deepStrictEqual(rows[0].attributes, { 'data-sort-value': '2' });
 			assert.strictEqual(rows[1].html, 'ABC');
+		});
+
+		it('should use the linked DateQuestion to sort date values', () => {
+			const dateQuestion = new DateQuestion({ fieldName: 'date', title: 'Decision Date', question: 'When?' });
+			dateQuestion.formatAnswerForSummary = () => [{ value: '2024-12-25' }];
+			question.section!.questions[2] = dateQuestion;
+
+			const rows = question.createRow(mockViewModel, { id: '1', date: '2024-12-25' });
+
+			assert.strictEqual(rows[2].attributes?.['data-sort-value'], new Date('2024-12-25').getTime().toString());
 		});
 	});
 
 	describe('handleSorting()', () => {
-		it('should return unix timestamp when column sortType is date', () => {
-			const col = { header: 'Date', fieldName: 'date', sortType: 'date' };
-			const result = question.handleSorting('', col as TableColumn, {} as Question, '2024-12-25');
-
-			assert.strictEqual(result, new Date('2024-12-25').getTime());
-		});
-
 		it('should return unix timestamp if linked question is DateQuestion', () => {
 			const col = { header: 'Date', fieldName: 'dob' };
 			const dateQuestion = new DateQuestion({ fieldName: 'dob', title: 't', question: 'q' });
 
 			const result = question.handleSorting('01/01/2024', col as TableColumn, dateQuestion as Question, '2024-01-01');
 
-			assert.strictEqual(result, new Date('01/01/2024').getTime());
+			assert.strictEqual(result, new Date('01/01/2024').getTime().toString());
 		});
 
 		it('should return cell content as fallback', () => {

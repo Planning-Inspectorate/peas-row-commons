@@ -1,4 +1,5 @@
 import type { ManageService } from '#service';
+import type { FolderNode } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { asyncHandler } from '@planning-inspectorate/core/util';
 import {
 	buildGetJourney,
@@ -59,7 +60,7 @@ export function createRoutes(service: ManageService): IRouter {
 function createMiddlewares(service: ManageService) {
 	return [
 		buildGetJourney((req, journeyResponse) => {
-			const folderStructure = (req as Request & { folderStructure: Record<string, any> }).folderStructure;
+			const folderStructure = (req as Request & { folderStructure: FolderNode[] }).folderStructure;
 			const questions = getQuestions(folderStructure);
 			return createJourney(JOURNEY_ID, questions, journeyResponse, req);
 		}),

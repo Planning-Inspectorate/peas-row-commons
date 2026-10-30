@@ -27,7 +27,7 @@ export function buildViewCaseFolders(service: ManageService): AsyncRequestHandle
 					where: { caseId: id, parentFolderId: null, deletedAt: null } // Only get top level folders for this view.
 				})
 			]);
-		} catch (error: any) {
+		} catch (error) {
 			wrapPrismaError({
 				error,
 				logger,

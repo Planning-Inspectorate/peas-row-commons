@@ -19,7 +19,7 @@ export default class OptionalTimeDateTimeInput extends DateTimeQuestion {
 		section: Section,
 		journey: Journey,
 		customViewData: Record<string, unknown>,
-		payload?: Record<string, any>
+		payload?: Record<string, unknown>
 	): QuestionViewModel {
 		const viewModel = super.prepQuestionForRendering(section, journey, customViewData, payload);
 

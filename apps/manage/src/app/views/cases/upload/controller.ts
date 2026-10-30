@@ -48,7 +48,7 @@ export function buildUploadToFolderView(service: ManageService): AsyncRequestHan
 			caseRow = Case;
 			folder = restOfFolder;
 			drafts = DraftDocuments;
-		} catch (error: any) {
+		} catch (error) {
 			wrapPrismaError({
 				error,
 				logger,
