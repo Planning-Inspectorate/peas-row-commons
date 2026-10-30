@@ -287,6 +287,7 @@ export function combineSessionAndDbData(res: Response, answers: Record<string, u
  * Without this, the example from combineSessionAndDbData would show 4 inspectors (3 DB inspectors + 1 session inspector),
  * where the session inspector should have replaced one of the 3 inspectors from DB.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 export function mergeArraysById(dbArray: any[], sessionArray: any[], idKey = 'id', removedIds: string[] = []) {
 	const merged = dbArray.filter((dbItem) => !removedIds.includes(dbItem[idKey]));
 

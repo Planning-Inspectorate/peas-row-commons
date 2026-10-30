@@ -151,7 +151,7 @@ export default class CustomDatePeriodValidator extends BaseValidator {
 
 				if (!result.isEmpty()) {
 					const errors = result.array();
-					const fieldError = errors.find((e: any) => e.path === targetField);
+					const fieldError = errors.find((e) => e.type === 'field' && e.path === targetField);
 					if (fieldError) {
 						throw new Error(fieldError.msg);
 					}

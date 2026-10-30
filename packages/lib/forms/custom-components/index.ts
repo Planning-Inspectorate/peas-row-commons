@@ -11,6 +11,7 @@ import OptionalTimeDateTimeInput from './optional-time-date-time-input/question.
 import LegacyRadioQuestion from './radio-with-legacy-options/question.ts';
 import LegacySelectQuestion from './select-with-legacy-options/question.ts';
 
+export type { FlatFolder, FolderNode } from './nested-folder-radio/question.ts';
 export type { CustomComponentQuestionProps, MpescQuestionProps } from './question-props.ts';
 
 export const CUSTOM_COMPONENTS = Object.freeze({

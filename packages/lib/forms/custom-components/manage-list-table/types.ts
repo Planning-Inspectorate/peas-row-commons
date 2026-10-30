@@ -7,7 +7,7 @@ export interface TableHeadCell {
 	classes?: string;
 	colspan?: number;
 	rowspan?: number;
-	attributes?: Record<string, any>;
+	attributes?: Record<string, string>;
 }
 
 export interface TableRowCell {
@@ -17,7 +17,7 @@ export interface TableRowCell {
 	classes?: string;
 	colspan?: number;
 	rowspan?: number;
-	attributes?: Record<string, any>;
+	attributes?: Record<string, string>;
 }
 
 export interface TableManageListQuestionView extends BaseQuestionViewData {

@@ -1,11 +1,13 @@
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import {
 	COMMON_LAND_FOLDERS,
 	PEAS_FOLDERS,
 	ROW_FOLDERS
 } from '@pins/peas-row-commons-database/src/seed/static-data/folders.ts';
 import { CASE_TYPES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/types.ts';
+import type { FlatFolder, FolderNode } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
-import type { BreadcrumbItem, FlatFolder, FolderBreadcrumb, FolderNode } from './types.ts';
+import type { BreadcrumbItem, FolderBreadcrumb } from './types.ts';
 
 const ROW_FOLDERS_MAP = {
 	[CASE_TYPES_ID.COASTAL_ACCESS]: ROW_FOLDERS,
@@ -54,7 +56,7 @@ export function addCaseIdToFolders(folders: Folder[], caseId: string) {
 
 		if (folder.ChildFolders?.create) {
 			folderWithId.ChildFolders = {
-				create: folder.ChildFolders.create.map((child: any) => ({
+				create: folder.ChildFolders.create.map((child) => ({
 					...child,
 					caseId
 				}))
@@ -72,7 +74,7 @@ export function addCaseIdToFolders(folders: Folder[], caseId: string) {
  * "return"ing it and just awaiting in the function-call. Even though we
  * lose a tick.
  */
-export async function createFolders(folders: Folder[], caseId: string, tx: any) {
+export async function createFolders(folders: Folder[], caseId: string, tx: Prisma.TransactionClient) {
 	const folderData = addCaseIdToFolders(folders, caseId);
 
 	await Promise.all(

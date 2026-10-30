@@ -117,7 +117,7 @@ export function buildSaveController({ db, logger, audit }: ManageService) {
 			if (linkedCaseAuditEntries.length) {
 				await audit.recordMany(linkedCaseAuditEntries);
 			}
-		} catch (error: any) {
+		} catch (error) {
 			wrapPrismaError({
 				error,
 				logger,

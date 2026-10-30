@@ -104,7 +104,7 @@ export async function buildUserDisplayNameMap(
 	opts: {
 		logger: BaseLogger;
 		initClient: InitEntraClient;
-		session: any;
+		session: AuthSession;
 	}
 ): Promise<Map<string, string>> {
 	const userMap = new Map(groupMembers.allUsers.map((member) => [member.id, member.displayName]));

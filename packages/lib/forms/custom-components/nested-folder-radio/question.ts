@@ -6,7 +6,6 @@ export interface FlatFolder {
 	id: string;
 	parentFolderId?: string | null;
 	displayName: string;
-	[key: string]: any;
 }
 
 export interface FolderNode extends FlatFolder {
@@ -46,7 +45,7 @@ export default class NestedFolderQuestion extends Question {
 	private findPath(
 		nodes: FolderNode[] | undefined,
 		targetId: string,
-		key: string = 'id',
+		key: 'id' | 'displayName' = 'id',
 		currentPath: string[] = []
 	): string[] | null {
 		if (!nodes || !Array.isArray(nodes)) return null;
@@ -126,7 +125,7 @@ export default class NestedFolderQuestion extends Question {
 	/**
 	 * Recursive helper to find a folder by ID in the tree
 	 */
-	private getFolderById(folders: any[], id: string): any | null {
+	private getFolderById(folders: FolderNode[], id: string): FolderNode | null {
 		for (const folder of folders) {
 			if (folder.id === id) return folder;
 
