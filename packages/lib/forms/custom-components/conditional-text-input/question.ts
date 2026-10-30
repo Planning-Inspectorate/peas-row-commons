@@ -93,7 +93,7 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 		section: Section,
 		journey: Journey,
 		customViewData: Record<string, unknown>,
-		payload: Record<string, any> | undefined,
+		payload: Record<string, unknown> | undefined,
 		options: PrepQuestionForRenderingOptions
 	): QuestionViewModel {
 		const answers = this.answerObjectFromJourneyResponse(journey.response, options);

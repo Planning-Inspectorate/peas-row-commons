@@ -1,3 +1,4 @@
+import type { Question } from '@planning-inspectorate/dynamic-forms';
 import { BaseValidator } from '@planning-inspectorate/dynamic-forms';
 import { body } from 'express-validator';
 
@@ -21,7 +22,7 @@ export default class NestedRequiredValidator extends BaseValidator {
 	 * We only need to check if the base level folder was at least selected
 	 * if they did that then we know they've at least chosen something.
 	 */
-	validate(questionObj: any) {
+	validate(questionObj: Question) {
 		return body().custom((_, { req }) => {
 			const rootInputName = `${questionObj.fieldName}_level_0_root`;
 

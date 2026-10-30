@@ -25,7 +25,7 @@ export function buildViewCaseHistory(service: ManageService): AsyncRequestHandle
 				},
 				where: { id }
 			});
-		} catch (error: any) {
+		} catch (error) {
 			wrapPrismaError({
 				error,
 				logger,

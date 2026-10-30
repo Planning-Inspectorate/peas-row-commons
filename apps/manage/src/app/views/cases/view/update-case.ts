@@ -55,6 +55,7 @@ import { mapProceduresToArray, sortProceduresChronologically } from './view-mode
 interface HandlerParams {
 	req: Request;
 	res: Response;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 	data: Record<string, any>;
 }
 
@@ -320,7 +321,7 @@ async function updateCaseData(
 
 			return { previous: caseRow, updated };
 		});
-	} catch (error: any) {
+	} catch (error) {
 		wrapPrismaError({
 			error,
 			logger,
@@ -352,8 +353,11 @@ export function mapCasePayload(flatData: Record<string, unknown>): Prisma.CaseUp
  * Separates out the data into 2 groups: data on main Case table
  * and data on a secondary sub table (e.g. Dates)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 function parseDataToCorrectTable(flatData: Record<string, any>) {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any  -- TODO HRP-706 implement answer model
 	const mainTableData: Record<string, any> = {};
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any  -- TODO HRP-706 implement answer model
 	const nestedData: Record<string, Record<string, any>> = {};
 
 	Object.keys(flatData).forEach((key) => {
@@ -380,10 +384,12 @@ function parseDataToCorrectTable(flatData: Record<string, any>) {
 /**
  * Creates the payload ready to upsert based on the two data sets (main vs nested).
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any  -- TODO HRP-706 implement answer model
 function generateNestedQuery(mainTableData: Record<string, any>, nestedData: Record<string, Record<string, any>>) {
 	const prismaPayload: Prisma.CaseUpdateInput = { ...mainTableData };
 
 	Object.entries(nestedData).forEach(([relationName, data]) => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 		(prismaPayload as any)[relationName] = {
 			upsert: {
 				create: data,
@@ -700,6 +706,7 @@ function getVenuePayload(venue: AddressItem) {
 /**
  * Handles connecting or creating a Case Officer based on their Entra ID.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 function handleCaseOfficer(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
 	if (flatData.caseOfficerId) {
 		prismaPayload.CaseOfficer = {
@@ -716,9 +723,11 @@ function handleCaseOfficer(flatData: Record<string, any>, prismaPayload: Prisma.
 /**
  * Handles the deletion and creation of related cases
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 function handleRelatedCases(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
 	if (!Object.hasOwn(flatData, 'relatedCaseDetails')) return;
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 	const newRelatedCases = flatData.relatedCaseDetails.map((relatedCase: any) => ({
 		reference: relatedCase.relatedCaseReference
 	}));
@@ -734,6 +743,7 @@ function handleRelatedCases(flatData: Record<string, any>, prismaPayload: Prisma
 	delete flatData.relatedCaseDetails;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 function handleBooleans(flatData: Record<string, any>) {
 	if (Object.hasOwn(flatData, 'isFencingPermanent')) {
 		flatData.isFencingPermanent = yesNoToBoolean(flatData.isFencingPermanent);
@@ -743,6 +753,7 @@ function handleBooleans(flatData: Record<string, any>) {
 /**
  * Handles the creation and deletion of inspectors.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 function handleInspectors(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
 	if (!Object.hasOwn(flatData, 'inspectorDetails')) return;
 
@@ -772,6 +783,7 @@ function handleInspectors(flatData: Record<string, any>, prismaPayload: Prisma.C
 /**
  * Handles mapping the authority data fields to the db fields.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 function handleAuthority(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
 	if (!Object.hasOwn(flatData, 'authorityName')) return;
 
@@ -783,12 +795,14 @@ function handleAuthority(flatData: Record<string, any>, prismaPayload: Prisma.Ca
 /**
  * Handles the creation, update, and deletion of site addresses.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 function handleSiteAddresses(flatData: Record<string, any>, prismaPayload: Prisma.CaseUpdateInput) {
 	if (!Object.hasOwn(flatData, 'siteAddressDetails') || !Array.isArray(flatData.siteAddressDetails)) return;
 
 	const upserts: Prisma.CaseToAddressUpsertWithWhereUniqueWithoutCaseInput[] = [];
 	const providedIds: string[] = [];
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 	for (const item of flatData.siteAddressDetails as Record<string, any>[]) {
 		const itemId = item.id as string | undefined;
 		if (!itemId || !item.siteAddress) continue;

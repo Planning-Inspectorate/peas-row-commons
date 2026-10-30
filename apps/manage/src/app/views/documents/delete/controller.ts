@@ -1,10 +1,24 @@
 import type { ManageService } from '#service';
-import type { Document } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { getCountHeading } from '@pins/peas-row-commons-lib/util/file-count-headings.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 import { addSessionData, wrapPrismaError } from '@planning-inspectorate/core/util';
+import type { GovUkErrorList } from '@planning-inspectorate/dynamic-forms';
 import type { Request, Response } from 'express';
 import { AUDIT_ACTIONS } from '../../../audit/actions.ts';
+
+export type DocumentsContext = {
+	documents: {
+		id: string;
+		fileName: string;
+		caseId: string;
+		deletedAt: Date | null;
+		Folder: {
+			id: string;
+			displayName: string;
+		};
+	}[];
+	previousUrl: string;
+};
 
 /**
  * Extracts document IDs from the request body.
@@ -19,7 +33,11 @@ function extractDocumentIds(req: Request): string[] {
 /**
  * Grabs meta data for all documents to remove
  */
-async function getDocumentsContext(db: any, documentIds: string[], req: Request) {
+async function getDocumentsContext(
+	db: ManageService['db'],
+	documentIds: string[],
+	req: Request
+): Promise<DocumentsContext> {
 	const documents = await db.document.findMany({
 		select: {
 			id: true,
@@ -51,9 +69,9 @@ async function getDocumentsContext(db: any, documentIds: string[], req: Request)
 function renderConfirmationView(
 	req: Request,
 	res: Response,
-	context: any,
+	context: DocumentsContext,
 	safeReturnUrl: string,
-	errorSummary?: any[]
+	errorSummary?: GovUkErrorList
 ) {
 	if (errorSummary) {
 		res.locals.errorSummary = errorSummary;
@@ -96,7 +114,7 @@ export function buildDeleteFileView(service: ManageService) {
 			const context = await getDocumentsContext(db, documentIds, req);
 
 			return renderConfirmationView(req, res, context, safeReturnUrl);
-		} catch (error: any) {
+		} catch (error) {
 			wrapPrismaError({
 				error,
 				logger,
@@ -126,7 +144,7 @@ export function buildDeleteFileController(service: ManageService) {
 
 		if (!documentIds.length) throw new Error('documentIds body param required');
 
-		let context;
+		let context: DocumentsContext | undefined;
 
 		try {
 			context = await getDocumentsContext(db, documentIds, req);
@@ -153,7 +171,7 @@ export function buildDeleteFileController(service: ManageService) {
 					action: AUDIT_ACTIONS.FILES_DELETED,
 					userId,
 					metadata: {
-						files: context.documents.map((doc: Document) => doc.fileName)
+						files: context.documents.map((doc) => doc.fileName)
 					}
 				});
 			}
@@ -164,7 +182,9 @@ export function buildDeleteFileController(service: ManageService) {
 		} catch (error) {
 			logger.error({ error, documentIds }, 'Failed to delete documents');
 
-			const errorMessage = [{ text: 'Failed to delete documents, please try again.' }];
+			const errorMessage = [
+				{ text: 'Failed to delete documents, please try again.', href: '#pins-delete-files-button' }
+			];
 			return renderConfirmationView(
 				req,
 				res,
@@ -211,7 +231,7 @@ export function buildRemoveFileFromSelection(service: ManageService) {
 		try {
 			const context = await getDocumentsContext(service.db, updatedDocumentIds, req);
 			return renderConfirmationView(req, res, context, safeReturnUrl);
-		} catch (error: any) {
+		} catch (error) {
 			wrapPrismaError({
 				error,
 				logger: service.logger,

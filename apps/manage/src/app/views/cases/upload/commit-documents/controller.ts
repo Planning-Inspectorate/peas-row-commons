@@ -145,7 +145,7 @@ export async function createDocumentsFromDrafts(
 		logger.info({ caseId, count: drafts.length }, 'Documents successfully committed to DB');
 
 		return { createdLength: drafts.length, fileNames };
-	} catch (error: any) {
+	} catch (error) {
 		wrapPrismaError({
 			error,
 			logger,

@@ -17,7 +17,7 @@ export function sanitiseSearchQuery(query: string | undefined) {
 }
 
 interface Constraint {
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
 interface SearchOption {

@@ -1,4 +1,5 @@
 import type { ManageService } from '#service';
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 import { createWhereClause, sanitiseSearchQuery } from '@pins/peas-row-commons-lib/util/search-queries.ts';
@@ -27,7 +28,7 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 		const [filesDeleted] = readAndClearSessionData(req);
 
 		let totalDocuments = 0;
-		let documents: any[] = [];
+		let documents: Prisma.DocumentGetPayload<{ include: { Folder: true; Case: true; UserDocuments: true } }>[] = [];
 
 		if (searchString) {
 			const searchCriteria = createWhereClause(sanitiseSearchQuery(searchString), [

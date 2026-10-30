@@ -124,7 +124,7 @@ describe('TableManageListQuestion', () => {
 			const result = tableQuestion.createCell(dateQuestion, { dob: '1990-01-01' });
 
 			assert.strictEqual(result.html, '1990-01-01');
-			assert.strictEqual(result.attributes?.['data-sort-value'], new Date('1990-01-01').getTime());
+			assert.strictEqual(result.attributes?.['data-sort-value'], new Date('1990-01-01').getTime().toString());
 		});
 	});
 
@@ -142,7 +142,7 @@ describe('TableManageListQuestion', () => {
 
 			assert.strictEqual(result?.text, 'Plot 1');
 			assert.strictEqual(result?.classes, 'govuk-table__cell');
-			assert.deepStrictEqual(result?.attributes, { 'data-sort-value': 1 });
+			assert.deepStrictEqual(result?.attributes, { 'data-sort-value': '1' });
 		});
 
 		it('should number subsequent rows correctly', () => {
@@ -151,7 +151,7 @@ describe('TableManageListQuestion', () => {
 			const result = tableQuestion.createIndexCell(9);
 
 			assert.strictEqual(result?.text, 'Plot 10');
-			assert.deepStrictEqual(result?.attributes, { 'data-sort-value': 10 });
+			assert.deepStrictEqual(result?.attributes, { 'data-sort-value': '10' });
 		});
 	});
 
@@ -179,7 +179,7 @@ describe('TableManageListQuestion', () => {
 
 			assert.strictEqual(row.length, 4);
 			assert.strictEqual(row[0].text, 'Plot 3');
-			assert.deepStrictEqual(row[0].attributes, { 'data-sort-value': 3 });
+			assert.deepStrictEqual(row[0].attributes, { 'data-sort-value': '3' });
 			assert.strictEqual(row[1].html, 'Ans 1');
 		});
 	});

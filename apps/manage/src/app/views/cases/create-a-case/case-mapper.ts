@@ -7,6 +7,7 @@ import { kebabToCamel } from './questions-utils.ts';
 /**
  * Takes an answers object and formats the data correctly ready for insertion into DB.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 export function mapAnswersToCaseInput(answers: Record<string, any>, reference: string) {
 	const caseType = resolveCaseType(answers);
 	const caseSubType = resolveCaseSubType(caseType, answers);
@@ -54,6 +55,7 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 	}
 
 	const mappedApplicants = answers.applicantDetails
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 		.map((item: Record<string, any>) => {
 			const contact: Prisma.ContactCreateWithoutCaseInput = {
 				ContactType: { connect: { id: CONTACT_TYPE_ID.APPLICANT_APPELLANT } },
@@ -96,6 +98,7 @@ export function mapAnswersToCaseInput(answers: Record<string, any>, reference: s
 /**
  * Grabs both type and subtype (if it exists)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 export function resolveCaseTypeIds(answers: Record<string, any>) {
 	const typeId = resolveCaseType(answers);
 	const subtypeId = resolveCaseSubType(typeId, answers);
@@ -105,6 +108,7 @@ export function resolveCaseTypeIds(answers: Record<string, any>) {
 /**
  * Finds case type based on casework area
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 function resolveCaseType(answers: Record<string, any>) {
 	const areaId = answers.caseworkArea;
 
@@ -116,6 +120,7 @@ function resolveCaseType(answers: Record<string, any>) {
  * Finds subtype based on type, unlike type has the potential to be null, as
  * there are some types that do not have a subtype.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 function resolveCaseSubType(caseType: string | null, answers: Record<string, any>): string | null {
 	if (!caseType) return null;
 
@@ -134,6 +139,7 @@ function mapSiteAddresses(siteAddressDetails: unknown): Prisma.CaseToAddressCrea
 		}));
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 function hasSiteAddress(item: Record<string, any>): boolean {
 	const address = item?.siteAddress;
 	return address && typeof address === 'object' && Object.values(address).some((val) => Boolean(val));

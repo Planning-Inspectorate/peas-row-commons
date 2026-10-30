@@ -81,7 +81,7 @@ export function buildCreateFolders(service: ManageService): AsyncRequestHandlerW
 			const returnUrl = getRedirectUrl(id, parentFolder, folderId);
 
 			return res.redirect(returnUrl);
-		} catch (error: any) {
+		} catch (error) {
 			wrapPrismaError({
 				error,
 				logger,
@@ -113,7 +113,7 @@ export function getErroredFolderName(req: Request, id: string) {
 /**
  * Verifies if a parent folder exists and belongs to the specified case
  */
-export async function getParentFolder(db: any, folderId: string | null, caseId: string) {
+export async function getParentFolder(db: ManageService['db'], folderId: string | null, caseId: string) {
 	if (!folderId) return null;
 
 	return db.folder.findUnique({
@@ -126,7 +126,7 @@ export async function getParentFolder(db: any, folderId: string | null, caseId: 
  * Calculates the next available display order for the new folder,
  * should be highested number in folder + 100.
  */
-export async function getNextDisplayOrder(db: any, parentFolderId: string | null, caseId: string) {
+export async function getNextDisplayOrder(db: ManageService['db'], parentFolderId: string | null, caseId: string) {
 	const aggregation = await db.folder.aggregate({
 		where: {
 			parentFolderId,

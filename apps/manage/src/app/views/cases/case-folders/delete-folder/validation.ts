@@ -42,7 +42,7 @@ export function buildValidateDeleteFolder(service: ManageService, setSessionData
 					};
 				}
 			}
-		} catch (error: any) {
+		} catch (error) {
 			wrapPrismaError({
 				error,
 				logger,

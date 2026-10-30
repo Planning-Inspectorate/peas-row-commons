@@ -29,7 +29,6 @@ import { LEGACY_CONTACT_TYPES, LEGACY_SECTIONS } from './static-data/legacy/inde
 
 type ReferenceDataInput = {
 	id: string;
-	[key: string]: any;
 };
 
 interface PrismaDelegate<T> {

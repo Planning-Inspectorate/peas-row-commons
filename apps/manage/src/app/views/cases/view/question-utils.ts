@@ -33,6 +33,10 @@ import { LEGACY_CONTACT_TYPES } from '@pins/peas-row-commons-database/src/seed/s
 import { GENERAL_CONSTANTS } from '@pins/peas-row-commons-lib/constants/general.ts';
 import { INSPECTOR_CONSTANTS } from '@pins/peas-row-commons-lib/constants/inspectors.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
+import type {
+	ConditionalOptionsQuestionParams,
+	OptionWithCondition
+} from '@pins/peas-row-commons-lib/forms/custom-components/conditional-text-input/question.ts';
 import type { MpescQuestionProps } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import { CUSTOM_COMPONENTS } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import type TableManageListQuestion from '@pins/peas-row-commons-lib/forms/custom-components/manage-list-table/question.ts';
@@ -41,7 +45,13 @@ import { createPersonQuestions } from '@pins/peas-row-commons-lib/util/contact.t
 import CustomDatePeriodValidator from '@pins/peas-row-commons-lib/validators/custom-date-period-validator.ts';
 import { ManageListItemsValidator } from '@pins/peas-row-commons-lib/validators/linked-cases-validator.ts';
 import { ManageListCrossFieldValidator } from '@pins/peas-row-commons-lib/validators/manage-list-cross-field-validator.ts';
-import type { BaseValidator, Question, SummaryFormatterContext } from '@planning-inspectorate/dynamic-forms';
+import type {
+	BaseValidator,
+	Journey,
+	Option,
+	Question,
+	SummaryFormatterContext
+} from '@planning-inspectorate/dynamic-forms';
 import {
 	AddressValidator,
 	BOOLEAN_OPTIONS,
@@ -59,12 +69,11 @@ import { referenceDataToRadioOptions } from '../create-a-case/questions-utils.ts
 import { buildExistingLeadCaseMap, getLinkedCaseDetailRows, type OtherCaseWithParent } from './linked-cases.ts';
 import type { UserMap } from './types.ts';
 
-type RadioOption = { text: string; value: string } | { divider: string };
-
 // Adds a divider 'Or' between options
-export const OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER = OBJECTOR_STATUSES.map(
-	(s) => ({ text: s.displayName, value: s.id }) as RadioOption
-).toSpliced(-1, 0, { divider: 'or' });
+export const OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER = OBJECTOR_STATUSES.map<Option>((s) => ({
+	text: s.displayName,
+	value: s.id
+})).toSpliced(-1, 0, { divider: 'or' });
 
 const getAuthorityOptions = () => {
 	let LPAs: Prisma.AuthorityUncheckedCreateInput[];
@@ -90,7 +99,7 @@ const getAuthorityOptions = () => {
 
 interface FormattingContext {
 	getQuestion: (fieldName: string) => Question | undefined;
-	mockJourney: any;
+	mockJourney: Journey;
 }
 
 /**
@@ -1101,8 +1110,8 @@ export const OUTCOME_QUESTIONS = {
 		fieldName: 'outcomeId',
 		url: 'outcome',
 		validators: [new RequiredValidator('Select the outcome')],
-		options: OUTCOMES.map((status) => {
-			const option: any = {
+		options: OUTCOMES.map<ConditionalOptionsQuestionParams['options'][number]>((status) => {
+			const option: OptionWithCondition = {
 				text: status.displayName,
 				value: status.id
 			};
@@ -2408,7 +2417,7 @@ export const ALL_QUESTIONS = {
 };
 
 const FIELD_DISPLAY_NAMES: Record<string, string> = Object.fromEntries(
-	Object.values(ALL_QUESTIONS).map((q: any) => [q.fieldName, q.title])
+	Object.values(ALL_QUESTIONS).map((q) => [q.fieldName, q.title])
 );
 
 /**
