@@ -1,5 +1,7 @@
 process.env.ENVIRONMENT = 'dev';
 
+import { OUTCOME_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/outcome.ts';
+import { OBJECTOR_STATUSES, OUTCOMES } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { ManageListCrossFieldValidator } from '@pins/peas-row-commons-lib/validators/manage-list-cross-field-validator.ts';
 import { AddressValidator, COMPONENT_TYPES } from '@planning-inspectorate/dynamic-forms';
 import assert from 'node:assert';
@@ -13,6 +15,8 @@ import {
 	dateQuestion,
 	handleOriginatorFormattingFn,
 	linkedCaseSummaryFormatter,
+	OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER,
+	OUTCOME_QUESTIONS,
 	OVERVIEW_QUESTIONS,
 	validateDateIsAfterReceivedDate,
 	validateDateRangeIsAfterReceivedDate,
@@ -28,6 +32,38 @@ describe('questions utils', () => {
 	afterEach(() => {
 		delete process.env.ENVIRONMENT;
 	});
+	describe('options with dividers', () => {
+		it('should preserve outcome order and conditional fields with a divider before the final option', () => {
+			const options = OUTCOME_QUESTIONS.outcome.options;
+			const selectableOptions = options.filter((option) => 'value' in option);
+			assert.deepStrictEqual(
+				selectableOptions.map(({ text, value }) => ({ text, value })),
+				OUTCOMES.map((outcome) => ({ text: outcome.displayName, value: outcome.id }))
+			);
+			assert.strictEqual(options.length, OUTCOMES.length + 1);
+			assert.deepStrictEqual(options.at(-2), { divider: 'or' });
+			assert.deepStrictEqual(
+				selectableOptions.find((option) => option.value === OUTCOME_ID.GRANTED_WITH_CONDITIONS)?.conditional,
+				{ question: 'Condition details', fieldName: 'grantedWithConditionsComment', type: 'textarea' }
+			);
+			assert.deepStrictEqual(selectableOptions.find((option) => option.value === OUTCOME_ID.OTHER)?.conditional, {
+				fieldName: 'otherComment',
+				type: 'textarea'
+			});
+			assert.strictEqual(selectableOptions.filter((option) => option.conditional).length, 2);
+		});
+
+		it('should preserve objector status order with a divider before the final option', () => {
+			const selectableOptions = OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER.filter((option) => 'value' in option);
+			assert.deepStrictEqual(
+				selectableOptions,
+				OBJECTOR_STATUSES.map((status) => ({ text: status.displayName, value: status.id }))
+			);
+			assert.strictEqual(OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER.length, OBJECTOR_STATUSES.length + 1);
+			assert.deepStrictEqual(OBJECTOR_STATUSES_FORMATTED_WITH_DIVIDER.at(-2), { divider: 'or' });
+		});
+	});
+
 	describe('dateQuestion factory', () => {
 		it('should create a date question with defaults based on fieldName', () => {
 			const fieldName = 'testDateParameter';

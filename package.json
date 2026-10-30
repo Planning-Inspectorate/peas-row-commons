@@ -75,7 +75,7 @@
     "@commitlint/config-conventional": "^21.0.2",
     "@faker-js/faker": "^10.6.0",
     "@microsoft/microsoft-graph-types": "^2.43.1",
-    "@planning-inspectorate/coding-standards": "^1.2.0",
+    "@planning-inspectorate/coding-standards": "^2.0.0",
     "@types/adm-zip": "^0.5.8",
     "@types/archiver": "^8.0.0",
     "@types/escape-html": "^1.0.4",

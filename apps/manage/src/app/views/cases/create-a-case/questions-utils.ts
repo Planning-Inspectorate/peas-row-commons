@@ -1,4 +1,5 @@
 import { CASE_TYPES_ID, CASEWORK_AREAS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
+import type { SelectableOption } from '@planning-inspectorate/dynamic-forms';
 
 import type { DataPoint, GroupRelationships, UIGroup } from './types.ts';
 
@@ -19,11 +20,7 @@ function toCamelValues<T extends Record<string, string>>(obj: T): T {
 /**
  * Takes reference data and makes it the correct format for radio buttons, selects etc.
  */
-export function referenceDataToRadioOptions(type: { displayName: string; id: string }): {
-	text: string;
-	value: string;
-	conditional?: Record<string, any>;
-} {
+export function referenceDataToRadioOptions(type: { displayName: string; id: string }): SelectableOption {
 	return {
 		text: type.displayName,
 		value: type.id
