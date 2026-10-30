@@ -8,6 +8,7 @@ export interface TableColumn {
 	header: string;
 	fieldName: string;
 	format?: (
+		// TODO HRP-707 this is still unknown at this stage - do we convert to a string before?
 		value: string,
 		rowData: Record<string, unknown>,
 		params: { getQuestion: (fieldName: string) => Question | undefined; mockJourney: Journey }
@@ -67,7 +68,7 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 	 */
 	override createRow(
 		viewModel: QuestionViewModel<TableManageListQuestionView>,
-		item: Record<string, any>,
+		item: Record<string, unknown>,
 		index: number = 0
 	): TableRowCell[] {
 		const cells = this.columns.map((col) => {
@@ -75,9 +76,7 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 
 			const cellContent = this.getFormattedColumnValue(col, item, linkedQuestion);
 
-			const rawValue = item[col.fieldName];
-
-			const sortValue = this.handleSorting(cellContent, col, linkedQuestion, rawValue);
+			const sortValue = this.handleSorting(cellContent, col, linkedQuestion);
 
 			return {
 				html: cellContent || '-',
@@ -100,19 +99,14 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 	}
 
 	/**
-	 * Sorts by string, unless item is a date or column is specified as a date, in which case
-	 * we need to do some conversion
+	 * Sorts by string, unless item is a date, in which case we need to do some conversion
 	 */
-	handleSorting(cellContent: string, col: TableColumn, linkedQuestion: Question | undefined, rawValue: string) {
-		let sortValue: string | number = cellContent;
-
-		if (col.sortType === 'date' && rawValue) {
-			sortValue = new Date(rawValue).getTime();
-		} else if (linkedQuestion instanceof DateQuestion) {
-			sortValue = new Date(cellContent)?.getTime();
+	handleSorting(cellContent: string, col: TableColumn, linkedQuestion: Question | undefined): string {
+		if (linkedQuestion instanceof DateQuestion) {
+			return new Date(cellContent)?.getTime().toString();
 		}
 
-		return sortValue;
+		return cellContent;
 	}
 
 	override formatItemAnswers(answer: Record<string, unknown>) {
@@ -134,8 +128,9 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 	/**
 	 * Priority: explicit custom formatter -> question's own formatter -> raw value
 	 */
-	private getFormattedColumnValue(col: TableColumn, item: Record<string, any>, linkedQuestion?: Question): string {
-		const rawValue = item[col.fieldName];
+	private getFormattedColumnValue(col: TableColumn, item: Record<string, unknown>, linkedQuestion?: Question): string {
+		// @ts-expect-error -- TODO HRP-707 this is still unknown at this stage, need to handle that.
+		const rawValue: string = item[col.fieldName];
 
 		const mockJourney = new JourneyForDisplay(item);
 
@@ -152,7 +147,7 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 			}
 
 			const formattedArray = linkedQuestion.formatAnswerForSummary('', mockJourney, rawValue);
-			return formattedArray.map((a: any) => a.value).join(', ');
+			return formattedArray.map((a) => a.value).join(', ');
 		}
 
 		return rawValue ?? '-';

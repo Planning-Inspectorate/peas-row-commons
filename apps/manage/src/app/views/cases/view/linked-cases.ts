@@ -244,7 +244,7 @@ export async function linkNewCaseToLead(
  * (see `extractLinkedCaseChanges`/`applyLinkedCaseRelationships`), so it just needs to
  * be removed from the flat data here so it isn't mistaken for a plain `Case` field.
  */
-export function stripLinkedCaseDetails(flatData: Record<string, any>) {
+export function stripLinkedCaseDetails(flatData: Record<string, unknown>) {
 	delete flatData.linkedCaseDetails;
 }
 

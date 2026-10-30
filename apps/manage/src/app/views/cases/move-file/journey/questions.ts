@@ -1,3 +1,4 @@
+import type { FolderNode } from '@pins/peas-row-commons-lib/forms/custom-components/index.ts';
 import {
 	CUSTOM_COMPONENT_CLASSES,
 	CUSTOM_COMPONENTS
@@ -5,7 +6,7 @@ import {
 import NestedRequiredValidator from '@pins/peas-row-commons-lib/forms/custom-components/nested-folder-radio/validator.ts';
 import { createQuestions, questionClasses } from '@planning-inspectorate/dynamic-forms';
 
-export function getQuestions(folderStructure: Record<string, any>) {
+export function getQuestions(folderStructure: FolderNode[]) {
 	const questions = {
 		moveFolder: {
 			type: CUSTOM_COMPONENTS.NESTED_FOLDERS,

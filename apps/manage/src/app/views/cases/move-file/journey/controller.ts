@@ -20,8 +20,8 @@ const documentFindManySelectArg = {
 } as const satisfies Prisma.DocumentSelect;
 
 /**
- * Creates the middleware that fetches the case + folders from the DB
- * and attaches them to res.locals so the Question can see them.
+ * Fetches the case folders and attaches their tree to the request so the
+ * journey factory can use it when building the questions.
  */
 export function buildLoadCaseData(service: ManageService): RequestHandler {
 	const { db } = service;
@@ -42,6 +42,8 @@ export function buildLoadCaseData(service: ManageService): RequestHandler {
 			return next(new Error('Case not found'));
 		}
 
+		// The dynamic-forms journey factory receives req, not res, so this data must be on the request.
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-707 add typing for Request to handle custom values
 		(req as any).folderStructure = buildFolderTree(caseData.Folders);
 
 		next();
@@ -213,7 +215,7 @@ export function buildSaveController({ db, logger, audit }: ManageService): Reque
 			// Will show the success banner once we have redirected to the new folder page.
 			addSessionData(req, destinationFolderId, { filesMoved: fileIds.length }, 'folder');
 			delete req.session.moveFilesIds;
-		} catch (error: any) {
+		} catch (error) {
 			wrapPrismaError({
 				error,
 				logger,

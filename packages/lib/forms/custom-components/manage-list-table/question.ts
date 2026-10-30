@@ -202,7 +202,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 			text: `${this.indexColumnHeader} ${rowNumber}`,
 			classes: 'govuk-table__cell',
 			attributes: {
-				'data-sort-value': rowNumber
+				'data-sort-value': rowNumber.toString()
 			}
 		};
 	}
@@ -219,7 +219,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 		const cellContent = formatted.map((answer) => answer.value).join(', ');
 
 		// Most things just sort by their cell, but dates need to be formatted into unix format (ms)
-		const sortValue = question instanceof DateQuestion ? new Date(cellContent)?.getTime() : cellContent;
+		const sortValue = question instanceof DateQuestion ? new Date(cellContent)?.getTime().toString() : cellContent;
 
 		return {
 			html: cellContent || '-',

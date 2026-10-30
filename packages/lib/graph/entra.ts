@@ -3,6 +3,7 @@ import { URL } from 'node:url';
 import { isValidUuidFormat } from '../util/uuid.ts';
 import type { UserDetails } from './cached-entra-client.ts';
 import type { GroupMember } from './types.ts';
+
 const PER_PAGE = 500; // max 999 per page
 const MAX_PAGES = 10; // max 5000 entries
 const MAX_BATCH_SIZE = 20; // max 20 requests per batch as per Microsoft Graph API limits
@@ -42,7 +43,7 @@ export class EntraClient {
 		const members = [];
 		for (let i = 0; i < MAX_PAGES; i++) {
 			const res = await listMembers.get();
-			members.push(...res.value.filter((v: Record<string, any>) => v[ODATA.TYPE] === ODATA.USER_TYPE));
+			members.push(...res.value.filter((v: { [ODATA.TYPE]?: string }) => v[ODATA.TYPE] === ODATA.USER_TYPE));
 
 			const nextLink = res[ODATA.NEXT_LINK];
 			if (!nextLink) {

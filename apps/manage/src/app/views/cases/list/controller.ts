@@ -52,7 +52,7 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 
 		try {
 			[cases, totalCases, typeCountsGrouped, subTypeCountsGrouped, statusCountsGrouped] = await Promise.all(query);
-		} catch (error: any) {
+		} catch (error) {
 			wrapPrismaError({
 				error,
 				logger,
@@ -208,7 +208,7 @@ function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerato
 /**
  * Creates the query we will use to get the Case data
  */
-function generateQuery(db: PrismaClient, skipSize: number, pageSize: number, whereClause: Record<string, any>) {
+function generateQuery(db: PrismaClient, skipSize: number, pageSize: number, whereClause: Prisma.CaseWhereInput) {
 	return [
 		db.case.findMany({
 			orderBy: { receivedDate: 'desc' },

@@ -21,7 +21,7 @@ import type { Logger } from 'pino';
 import { resolveLinkedCaseRelationships } from './linked-cases.ts';
 import type { CaseDecisionFields, CaseListFields, CaseNoteFields, CaseProcedureFields, UserMap } from './types.ts';
 
-function formatValue(value: any) {
+function formatValue(value: unknown) {
 	if (typeof value === 'boolean') {
 		return booleanToYesNoValue(value);
 	}
@@ -71,6 +71,7 @@ export function sortProceduresChronologically(procedures?: CaseProcedureFields[]
  *
  * Fields we don't want in the UI (internal IDs, timestamps) are stripped.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 export function mapProceduresToArray(procedures: any[]): Record<string, any>[] | undefined {
 	if (!procedures || !Array.isArray(procedures) || procedures.length === 0) {
 		return undefined;
@@ -111,6 +112,7 @@ export function mapProceduresToArray(procedures: any[]): Record<string, any>[] |
 	];
 
 	return procedures.map((proc) => {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 		const mapped: Record<string, any> = {};
 
 		Object.keys(proc).forEach((key) => {
@@ -151,6 +153,7 @@ export function mapProceduresToArray(procedures: any[]): Record<string, any>[] |
  * Converts the nested nature of join tables into a flat object.
  */
 export function caseToViewModel(caseRow: CaseListFields, userMap: UserMap, logger?: Logger) {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 	const mergedData: Record<string, any> = { ...caseRow };
 
 	NESTED_SECTIONS.forEach((sectionKey) => {
@@ -223,6 +226,7 @@ export function caseToViewModel(caseRow: CaseListFields, userMap: UserMap, logge
 	const procedureDetails = mapProceduresToArray(sortedProcedures || []);
 	delete mergedData.Procedures;
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- TODO HRP-706 implement answer model
 	const sanitisedData: Record<string, any> = {};
 	for (const key in mergedData) {
 		if (key !== 'SiteAddresses') {
@@ -325,7 +329,7 @@ export const mapAndSortDecisions = (decisions?: CaseDecisionFields[]) => {
  */
 export const mapNotes = (unmappedCaseNotes: Omit<CaseNoteFields, 'Case'>[], userMap: UserMap, caseId: string) => {
 	// Sort the cases first so that they are in descending order by creation date.
-	const caseNotes = [...unmappedCaseNotes].sort((a: any, b: any) => b.createdAt - a.createdAt);
+	const caseNotes = [...unmappedCaseNotes].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
 	return {
 		caseNotes: caseNotes.map((caseNote) => {

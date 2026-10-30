@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { beforeEach, describe, it } from 'node:test';
+import type { ConditionalOptionsQuestionParams } from './question.ts';
 import ConditionalOptionsQuestion from './question.ts';
 
 let mockJourney: any;
@@ -54,6 +55,51 @@ describe('Conditional Options Question', () => {
 	});
 
 	describe('Constructor', () => {
+		it('should preserve dividers and map only selectable conditional fields', async () => {
+			const params: ConditionalOptionsQuestionParams = {
+				title: 'Test Question',
+				question: 'Choose an option',
+				fieldName: 'my_radio_field',
+				options: [
+					{
+						text: 'Yes',
+						value: 'yes',
+						conditional: { fieldName: 'yes_details_db_field' }
+					},
+					{ divider: 'or' },
+					{ text: 'No', value: 'no' }
+				]
+			};
+			const question = new ConditionalOptionsQuestion(params);
+
+			assert.deepStrictEqual(question.options, [
+				{
+					text: 'Yes',
+					value: 'yes',
+					conditional: {
+						type: 'textarea',
+						fieldName: 'yes_text',
+						question: undefined,
+						value: 'yes',
+						inputClasses: 'govuk-!-width-one-half'
+					}
+				},
+				{ divider: 'or' },
+				{ text: 'No', value: 'no' }
+			]);
+			assert.deepStrictEqual(question.conditionalMapping, { yes: 'yes_details_db_field' });
+
+			req.body = { my_radio_field: 'yes', my_radio_field_yes_text: ' Details ' };
+			assert.deepStrictEqual(await question.getDataToSave(req), {
+				answers: { my_radio_field: 'yes', yes_details_db_field: 'Details' }
+			});
+
+			req.body = { my_radio_field: 'no', my_radio_field_yes_text: 'Leftover details' };
+			assert.deepStrictEqual(await question.getDataToSave(req), {
+				answers: { my_radio_field: 'no', yes_details_db_field: null }
+			});
+		});
+
 		it('should correctly map conditional fields in conditionalMapping', () => {
 			const question = new ConditionalOptionsQuestion(questionParams as any);
 
