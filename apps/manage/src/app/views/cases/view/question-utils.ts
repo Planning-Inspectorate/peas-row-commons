@@ -2377,7 +2377,7 @@ export function createProcedureDetailQuestions(
 ) {
 	const inspectorIds = inspectors?.map((inspector) => inspector.inspectorId);
 	const relevantInspectors = [...groupMembers.inspectors].filter((member) => inspectorIds.includes(member.id));
-	const inspectorOptions: RadioOption[] = relevantInspectors.map(referenceDataToRadioOptions);
+	const inspectorOptions: Option[] = relevantInspectors.map(referenceDataToRadioOptions);
 	const legacyOptions = getAndSortLegacyUsers(userMap);
 
 	/**
