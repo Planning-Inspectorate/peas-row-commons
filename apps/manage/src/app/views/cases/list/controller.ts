@@ -233,7 +233,11 @@ function createCombinedWhereClause(req: Request, filterGenerator: FilterGenerato
 /**
  * Creates the query we will use to get the Case data
  */
-function generateQuery(db: PrismaClient, skipSize: number, pageSize: number, whereClause: Prisma.CaseWhereInput,
+function generateQuery(
+	db: PrismaClient,
+	skipSize: number,
+	pageSize: number,
+	whereClause: Prisma.CaseWhereInput,
 	orderBy: { sortField: string; sortOrder: 'asc' | 'desc' }
 ) {
 	return [
