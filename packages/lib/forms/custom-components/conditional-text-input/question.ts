@@ -1,5 +1,7 @@
 import type {
+	DividerOption,
 	Journey,
+	Option,
 	PrepQuestionForRenderingOptions,
 	QuestionViewModel,
 	RadioQuestionParams,
@@ -20,7 +22,7 @@ type NarrowedConditional = Omit<NonNullable<SelectableOption['conditional']>, 't
  * `type` defaults to 'textarea'). This is transformed into a real `SelectableOption` in the
  * constructor before being passed to the base `OptionsQuestion`.
  */
-type OptionWithCondition = Omit<SelectableOption, 'conditional'> & {
+export type OptionWithCondition = Omit<SelectableOption, 'conditional'> & {
 	conditional?: NarrowedConditional;
 };
 
@@ -29,7 +31,7 @@ type OptionWithCondition = Omit<SelectableOption, 'conditional'> & {
  * TODO HRP-653 deprecate this for RadioQuestion
  */
 export type ConditionalOptionsQuestionParams = Omit<RadioQuestionParams, 'options'> & {
-	options: OptionWithCondition[];
+	options: (OptionWithCondition | DividerOption)[];
 };
 
 export interface ConditionalOptionsQuestionProps extends ConditionalOptionsQuestionParams {
@@ -47,7 +49,11 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 	conditionalMapping: Record<string, string>;
 
 	constructor({ options, ...params }: ConditionalOptionsQuestionParams) {
-		const processedOptions = options.map((option): SelectableOption => {
+		const processedOptions = options.map((option): Option => {
+			if (!('value' in option)) {
+				return option;
+			}
+
 			const { conditional, ...restOption } = option;
 
 			if (!conditional) {
@@ -76,7 +82,7 @@ export default class ConditionalOptionsQuestion extends OptionsQuestion {
 
 		this.conditionalMapping = options.reduce(
 			(acc, option) => {
-				if (option.conditional?.fieldName) {
+				if ('value' in option && option.conditional?.fieldName) {
 					acc[option.value] = option.conditional.fieldName;
 				}
 				return acc;
