@@ -46,13 +46,8 @@ export function getSortHeaders(
 
 		const href = builder.toString();
 		const ariaSort = isActive ? (current.sortOrder === Prisma.SortOrder.asc ? 'ascending' : 'descending') : 'none';
-		const arrow = isActive ? (current.sortOrder === Prisma.SortOrder.asc ? '▲' : '▼') : '';
 
-		const html =
-			`<a class="govuk-link govuk-link--no-visited-state" href="${href}">` +
-			`${column.label}` +
-			(arrow ? ` <span aria-hidden="true">${arrow}</span>` : '') +
-			`</a>`;
+		const html = `<a class="govuk-link govuk-link--no-visited-state" href="${href}">` + `${column.label}` + `</a>`;
 
 		return { html, classes: column.classes, attributes: { 'aria-sort': ariaSort } };
 	});

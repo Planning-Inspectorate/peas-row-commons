@@ -172,8 +172,6 @@ describe('getSortHeaders', () => {
 			// active column → aria-sort on the <th> cell, descending arrow in html
 			const active = findHeaderByKey(headers, 'receivedDate');
 			assert.strictEqual(active.attributes?.['aria-sort'], 'descending');
-			assert.match(active.html, /▼/);
-			assert.match(active.html, /aria-hidden="true"/);
 			// no longer on the link
 			assert.doesNotMatch(active.html, /aria-sort/);
 
@@ -193,7 +191,6 @@ describe('getSortHeaders', () => {
 
 			const active = findHeaderByKey(headers, 'receivedDate');
 			assert.strictEqual(active.attributes?.['aria-sort'], 'ascending');
-			assert.match(active.html, /▲/);
 		});
 
 		it('should set aria-sort "none" on every header when no column is active', () => {
