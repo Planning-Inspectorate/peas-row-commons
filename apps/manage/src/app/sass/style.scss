@@ -19,6 +19,7 @@ $font-family: arial, helvetica, sans-serif;
 @use 'components/filter-tags';
 @use 'components/pins-case-history-table';
 @use 'components/pins-documents-table';
+@use 'components/pins-table';
 
 // TODO HRP-578 split this one file into multiple files for better maintainability, e.g. one per page or component
 // Use this pattern for any new additions

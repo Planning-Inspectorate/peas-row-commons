@@ -1,0 +1,21 @@
+@use 'node_modules/govuk-frontend/dist/govuk/index' as govuk;
+
+/**
+* Sortable table headers: the arrow is driven purely by the aria-sort attribute
+* so it doesn't fall out of sync with the actual sort order. The arrow is also hidden from screen readers as it is purely decorative.
+*/
+.pins-table {
+	.govuk-table__header[aria-sort] > .govuk-link::after {
+		margin-left: 5px;
+		font-size: 0.8em;
+		content: '';
+	}
+
+	.govuk-table__header[aria-sort='ascending'] > .govuk-link::after {
+		content: '▲';
+	}
+
+	.govuk-table__header[aria-sort='descending'] > .govuk-link::after {
+		content: '▼';
+	}
+}

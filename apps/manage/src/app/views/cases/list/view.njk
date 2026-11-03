@@ -100,6 +100,7 @@
     {% endfor %}
 
     {{ govukTable({
+        classes: "pins-table",
         head: sortHeaders,
         rows: cases
     }) }}
