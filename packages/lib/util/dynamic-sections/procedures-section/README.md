@@ -41,7 +41,7 @@
 ## Remove and Save
 - Detail fields have a "Remove and save" button that clears the value.
 - The remove route (`/:section/:question/remove`) must be registered **above** the generic edit route in Express to avoid being shadowed.
-- `clearAnswer` must run **before** the flattened field remap so that the nulled values are picked up by the remap and flow through to `handleProcedureDetails`.
+- `clearAnswer` must run **before** dynamic-section answers are wrapped into `procedureDetails` so that the nulled value flows through to `handleProcedureUpdates`.
 
 ## Inspector Display Logic
 - Real inspector ID → displays the inspector's name (resolved via radio options)
