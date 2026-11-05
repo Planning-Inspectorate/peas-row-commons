@@ -361,7 +361,10 @@ export function mapCaseDetailsData(
 					end: formatDate(caseData.Abeyance.abeyanceEndDate)
 				}
 			: undefined,
-		siteAddress: mapAddress(caseData.SiteAddress),
+		siteAddressDetails: (caseData.SiteAddresses ?? []).map((caseToAddress) => ({
+			id: caseToAddress.id,
+			siteAddress: mapAddress(caseToAddress.Address)
+		})),
 		location: caseData.location ?? undefined,
 		applicants,
 		dates: {
