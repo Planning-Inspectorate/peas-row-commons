@@ -15,7 +15,6 @@
         <div class="govuk-grid-column-full">
 
             {% set isFilterActive = statusParams.currentStatus and statusParams.currentStatus !== 'all' %}
-            {% set clearFilterUrl = "?userId=" + selectedUserId if selectedUserId else "?" %}
 
             {% if cases | length === 0 and not isFilterActive %}
                 <h1 class="govuk-heading-l" data-cy="page-heading-no-cases">
@@ -86,6 +85,9 @@
                             },
                             items: statusItems
                         }) }}
+
+                        <input type="hidden" name="sortBy" value="{{ sorting.sortBy }}">
+                        <input type="hidden" name="order" value="{{ sorting.order }}">
                         
                         <div class="govuk-button-group govuk-!-margin-bottom-0">
                             {{ govukButton({
@@ -117,7 +119,7 @@
                     {% if currentStatus and currentStatus !== "all" %}
                         {% set paginationSuffix = paginationSuffix + "&status=" + currentStatus %}
                     {% endif %}
-
+                    {% set paginationSuffix = paginationSuffix + paginationParams.sortValue %}
                     <div id="pagination">
                         <p class="govuk-body govuk-clearfix">
                             <span>
@@ -195,21 +197,13 @@
                         {% endfor %}
 
                         {{ govukTable({
+                            classes: "pins-table",
                             attributes: {
-                                "data-cy": "assigned-to-me-table",
-                                "data-module": "moj-sortable-table"
+                                "data-cy": "assigned-to-me-table"
                             },
-                            head: [
-                                { text: "Reference", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } },
-                                { text: "Case name", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } },
-                                { text: "Case officer", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } },
-                                { text: "Inspector", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } },
-                                { text: "Received", classes: "pins-width-one-sixth", attributes: { "aria-sort": "descending" } },
-                                { text: "Status", classes: "pins-width-one-sixth", attributes: { "aria-sort": "none" } }
-                            ],
+                            head: sortHeaders,
                             rows: caseRows
                         }) }}
-
                         {% if paginationParams.uiItems.items.length > 1 %}
                             {{ govukPagination(paginationParams.uiItems) }}
                         {% endif %}
