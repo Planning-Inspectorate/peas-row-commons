@@ -273,7 +273,7 @@ export const createPersonQuestions = <S extends string>({
 	const addressQuestion = {
 		type: CUSTOM_COMPONENTS.ADDRESS_WITH_ID,
 		title: `${label} address details`,
-		question: `${label} address details (optional)`,
+		question: `What are the ${labelLower} address details? (optional)`,
 		fieldName: `${db}Address`,
 		url: `${url}-address`,
 		validators: [new AddressValidator()],
@@ -283,7 +283,7 @@ export const createPersonQuestions = <S extends string>({
 	const contactDetailsQuestion = {
 		type: COMPONENT_TYPES.MULTI_FIELD_INPUT,
 		title: `${label === 'Contact' ? 'Contact details' : label + ' contact details'}`,
-		question: `${label === 'Contact' ? 'What are the contact details?' : label + ' contact details'} (optional)`,
+		question: `${label === 'Contact' ? 'What are the contact details?' : `What are the ${labelLower} contact details?`} (optional)`,
 		fieldName: `${section}Details`,
 		url: `${url}-contact-details`,
 		viewData: { ...viewData, tableHeader: 'Contact' },
