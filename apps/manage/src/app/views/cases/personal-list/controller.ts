@@ -9,7 +9,7 @@ import type { AsyncRequestHandler, AsyncRequestHandlerWithBody } from '@planning
 import { getPageData, getPaginationParams } from '../../pagination/pagination-utils.ts';
 import { casesToViewModel } from './view-model.ts';
 
-type PersonalListSortKey = 'reference' | 'name' | 'caseOfficer' | 'inspector' | 'receivedDate' | 'statusId';
+type PersonalListSortKey = 'reference' | 'name' | 'receivedDate' | 'statusId';
 
 type PersonalListSort = {
 	sortField: PersonalListSortKey;
@@ -38,7 +38,6 @@ function fetchCasesForUser(
 	orderBy: PersonalListSort
 ) {
 	const where = buildPersonalListWhereClause(userId, statusFilter);
-	const sortByUserName = orderBy.sortField === 'caseOfficer' || orderBy.sortField === 'inspector';
 
 	let primaryOrder: Prisma.CaseOrderByWithRelationInput;
 
@@ -55,10 +54,6 @@ function fetchCasesForUser(
 		case 'statusId':
 			primaryOrder = { Status: { displayName: orderBy.sortOrder } };
 			break;
-		case 'caseOfficer':
-		case 'inspector':
-			primaryOrder = { receivedDate: 'desc' };
-			break;
 	}
 
 	return db.case.findMany({
@@ -68,9 +63,9 @@ function fetchCasesForUser(
 			CaseOfficer: true,
 			Inspectors: { include: { Inspector: true } }
 		},
-		// Stable ordering prevents tied cases moving between pages.
 		orderBy: [primaryOrder, { id: 'asc' }],
-		...(sortByUserName ? {} : { skip: skipSize, take: pageSize })
+		skip: skipSize,
+		take: pageSize
 	});
 }
 
@@ -92,8 +87,6 @@ export function buildViewPersonalList(service: ManageService): AsyncRequestHandl
 		const headerFields = [
 			{ key: 'reference', label: 'Reference', classes: 'pins-width-one-sixth' },
 			{ key: 'name', label: 'Case name', classes: 'pins-width-one-sixth' },
-			{ key: 'caseOfficer', label: 'Case officer', classes: 'pins-width-one-sixth' },
-			{ key: 'inspector', label: 'Inspector', classes: 'pins-width-one-sixth' },
 			{ key: 'receivedDate', label: 'Received', classes: 'pins-width-one-sixth' },
 			{ key: 'statusId', label: 'Status', classes: 'pins-width-one-sixth' }
 		] satisfies (SortableColumn & { key: PersonalListSortKey })[];
@@ -129,34 +122,22 @@ export function buildViewPersonalList(service: ManageService): AsyncRequestHandl
 			})
 		]);
 
-		const caseViewModels = casesToViewModel(personalCases, groupMembers);
-		const { sortField, sortOrder } = sanitisedOrderByQuery;
-		const sortByUserName = sortField === 'caseOfficer' || sortField === 'inspector';
+		const cases = casesToViewModel(personalCases, groupMembers);
 
-		if (sortByUserName) {
-			const getName = (caseRow: (typeof caseViewModels)[number]) =>
-				sortField === 'caseOfficer'
-					? caseRow.caseOfficerName || ''
-					: caseRow.mappedInspectors
-							.map((inspector) => inspector.displayName)
-							.sort((a, b) => a.localeCompare(b, 'en-GB', { sensitivity: 'base' }))
-							.join(', ');
-			caseViewModels.sort((a, b) => {
-				const first = getName(a);
-				const second = getName(b);
+		const sortableHeaders = getSortHeaders(req, headerFields, sanitisedOrderByQuery);
 
-				if (!first && !second) return 0;
-				if (!first) return 1;
-				if (!second) return -1;
-
-				const comparison = first.localeCompare(second, 'en-GB', { sensitivity: 'base' });
-				return sortOrder === 'asc' ? comparison : -comparison;
-			});
-		}
-
-		const cases = sortByUserName ? caseViewModels.slice(skipSize, skipSize + pageSize) : caseViewModels;
-
-		const sortHeaders = getSortHeaders(req, headerFields, sanitisedOrderByQuery);
+		const sortHeaders = [
+			...sortableHeaders.slice(0, 2),
+			{
+				text: 'Case officer',
+				classes: 'pins-width-one-sixth'
+			},
+			{
+				text: 'Inspector',
+				classes: 'pins-width-one-sixth'
+			},
+			...sortableHeaders.slice(2)
+		];
 
 		logger.info(
 			{ userId, caseCount: personalCases.length, groupMemberCount: groupMembers?.allUsers?.length || 0 },
