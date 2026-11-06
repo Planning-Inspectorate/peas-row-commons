@@ -190,7 +190,10 @@ describe('createPersonQuestions', () => {
 		assert.strictEqual(result.applicantDetailsName.question, 'Who is the applicant?');
 
 		assert.strictEqual(result.applicantDetailsContactDetails.title, 'Applicant contact details');
-		assert.strictEqual(result.applicantDetailsContactDetails.question, 'Applicant contact details (optional)');
+		assert.strictEqual(
+			result.applicantDetailsContactDetails.question,
+			'What are the applicant contact details? (optional)'
+		);
 	});
 
 	it('should adjust title and question text when the label is exactly "Contact"', () => {
