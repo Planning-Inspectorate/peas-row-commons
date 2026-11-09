@@ -109,7 +109,7 @@ export function buildViewPersonalList(service: ManageService): AsyncRequestHandl
 
 		return res.render('views/cases/personal-list/view.njk', {
 			cases: casesToViewModel(personalCases, groupMembers),
-			pageHeading: `Cases assigned to ${selectedUserId ? userName : 'you'}`,
+			pageHeading: selectedUserId ? `Cases assigned to ${userName}` : 'My cases',
 			noCasesHeading: `${selectedUserId ? `${userName} is` : 'You are'} not assigned to any cases`,
 			currentPage: 'personal-list',
 			statusParams: {
