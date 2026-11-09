@@ -1,10 +1,20 @@
 import type { ManageService } from '#service';
 import { getEntraGroupMembers } from '#util/entra-groups.ts';
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { CASE_STATUSES } from '@pins/peas-row-commons-database/src/seed/static-data/status.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
+import { getSortHeaders, type SortableColumn } from '@pins/peas-row-commons-lib/util/sort-headers.ts';
+import { getSortQueries } from '@pins/peas-row-commons-lib/util/sort-queries.ts';
 import type { AsyncRequestHandler, AsyncRequestHandlerWithBody } from '@planning-inspectorate/core/util';
 import { getPageData, getPaginationParams } from '../../pagination/pagination-utils.ts';
 import { casesToViewModel } from './view-model.ts';
+
+type PersonalListSortKey = 'reference' | 'name' | 'receivedDate' | 'statusId';
+
+type PersonalListSort = {
+	sortField: PersonalListSortKey;
+	sortOrder: Prisma.SortOrder;
+};
 
 /**
  * Safely extracts a single string from an Express query parameter,
@@ -24,9 +34,27 @@ function fetchCasesForUser(
 	userId: string,
 	statusFilter: string | undefined,
 	skipSize: number,
-	pageSize: number
+	pageSize: number,
+	orderBy: PersonalListSort
 ) {
 	const where = buildPersonalListWhereClause(userId, statusFilter);
+
+	let primaryOrder: Prisma.CaseOrderByWithRelationInput;
+
+	switch (orderBy.sortField) {
+		case 'reference':
+			primaryOrder = { reference: orderBy.sortOrder };
+			break;
+		case 'name':
+			primaryOrder = { name: orderBy.sortOrder };
+			break;
+		case 'receivedDate':
+			primaryOrder = { receivedDate: orderBy.sortOrder };
+			break;
+		case 'statusId':
+			primaryOrder = { Status: { displayName: orderBy.sortOrder } };
+			break;
+	}
 
 	return db.case.findMany({
 		where,
@@ -35,7 +63,7 @@ function fetchCasesForUser(
 			CaseOfficer: true,
 			Inspectors: { include: { Inspector: true } }
 		},
-		orderBy: { receivedDate: 'desc' },
+		orderBy: [primaryOrder, { id: 'asc' }],
 		skip: skipSize,
 		take: pageSize
 	});
@@ -56,10 +84,35 @@ export function buildViewPersonalList(service: ManageService): AsyncRequestHandl
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
+		const headerFields = [
+			{ key: 'reference', label: 'Reference', classes: 'pins-width-one-sixth' },
+			{ key: 'name', label: 'Case name', classes: 'pins-width-one-sixth' },
+			{ key: 'receivedDate', label: 'Received', classes: 'pins-width-one-sixth' },
+			{ key: 'statusId', label: 'Status', classes: 'pins-width-one-sixth' }
+		] satisfies (SortableColumn & { key: PersonalListSortKey })[];
+
+		const sanitisedOrderByQuery = getSortQueries<Record<PersonalListSortKey, Prisma.SortOrder>>(req, {
+			sortBy: 'receivedDate',
+			sortOrder: 'desc',
+			allowedFields: headerFields.map((field) => field.key)
+		});
+
+		const sortParams = new URLSearchParams();
+		sortParams.set('sortBy', sanitisedOrderByQuery.sortField);
+		sortParams.set('order', sanitisedOrderByQuery.sortOrder);
+		const sortValue = `&${sortParams.toString()}`;
+		const clearFilterParams = new URLSearchParams(sortParams);
+
+		if (selectedUserId) {
+			clearFilterParams.set('userId', selectedUserId);
+		}
+
+		const clearFilterUrl = `/cases/personal-list?${clearFilterParams.toString()}`;
+
 		logger.info({ userId, statusFilter: status }, 'Fetching personal list data');
 
 		const [personalCases, totalCases, groupMembers] = await Promise.all([
-			fetchCasesForUser(db, userId, status, skipSize, pageSize),
+			fetchCasesForUser(db, userId, status, skipSize, pageSize, sanitisedOrderByQuery),
 			countCasesForUser(db, userId, status),
 			getEntraGroupMembers({
 				logger,
@@ -68,6 +121,23 @@ export function buildViewPersonalList(service: ManageService): AsyncRequestHandl
 				groupIds
 			})
 		]);
+
+		const cases = casesToViewModel(personalCases, groupMembers);
+
+		const sortableHeaders = getSortHeaders(req, headerFields, sanitisedOrderByQuery);
+
+		const sortHeaders = [
+			...sortableHeaders.slice(0, 2),
+			{
+				text: 'Case officer',
+				classes: 'pins-width-one-sixth'
+			},
+			{
+				text: 'Inspector',
+				classes: 'pins-width-one-sixth'
+			},
+			...sortableHeaders.slice(2)
+		];
 
 		logger.info(
 			{ userId, caseCount: personalCases.length, groupMemberCount: groupMembers?.allUsers?.length || 0 },
@@ -93,7 +163,8 @@ export function buildViewPersonalList(service: ManageService): AsyncRequestHandl
 			resultsStartNumber,
 			resultsEndNumber,
 			totalCases,
-			uiItems: paginationItems
+			uiItems: paginationItems,
+			sortValue
 		};
 
 		// If we have attempted to view a specific user, and they are not in Entra, redirect back to personal page
@@ -108,7 +179,12 @@ export function buildViewPersonalList(service: ManageService): AsyncRequestHandl
 			: baseSelectUserUrl;
 
 		return res.render('views/cases/personal-list/view.njk', {
-			cases: casesToViewModel(personalCases, groupMembers),
+			cases,
+			sortHeaders,
+			sorting: {
+				sortBy: sanitisedOrderByQuery.sortField,
+				order: sanitisedOrderByQuery.sortOrder
+			},
 			pageHeading: selectedUserId ? `Cases assigned to ${userName}` : 'My cases',
 			noCasesHeading: `${selectedUserId ? `${userName} is` : 'You are'} not assigned to any cases`,
 			currentPage: 'personal-list',
@@ -118,7 +194,8 @@ export function buildViewPersonalList(service: ManageService): AsyncRequestHandl
 			},
 			selectedUserId,
 			viewAnotherHref,
-			paginationParams
+			paginationParams,
+			clearFilterUrl
 		});
 	};
 }
