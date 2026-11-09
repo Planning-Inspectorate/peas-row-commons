@@ -158,7 +158,7 @@ describe('Personal List Controllers', () => {
 
 				const [viewPath, viewData] = res.render.mock.calls[0].arguments as [string, RenderLocals];
 				assert.strictEqual(viewPath, 'views/cases/personal-list/view.njk');
-				assert.strictEqual(viewData.pageHeading, 'Cases assigned to you');
+				assert.strictEqual(viewData.pageHeading, 'My cases');
 				assert.strictEqual(viewData.statusParams?.currentStatus, undefined);
 				assert.strictEqual(viewData.cases?.[0].caseOfficerName, 'Jane Smith');
 			});
