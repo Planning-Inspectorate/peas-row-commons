@@ -1,4 +1,6 @@
 import type { ManageService } from '#service';
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { SortHeaderViewModel } from '@pins/peas-row-commons-lib/util/sort-headers.ts';
 import type { NextFunction, Request, Response } from 'express';
 import assert from 'node:assert/strict';
 import { describe, it, mock } from 'node:test';
@@ -19,15 +21,28 @@ type FindManyArgs = {
 			Inspectors?: { some: { Inspector: { idpUserId: string } } };
 		}>;
 	};
+	orderBy: Prisma.CaseOrderByWithRelationInput[];
+	skip?: number;
+	take?: number;
 };
 
 type RenderLocals = {
 	pageHeading?: string;
 	currentPage?: string;
 	statusParams?: { currentStatus?: string; caseStatuses?: unknown[] };
-	cases?: Array<{ caseOfficerName?: string }>;
+	cases?: Array<{
+		id: string;
+		caseOfficerName?: string;
+		mappedInspectors: Array<{ displayName: string }>;
+	}>;
 	options?: Array<{ text: string; value: string }>;
 	backLinkUrl?: string;
+	sortHeaders: SortHeaderViewModel[];
+	sorting: {
+		sortBy: string;
+		order: 'asc' | 'desc';
+	};
+	clearFilterUrl: string;
 };
 
 const buildMockRes = (): MockRes => {
@@ -44,17 +59,14 @@ const buildMockReq = (overrides: Record<string, unknown> = {}): Request =>
 	({
 		query: {},
 		body: {},
+		originalUrl: '/cases/personal-list',
+		baseUrl: 'https://localhost:4000',
+		path: '/cases/personal-list',
 		session: { account: { localAccountId: 'user-123' } },
 		...overrides
 	}) as unknown as Request;
 
-const buildPaginatedMockReq = (overrides: Record<string, unknown> = {}): Request =>
-	buildMockReq({
-		originalUrl: '/cases/personal-list',
-		baseUrl: '',
-		path: '/cases/personal-list',
-		...overrides
-	});
+const buildPaginatedMockReq = (overrides: Record<string, unknown> = {}): Request => buildMockReq(overrides);
 
 const buildService = (
 	findManyMock: ReturnType<typeof mock.fn>,
@@ -253,6 +265,7 @@ describe('Personal List Controllers', () => {
 				assert.strictEqual(paginationParams.totalPages, 2);
 				assert.strictEqual(paginationParams.resultsStartNumber, 1);
 				assert.strictEqual(paginationParams.resultsEndNumber, 25);
+				assert.strictEqual(paginationParams.sortValue, '&sortBy=receivedDate&order=desc');
 			});
 
 			it('should show 1 page with no navigation when cases fit within 25 item default', async () => {
@@ -412,6 +425,165 @@ describe('Personal List Controllers', () => {
 				assert.strictEqual(paginationParams.selectedItemsPerPage, 999);
 				assert.strictEqual(paginationParams.totalPages, 1); // 10 cases / 100 effective page size
 			});
+		});
+	});
+
+	describe('Sorting', () => {
+		it('should default to Received descending and link to descending without redirecting', async () => {
+			const req = buildMockReq();
+			const res = buildMockRes();
+			const findManyMock = mock.fn((_args: FindManyArgs) => Promise.resolve([]));
+
+			await buildViewPersonalList(buildService(findManyMock))(req, res as unknown as Response, nextMock);
+
+			const viewData = res.render.mock.calls[0].arguments[1] as RenderLocals;
+			const receivedHeader = viewData.sortHeaders[4];
+			const dbArgs = findManyMock.mock.calls[0].arguments[0];
+
+			assert.deepStrictEqual(dbArgs.orderBy, [{ receivedDate: 'desc' }, { id: 'asc' }]);
+			assert.strictEqual(receivedHeader.attributes['aria-sort'], 'descending');
+			assert.match(
+				receivedHeader.html,
+				/href="https:\/\/localhost:4000\/cases\/personal-list\?sortBy=receivedDate&order=asc"/
+			);
+			assert.strictEqual(res.redirect.mock.callCount(), 0);
+		});
+
+		it('should link to descending when Received is ascending', async () => {
+			const req = buildMockReq({
+				query: { sortBy: 'receivedDate', order: 'asc' }
+			});
+			const res = buildMockRes();
+			const findManyMock = mock.fn((_args: FindManyArgs) => Promise.resolve([]));
+
+			await buildViewPersonalList(buildService(findManyMock))(req, res as unknown as Response, nextMock);
+
+			const viewData = res.render.mock.calls[0].arguments[1] as RenderLocals;
+			const receivedHeader = viewData.sortHeaders[4];
+			const dbArgs = findManyMock.mock.calls[0].arguments[0];
+
+			assert.deepStrictEqual(dbArgs.orderBy, [{ receivedDate: 'asc' }, { id: 'asc' }]);
+			assert.strictEqual(receivedHeader.attributes['aria-sort'], 'ascending');
+			assert.match(
+				receivedHeader.html,
+				/href="https:\/\/localhost:4000\/cases\/personal-list\?sortBy=receivedDate&order=desc"/
+			);
+		});
+
+		it('should generate a sort link from page two that loads page one and preserves filters', async () => {
+			const req = buildMockReq({
+				query: {
+					page: '2',
+					itemsPerPage: '25',
+					userId: 'user-2',
+					status: 'new-case'
+				}
+			});
+			const res = buildMockRes();
+			const findManyMock = mock.fn((_args: FindManyArgs) => Promise.resolve([]));
+			const countMock = mock.fn(() => Promise.resolve(56));
+			const handler = buildViewPersonalList(buildService(findManyMock, countMock));
+
+			await handler(req, res as unknown as Response, nextMock);
+
+			assert.strictEqual(findManyMock.mock.calls[0].arguments[0].skip, 25);
+
+			const viewData = res.render.mock.calls[0].arguments[1] as RenderLocals;
+			const referenceHeader = viewData.sortHeaders[0];
+			const href = referenceHeader.html.match(/href="([^"]+)"/)?.[1];
+
+			assert.ok(href, 'Reference header should contain a navigation link');
+
+			const sortUrl = new URL(href);
+
+			assert.strictEqual(sortUrl.pathname, '/cases/personal-list');
+			assert.strictEqual(sortUrl.searchParams.has('page'), false);
+			assert.strictEqual(sortUrl.searchParams.get('sortBy'), 'reference');
+			assert.strictEqual(sortUrl.searchParams.get('order'), 'asc');
+			assert.strictEqual(sortUrl.searchParams.get('itemsPerPage'), '25');
+			assert.strictEqual(sortUrl.searchParams.get('userId'), 'user-2');
+			assert.strictEqual(sortUrl.searchParams.get('status'), 'new-case');
+
+			const sortedReq = buildMockReq({
+				query: Object.fromEntries(sortUrl.searchParams),
+				originalUrl: sortUrl.pathname + sortUrl.search
+			});
+			const sortedRes = buildMockRes();
+
+			await handler(sortedReq, sortedRes as unknown as Response, nextMock);
+
+			const sortedDbArgs = findManyMock.mock.calls[1].arguments[0];
+
+			assert.strictEqual(sortedDbArgs.skip, 0);
+			assert.strictEqual(sortedDbArgs.take, 25);
+			assert.deepStrictEqual(sortedDbArgs.orderBy, [{ reference: 'asc' }, { id: 'asc' }]);
+			assert.deepStrictEqual(sortedDbArgs.where.Status, { id: 'new-case' });
+			assert.deepStrictEqual(sortedDbArgs.where.OR, [
+				{ CaseOfficer: { idpUserId: 'user-2' } },
+				{ Inspectors: { some: { Inspector: { idpUserId: 'user-2' } } } }
+			]);
+		});
+
+		it('should fall back to Received descending for invalid sorting parameters', async () => {
+			const req = buildMockReq({
+				query: { sortBy: 'not-a-column', order: 'not-an-order' }
+			});
+			const res = buildMockRes();
+			const findManyMock = mock.fn((_args: FindManyArgs) => Promise.resolve([]));
+
+			await buildViewPersonalList(buildService(findManyMock))(req, res as unknown as Response, nextMock);
+
+			const viewData = res.render.mock.calls[0].arguments[1] as RenderLocals;
+
+			assert.deepStrictEqual(findManyMock.mock.calls[0].arguments[0].orderBy, [
+				{ receivedDate: 'desc' },
+				{ id: 'asc' }
+			]);
+			assert.deepStrictEqual(viewData.sorting, {
+				sortBy: 'receivedDate',
+				order: 'desc'
+			});
+			assert.strictEqual(viewData.clearFilterUrl, '/cases/personal-list?sortBy=receivedDate&order=desc');
+		});
+		it('should preserve sorting in the clear-filter URL when no cases match', async () => {
+			const req = buildMockReq({
+				query: {
+					sortBy: 'name',
+					order: 'desc',
+					status: 'new-case',
+					page: '2'
+				}
+			});
+			const res = buildMockRes();
+			const findManyMock = mock.fn(() => Promise.resolve([]));
+			const countMock = mock.fn(() => Promise.resolve(0));
+
+			await buildViewPersonalList(buildService(findManyMock, countMock))(req, res as unknown as Response, nextMock);
+
+			const viewData = res.render.mock.calls[0].arguments[1] as RenderLocals;
+
+			assert.deepStrictEqual(viewData.cases, []);
+			assert.strictEqual(viewData.clearFilterUrl, '/cases/personal-list?sortBy=name&order=desc');
+		});
+
+		it('should preserve the selected user and sorting in the clear-filter URL', async () => {
+			const req = buildMockReq({
+				query: {
+					userId: 'user-2',
+					sortBy: 'reference',
+					order: 'asc',
+					status: 'new-case',
+					page: '2'
+				}
+			});
+			const res = buildMockRes();
+			const findManyMock = mock.fn(() => Promise.resolve([]));
+
+			await buildViewPersonalList(buildService(findManyMock))(req, res as unknown as Response, nextMock);
+
+			const viewData = res.render.mock.calls[0].arguments[1] as RenderLocals;
+
+			assert.strictEqual(viewData.clearFilterUrl, '/cases/personal-list?sortBy=reference&order=asc&userId=user-2');
 		});
 	});
 
