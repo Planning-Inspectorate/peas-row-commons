@@ -4,15 +4,21 @@ import { Journey, ManageListSection, Section } from '@planning-inspectorate/dyna
 import type { Request } from 'express';
 import { buildDynamicOutcomeSections, buildOutcomeManageList } from './journeys/outcome-journey.ts';
 import {
-	buildDynamicProcedureSections,
-	buildProcedureAllQuestionsSection,
-	buildProcedureManageList
+	buildProcedureManageList,
+	getDynamicProcedureSections,
+	type ProcedureDetails
 } from './journeys/procedure-journey.ts';
+import type { InspectorRadioConfig } from './questions-procedure.ts';
 import type { CaseViewQuestions } from './questions.ts';
 
 export const JOURNEY_ID = 'case-details';
 
-export function createJourney(questions: CaseViewQuestions, response: JourneyResponse, req: Request) {
+export function createJourney(
+	questions: CaseViewQuestions,
+	response: JourneyResponse,
+	req: Request,
+	config: InspectorRadioConfig
+) {
 	const id = getStringParam(req.params, 'id');
 
 	if (!req.baseUrl?.includes(id)) {
@@ -22,9 +28,11 @@ export function createJourney(questions: CaseViewQuestions, response: JourneyRes
 	const outcomeManageList = buildOutcomeManageList(questions);
 	const dynamicOutcomeSections = buildDynamicOutcomeSections(outcomeManageList, response);
 
-	const procedureManageList = buildProcedureManageList(questions);
-	const procedureAllQuestionsSection = buildProcedureAllQuestionsSection(questions);
-	const dynamicProcedureSections = buildDynamicProcedureSections(procedureAllQuestionsSection, response);
+	const procedureManageList = buildProcedureManageList(config);
+	const dynamicProcedureSections = getDynamicProcedureSections(
+		config,
+		response?.answers?.procedureDetails as ProcedureDetails
+	);
 
 	/**
 	 * Checks that a manage list has at least 1 answer (of anything)
