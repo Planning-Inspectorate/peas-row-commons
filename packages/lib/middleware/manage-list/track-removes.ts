@@ -1,44 +1,8 @@
 import type { AsyncRequestHandlerWithBody } from '@planning-inspectorate/core/util';
-import { BOOLEAN_OPTIONS, MANAGE_LIST_ACTIONS, question } from '@planning-inspectorate/dynamic-forms';
+import { MANAGE_LIST_ACTIONS } from '@planning-inspectorate/dynamic-forms';
 import type { RequestHandler } from 'express';
 
 type RemoveHandler = AsyncRequestHandlerWithBody<{ remove?: string }>;
-
-/**
- * The dynamic-forms remove functionality is built on the idea of a single POST
- * request, however our design is a form with a YES/NO response, meaning we need
- * a bouncer middleware to check for a NO response and redirect if we see this.
- *
- * The 4 scenarios are:
- *
- * 1) It is a remove POST and the user selected yes -> let them through
- * 2) It is a remove POST and the user selected no -> bounce them
- * 3) It is a remove POST and the user selected nothing -> reload with an error
- * 4) It is NOT a remove post -> let them through
- */
-export const bounceRemoveCancellation: RemoveHandler = async (req, res, next) => {
-	const { manageListAction, manageListItemId } = req.params;
-	const { remove } = req.body;
-
-	if (manageListAction === MANAGE_LIST_ACTIONS.REMOVE && manageListItemId) {
-		if (remove !== BOOLEAN_OPTIONS.YES && remove !== BOOLEAN_OPTIONS.NO) {
-			const errorMessage = 'Select yes if you want to remove this item';
-
-			res.locals = res.locals || {};
-			res.locals.errorSummary = [{ text: errorMessage, href: '#remove' }];
-
-			await question(req, res);
-			return;
-		}
-
-		if (remove === BOOLEAN_OPTIONS.NO) {
-			const returnUrl = req.originalUrl.split('/remove/')[0];
-			return res.redirect(returnUrl);
-		}
-	}
-
-	if (next) next();
-};
 
 /**
  * For manage list item removals we need to track the ids selected to be removed, this is needed
@@ -49,7 +13,7 @@ export const trackRemovedItemId: RemoveHandler = async (req, res, next) => {
 	const { manageListAction, manageListItemId } = req.params;
 	const { remove } = req.body;
 
-	if (manageListAction === MANAGE_LIST_ACTIONS.REMOVE && manageListItemId && remove === BOOLEAN_OPTIONS.YES) {
+	if (manageListAction === MANAGE_LIST_ACTIONS.REMOVE && manageListItemId && remove === 'remove') {
 		req.session.removedListItems ??= [];
 		if (!req.session.removedListItems.includes(manageListItemId)) {
 			req.session.removedListItems.push(manageListItemId);
