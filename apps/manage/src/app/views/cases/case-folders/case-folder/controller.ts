@@ -1,9 +1,11 @@
 import type { ManageService } from '#service';
-import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { Prisma, PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { getFolderStats } from '@pins/peas-row-commons-database/util/folder.ts';
 import { CLOSED_STATUSES } from '@pins/peas-row-commons-lib/constants/statuses.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
+import { getSortHeaders, type SortableColumn } from '@pins/peas-row-commons-lib/util/sort-headers.ts';
+import { getSortQueries } from '@pins/peas-row-commons-lib/util/sort-queries.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import {
 	DOCUMENT_FILTER_VALUES,
@@ -22,6 +24,13 @@ import { buildBreadcrumbItems } from '../folder-utils.ts';
 import type { FolderBreadcrumb } from '../types.ts';
 import { createFoldersViewModel } from '../view-model.ts';
 import { createDocumentsViewModel, type DocumentWithUserDocuments } from './view-model.ts';
+
+type FolderFileSortKey = 'fileName' | 'uploaded';
+
+type FolderFileSort = {
+	sortField: FolderFileSortKey;
+	sortOrder: Prisma.SortOrder;
+};
 
 export function buildViewCaseFolder(
 	service: ManageService,
@@ -52,6 +61,39 @@ export function buildViewCaseFolder(
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
+		const headerFields = [
+			{
+				key: 'fileName',
+				label: 'File name',
+				classes: 'govuk-!-width-one-third'
+			},
+			{ key: 'uploaded', label: 'Uploaded' }
+		] satisfies (SortableColumn & { key: FolderFileSortKey })[];
+
+		const sanitisedOrderByQuery: FolderFileSort = getSortQueries<Record<FolderFileSortKey, Prisma.SortOrder>>(req, {
+			sortBy: 'uploaded',
+			sortOrder: 'desc',
+			allowedFields: headerFields.map((field) => field.key)
+		});
+
+		let primaryOrder: Prisma.DocumentOrderByWithRelationInput;
+
+		switch (sanitisedOrderByQuery.sortField) {
+			case 'fileName':
+				primaryOrder = { fileName: sanitisedOrderByQuery.sortOrder };
+				break;
+			case 'uploaded':
+				primaryOrder = { uploadedDate: sanitisedOrderByQuery.sortOrder };
+				break;
+		}
+
+		const sortHeaders = getSortHeaders(req, headerFields, sanitisedOrderByQuery);
+
+		const sortParams = new URLSearchParams();
+		sortParams.set('sortBy', sanitisedOrderByQuery.sortField);
+		sortParams.set('order', sanitisedOrderByQuery.sortOrder);
+
+		const sortValue = `&${sortParams.toString()}`;
 		try {
 			const caseData = await db.case.findUnique({
 				select: { reference: true, name: true, statusId: true, legacyCaseId: true },
@@ -104,7 +146,7 @@ export function buildViewCaseFolder(
 						Folder: true,
 						UserDocuments: { where: { User: { idpUserId: userId } } }
 					},
-					orderBy: { uploadedDate: 'desc' }
+					orderBy: [primaryOrder, { id: 'asc' }]
 				}),
 				db.document.count({
 					where: { ...baseDocumentWhere, ...dynamicDocumentWhere }
@@ -132,6 +174,7 @@ export function buildViewCaseFolder(
 
 			const currentPath = req.originalUrl.split('?')[0];
 			const filterViewModel = filterGenerator.generateFilters(req.query, currentPath, counts);
+			filterViewModel.selectedCategories.clearLinkHref = `${currentPath}?${sortParams.toString()}`;
 
 			const folderPath = await getFolderPath(db, id, folderId);
 			const breadcrumbItems = buildBreadcrumbItems(id, folderPath);
@@ -155,7 +198,8 @@ export function buildViewCaseFolder(
 				subFoldersCount: createFoldersViewModel(folderData.ChildFolders).length,
 				documentCount: folderDocumentsCount,
 				uiItems: getPaginationModel(req, totalPages, pageNumber),
-				filtersValue: filterGenerator.createCurrentlySelectedFilterValues(req.query)
+				filtersValue: filterGenerator.createCurrentlySelectedFilterValues(req.query),
+				sortValue
 			};
 
 			const subFoldersViewModel = folderData.ChildFolders ? createFoldersViewModel(folderData.ChildFolders) : [];
@@ -186,6 +230,11 @@ export function buildViewCaseFolder(
 				currentPath: currentPath,
 				documents: documentsViewModel,
 				paginationParams,
+				sortHeaders,
+				sorting: {
+					sortBy: sanitisedOrderByQuery.sortField,
+					order: sanitisedOrderByQuery.sortOrder
+				},
 				filterData: filterViewModel,
 				createdFolderName,
 				createdFolderUrl,
