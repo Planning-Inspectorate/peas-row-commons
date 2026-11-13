@@ -1,4 +1,4 @@
-{% macro renderPagination(selectedItemsPerPage, totalRepresentations, pageNumber, searchValue, filtersValue) %}
+{% macro renderPagination(selectedItemsPerPage, totalRepresentations, pageNumber, searchValue, filtersValue, sortValue="") %}
     {% if totalRepresentations > 25 %}
         <span><strong>Results per page</strong></span>&nbsp;&nbsp;&nbsp;&nbsp;
 

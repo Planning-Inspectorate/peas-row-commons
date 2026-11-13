@@ -30,6 +30,8 @@ describe('buildViewCaseFolder', () => {
 			params: { id: 'case-123', folderId: 'folder-456' },
 			query: {},
 			session: { account: { localAccountId: 'user-456' } },
+			baseUrl: '',
+			path: '/cases/case-123/folders/folder-456',
 			originalUrl: '/cases/case-123/folders/folder-456',
 			...overrides
 		}) as any;
@@ -450,6 +452,275 @@ describe('buildViewCaseFolder', () => {
 			assert.strictEqual(viewData.folderUpdates.folderCreated, true);
 			assert.strictEqual(viewData.createdFolderName, 'Test Subfolder');
 			assert.strictEqual(viewData.createdFolderUrl, '/cases/case-123/case-folders/folder-789/test-subfolder');
+		});
+	});
+
+	describe('Sorting', () => {
+		const folderPath = '/cases/case-123/case-folders/folder-456/my-folder';
+
+		beforeEach(() => {
+			mockDb.folder.findUnique.mock.mockImplementation(() =>
+				Promise.resolve({
+					id: 'folder-456',
+					displayName: 'My Folder',
+					caseId: 'case-123',
+					ChildFolders: [],
+					ParentFolder: null
+				})
+			);
+			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve([]));
+			mockDb.$queryRaw.mock.mockImplementation(() => Promise.resolve([{ totalFolders: 0, totalDocuments: 10 }]));
+		});
+
+		it('should default to Uploaded descending and link to ascending', async () => {
+			const req = mockReq({
+				baseUrl: '',
+				path: folderPath,
+				originalUrl: folderPath
+			});
+			const res = mockRes();
+			const next = mock.fn();
+
+			await buildViewCaseFolder(service as any)(req, res, next);
+
+			assert.strictEqual(next.mock.callCount(), 0);
+			assert.strictEqual(res.render.mock.callCount(), 1);
+
+			const viewData = res.render.mock.calls[0].arguments[1];
+			const uploadedHeader = viewData.sortHeaders[1];
+
+			assert.deepStrictEqual(mockDb.document.findMany.mock.calls[0].arguments[0].orderBy, [
+				{ uploadedDate: 'desc' },
+				{ id: 'asc' }
+			]);
+			assert.strictEqual(uploadedHeader.attributes['aria-sort'], 'descending');
+			assert.ok(uploadedHeader.html.includes(`href="${folderPath}?sortBy=uploaded&order=asc"`));
+			assert.strictEqual(viewData.paginationParams.sortValue, '&sortBy=uploaded&order=desc');
+		});
+
+		it('should sort Uploaded ascending and link to descending', async () => {
+			const req = mockReq({
+				baseUrl: '',
+				path: folderPath,
+				originalUrl: `${folderPath}?sortBy=uploadedDate&order=asc`,
+				query: { sortBy: 'uploadedDate', order: 'asc' }
+			});
+			const res = mockRes();
+			const next = mock.fn();
+
+			await buildViewCaseFolder(service as any)(req, res, next);
+
+			assert.strictEqual(next.mock.callCount(), 0);
+			const viewData = res.render.mock.calls[0].arguments[1];
+			const uploadedHeader = viewData.sortHeaders[1];
+
+			assert.deepStrictEqual(mockDb.document.findMany.mock.calls[0].arguments[0].orderBy, [
+				{ uploadedDate: 'asc' },
+				{ id: 'asc' }
+			]);
+			assert.strictEqual(uploadedHeader.attributes['aria-sort'], 'ascending');
+			assert.ok(uploadedHeader.html.includes(`href="${folderPath}?sortBy=uploaded&order=desc"`));
+		});
+
+		it('should sort File name ascending and preserve sorting in pagination', async () => {
+			const req = mockReq({
+				baseUrl: '',
+				path: folderPath,
+				originalUrl: `${folderPath}?sortBy=fileName&order=asc`,
+				query: { sortBy: 'fileName', order: 'asc' }
+			});
+			const res = mockRes();
+			const next = mock.fn();
+
+			await buildViewCaseFolder(service as any)(req, res, next);
+
+			assert.strictEqual(next.mock.callCount(), 0);
+			const viewData = res.render.mock.calls[0].arguments[1];
+			const fileNameHeader = viewData.sortHeaders[0];
+
+			assert.deepStrictEqual(mockDb.document.findMany.mock.calls[0].arguments[0].orderBy, [
+				{ fileName: 'asc' },
+				{ id: 'asc' }
+			]);
+			assert.strictEqual(fileNameHeader.attributes['aria-sort'], 'ascending');
+			assert.strictEqual(viewData.sortHeaders[1].attributes['aria-sort'], 'none');
+			assert.ok(fileNameHeader.html.includes(`href="${folderPath}?sortBy=fileName&order=desc"`));
+			assert.strictEqual(viewData.paginationParams.sortValue, '&sortBy=fileName&order=asc');
+		});
+
+		it('should sort File name descending and preserve sorting in pagination', async () => {
+			const req = mockReq({
+				baseUrl: '',
+				path: folderPath,
+				originalUrl: `${folderPath}?sortBy=fileName&order=desc`,
+				query: { sortBy: 'fileName', order: 'desc' }
+			});
+			const res = mockRes();
+			const next = mock.fn();
+
+			await buildViewCaseFolder(service as any)(req, res, next);
+
+			assert.strictEqual(next.mock.callCount(), 0);
+			const viewData = res.render.mock.calls[0].arguments[1];
+			const fileNameHeader = viewData.sortHeaders[0];
+
+			assert.deepStrictEqual(mockDb.document.findMany.mock.calls[0].arguments[0].orderBy, [
+				{ fileName: 'desc' },
+				{ id: 'asc' }
+			]);
+			assert.strictEqual(fileNameHeader.attributes['aria-sort'], 'descending');
+			assert.strictEqual(viewData.sortHeaders[1].attributes['aria-sort'], 'none');
+			assert.ok(fileNameHeader.html.includes(`href="${folderPath}?sortBy=fileName&order=asc"`));
+			assert.strictEqual(viewData.paginationParams.sortValue, '&sortBy=fileName&order=desc');
+		});
+
+		it('should reset the page when sorting and preserve document filters', async () => {
+			const req = mockReq({
+				baseUrl: '',
+				path: folderPath,
+				originalUrl: `${folderPath}?page=2&itemsPerPage=25&readStatus=unread&flaggedStatus=flagged`,
+				query: {
+					page: '2',
+					itemsPerPage: '25',
+					readStatus: 'unread',
+					flaggedStatus: 'flagged'
+				}
+			});
+			const res = mockRes();
+			const next = mock.fn();
+			mockDb.document.count.mock.mockImplementation(() => Promise.resolve(56));
+
+			const handler = buildViewCaseFolder(service as any);
+			await handler(req, res, next);
+
+			assert.strictEqual(next.mock.callCount(), 0);
+			const originalDbArgs = mockDb.document.findMany.mock.calls[0].arguments[0];
+			assert.strictEqual(originalDbArgs.skip, 25);
+
+			const viewData = res.render.mock.calls[0].arguments[1];
+			const href = viewData.sortHeaders[0].html.match(/href="([^"]+)"/)?.[1];
+			assert.ok(href, 'File name header should contain a navigation link');
+
+			const sortUrl = new URL(href, 'http://localhost');
+
+			assert.strictEqual(sortUrl.pathname, folderPath);
+			assert.strictEqual(sortUrl.searchParams.has('page'), false);
+			assert.strictEqual(sortUrl.searchParams.get('sortBy'), 'fileName');
+			assert.strictEqual(sortUrl.searchParams.get('order'), 'asc');
+			assert.strictEqual(sortUrl.searchParams.get('itemsPerPage'), '25');
+			assert.strictEqual(sortUrl.searchParams.get('readStatus'), 'unread');
+			assert.strictEqual(sortUrl.searchParams.get('flaggedStatus'), 'flagged');
+
+			const sortedReq = mockReq({
+				baseUrl: '',
+				path: folderPath,
+				query: Object.fromEntries(sortUrl.searchParams),
+				originalUrl: sortUrl.pathname + sortUrl.search
+			});
+			const sortedRes = mockRes();
+
+			await handler(sortedReq, sortedRes, next);
+
+			assert.strictEqual(next.mock.callCount(), 0);
+			// Each request fetches displayed documents and filter-count documents.
+			const sortedDbArgs = mockDb.document.findMany.mock.calls[2].arguments[0];
+
+			assert.strictEqual(sortedDbArgs.skip, 0);
+			assert.strictEqual(sortedDbArgs.take, 25);
+			assert.deepStrictEqual(sortedDbArgs.orderBy, [{ fileName: 'asc' }, { id: 'asc' }]);
+			assert.deepStrictEqual(sortedDbArgs.where, originalDbArgs.where);
+		});
+
+		it('should fall back to Uploaded descending for invalid sorting parameters', async () => {
+			const req = mockReq({
+				baseUrl: '',
+				path: folderPath,
+				originalUrl: folderPath,
+				query: { sortBy: 'not-a-column', order: 'not-an-order' }
+			});
+			const res = mockRes();
+			const next = mock.fn();
+
+			await buildViewCaseFolder(service as any)(req, res, next);
+
+			assert.strictEqual(next.mock.callCount(), 0);
+			const viewData = res.render.mock.calls[0].arguments[1];
+
+			assert.deepStrictEqual(mockDb.document.findMany.mock.calls[0].arguments[0].orderBy, [
+				{ uploadedDate: 'desc' },
+				{ id: 'asc' }
+			]);
+			assert.strictEqual(viewData.sortHeaders[1].attributes['aria-sort'], 'descending');
+			assert.strictEqual(viewData.paginationParams.sortValue, '&sortBy=uploaded&order=desc');
+		});
+
+		it('should reject sorting by size even though it is a document field', async () => {
+			const req = mockReq({
+				baseUrl: '',
+				path: folderPath,
+				originalUrl: folderPath,
+				query: { sortBy: 'size', order: 'not-an-order' }
+			});
+			const res = mockRes();
+			const next = mock.fn();
+
+			await buildViewCaseFolder(service as any)(req, res, next);
+
+			assert.strictEqual(next.mock.callCount(), 0);
+			const viewData = res.render.mock.calls[0].arguments[1];
+
+			assert.deepStrictEqual(mockDb.document.findMany.mock.calls[0].arguments[0].orderBy, [
+				{ uploadedDate: 'desc' },
+				{ id: 'asc' }
+			]);
+			assert.strictEqual(viewData.sortHeaders[1].attributes['aria-sort'], 'descending');
+			assert.strictEqual(viewData.paginationParams.sortValue, '&sortBy=uploaded&order=desc');
+		});
+
+		it('should reject sorting by fileStatus', async () => {
+			const req = mockReq({
+				baseUrl: '',
+				path: folderPath,
+				originalUrl: folderPath,
+				query: { sortBy: 'fileStatus', order: 'not-an-order' }
+			});
+			const res = mockRes();
+			const next = mock.fn();
+
+			await buildViewCaseFolder(service as any)(req, res, next);
+
+			assert.strictEqual(next.mock.callCount(), 0);
+			const viewData = res.render.mock.calls[0].arguments[1];
+
+			assert.deepStrictEqual(mockDb.document.findMany.mock.calls[0].arguments[0].orderBy, [
+				{ uploadedDate: 'desc' },
+				{ id: 'asc' }
+			]);
+			assert.strictEqual(viewData.sortHeaders[1].attributes['aria-sort'], 'descending');
+			assert.strictEqual(viewData.paginationParams.sortValue, '&sortBy=uploaded&order=desc');
+		});
+
+		it('should reject sorting by fileActions', async () => {
+			const req = mockReq({
+				baseUrl: '',
+				path: folderPath,
+				originalUrl: folderPath,
+				query: { sortBy: 'fileActions', order: 'not-an-order' }
+			});
+			const res = mockRes();
+			const next = mock.fn();
+
+			await buildViewCaseFolder(service as any)(req, res, next);
+
+			assert.strictEqual(next.mock.callCount(), 0);
+			const viewData = res.render.mock.calls[0].arguments[1];
+
+			assert.deepStrictEqual(mockDb.document.findMany.mock.calls[0].arguments[0].orderBy, [
+				{ uploadedDate: 'desc' },
+				{ id: 'asc' }
+			]);
+			assert.strictEqual(viewData.sortHeaders[1].attributes['aria-sort'], 'descending');
+			assert.strictEqual(viewData.paginationParams.sortValue, '&sortBy=uploaded&order=desc');
 		});
 	});
 });

@@ -5,7 +5,7 @@
 {# 
     Takes 2 optional parameters, to show checkboxes and to show a "view folder link" in actions.
 #}
-{% macro documentsTable(documentsList, currentUrl, showCheckboxes=false, showFolderLink=false) %}
+{% macro documentsTable(documentsList, currentUrl, showCheckboxes=false, showFolderLink=false, sortableHeaders=[]) %}
 
     {% set rows = [] %}
 
@@ -114,8 +114,7 @@
         {% set rows = (rows.push(rowItems), rows) %}
     {% endfor %}
 
-    {% set headers = [] %}
-
+    {% set sortHeaders = [] %}
     {% if showCheckboxes %}
         {% set selectAllHtml %}
             <div class="govuk-checkboxes__item govuk-checkboxes--small mo-checkbox-table-cell">
@@ -125,35 +124,39 @@
                 </label>
             </div>
         {% endset %}
-        {% set headers = (headers.push({ html: selectAllHtml }), headers) %}
+        {% set sortHeaders = (sortHeaders.push({ html: selectAllHtml }), sortHeaders) %}
     {% endif %}
 
-    {% set headers = (headers.push(
-        {
-            text: 'File name',
-            attributes: { "aria-sort": "none" },
-            classes: "govuk-!-width-one-third"
-        },
-        {
-            text: 'Uploaded',
-            attributes: { "aria-sort": "descending" }
-        },
-        {
-            text: 'Status'
-        },
-        {
-            text: 'Actions'
-        }
-    ), headers) %}
+    {% if sortableHeaders.length %}
+        {% for header in sortableHeaders %}
+            {% set sortHeaders = (sortHeaders.push(header), sortHeaders) %}
+        {% endfor %}
+    {% else %}
+        {% set sortHeaders = (sortHeaders.push(
+            {
+                text: 'File name',
+                attributes: { "aria-sort": "none" },
+                classes: "govuk-!-width-one-third"
+            },
+            {
+                text: 'Uploaded',
+                attributes: { "aria-sort": "descending" }
+            }
+        ), sortHeaders) %}
+    {% endif %}
+
+    {% set sortHeaders = (sortHeaders.push(
+        { text: 'Status' },
+        { text: 'Actions' }
+    ), sortHeaders) %}
 
     {{ govukTable({
         attributes: {
-            "data-module": "moj-sortable-table",
             "data-cy": "documents-table"
         },
-        head: headers,
+        head: sortHeaders,
         rows: rows,
-        classes: "pins-documents-table"
+        classes: "pins-documents-table pins-table"
     }) }}
 
 {% endmacro %}

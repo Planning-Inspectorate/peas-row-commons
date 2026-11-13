@@ -121,6 +121,8 @@
                     filterData.checkboxGroups,
                     filterData.selectedCategories
                 ) }}
+                <input type="hidden" name="sortBy" value="{{ sorting.sortBy }}">
+                <input type="hidden" name="order" value="{{ sorting.order }}">
             </form>
         </div>
 
@@ -139,16 +141,21 @@
 
                                 {% if paginationParams.totalSubFolders > 0 %}
                                     <p class="govuk-body govuk-!-margin-bottom-0">
-                                        This folder contains {{ paginationParams.subFoldersCount }} subfolders which contain {{ (paginationParams.totalDocumentsCount | default(0)) - (paginationParams.documentCount | default(0)) }} file(s) in total.
+                                        This folder contains {{ paginationParams.subFoldersCount }} subfolders which
+                                        contain {{ (paginationParams.totalDocumentsCount | default(0)) - (paginationParams.documentCount | default(0)) }}
+                                        file(s) in total.
                                     </p>
 
                                     {% set subFoldersHtml %}
                                         <ul class="govuk-list" data-cy="folder-list">
-                                        {% for folder in subFolders %}
-                                            <li class="govuk-!-margin-bottom-4"><a class="govuk-link govuk-heading-s" href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}" data-cy="subfolder-link-{{ folder.id }}">
-                                                {{ folder.displayName }}
-                                            </a></li>
-                                        {% endfor %}
+                                            {% for folder in subFolders %}
+                                                <li class="govuk-!-margin-bottom-4"><a
+                                                            class="govuk-link govuk-heading-s"
+                                                            href="{{ baseFoldersUrl }}/{{ folder.id }}/{{ folder.encodedDisplayName }}"
+                                                            data-cy="subfolder-link-{{ folder.id }}">
+                                                        {{ folder.displayName }}
+                                                    </a></li>
+                                            {% endfor %}
                                         </ul>
                                     {% endset %}
 
@@ -174,7 +181,8 @@
                                 {% endif %}
                                 {% if documents|length !== 0 %}
                                     <p class="govuk-body govuk-!-margin-bottom-0" data-cy="pagination-results-text">
-                                        Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalFilteredDocuments > paginationParams.resultsEndNumber else paginationParams.totalFilteredDocuments }}</strong>
+                                        Showing <strong>{{ paginationParams.resultsStartNumber }}</strong> to
+                                        <strong>{{ paginationParams.resultsEndNumber if paginationParams.totalFilteredDocuments > paginationParams.resultsEndNumber else paginationParams.totalFilteredDocuments }}</strong>
                                         of <strong>{{ paginationParams.totalFilteredDocuments }}</strong> files.
                                     </p>
                                 {% endif %}
@@ -182,8 +190,7 @@
 
                             {% if documents|length !== 0 %}
                                 <div class="pins-pagination-options govuk-!-margin-bottom-4">
-                                    {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalFilteredDocuments, paginationParams.pageNumber, paginationParams.searchValue, paginationParams.filtersValue) }}
-                                </div>
+                                    {{ paginationOptions.renderPagination(paginationParams.selectedItemsPerPage, paginationParams.totalFilteredDocuments, paginationParams.pageNumber, paginationParams.searchValue, paginationParams.filtersValue, paginationParams.sortValue) }}                                </div>
                             {% endif %}
                             <p class="govuk-body govuk-!-font-weight-bold">File actions</p>
                             <div class="govuk-button-group govuk-!-margin-bottom-4">
@@ -198,16 +205,16 @@
                                     {{ govukButton({
                                         text: "Move selected",
                                         classes: "govuk-button--secondary",
-                                        attributes: { 
+                                        attributes: {
                                             "data-module": "govuk-button",
-                                            "data-cy": "move-selected-btn" 
+                                            "data-cy": "move-selected-btn"
                                         }
                                     }) }}
 
                                     {{ govukButton({
                                         text: "Download selected",
                                         classes: "govuk-button--secondary",
-                                        attributes: { 
+                                        attributes: {
                                             "data-module": "govuk-button",
                                             "data-cy": "download-selected-btn",
                                             "formaction": "/documents/download"
@@ -217,7 +224,7 @@
                                     {{ govukButton({
                                         text: "Delete selected",
                                         classes: "govuk-button--secondary",
-                                        attributes: { 
+                                        attributes: {
                                             "data-module": "govuk-button",
                                             "data-cy": "delete-selected-btn",
                                             "formaction": currentPath + "/documents/delete-confirmation"
@@ -228,30 +235,33 @@
 
                             {% if documents|length !== 0 %}
                                 <!-- Polite aria so that screen readers will gently let the user know when this number changes -->
-                                <p id="selection-count-container" class="govuk-body govuk-!-display-none" aria-live="polite">
+                                <p id="selection-count-container" class="govuk-body govuk-!-display-none"
+                                   aria-live="polite">
                                     <span id="selection-count-number">0</span> file(s) selected
                                 </p>
                                 <p class="govuk-body">Select 'All' checkbox to select all the files.</p>
                                 <div class="govuk-grid-row">
                                     <div class="govuk-grid-column-full">
-                                        {{ documentsTable(documents, currentPath, true, false) }}
+                                        {{ documentsTable(documents, currentPath, true, false, sortHeaders) }}
                                     </div>
                                 </div>
-                                {# if uiItems.items is <=1 then pagination options not shown #} 
+                                {# if uiItems.items is <=1 then pagination options not shown #}
                                 {% if paginationParams.uiItems.items.length > 1 %}
                                     {{ govukPagination(paginationParams.uiItems) }}
                                 {% endif %}
-                           {% else %}
+                            {% else %}
                                 {% if filterData.selectedCategories.categories | length > 0 %}
                                     <p class="govuk-body govuk-!-margin-top-4">
                                         No files match your selected filters.
-                                        Try <a href="{{ currentPath }}" class="govuk-link govuk-link--no-visited-state">clearing your filters</a>.
+                                        Try <a href="{{ filterData.selectedCategories.clearLinkHref }}"
+                                               class="govuk-link govuk-link--no-visited-state">clearing your filters</a>.
                                     </p>
                                 {% endif %}
                             {% endif %}
                         </form>
                         {# This is the target form for inline status changes, which is needed independent of the main form to avoid it picking up the checkboxes #}
-                        <form id="inline-action-form" action="/documents/toggle-action" method="POST" style="display: none;">
+                        <form id="inline-action-form" action="/documents/toggle-action" method="POST"
+                              style="display: none;">
                             <input type="hidden" name="caseId" value="{{ caseId }}">
                             <input type="hidden" name="returnUrl" value="{{ currentUrl }}">
                             {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
@@ -261,42 +271,41 @@
             </div>
         </div>
     </div>
-<script type="module" {% if cspNonce %}nonce="{{ cspNonce }}"{% endif %}>
-        document.addEventListener('DOMContentLoaded', function() {
-            const selectAll = document.getElementById('checkboxes-all');
-            const checkboxes = document.querySelectorAll('input[name="selectedFiles"]');
-            const countContainer = document.getElementById('selection-count-container');
-            const countNumber = document.getElementById('selection-count-number');
+    <script type="module" {% if cspNonce %}nonce="{{ cspNonce }}"{% endif %}>
+			document.addEventListener('DOMContentLoaded', function() {
+				const selectAll = document.getElementById('checkboxes-all');
+				const checkboxes = document.querySelectorAll('input[name="selectedFiles"]');
+				const countContainer = document.getElementById('selection-count-container');
+				const countNumber = document.getElementById('selection-count-number');
 
-            if (countContainer && checkboxes.length > 0) {
-                countContainer.classList.remove('govuk-!-display-none');
-            }
+				if (countContainer && checkboxes.length > 0) {
+					countContainer.classList.remove('govuk-!-display-none');
+				}
 
-            function updateCount() {
-                const selectedCount = document.querySelectorAll('input[name="selectedFiles"]:checked').length;
-                if (countNumber) {
-                    countNumber.textContent = selectedCount;
-                }
-            }
+				function updateCount() {
+					const selectedCount = document.querySelectorAll('input[name="selectedFiles"]:checked').length;
+					if (countNumber) {
+						countNumber.textContent = selectedCount;
+					}
+				}
 
-            updateCount();
+				updateCount();
 
-            if (selectAll) {
-                selectAll.addEventListener('change', function(e) {
-                    checkboxes.forEach(function(cb) {
-                        cb.checked = e.target.checked;
-                    });
-                    updateCount();
-                });
+				if (selectAll) {
+					selectAll.addEventListener('change', function(e) {
+						checkboxes.forEach(function(cb) {
+							cb.checked = e.target.checked;
+						});
+						updateCount();
+					});
 
-                checkboxes.forEach(function(cb) {
-                    cb.addEventListener('change', function() {
-                        const allChecked = Array.from(checkboxes).every(c => c.checked);
-                        selectAll.checked = allChecked;
-                        updateCount();
-                    });
-                });
-            }
-        });
+					checkboxes.forEach(function(cb) {
+						cb.addEventListener('change', function() {
+							selectAll.checked = Array.from(checkboxes).every((checkbox) => checkbox.checked);
+							updateCount();
+						});
+					});
+				}
+			});
     </script>
 {% endblock %}
