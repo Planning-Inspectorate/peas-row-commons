@@ -8,36 +8,32 @@
         <div class="govuk-grid-column-two-thirds">
             <form action="" method="post" novalidate>
                 {% if _csrf %}<input type="hidden" name="_csrf" value="{{ _csrf }}">{% endif %}
-                {{ govukRadios({
-                    name: "remove",
-                    fieldset: {
-                        legend: {
-                            text: "Are you sure you want to remove this " + (titleSingular | lower) + "?",
-                            isPageHeading: true,
-                            classes: "govuk-fieldset__legend--l"
-                        }
-                    },
-                    hint: {
-                        html: summaryHtml
-                    },
-                    items: [
-                        {
-                            value: "yes",
-                            text: "Yes",
-                            attributes: { "data-cy": "answer-yes" }
-                        },
-                        {
-                            value: "no",
-                            text: "No",
-                            attributes: { "data-cy": "answer-no" }
-                        }
-                    ]
+                <h1 class="govuk-heading-l">Remove {{ titleSingular | lower }}</h1>
+
+                <div class="govuk-inset-text">
+                    {% for item in questionSummary %}
+                        {% if item.answer %}
+                            <p class="govuk-body">{{ item.answer | safe }}</p>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                {{ govukButton({
+                    text: "Remove " + (titleSingular | lower),
+                    type: "submit",
+                    classes: "govuk-button--warning",
+                    attributes: {
+                        name: "remove",
+                        value: "remove",
+                        "data-cy":"button-remove"
+                    }
                 }) }}
 
                 {{ govukButton({
-                    text: "Continue",
-                    type: "submit",
-                    attributes: { "data-cy":"button-save-and-continue"}
+                    text: "Cancel",
+                    href: backLink,
+                    classes: "govuk-button--secondary",
+                    attributes: { "data-cy":"button-back"}
                 }) }}
             </form>
         </div>
