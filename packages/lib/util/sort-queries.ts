@@ -3,6 +3,11 @@ import type { Request } from 'express';
 
 type SortOrder = Prisma.SortOrder;
 
+export interface TableSortPreference {
+	sortBy: string;
+	sortOrder: SortOrder;
+}
+
 /**
  * Gets the keys of a Prisma `OrderByWithRelationInput` type that can be sorted
  * directly with `'asc' | 'desc'`. These are the model's scalar columns.
@@ -41,22 +46,28 @@ export interface SortDefaults<T> {
  * Extracts and validates sorting parameters from the request query.
  * Reads sortBy and order from the request query and checks them against the provided defaults.
  * Returns an object suitable for use in a Prisma orderBy clause.
- * If the parameters are invalid or not provided, it falls back to the specified defaults.
+ * Invalid or missing parameters fall back to validated saved preferences, then defaults.
  */
 export function getSortQueries<T>(
 	req: Request,
-	defaults: SortDefaults<T>
+	defaults: SortDefaults<T>,
+	savedSort?: TableSortPreference
 ): { sortField: ScalarSortKey<T>; sortOrder: SortOrder } {
 	const requestedField = req.query?.sortBy;
 	const requestedOrder = req.query?.order;
+	const fallbackField =
+		typeof savedSort?.sortBy === 'string' && isAllowedField(savedSort.sortBy, defaults.allowedFields)
+			? savedSort.sortBy
+			: defaults.sortBy;
+	const fallbackOrder = validateOrderBy(savedSort?.sortOrder) ? savedSort.sortOrder : defaults.sortOrder;
 
 	const sortField =
 		typeof requestedField === 'string' && isAllowedField(requestedField, defaults.allowedFields)
-			? (requestedField as ScalarSortKey<T>)
-			: defaults.sortBy;
+			? requestedField
+			: fallbackField;
 
 	const sortOrder =
-		typeof requestedOrder === 'string' && validateOrderBy(requestedOrder) ? requestedOrder : defaults.sortOrder;
+		typeof requestedOrder === 'string' && validateOrderBy(requestedOrder) ? requestedOrder : fallbackOrder;
 
 	return { sortField, sortOrder };
 }

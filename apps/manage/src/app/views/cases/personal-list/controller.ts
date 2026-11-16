@@ -91,17 +91,29 @@ export function buildViewPersonalList(service: ManageService): AsyncRequestHandl
 			{ key: 'statusId', label: 'Status', classes: 'pins-width-one-sixth' }
 		] satisfies (SortableColumn & { key: PersonalListSortKey })[];
 
-		const sanitisedOrderByQuery = getSortQueries<Record<PersonalListSortKey, Prisma.SortOrder>>(req, {
-			sortBy: 'receivedDate',
-			sortOrder: 'desc',
-			allowedFields: headerFields.map((field) => field.key)
-		});
+		const sanitisedOrderByQuery = getSortQueries<Record<PersonalListSortKey, Prisma.SortOrder>>(
+			req,
+			{
+				sortBy: 'receivedDate',
+				sortOrder: 'desc',
+				allowedFields: headerFields.map((field) => field.key)
+			},
+			req.session.tableSorts?.['personal-list']
+		);
 
 		const sortParams = new URLSearchParams();
 		sortParams.set('sortBy', sanitisedOrderByQuery.sortField);
 		sortParams.set('order', sanitisedOrderByQuery.sortOrder);
 		const sortValue = `&${sortParams.toString()}`;
 		const clearFilterParams = new URLSearchParams(sortParams);
+
+		req.session.tableSorts = {
+			...req.session.tableSorts,
+			'personal-list': {
+				sortBy: sanitisedOrderByQuery.sortField,
+				sortOrder: sanitisedOrderByQuery.sortOrder
+			}
+		};
 
 		if (selectedUserId) {
 			clearFilterParams.set('userId', selectedUserId);

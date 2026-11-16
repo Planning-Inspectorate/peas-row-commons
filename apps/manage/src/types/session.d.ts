@@ -1,3 +1,4 @@
+import type { TableSortPreference } from '@pins/peas-row-commons-lib/util/sort-queries.ts';
 import 'express-session';
 
 type DynamicSessionData = {
@@ -8,5 +9,6 @@ type DynamicSessionData = {
 declare module 'express-session' {
 	interface SessionData extends DynamicSessionData {
 		permissions?: Record<string, boolean>;
+		tableSorts?: Partial<Record<string, TableSortPreference>>;
 	}
 }
