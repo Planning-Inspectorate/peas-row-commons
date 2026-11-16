@@ -3,6 +3,7 @@ import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.t
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 import { getStringParam } from '@pins/peas-row-commons-lib/util/params.ts';
 import { createWhereClause, sanitiseSearchQuery } from '@pins/peas-row-commons-lib/util/search-queries.ts';
+import { notFoundHandler } from '@planning-inspectorate/core/middleware';
 import { clearSessionData, readSessionData } from '@planning-inspectorate/core/util';
 import type { Request, RequestHandler } from 'express';
 import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
@@ -17,6 +18,12 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 
 	return async (req, res) => {
 		const id = getStringParam(req.params, 'id');
+		const caseData = await db.case.findUnique({ where: { id }, select: { reference: true } });
+
+		if (!caseData) {
+			return notFoundHandler(req, res);
+		}
+
 		const searchString = req.query?.searchCriteria?.toString().trim() || '';
 
 		const userId = req?.session?.account?.localAccountId;
@@ -96,6 +103,10 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 		const returnUrl = req.baseUrl.replace(/\/search-results\/?$/, '');
 
 		const breadcrumbItems = [
+			{
+				text: caseData.reference,
+				href: `/cases/${id}`
+			},
 			{
 				text: 'Manage case files',
 				href: returnUrl
