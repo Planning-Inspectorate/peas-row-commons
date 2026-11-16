@@ -133,7 +133,7 @@ export function buildViewCaseFolder(
 			const currentPath = req.originalUrl.split('?')[0];
 			const filterViewModel = filterGenerator.generateFilters(req.query, currentPath, counts);
 
-			const folderPath = await getFolderPath(db, id, folderId);
+			const folderPath = await getFolderPath(db, folderId, id);
 			const breadcrumbItems = buildBreadcrumbItems(id, folderPath);
 
 			const { totalPages, resultsStartNumber, resultsEndNumber } = getPageData(
@@ -234,7 +234,7 @@ export async function getFolderPath(db: PrismaClient, folderId: string, caseId?:
 	if (!resolvedCaseId) return [];
 
 	const allFolders = await db.folder.findMany({
-		where: { caseId: caseId },
+		where: { caseId: resolvedCaseId },
 		select: {
 			id: true,
 			displayName: true,
