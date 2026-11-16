@@ -56,16 +56,28 @@ export function buildListCases(service: ManageService, FilterGeneratorClass = Fi
 			{ key: 'statusId', label: 'Status', classes: 'govuk-!-width-one-quarter' }
 		] satisfies (SortableColumn & { key: CaseSortKey })[];
 
-		const sanitisedOrderByQuery = getSortQueries<Prisma.CaseOrderByWithRelationInput>(req, {
-			sortBy: 'receivedDate',
-			sortOrder: 'desc',
-			allowedFields: headerFields.map((field) => field.key)
-		});
+		const sanitisedOrderByQuery = getSortQueries<Prisma.CaseOrderByWithRelationInput>(
+			req,
+			{
+				sortBy: 'receivedDate',
+				sortOrder: 'desc',
+				allowedFields: headerFields.map((field) => field.key)
+			},
+			req.session.tableSorts?.['case-list']
+		);
 
 		const sortParams = new URLSearchParams();
 		sortParams.set('sortBy', sanitisedOrderByQuery.sortField);
 		sortParams.set('order', sanitisedOrderByQuery.sortOrder);
 		const sortValue = `&${sortParams.toString()}`;
+
+		req.session.tableSorts = {
+			...req.session.tableSorts,
+			'case-list': {
+				sortBy: sanitisedOrderByQuery.sortField,
+				sortOrder: sanitisedOrderByQuery.sortOrder
+			}
+		};
 
 		const query = generateQuery(db, skipSize, pageSize, whereClause, sanitisedOrderByQuery);
 

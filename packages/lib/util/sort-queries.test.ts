@@ -18,6 +18,44 @@ const defaults = {
 } satisfies SortDefaults<TestOrderBy>;
 
 describe('sort-queries', () => {
+	describe('saved preferences', () => {
+		it('uses saved sorting when query parameters are absent', () => {
+			const req = { query: {} } as Request;
+
+			assert.deepStrictEqual(getSortQueries<TestOrderBy>(req, defaults, { sortBy: 'name', sortOrder: 'asc' }), {
+				sortField: 'name',
+				sortOrder: 'asc'
+			});
+		});
+
+		it('gives explicit query parameters precedence over saved sorting', () => {
+			const req = { query: { sortBy: 'date', order: 'desc' } } as Request;
+
+			assert.deepStrictEqual(getSortQueries<TestOrderBy>(req, defaults, { sortBy: 'name', sortOrder: 'asc' }), {
+				sortField: 'date',
+				sortOrder: 'desc'
+			});
+		});
+
+		it('falls back to saved sorting for invalid query parameters', () => {
+			const req = { query: { sortBy: 'unknown', order: 'invalid' } } as Request;
+
+			assert.deepStrictEqual(getSortQueries<TestOrderBy>(req, defaults, { sortBy: 'name', sortOrder: 'asc' }), {
+				sortField: 'name',
+				sortOrder: 'asc'
+			});
+		});
+
+		it('falls back to the default column when the saved column is no longer allowed', () => {
+			const req = { query: {} } as Request;
+
+			assert.deepStrictEqual(
+				getSortQueries<TestOrderBy>(req, defaults, { sortBy: 'removed-column', sortOrder: 'asc' }),
+				{ sortField: 'defaultField', sortOrder: 'asc' }
+			);
+		});
+	});
+
 	describe('happy path', () => {
 		it('should return default sortBy and sortOrder if no query params are provided', () => {
 			const req = {

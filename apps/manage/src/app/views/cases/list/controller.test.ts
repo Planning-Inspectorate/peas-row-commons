@@ -1,6 +1,8 @@
 import type { ManageService } from '#service';
+import type { Prisma } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { FilterViewModel } from '@pins/peas-row-commons-lib/util/filter-generator.ts';
 import type { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
+import type { SortHeaderViewModel } from '@pins/peas-row-commons-lib/util/sort-headers.ts';
 import { mockLogger } from '@planning-inspectorate/core/testing';
 import type { Request, Response } from 'express';
 import assert from 'node:assert';
@@ -166,7 +168,7 @@ async function listCases(query: ParsedQs, totalCases = 100) {
 	};
 	const handler = buildListCases({ db, logger: mockLogger() } as unknown as ManageService);
 	await handler(
-		{ query, originalUrl: '/cases?page=3', baseUrl: '', path: '/cases' } as Request,
+		{ query, originalUrl: '/cases?page=3', baseUrl: '', path: '/cases', session: {} } as Request,
 		res as unknown as Response,
 		() => {}
 	);
@@ -336,6 +338,54 @@ describe('Case Controller', () => {
 	});
 
 	describe('buildListCases', () => {
+		it('retains the selected sort column and order when returning to the case list', async () => {
+			const session = {};
+			const firstRequest = {
+				query: { sortBy: 'name', order: 'asc' },
+				originalUrl: '/cases?sortBy=name&order=asc',
+				baseUrl: '',
+				path: '/cases',
+				session
+			} as Request;
+			const returnRequest = {
+				query: {},
+				originalUrl: '/cases',
+				baseUrl: '',
+				path: '/cases',
+				session
+			} as Request;
+			const db = {
+				case: {
+					findMany: mock.fn((_args: Prisma.CaseFindManyArgs) => []),
+					count: mock.fn(() => 0),
+					groupBy: mock.fn(() => [])
+				}
+			};
+			const res = {
+				render: mock.fn((_view: string, _data: { sortHeaders: SortHeaderViewModel[] }) => {})
+			};
+			const handler = buildListCases({ db, logger: mockLogger() } as unknown as ManageService);
+			const expectedOrderBy = [{ name: 'asc' }, { id: 'asc' }];
+			firstRequest.session.tableSorts = {
+				'other-table': { sortBy: 'something', sortOrder: 'desc' }
+			};
+
+			await handler(firstRequest, res as unknown as Response, () => {});
+			assert.deepStrictEqual(db.case.findMany.mock.calls[0].arguments[0].orderBy, expectedOrderBy);
+			assert.deepStrictEqual(firstRequest.session.tableSorts, {
+				'other-table': { sortBy: 'something', sortOrder: 'desc' },
+				'case-list': { sortBy: 'name', sortOrder: 'asc' }
+			});
+
+			await handler(returnRequest, res as unknown as Response, () => {});
+
+			assert.strictEqual(db.case.findMany.mock.callCount(), 2);
+			assert.strictEqual(res.render.mock.callCount(), 2);
+			assert.deepStrictEqual(db.case.findMany.mock.calls[1].arguments[0].orderBy, expectedOrderBy);
+			const returnView = res.render.mock.calls[1].arguments[1];
+			assert.strictEqual(returnView.sortHeaders[1].attributes['aria-sort'], 'ascending');
+		});
+
 		it('should fetch cases, map them, and render the view', async () => {
 			const nunjucks = configureNunjucks();
 
@@ -347,7 +397,8 @@ describe('Case Controller', () => {
 				query: {},
 				originalUrl: '/cases',
 				baseUrl: 'https://localhost:4000',
-				path: '/cases'
+				path: '/cases',
+				session: {}
 			};
 
 			const mockDb = {
@@ -406,7 +457,8 @@ describe('Case Controller', () => {
 					page: '2',
 					area: 'planning',
 					search: 'test'
-				}
+				},
+				session: {}
 			};
 
 			const mockDb = {
@@ -451,7 +503,8 @@ describe('Case Controller', () => {
 					},
 					originalUrl: '/cases',
 					baseUrl: 'https://localhost:4000',
-					path: '/cases'
+					path: '/cases',
+					session: {}
 				};
 				const mockDb = {
 					case: {
