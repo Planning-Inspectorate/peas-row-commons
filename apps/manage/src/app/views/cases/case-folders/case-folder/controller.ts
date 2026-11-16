@@ -134,7 +134,7 @@ export function buildViewCaseFolder(
 			const filterViewModel = filterGenerator.generateFilters(req.query, currentPath, counts);
 
 			const folderPath = await getFolderPath(db, folderId, id);
-			const breadcrumbItems = buildBreadcrumbItems(id, folderPath);
+			const breadcrumbItems = buildBreadcrumbItems(id, caseData.reference, folderPath);
 
 			const { totalPages, resultsStartNumber, resultsEndNumber } = getPageData(
 				totalFilteredDocuments,

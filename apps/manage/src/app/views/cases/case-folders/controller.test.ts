@@ -85,7 +85,11 @@ describe('buildViewCaseFolders', () => {
 			assert.strictEqual(viewData.pageHeading, 'Test Case');
 			assert.strictEqual(viewData.reference, 'REF-001');
 			assert.strictEqual(viewData.folders.length, 2);
-			assert.strictEqual(viewData.backLinkUrl, '/cases/case-123');
+			assert.ok(viewData.breadcrumbItems);
+			assert.strictEqual(viewData.breadcrumbItems[0].text, 'REF-001');
+			assert.strictEqual(viewData.breadcrumbItems[0].href, `/cases/case-123`);
+			assert.strictEqual(viewData.breadcrumbItems[1].text, 'Manage case files');
+			assert.strictEqual(viewData.breadcrumbItems[1].href, undefined);
 		});
 		it('should show a confirmation message if a folder was deleted', async () => {
 			const req = mockReq();

@@ -203,14 +203,34 @@ describe('Folder creation utils', () => {
 	describe('buildBreadcrumbItems', () => {
 		const caseId = 'case-123';
 
-		it('should return "Manage case files" as the first breadcrumb item with correct href', () => {
+		it('should return link to case as the first breadcrumb item', () => {
 			const folderPath: FolderBreadcrumb[] = [];
 
-			const result = buildBreadcrumbItems(caseId, folderPath);
+			const result = buildBreadcrumbItems(caseId, 'TEST/CASE/REF', folderPath);
 
-			assert.strictEqual(result.length, 1);
-			assert.strictEqual(result[0].text, 'Manage case files');
-			assert.strictEqual(result[0].href, `/cases/${caseId}/case-folders`);
+			assert.strictEqual(result.length, 2);
+			assert.strictEqual(result[0].text, 'TEST/CASE/REF');
+			assert.strictEqual(result[0].href, `/cases/${caseId}`);
+		});
+
+		it('should return "Manage case files" as the second breadcrumb item with correct href', () => {
+			const folderPath: FolderBreadcrumb[] = [{ id: 'folder-1', displayName: 'Documents', parentFolderId: null }];
+
+			const result = buildBreadcrumbItems(caseId, 'TEST/CASE/REF', folderPath);
+
+			assert.strictEqual(result.length, 3);
+			assert.strictEqual(result[1].text, 'Manage case files');
+			assert.strictEqual(result[1].href, `/cases/${caseId}/case-folders`);
+		});
+
+		it('should omit href in the second breadcrumb if no folders are defined', () => {
+			const folderPath: FolderBreadcrumb[] = [];
+
+			const result = buildBreadcrumbItems(caseId, 'TEST/CASE/REF', folderPath);
+
+			assert.strictEqual(result.length, 2);
+			assert.strictEqual(result[1].text, 'Manage case files');
+			assert.strictEqual(result[1].href, undefined);
 		});
 
 		it('should add folder path items after "Manage case files"', () => {
@@ -219,11 +239,11 @@ describe('Folder creation utils', () => {
 				{ id: 'folder-2', displayName: 'Reports', parentFolderId: 'folder-1' }
 			];
 
-			const result = buildBreadcrumbItems(caseId, folderPath);
+			const result = buildBreadcrumbItems(caseId, 'TEST/CASE/REF', folderPath);
 
-			assert.strictEqual(result.length, 3);
-			assert.strictEqual(result[1].text, 'Documents');
-			assert.strictEqual(result[2].text, 'Reports');
+			assert.strictEqual(result.length, 4);
+			assert.strictEqual(result[2].text, 'Documents');
+			assert.strictEqual(result[3].text, 'Reports');
 		});
 
 		it('should include href for all items except the last folder', () => {
@@ -233,12 +253,13 @@ describe('Folder creation utils', () => {
 				{ id: 'folder-3', displayName: 'Q1 Reports', parentFolderId: 'folder-2' }
 			];
 
-			const result = buildBreadcrumbItems(caseId, folderPath);
+			const result = buildBreadcrumbItems(caseId, 'TEST/CASE/REF', folderPath);
 
-			assert.strictEqual(result[0].href, `/cases/${caseId}/case-folders`);
-			assert.strictEqual(result[1].href, `/cases/${caseId}/case-folders/folder-1/documents`);
-			assert.strictEqual(result[2].href, `/cases/${caseId}/case-folders/folder-2/reports`);
-			assert.strictEqual(result[3].href, undefined);
+			assert.strictEqual(result[0].href, `/cases/${caseId}`);
+			assert.strictEqual(result[1].href, `/cases/${caseId}/case-folders`);
+			assert.strictEqual(result[2].href, `/cases/${caseId}/case-folders/folder-1/documents`);
+			assert.strictEqual(result[3].href, `/cases/${caseId}/case-folders/folder-2/reports`);
+			assert.strictEqual(result[4].href, undefined);
 		});
 
 		it('should convert folder names to kebab-case in hrefs', () => {
@@ -247,22 +268,22 @@ describe('Folder creation utils', () => {
 				{ id: 'folder-2', displayName: 'Final Report', parentFolderId: 'folder-1' }
 			];
 
-			const result = buildBreadcrumbItems(caseId, folderPath);
+			const result = buildBreadcrumbItems(caseId, 'TEST/CASE/REF', folderPath);
 
-			assert.strictEqual(result[1].href, `/cases/${caseId}/case-folders/folder-1/my-important-documents`);
-			assert.strictEqual(result[2].href, undefined);
+			assert.strictEqual(result[2].href, `/cases/${caseId}/case-folders/folder-1/my-important-documents`);
+			assert.strictEqual(result[3].href, undefined);
 		});
 
 		it('should handle single folder in path', () => {
 			const folderPath: FolderBreadcrumb[] = [{ id: 'folder-1', displayName: 'Documents', parentFolderId: null }];
 
-			const result = buildBreadcrumbItems(caseId, folderPath);
+			const result = buildBreadcrumbItems(caseId, 'TEST/CASE/REF', folderPath);
 
-			assert.strictEqual(result.length, 2);
-			assert.strictEqual(result[0].text, 'Manage case files');
-			assert.strictEqual(result[0].href, `/cases/${caseId}/case-folders`);
-			assert.strictEqual(result[1].text, 'Documents');
-			assert.strictEqual(result[1].href, undefined);
+			assert.strictEqual(result.length, 3);
+			assert.strictEqual(result[1].text, 'Manage case files');
+			assert.strictEqual(result[1].href, `/cases/${caseId}/case-folders`);
+			assert.strictEqual(result[2].text, 'Documents');
+			assert.strictEqual(result[2].href, undefined);
 		});
 	});
 

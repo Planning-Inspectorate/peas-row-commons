@@ -5,6 +5,7 @@ import { notFoundHandler } from '@planning-inspectorate/core/middleware';
 import type { AsyncRequestHandler } from '@planning-inspectorate/core/util';
 import { clearSessionData, readSessionData, wrapPrismaError } from '@planning-inspectorate/core/util';
 import type { Request } from 'express';
+import { buildBreadcrumbItems } from './folder-utils.ts';
 import { createFoldersViewModel } from './view-model.ts';
 
 export function buildViewCaseFolders(service: ManageService): AsyncRequestHandler {
@@ -45,12 +46,12 @@ export function buildViewCaseFolders(service: ManageService): AsyncRequestHandle
 			folderCreated && createdFolderId && createdFolderName
 				? `${req.originalUrl}/${createdFolderId}/${stringToKebab(createdFolderName as string)}`
 				: '';
+		const breadcrumbItems = buildBreadcrumbItems(id, caseRow.reference, []);
 
 		return res.render('views/cases/case-folders/view.njk', {
 			pageHeading: caseRow?.name,
 			reference: caseRow?.reference,
-			backLinkUrl: `/cases/${id}`,
-			backLinkText: 'Back to case details',
+			breadcrumbItems,
 			folders: foldersViewModel,
 			currentUrl: req.originalUrl,
 			folderCreated,

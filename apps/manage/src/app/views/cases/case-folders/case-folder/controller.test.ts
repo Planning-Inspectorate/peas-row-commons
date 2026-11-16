@@ -158,7 +158,10 @@ describe('buildViewCaseFolder', () => {
 			assert.strictEqual(viewData.documents.length, 1);
 
 			assert.ok(viewData.breadcrumbItems);
-			assert.strictEqual(viewData.breadcrumbItems[0].text, 'Manage case files');
+			assert.strictEqual(viewData.breadcrumbItems[0].text, 'REF-123');
+			assert.strictEqual(viewData.breadcrumbItems[1].text, 'Manage case files');
+			assert.strictEqual(viewData.breadcrumbItems[2].text, 'Parent Folder');
+			assert.strictEqual(viewData.breadcrumbItems[3].text, 'My Folder');
 		});
 
 		it('should render correct backlink when no parent folder exists', async () => {

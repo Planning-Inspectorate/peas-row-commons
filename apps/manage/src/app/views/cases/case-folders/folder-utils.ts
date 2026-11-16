@@ -127,16 +127,26 @@ export function buildFolderTree(flatFolders: FlatFolder[]): FolderNode[] {
  * Builds breadcrumb items for the breadcrumbs component.
  * Structure: Manage case files > Folder > Subfolder > Subfolder
  */
-export function buildBreadcrumbItems(caseId: string, folderPath: FolderBreadcrumb[]): BreadcrumbItem[] {
-	const baseFoldersUrl = `/cases/${caseId}/case-folders`;
+export function buildBreadcrumbItems(
+	caseId: string,
+	caseReference: string,
+	folderPath: FolderBreadcrumb[]
+): BreadcrumbItem[] {
+	const baseUrl = `/cases/${caseId}`;
+	const baseFoldersUrl = `${baseUrl}/case-folders`;
 
-	// Start with "Manage case files" which links to the root folders page
 	const breadcrumbItems: BreadcrumbItem[] = [
 		{
-			text: 'Manage case files',
-			href: baseFoldersUrl
+			text: caseReference,
+			href: baseUrl
 		}
 	];
+
+	breadcrumbItems.push({
+		text: 'Manage case files',
+		// If no folders in path, this is the current page, so no link
+		href: folderPath.length === 0 ? undefined : baseFoldersUrl
+	});
 
 	// Add each folder in the path
 	// All folders except the last one get links
