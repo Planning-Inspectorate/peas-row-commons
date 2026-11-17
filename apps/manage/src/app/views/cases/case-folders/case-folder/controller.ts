@@ -1,11 +1,9 @@
 import type { ManageService } from '#service';
-import type { Prisma, PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
+import type { PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import { getFolderStats } from '@pins/peas-row-commons-database/util/folder.ts';
 import { CLOSED_STATUSES } from '@pins/peas-row-commons-lib/constants/statuses.ts';
 import { getPaginationModel } from '@pins/peas-row-commons-lib/util/pagination.ts';
 import { getStringParams } from '@pins/peas-row-commons-lib/util/params.ts';
-import { getSortHeaders, type SortableColumn } from '@pins/peas-row-commons-lib/util/sort-headers.ts';
-import { getSortQueries } from '@pins/peas-row-commons-lib/util/sort-queries.ts';
 import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import {
 	DOCUMENT_FILTER_VALUES,
@@ -20,17 +18,11 @@ import type { Request } from 'express';
 import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
 import { JOURNEY_ID } from '../../move-file/journey/journey.ts';
 import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
+import { getDocumentSorting } from '../document-sorting.ts';
 import { buildBreadcrumbItems } from '../folder-utils.ts';
 import type { FolderBreadcrumb } from '../types.ts';
 import { createFoldersViewModel } from '../view-model.ts';
 import { createDocumentsViewModel, type DocumentWithUserDocuments } from './view-model.ts';
-
-type FolderFileSortKey = 'fileName' | 'uploaded';
-
-type FolderFileSort = {
-	sortField: FolderFileSortKey;
-	sortOrder: Prisma.SortOrder;
-};
 
 export function buildViewCaseFolder(
 	service: ManageService,
@@ -61,39 +53,10 @@ export function buildViewCaseFolder(
 
 		const { selectedItemsPerPage, pageNumber, pageSize, skipSize } = getPaginationParams(req);
 
-		const headerFields = [
-			{
-				key: 'fileName',
-				label: 'File name',
-				classes: 'govuk-!-width-one-third'
-			},
-			{ key: 'uploaded', label: 'Uploaded' }
-		] satisfies (SortableColumn & { key: FolderFileSortKey })[];
-
-		const sanitisedOrderByQuery: FolderFileSort = getSortQueries<Record<FolderFileSortKey, Prisma.SortOrder>>(req, {
-			sortBy: 'uploaded',
-			sortOrder: 'desc',
-			allowedFields: headerFields.map((field) => field.key)
-		});
-
-		let primaryOrder: Prisma.DocumentOrderByWithRelationInput;
-
-		switch (sanitisedOrderByQuery.sortField) {
-			case 'fileName':
-				primaryOrder = { fileName: sanitisedOrderByQuery.sortOrder };
-				break;
-			case 'uploaded':
-				primaryOrder = { uploadedDate: sanitisedOrderByQuery.sortOrder };
-				break;
-		}
-
-		const sortHeaders = getSortHeaders(req, headerFields, sanitisedOrderByQuery);
-
-		const sortParams = new URLSearchParams();
-		sortParams.set('sortBy', sanitisedOrderByQuery.sortField);
-		sortParams.set('order', sanitisedOrderByQuery.sortOrder);
-
-		const sortValue = `&${sortParams.toString()}`;
+		const { sanitisedOrderByQuery, primaryOrder, sortHeaders, sortParams, sortValue } = getDocumentSorting(
+			req,
+			'case-folder'
+		);
 		try {
 			const caseData = await db.case.findUnique({
 				select: { reference: true, name: true, statusId: true, legacyCaseId: true },
