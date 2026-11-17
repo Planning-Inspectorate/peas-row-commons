@@ -9,6 +9,7 @@ import type { Request, RequestHandler } from 'express';
 import { getPageData, getPaginationParams } from '../../../pagination/pagination-utils.ts';
 import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 import { createDocumentsViewModel } from '../case-folder/view-model.ts';
+import { getDocumentSorting } from '../document-sorting.ts';
 
 /**
  * Controller for viewing the file search page, handles the pagination and select of the files.
@@ -33,7 +34,7 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 		}
 
 		const [filesDeleted] = readAndClearSessionData(req);
-
+		const { sanitisedOrderByQuery, primaryOrder, sortHeaders, sortValue } = getDocumentSorting(req, 'file-search');
 		let totalDocuments = 0;
 		let documents: Prisma.DocumentGetPayload<{ include: { Folder: true; Case: true; UserDocuments: true } }>[] = [];
 
@@ -69,7 +70,7 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 						deletedAt: null,
 						caseId: id
 					},
-					orderBy: { uploadedDate: 'desc' },
+					orderBy: [primaryOrder, { id: 'asc' }],
 					skip: skipSize,
 					take: pageSize
 				})
@@ -94,7 +95,8 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 			resultsStartNumber,
 			resultsEndNumber,
 			totalDocuments,
-			uiItems: paginationItems
+			uiItems: paginationItems,
+			sortValue
 		};
 
 		const documentsViewModel =
@@ -125,7 +127,12 @@ export function buildFileSearchView(service: ManageService): RequestHandler {
 			searchValue: searchString,
 			paginationParams,
 			breadcrumbItems,
-			filesDeleted
+			filesDeleted,
+			sortHeaders,
+			sorting: {
+				sortBy: sanitisedOrderByQuery.sortField,
+				order: sanitisedOrderByQuery.sortOrder
+			}
 		});
 	};
 }
