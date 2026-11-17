@@ -14,7 +14,6 @@ import {
 	formatDateTime,
 	formatNumber
 } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
-import type { ExistingProcedures } from '../../views/cases/view/update-procedures.ts';
 import { AUDIT_ACTIONS } from '../actions.ts';
 import type { AuditEntry } from '../types.ts';
 
@@ -425,15 +424,14 @@ export function resolveProcedureAudits(
 	oldProcedures: ProcedureWithRelations[],
 	newProcedures: Record<string, unknown>[],
 	userDisplayNameMap: Map<string, string>,
-	// if there are existingProcedures passed, its a manage list edit
-	existingProcedures?: ExistingProcedures
+	isManageListEdit = false
 ): AuditEntry[] {
 	const entries: AuditEntry[] = [];
 
 	const oldById = new Map(oldProcedures.map((p) => [p.id, p]));
 	const newById = new Map(newProcedures.map((p) => [p.id as string, p]));
 
-	if (existingProcedures) {
+	if (isManageListEdit) {
 		// add and delete is only possible when editing the manage list
 
 		// Added — ID in new but not in old

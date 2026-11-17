@@ -1005,7 +1005,7 @@ async function recordAuditEntries(
 					(previousValues.Procedures as ProcedureWithRelations[]) ?? [],
 					answersSnapshot.procedureDetails as Record<string, unknown>[],
 					userDisplayNameMap,
-					existingProcedures
+					existingProcedures !== undefined
 				)
 			);
 		}

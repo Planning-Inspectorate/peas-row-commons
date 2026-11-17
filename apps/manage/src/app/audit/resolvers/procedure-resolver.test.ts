@@ -75,14 +75,7 @@ describe('resolveProcedureAudits', () => {
 			const oldProcedures: ProcedureWithRelations[] = [];
 			const newProcedures = [{ id: 'proc-new', procedureTypeId: 'hearing' }];
 
-			const entries = resolveProcedureAudits(
-				CASE_ID,
-				USER_ID,
-				oldProcedures,
-				newProcedures,
-				userDisplayNameMap,
-				oldProcedures
-			);
+			const entries = resolveProcedureAudits(CASE_ID, USER_ID, oldProcedures, newProcedures, userDisplayNameMap, true);
 
 			assert.strictEqual(entries.length, 1);
 			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.PROCEDURE_ADDED);
@@ -92,14 +85,7 @@ describe('resolveProcedureAudits', () => {
 			const oldProcedures: ProcedureWithRelations[] = [];
 			const newProcedures = [{ id: 'proc-new', procedureTypeId: 'hearing' }];
 
-			const entries = resolveProcedureAudits(
-				CASE_ID,
-				USER_ID,
-				oldProcedures,
-				newProcedures,
-				userDisplayNameMap,
-				undefined
-			);
+			const entries = resolveProcedureAudits(CASE_ID, USER_ID, oldProcedures, newProcedures, userDisplayNameMap, false);
 
 			assert.strictEqual(entries.length, 0);
 		});
@@ -110,14 +96,7 @@ describe('resolveProcedureAudits', () => {
 			const oldProcedures = [buildOldProcedure()];
 			const newProcedures: Record<string, unknown>[] = [];
 
-			const entries = resolveProcedureAudits(
-				CASE_ID,
-				USER_ID,
-				oldProcedures,
-				newProcedures,
-				userDisplayNameMap,
-				oldProcedures
-			);
+			const entries = resolveProcedureAudits(CASE_ID, USER_ID, oldProcedures, newProcedures, userDisplayNameMap, true);
 
 			assert.strictEqual(entries.length, 1);
 			assert.strictEqual(entries[0].action, AUDIT_ACTIONS.PROCEDURE_DELETED);
@@ -127,14 +106,7 @@ describe('resolveProcedureAudits', () => {
 			const oldProcedures = [buildOldProcedure()];
 			const newProcedures: Record<string, unknown>[] = [];
 
-			const entries = resolveProcedureAudits(
-				CASE_ID,
-				USER_ID,
-				oldProcedures,
-				newProcedures,
-				userDisplayNameMap,
-				undefined
-			);
+			const entries = resolveProcedureAudits(CASE_ID, USER_ID, oldProcedures, newProcedures, userDisplayNameMap, false);
 
 			assert.strictEqual(entries.length, 0);
 		});
