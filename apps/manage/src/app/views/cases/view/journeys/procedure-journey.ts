@@ -47,6 +47,8 @@ export function getDynamicProcedureSections(config: InspectorRadioConfig, proced
 	const sections: DynamicSection[] = [];
 	for (const procedure of procedures) {
 		const common = getCreateProcedureQuestions(config, false);
+		// site visit type is editable in a different place for site visit procedures
+		common.procedureSiteVisitType.editable = procedure.procedureTypeId !== PROCEDURES_ID.SITE_VISIT;
 		switch (procedure.procedureTypeId) {
 			case PROCEDURES_ID.SITE_VISIT:
 				sections.push(siteVisitDynamicSection(procedure, common));
@@ -83,6 +85,7 @@ function hearingDynamicSection(
 ) {
 	const questions = getHearingQuestions();
 	return newProcedureDynamicSection(procedure, common)
+		.addQuestion(common.procedureSiteVisitType)
 		.addQuestion(questions.procedureSiteVisitDate)
 
 		.addQuestion(questions.procedureEarliestHearingDate)
@@ -117,6 +120,7 @@ function inquiryDynamicSection(
 	const questions = getInquiryQuestions();
 
 	return newProcedureDynamicSection(procedure, common)
+		.addQuestion(common.procedureSiteVisitType)
 		.addQuestion(questions.procedureSiteVisitDate)
 
 		.addQuestion(questions.procedureEarliestInquiryDate)
@@ -155,6 +159,7 @@ function adminInHouseDynamicSection(
 ) {
 	const questions = getAdminInHouseQuestions();
 	return newProcedureDynamicSection(procedure, common)
+		.addQuestion(common.procedureSiteVisitType)
 		.addQuestion(questions.procedureSiteVisitDate)
 		.addQuestion(questions.procedureCaseOfficerVerificationDate)
 		.addQuestion(questions.procedureInHouseDate);
@@ -166,6 +171,8 @@ function writtenRepsDynamicSection(
 ) {
 	const questions = getWrittenRepsQuestions();
 	return newProcedureDynamicSection(procedure, common)
+		.addQuestion(common.procedureSiteVisitType)
+		.addQuestion(questions.procedureSiteVisitDate)
 		.addQuestion(questions.procedureCaseOfficerVerificationDate)
 		.addQuestion(questions.procedureOfferWrittenRepsDate)
 		.addQuestion(questions.procedureDeadlineForConsent);
@@ -177,17 +184,31 @@ function newProcedureDynamicSection(
 ) {
 	const title = getSectionTitle(procedure, 0);
 	const section = new DynamicSection(title, procedure.id, 'procedureDetails');
-	addBaseProcedureQuestions(section, common);
+	addBaseProcedureQuestions(section, common, procedure.procedureTypeId === PROCEDURES_ID.SITE_VISIT);
 	return section;
 }
 
-function addBaseProcedureQuestions(section: Section, common: ReturnType<typeof getCreateProcedureQuestions>) {
+function addBaseProcedureQuestions(
+	section: Section,
+	common: ReturnType<typeof getCreateProcedureQuestions>,
+	includeSiteVisitType: boolean = true
+) {
 	section
 		.addQuestion(common.procedureType)
 		.addQuestion(common.procedureAdminType)
-		.withCondition(whenQuestionHasAnswer(common.procedureType, PROCEDURES_ID.ADMIN_IN_HOUSE))
-		.addQuestion(common.procedureSiteVisitType)
-		.withCondition(whenQuestionHasAnswer(common.procedureType, PROCEDURES_ID.SITE_VISIT))
+		.withCondition(whenQuestionHasAnswer(common.procedureType, PROCEDURES_ID.ADMIN_IN_HOUSE));
+
+	/**
+	 * Site visit type question is only editable/shown here (in manage list) for site visit procedures.
+	 * For other procedure types, it is editable/shown in the dynamic section questions.
+	 */
+	if (includeSiteVisitType) {
+		section
+			.addQuestion(common.procedureSiteVisitType)
+			.withCondition(whenQuestionHasAnswer(common.procedureType, PROCEDURES_ID.SITE_VISIT));
+	}
+
+	section
 		.addQuestion(common.procedureInspector)
 		.withCondition((response: JourneyResponse) => {
 			/**
