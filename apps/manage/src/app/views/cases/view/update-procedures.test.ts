@@ -1,3 +1,4 @@
+import { SITE_VISITS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
@@ -80,6 +81,15 @@ describe('update-procedures', () => {
 			assert.strictEqual(query.delete, undefined);
 		});
 
+		it('should update the site visit type for an existing procedure', () => {
+			const existing = [buildProcedure({ siteVisitTypeId: SITE_VISITS_ID.ARSV })];
+			const edits = [buildProcedureEdit({ siteVisitTypeId: SITE_VISITS_ID.ASV })];
+
+			assert.deepStrictEqual(handleProcedureManageListEdits(edits, existing), {
+				update: [{ where: { id: 'proc-1' }, data: { SiteVisitType: { connect: { id: SITE_VISITS_ID.ASV } } } }]
+			});
+		});
+
 		it('should disconnect the not-allocated inspector when updating', () => {
 			const existing = [buildProcedure({ id: 'proc-1', inspectorId: 'inspector-1' })];
 			const edits = [buildProcedureEdit({ id: 'proc-1', inspectorId: PROCEDURE_CONSTANTS.NOT_ALLOCATED })];
@@ -147,6 +157,20 @@ describe('update-procedures', () => {
 
 			assert.deepStrictEqual(updates[0].data.ProcedureType, { connect: { id: 'type-1' } });
 			assert.deepStrictEqual(updates[0].data.ProcedureStatus, { connect: { id: 'status-1' } });
+		});
+
+		it('should connect the site visit type for the edited procedure', () => {
+			const updates = handleProcedureDynamicSectionEdits([{ id: 'proc-1', siteVisitTypeId: SITE_VISITS_ID.USV }]);
+
+			assert.deepStrictEqual(updates, [
+				{ where: { id: 'proc-1' }, data: { SiteVisitType: { connect: { id: SITE_VISITS_ID.USV } } } }
+			]);
+		});
+
+		it('should leave the site visit type unchanged when a dynamic edit omits it', () => {
+			const updates = handleProcedureDynamicSectionEdits([{ id: 'proc-1', hearingPreparationTimeDays: '2' }]);
+
+			assert.strictEqual(updates[0].data.SiteVisitType, undefined);
 		});
 
 		it('should map valid date fields to a Date and invalid/empty to null', () => {
