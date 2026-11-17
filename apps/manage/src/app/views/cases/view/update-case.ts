@@ -9,6 +9,7 @@ import { DECISION_MAKER_TYPE_ID } from '@pins/peas-row-commons-database/src/seed
 import { CONTACT_TYPE_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { CASE_STATUS_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/status.ts';
 import { LIST_FIELDS } from '@pins/peas-row-commons-lib/constants/audit.ts';
+import { mapAddressViewModelToDb } from '@pins/peas-row-commons-lib/util/address.ts';
 import { CONTACT_MAPPINGS, handleContacts } from '@pins/peas-row-commons-lib/util/contact.ts';
 import { toDateOrNull } from '@pins/peas-row-commons-lib/util/dates.ts';
 import { toFloat } from '@pins/peas-row-commons-lib/util/numbers.ts';
@@ -71,7 +72,8 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false): Sa
 
 		logger.info({ id }, 'case update');
 
-		const rawAnswers = data?.answers || {};
+		// TODO HRP-706: replace this assertion with a typed answer model.
+		const rawAnswers = (data?.answers || {}) as Record<string, unknown>;
 
 		for (const key of Object.keys(rawAnswers)) {
 			const value = rawAnswers[key];
@@ -97,7 +99,7 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false): Sa
 		// handle procedure edits - put them into the procedureDetails array for handleProcedureUpdates
 		if (isDynamicSection && dynamicSectionFieldName === 'procedureDetails' && dynamicSectionId) {
 			// all rawAnswers edits apply to the procedure, move them into the procedure object
-			const procedure: Record<string, string> = { id: dynamicSectionId };
+			const procedure: Record<string, unknown> = { id: dynamicSectionId };
 			for (const key of Object.keys(rawAnswers)) {
 				procedure[key] = rawAnswers[key];
 				delete rawAnswers[key];

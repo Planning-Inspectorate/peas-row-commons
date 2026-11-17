@@ -129,7 +129,8 @@ export function mapProceduresToArray(
 
 			// Map venue address objects to the UI format
 			if (VENUE_FIELDS.includes(key) && typeof value === 'object') {
-				mapped[key] = mapAddressDbToViewModel(value);
+				// TODO HRP-706: model and narrow venue fields as addresses.
+				mapped[key] = mapAddressDbToViewModel(value as NonNullable<Parameters<typeof mapAddressDbToViewModel>[0]>);
 			} else {
 				mapped[key] = formatValue(value);
 			}

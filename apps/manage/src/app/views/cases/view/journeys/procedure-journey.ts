@@ -20,6 +20,12 @@ import {
 } from '../questions-procedure.ts';
 import type { mapProceduresToArray } from '../view-model.ts';
 
+type ProcedureSectionDetails = {
+	id: string;
+	procedureTypeId?: string;
+	procedureStatusId?: string;
+};
+
 /**
  * Build the manage list section that defines the "add procedure" flow.
  */
@@ -36,8 +42,10 @@ export function getDynamicProcedureSections(config: InspectorRadioConfig, proced
 	if (!procedureDetails) {
 		return [];
 	}
+	// TODO HRP-706: guarantee procedure identity fields in the mapper's return type.
+	const procedures = procedureDetails as ProcedureSectionDetails[];
 	const sections: DynamicSection[] = [];
-	for (const procedure of procedureDetails) {
+	for (const procedure of procedures) {
 		const common = getCreateProcedureQuestions(config, false);
 		switch (procedure.procedureTypeId) {
 			case PROCEDURES_ID.SITE_VISIT:
@@ -60,13 +68,19 @@ export function getDynamicProcedureSections(config: InspectorRadioConfig, proced
 	return sections;
 }
 
-function siteVisitDynamicSection(procedure: any, common: ReturnType<typeof getCreateProcedureQuestions>) {
+function siteVisitDynamicSection(
+	procedure: ProcedureSectionDetails,
+	common: ReturnType<typeof getCreateProcedureQuestions>
+) {
 	const questions = getSiteVisitQuestions();
 
 	return newProcedureDynamicSection(procedure, common).addQuestion(questions.procedureSiteVisitDate);
 }
 
-function hearingDynamicSection(procedure: any, common: ReturnType<typeof getCreateProcedureQuestions>) {
+function hearingDynamicSection(
+	procedure: ProcedureSectionDetails,
+	common: ReturnType<typeof getCreateProcedureQuestions>
+) {
 	const questions = getHearingQuestions();
 	return newProcedureDynamicSection(procedure, common)
 		.addQuestion(questions.procedureSiteVisitDate)
@@ -96,7 +110,10 @@ function hearingDynamicSection(procedure: any, common: ReturnType<typeof getCrea
 		.addQuestion(questions.procedureHearingReportingTime);
 }
 
-function inquiryDynamicSection(procedure: any, common: ReturnType<typeof getCreateProcedureQuestions>) {
+function inquiryDynamicSection(
+	procedure: ProcedureSectionDetails,
+	common: ReturnType<typeof getCreateProcedureQuestions>
+) {
 	const questions = getInquiryQuestions();
 
 	return newProcedureDynamicSection(procedure, common)
@@ -132,7 +149,10 @@ function inquiryDynamicSection(procedure: any, common: ReturnType<typeof getCrea
 		.addQuestion(questions.procedureInquiryReportingTime);
 }
 
-function adminInHouseDynamicSection(procedure: any, common: ReturnType<typeof getCreateProcedureQuestions>) {
+function adminInHouseDynamicSection(
+	procedure: ProcedureSectionDetails,
+	common: ReturnType<typeof getCreateProcedureQuestions>
+) {
 	const questions = getAdminInHouseQuestions();
 	return newProcedureDynamicSection(procedure, common)
 		.addQuestion(questions.procedureSiteVisitDate)
@@ -140,7 +160,10 @@ function adminInHouseDynamicSection(procedure: any, common: ReturnType<typeof ge
 		.addQuestion(questions.procedureInHouseDate);
 }
 
-function writtenRepsDynamicSection(procedure: any, common: ReturnType<typeof getCreateProcedureQuestions>) {
+function writtenRepsDynamicSection(
+	procedure: ProcedureSectionDetails,
+	common: ReturnType<typeof getCreateProcedureQuestions>
+) {
 	const questions = getWrittenRepsQuestions();
 	return newProcedureDynamicSection(procedure, common)
 		.addQuestion(questions.procedureCaseOfficerVerificationDate)
@@ -149,7 +172,7 @@ function writtenRepsDynamicSection(procedure: any, common: ReturnType<typeof get
 }
 
 function newProcedureDynamicSection(
-	procedure: { id: string; procedureTypeId?: string; procedureStatusId?: string },
+	procedure: ProcedureSectionDetails,
 	common: ReturnType<typeof getCreateProcedureQuestions>
 ) {
 	const title = getSectionTitle(procedure, 0);
