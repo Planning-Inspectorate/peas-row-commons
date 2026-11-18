@@ -33,6 +33,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 	showAnswersInSummary: boolean;
 	hideRemoveOnLastItem: boolean;
 	indexColumnHeader?: string;
+	maximumAnswers?: number;
 
 	constructor(params: TableManageListQuestionParams) {
 		super(params);
@@ -41,7 +42,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 		this.showAnswersInSummary = params.showAnswersInSummary || false;
 		this.hideRemoveOnLastItem = params.hideRemoveOnLastItem || false;
 		this.indexColumnHeader = params.indexColumnHeader;
-
+		this.maximumAnswers = params.maximumAnswers ?? null;
 		this.viewFolder = 'custom-components/manage-list-table';
 	}
 
@@ -96,6 +97,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 
 		viewModel.question.tableHead = headers;
 		viewModel.question.tableRows = rows;
+		viewModel.hideAddButton = this.maximumAnswers && viewModel.question.value.length >= this.maximumAnswers;
 	}
 
 	/**

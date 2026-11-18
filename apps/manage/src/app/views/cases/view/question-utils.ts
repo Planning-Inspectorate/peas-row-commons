@@ -636,7 +636,8 @@ export const CASE_DETAILS_QUESTIONS = {
 		titleSingular: 'site address',
 		showAnswersInSummary: true,
 		hideRemoveOnLastItem: false,
-		indexColumnHeader: 'Plot'
+		indexColumnHeader: 'Plot',
+		maximumAnswers: 50
 	},
 	siteAddress: {
 		type: COMPONENT_TYPES.ADDRESS,

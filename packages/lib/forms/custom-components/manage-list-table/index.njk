@@ -39,12 +39,13 @@
                 {% else %}
                     <p class="govuk-body">Add one or more {{ emptyNamePlural or emptyName + "s" }}. No {{ emptyName }} details have been added.</p>
                 {% endif %}
-
-                {{ govukButton({
-                    text: addMoreButtonText,
-                    href: util.trimTrailingSlash(originalUrl) + "/" + question.addAnotherLink,
-                    classes: "" if hideCancel and not hasData else "govuk-button--secondary"
-                }) }}
+                {% if not hideAddButton %}
+                    {{ govukButton({
+                        text: addMoreButtonText,
+                        href: util.trimTrailingSlash(originalUrl) + "/" + question.addAnotherLink,
+                        classes: "" if hideCancel and not hasData else "govuk-button--secondary"
+                    }) }}
+                {% endif %}
 
                 {# Show the buttons always, unless we are told to hide them when empty, in which case only show if the page has data  #}
                 {% if not hideButtonsEmpty or hasData %}
