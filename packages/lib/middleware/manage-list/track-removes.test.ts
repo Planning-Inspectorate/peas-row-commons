@@ -1,10 +1,9 @@
 import type { NextFunction, Request, Response } from 'express';
 import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
-import { bounceRemoveCancellation, resetRemovedListItems, trackRemovedItemId } from './track-removes.ts';
+import { resetRemovedListItems, trackRemovedItemId } from './track-removes.ts';
 
 const MANAGE_LIST_ACTIONS = { REMOVE: 'remove' };
-const BOOLEAN_OPTIONS = { YES: 'yes', NO: 'no' };
 
 describe('Manage List Removal Middleware', () => {
 	let mockReq: Partial<Request>;
@@ -21,68 +20,28 @@ describe('Manage List Removal Middleware', () => {
 		mockReq = {
 			params: {},
 			body: {},
-			session: {} as unknown as Request['session'],
+			session: {} as Request['session'],
 			originalUrl: ''
 		};
 
 		mockRes = {
 			redirect: ((url: string) => {
 				redirectedUrl = url;
-			}) as unknown as Response['redirect']
+			}) as Response['redirect']
 		};
 
-		mockNext = (() => {
+		mockNext = () => {
 			nextCalledTimes++;
-		}) as unknown as NextFunction;
-	});
-
-	describe('bounceRemoveCancellation', () => {
-		it('should redirect to the base URL and NOT call next() if user selected "no"', async () => {
-			mockReq.params = { manageListAction: MANAGE_LIST_ACTIONS.REMOVE, manageListItemId: '123' };
-			mockReq.body = { remove: BOOLEAN_OPTIONS.NO };
-			mockReq.originalUrl = '/overview/check-linked-cases/remove/123/confirm';
-
-			await bounceRemoveCancellation(mockReq as Request, mockRes as Response, mockNext);
-
-			assert.strictEqual(redirectedUrl, '/overview/check-linked-cases');
-			assert.strictEqual(nextCalledTimes, 0);
-		});
-
-		it('should call next() and do nothing if user selected "yes"', async () => {
-			mockReq.params = { manageListAction: MANAGE_LIST_ACTIONS.REMOVE, manageListItemId: '123' };
-			mockReq.body = { remove: BOOLEAN_OPTIONS.YES };
-
-			await bounceRemoveCancellation(mockReq as Request, mockRes as Response, mockNext);
-
-			assert.strictEqual(nextCalledTimes, 1);
-			assert.strictEqual(redirectedUrl, null);
-		});
-
-		it('should call next() and do nothing if action is not REMOVE', async () => {
-			mockReq.params = { manageListAction: 'add', manageListItemId: '123' };
-			mockReq.body = { remove: BOOLEAN_OPTIONS.NO };
-
-			await bounceRemoveCancellation(mockReq as Request, mockRes as Response, mockNext);
-
-			assert.strictEqual(nextCalledTimes, 1);
-			assert.strictEqual(redirectedUrl, null);
-		});
-
-		it('should call next() and do nothing if manageListItemId is missing', async () => {
-			mockReq.params = { manageListAction: MANAGE_LIST_ACTIONS.REMOVE };
-			mockReq.body = { remove: BOOLEAN_OPTIONS.NO };
-
-			await bounceRemoveCancellation(mockReq as Request, mockRes as Response, mockNext);
-
-			assert.strictEqual(nextCalledTimes, 1);
-			assert.strictEqual(redirectedUrl, null);
-		});
+		};
 	});
 
 	describe('trackRemovedItemId', () => {
-		it('should initialize the array, add the ID, and call next() if user selected "yes"', async () => {
-			mockReq.params = { manageListAction: MANAGE_LIST_ACTIONS.REMOVE, manageListItemId: '123' };
-			mockReq.body = { remove: BOOLEAN_OPTIONS.YES };
+		it('should initialize the array and track the ID when Remove is submitted', async () => {
+			mockReq.params = {
+				manageListAction: MANAGE_LIST_ACTIONS.REMOVE,
+				manageListItemId: '123'
+			};
+			mockReq.body = { remove: 'remove' };
 
 			await trackRemovedItemId(mockReq as Request, mockRes as Response, mockNext);
 
@@ -90,10 +49,15 @@ describe('Manage List Removal Middleware', () => {
 			assert.strictEqual(nextCalledTimes, 1);
 		});
 
-		it('should append the ID to an existing array and call next() if user selected "yes"', async () => {
-			mockReq.params = { manageListAction: MANAGE_LIST_ACTIONS.REMOVE, manageListItemId: '456' };
-			mockReq.body = { remove: BOOLEAN_OPTIONS.YES };
-			mockReq.session = { removedListItems: ['123'] } as unknown as Request['session'];
+		it('should append the ID to an existing array when Remove is submitted', async () => {
+			mockReq.params = {
+				manageListAction: MANAGE_LIST_ACTIONS.REMOVE,
+				manageListItemId: '456'
+			};
+			mockReq.body = { remove: 'remove' };
+			mockReq.session = {
+				removedListItems: ['123']
+			} as unknown as Request['session'];
 
 			await trackRemovedItemId(mockReq as Request, mockRes as Response, mockNext);
 
@@ -101,10 +65,15 @@ describe('Manage List Removal Middleware', () => {
 			assert.strictEqual(nextCalledTimes, 1);
 		});
 
-		it('should not add a duplicate ID to the array, but still call next() if user selected "yes"', async () => {
-			mockReq.params = { manageListAction: MANAGE_LIST_ACTIONS.REMOVE, manageListItemId: '123' };
-			mockReq.body = { remove: BOOLEAN_OPTIONS.YES };
-			mockReq.session = { removedListItems: ['123'] } as unknown as Request['session'];
+		it('should not add a duplicate ID when Remove is submitted', async () => {
+			mockReq.params = {
+				manageListAction: MANAGE_LIST_ACTIONS.REMOVE,
+				manageListItemId: '123'
+			};
+			mockReq.body = { remove: 'remove' };
+			mockReq.session = {
+				removedListItems: ['123']
+			} as unknown as Request['session'];
 
 			await trackRemovedItemId(mockReq as Request, mockRes as Response, mockNext);
 
@@ -112,9 +81,43 @@ describe('Manage List Removal Middleware', () => {
 			assert.strictEqual(nextCalledTimes, 1);
 		});
 
-		it('should call next() without modifying the session if user selected "no"', async () => {
-			mockReq.params = { manageListAction: MANAGE_LIST_ACTIONS.REMOVE, manageListItemId: '123' };
-			mockReq.body = { remove: BOOLEAN_OPTIONS.NO };
+		for (const remove of ['cancel', undefined, 'invalid', 'yes', 'no']) {
+			it(`should not initialize removal tracking for action ${String(remove)}`, async () => {
+				mockReq.params = {
+					manageListAction: MANAGE_LIST_ACTIONS.REMOVE,
+					manageListItemId: '123'
+				};
+				mockReq.body = remove === undefined ? {} : { remove };
+
+				await trackRemovedItemId(mockReq as Request, mockRes as Response, mockNext);
+
+				assert.strictEqual(mockReq.session?.removedListItems, undefined);
+				assert.strictEqual(nextCalledTimes, 1);
+			});
+		}
+
+		it('should preserve previously tracked IDs when Cancel is submitted', async () => {
+			mockReq.params = {
+				manageListAction: MANAGE_LIST_ACTIONS.REMOVE,
+				manageListItemId: '456'
+			};
+			mockReq.body = { remove: 'cancel' };
+			mockReq.session = {
+				removedListItems: ['123']
+			} as unknown as Request['session'];
+
+			await trackRemovedItemId(mockReq as Request, mockRes as Response, mockNext);
+
+			assert.deepStrictEqual(mockReq.session?.removedListItems, ['123']);
+			assert.strictEqual(nextCalledTimes, 1);
+		});
+
+		it('should not modify the session if the route action is not REMOVE', async () => {
+			mockReq.params = {
+				manageListAction: 'edit',
+				manageListItemId: '123'
+			};
+			mockReq.body = { remove: 'remove' };
 
 			await trackRemovedItemId(mockReq as Request, mockRes as Response, mockNext);
 
@@ -122,9 +125,9 @@ describe('Manage List Removal Middleware', () => {
 			assert.strictEqual(nextCalledTimes, 1);
 		});
 
-		it('should call next() without modifying the session if action is not REMOVE', async () => {
-			mockReq.params = { manageListAction: 'edit', manageListItemId: '123' };
-			mockReq.body = { remove: BOOLEAN_OPTIONS.YES };
+		it('should not modify the session if manageListItemId is missing', async () => {
+			mockReq.params = { manageListAction: MANAGE_LIST_ACTIONS.REMOVE };
+			mockReq.body = { remove: 'remove' };
 
 			await trackRemovedItemId(mockReq as Request, mockRes as Response, mockNext);
 
@@ -135,7 +138,9 @@ describe('Manage List Removal Middleware', () => {
 
 	describe('resetRemovedListItems', () => {
 		it('should clear the removedListItems array in the session', () => {
-			mockReq.session = { removedListItems: ['123', '456'] } as unknown as Request['session'];
+			mockReq.session = {
+				removedListItems: ['123', '456']
+			} as unknown as Request['session'];
 
 			resetRemovedListItems(mockReq as Request, mockRes as Response, mockNext);
 
@@ -143,7 +148,7 @@ describe('Manage List Removal Middleware', () => {
 			assert.strictEqual(nextCalledTimes, 1);
 		});
 
-		it('should safely do nothing and call next if session is undefined', () => {
+		it('should call next() without error if the session is undefined', () => {
 			mockReq.session = undefined;
 
 			resetRemovedListItems(mockReq as Request, mockRes as Response, mockNext);

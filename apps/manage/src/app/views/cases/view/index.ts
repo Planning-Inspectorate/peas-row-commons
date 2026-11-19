@@ -15,7 +15,6 @@ import { buildGetJourneyMiddleware, buildViewCaseDetails } from './controller.ts
 import { buildUpdateCase } from './update-case.ts';
 
 import {
-	bounceRemoveCancellation,
 	resetRemovedListItems,
 	trackRemovedItemId
 } from '@pins/peas-row-commons-lib/middleware/manage-list/track-removes.ts';
@@ -86,7 +85,6 @@ export function createRoutes(service: ManageService) {
 		getJourney,
 		validate,
 		validationErrorHandler,
-		asyncHandler(bounceRemoveCancellation),
 		loadQuestionSpecificValidation,
 		asyncHandler(trackRemovedItemId),
 		buildSave(saveDataToSession)
