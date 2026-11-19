@@ -1,5 +1,4 @@
 import type { ManageService } from '#service';
-import { bounceRemoveCancellation } from '@pins/peas-row-commons-lib/middleware/manage-list/track-removes.ts';
 import { asyncHandler } from '@planning-inspectorate/core/util';
 import type { JourneyResponse } from '@planning-inspectorate/dynamic-forms';
 import {
@@ -64,7 +63,6 @@ export function createNewCaseRoutes(service: ManageService): IRouter {
 		getJourney,
 		validate,
 		validationErrorHandler,
-		asyncHandler(bounceRemoveCancellation),
 		buildSave(saveDataToSession)
 	);
 
