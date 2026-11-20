@@ -151,6 +151,7 @@ export function buildViewCaseDetails(): ViewCaseHandler {
 			allCaseNotesCount,
 			baseUrl,
 			backLinkUrl: res.locals.backLinkUrl || '/cases',
+			backLinkText: 'Back to all cases',
 			caseUpdatedParams: {
 				updated: hasUpdate,
 				html: hasUpdate ? buildSuccessHtml(sectionName, customMessage) : ''
