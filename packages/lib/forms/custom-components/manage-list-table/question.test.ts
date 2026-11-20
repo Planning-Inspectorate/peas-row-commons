@@ -48,6 +48,22 @@ describe('TableManageListQuestion', () => {
 		it('should set the custom view folder', () => {
 			assert.strictEqual(tableQuestion.viewFolder, 'custom-components/manage-list-table');
 		});
+
+		it('should set maximumAnswers from params', () => {
+			const question = new TableManageListQuestion({
+				title: 'Test Table',
+				fieldName: 'testTable',
+				titleSingular: 'Item',
+				question: 'What items do you want to add?',
+				maximumAnswers: 3
+			} as any);
+
+			assert.strictEqual(question.maximumAnswers, 3);
+		});
+
+		it('should leave maximumAnswers undefined when not provided', () => {
+			assert.strictEqual(tableQuestion.maximumAnswers, undefined);
+		});
 	});
 
 	describe('createHeaders()', () => {
@@ -253,6 +269,45 @@ describe('TableManageListQuestion', () => {
 			assert.throws(() => {
 				tableQuestion.addCustomDataToViewModel(mockViewModel);
 			}, /manage list section not set/);
+		});
+	});
+
+	describe('addCustomDataToViewModel() with maximumAnswers', () => {
+		beforeEach(() => {
+			tableQuestion.section!.questions[0].shouldDisplay = () => true;
+			tableQuestion.section!.questions[1].shouldDisplay = () => true;
+			tableQuestion.section!.questions[0].formatAnswerForSummary = () => [{ value: 'Ans 1' } as SummaryRow];
+			tableQuestion.section!.questions[1].formatAnswerForSummary = () => [{ value: 'Ans 2' } as SummaryRow];
+		});
+
+		it('should not hide the add button when maximumAnswers is not set', () => {
+			tableQuestion.addCustomDataToViewModel(mockViewModel);
+
+			assert.ok(!mockViewModel.hideAddButton);
+		});
+
+		it('should not hide the add button when the answer count is below maximumAnswers', () => {
+			tableQuestion.maximumAnswers = 3;
+
+			tableQuestion.addCustomDataToViewModel(mockViewModel);
+
+			assert.strictEqual(mockViewModel.hideAddButton, false);
+		});
+
+		it('should hide the add button when the answer count equals maximumAnswers', () => {
+			tableQuestion.maximumAnswers = 2;
+
+			tableQuestion.addCustomDataToViewModel(mockViewModel);
+
+			assert.strictEqual(mockViewModel.hideAddButton, true);
+		});
+
+		it('should hide the add button when the answer count exceeds maximumAnswers', () => {
+			tableQuestion.maximumAnswers = 1;
+
+			tableQuestion.addCustomDataToViewModel(mockViewModel);
+
+			assert.strictEqual(mockViewModel.hideAddButton, true);
 		});
 	});
 
