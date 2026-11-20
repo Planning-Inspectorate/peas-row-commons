@@ -21,6 +21,7 @@ export interface TableManageListQuestionParams extends ManageListQuestionParams 
 	 * table. Only affects the table view, not the showAnswersInSummary list.
 	 */
 	indexColumnHeader?: string;
+	maximumAnswers?: number;
 }
 
 export interface TableManageListQuestionProps extends TableManageListQuestionParams {
@@ -42,7 +43,7 @@ export default class TableManageListQuestion extends ManageListQuestion {
 		this.showAnswersInSummary = params.showAnswersInSummary || false;
 		this.hideRemoveOnLastItem = params.hideRemoveOnLastItem || false;
 		this.indexColumnHeader = params.indexColumnHeader;
-		this.maximumAnswers = params.maximumAnswers ?? null;
+		this.maximumAnswers = params.maximumAnswers;
 		this.viewFolder = 'custom-components/manage-list-table';
 	}
 
