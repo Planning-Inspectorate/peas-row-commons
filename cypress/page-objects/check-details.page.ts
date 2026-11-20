@@ -1,4 +1,3 @@
-import CommonActionsUtility from 'cypress/page-utilities/common-actions.utility.ts';
 import { runPageValidation } from 'cypress/page-utilities/page-validation.utility.ts';
 import RemoveDetailsPage from './remove-details.page.ts';
 
@@ -250,8 +249,7 @@ class CheckDetailsPage {
 			this.clickAction('remove', 1);
 
 			RemoveDetailsPage.isPageDisplayed();
-			RemoveDetailsPage.selectAnswer('yes');
-			CommonActionsUtility.clickActionButton('continue');
+			RemoveDetailsPage.remove();
 
 			this.removeFirstRowUntilEmpty(minimumRows);
 		});

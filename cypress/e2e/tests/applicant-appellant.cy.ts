@@ -121,8 +121,7 @@ describe('Planning Inspectorate > Overview > Applicant or appellant', () => {
 			CheckDetailsPage.isPageDisplayed('applicantAppellant', 'withDetails');
 			CheckDetailsPage.clickAction('remove', 1);
 			RemoveDetailsPage.isPageDisplayed();
-			RemoveDetailsPage.selectAnswer('yes');
-			CommonActionsUtility.clickActionButton('continue');
+			RemoveDetailsPage.remove();
 			CheckDetailsPage.isPageDisplayed('applicantAppellant', 'withDetails');
 			CommonActionsUtility.clickActionButton('saveAndContinue');
 			CaseDetailsPage.isPageDisplayed(false);
