@@ -111,8 +111,7 @@ describe('Planning Inspectorate > Overview > Objectors', () => {
 			CheckDetailsPage.isPageDisplayed('objectors', 'withDetails');
 			CheckDetailsPage.clickAction('remove', 1);
 			RemoveDetailsPage.isPageDisplayed();
-			RemoveDetailsPage.selectAnswer('yes');
-			CommonActionsUtility.clickActionButton('continue');
+			RemoveDetailsPage.remove();
 			CheckDetailsPage.isPageDisplayed('objectors', 'withoutDetails');
 			CommonActionsUtility.clickActionButton('saveAndContinue');
 			CaseDetailsPage.isPageDisplayed(false);
