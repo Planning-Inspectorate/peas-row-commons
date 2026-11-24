@@ -74,8 +74,7 @@ describe('Planning Inspectorate > Overview > Related cases', () => {
 			CheckDetailsPage.isPageDisplayed('relatedCases', 'withDetails');
 			CheckDetailsPage.clickAction('remove', 1);
 			RemoveDetailsPage.isPageDisplayed();
-			RemoveDetailsPage.selectAnswer('yes');
-			CommonActionsUtility.clickActionButton('continue');
+			RemoveDetailsPage.remove();
 			CheckDetailsPage.isPageDisplayed('relatedCases', 'withoutDetails');
 			CommonActionsUtility.clickActionButton('saveAndContinue');
 			CaseDetailsPage.isPageDisplayed(false);
@@ -195,6 +194,37 @@ describe('Planning Inspectorate > Overview > Related cases', () => {
 			CaseDetailsPage.isPageDisplayed(false);
 			CaseDetailsPage.validateSuccessBanner('overview');
 			CaseDetailsPage.clickBannerReturnToSection('overview');
+			CaseDetailsPage.validateSummaryRow('overview', 'Related case(s)', 'withDetails', [relatedCaseText]);
+		}); // cancel
+		it('can cancel removing a saved related case without losing its details', () => {
+			CaseDetailsPage.clickSummaryRowAction('overview', 'Related case(s)');
+			CheckDetailsPage.isPageDisplayed('relatedCases', 'withoutDetails');
+
+			const relatedCaseText = addRelatedCase();
+
+			CommonActionsUtility.clickActionButton('saveAndContinue');
+			CaseDetailsPage.isPageDisplayed(false);
+			CaseDetailsPage.clickSummaryRowAction('overview', 'Related case(s)');
+			CheckDetailsPage.isPageDisplayed('relatedCases', 'withDetails');
+
+			cy.location('pathname').then((listPath) => {
+				CheckDetailsPage.clickAction('remove', 1);
+				RemoveDetailsPage.isPageDisplayed();
+				RemoveDetailsPage.cancel();
+
+				cy.location('pathname').should('eq', listPath);
+			});
+
+			CheckDetailsPage.isPageDisplayed('relatedCases', 'withDetails');
+			CheckDetailsPage.validateRowValues(relatedCaseText, 'exists', 1);
+			cy.get('tbody.govuk-table__body tr.govuk-table__row').should('have.length', 1);
+
+			cy.reload();
+			CheckDetailsPage.isPageDisplayed('relatedCases', 'withDetails');
+			CheckDetailsPage.validateRowValues(relatedCaseText, 'exists', 1);
+
+			CommonActionsUtility.clickActionButton('saveAndContinue');
+			CaseDetailsPage.isPageDisplayed(false);
 			CaseDetailsPage.validateSummaryRow('overview', 'Related case(s)', 'withDetails', [relatedCaseText]);
 		});
 	}
