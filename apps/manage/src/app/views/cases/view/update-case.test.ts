@@ -1131,7 +1131,8 @@ describe('Update Case Controller', () => {
 						{
 							id: 'proc-4',
 							procedureTypeId: 'hearing',
-							procedureStatusId: 'active'
+							procedureStatusId: 'active',
+							inspectorId: null
 						}
 					]
 				};
@@ -1161,6 +1162,132 @@ describe('Update Case Controller', () => {
 	});
 
 	describe('buildUpdateCase (procedure updates)', () => {
+		const migratedInspector = { id: 'legacy-user', idpUserId: null, legacyId: 'legacy-inspector' };
+
+		const buildExistingProcedure = (overrides: Record<string, unknown> = {}) => ({
+			id: 'proc-migrated',
+			procedureTypeId: 'hearing',
+			procedureStatusId: 'pending',
+			Inspector: migratedInspector,
+			ProcedureType: { displayName: 'Hearing' },
+			ProcedureStatus: { displayName: 'Pending' },
+			...overrides
+		});
+
+		const toListAnswer = (procedure: Record<string, any>, overrides: Record<string, unknown> = {}) => ({
+			id: procedure.id,
+			procedureTypeId: procedure.procedureTypeId,
+			adminProcedureType: procedure.adminProcedureType,
+			procedureStatusId: procedure.procedureStatusId,
+			inspectorId: 'not-allocated',
+			...overrides
+		});
+
+		const mockExistingProcedures = (procedures: unknown[], { isManageList = true } = {}) => {
+			if (isManageList) mockDb.procedure.findMany.mock.mockImplementationOnce(() => procedures);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', Procedures: procedures }));
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123' }));
+		};
+
+		const saveManageList = (procedureDetails: unknown[]) =>
+			buildUpdateCase(mockService as any)({
+				req: { params: { id: 'case-123' }, session: {} } as any,
+				data: { answers: { procedureDetails } }
+			});
+
+		const removeInspectorViaDynamicSection = (procedureId: string, useRemoveButton: boolean) =>
+			buildUpdateCase(
+				mockService as any,
+				useRemoveButton
+			)({
+				req: { params: { id: 'case-123' }, session: {} } as any,
+				data: { answers: { inspectorId: 'not-allocated' } },
+				dynamicSectionId: procedureId,
+				dynamicSectionFieldName: 'procedureDetails',
+				isDynamicSection: true
+			});
+
+		const getAuditEntries = () => mockService.audit.recordMany.mock.calls[0].arguments[0];
+
+		const assertInspectorRemovalAndStatusChangeSaved = (removedInspectorProcedureId: string, procedureId: string) => {
+			assert.strictEqual(mockUpdate.mock.callCount(), 1);
+			assert.deepStrictEqual(mockUpdate.mock.calls[0].arguments[0].data, {
+				Procedures: {
+					update: [
+						{ where: { id: removedInspectorProcedureId }, data: { Inspector: { disconnect: true } } },
+						{ where: { id: procedureId }, data: { ProcedureStatus: { connect: { id: 'active' } } } }
+					]
+				}
+			});
+			const entries = getAuditEntries();
+			assert.strictEqual(entries.length, 2);
+			assert.strictEqual(entries[0].metadata?.fieldName, 'inspector');
+			assert.strictEqual(entries[0].metadata?.newValue, 'Not allocated yet');
+			assert.strictEqual(entries[1].metadata?.fieldName, 'status');
+		};
+
+		const assertInspectorRemovalSaved = (procedureId: string) => {
+			assert.deepStrictEqual(mockUpdate.mock.calls[0].arguments[0].data, {
+				Procedures: { update: [{ where: { id: procedureId }, data: { Inspector: { disconnect: true } } }] }
+			});
+			const entries = getAuditEntries();
+			assert.strictEqual(entries.length, 1);
+			assert.strictEqual(entries[0].metadata?.fieldName, 'inspector');
+			assert.strictEqual(entries[0].metadata?.newValue, 'Not allocated yet');
+		};
+
+		it('should clear and audit a migrated inspector saved as not allocated in the manage list', async () => {
+			const existing = buildExistingProcedure();
+			mockExistingProcedures([existing]);
+
+			await saveManageList([toListAnswer(existing)]);
+
+			assertInspectorRemovalSaved(existing.id);
+		});
+
+		it('should clear a migrated inspector saved as not allocated when another procedure is edited in the list', async () => {
+			const migrated = buildExistingProcedure();
+			const other = buildExistingProcedure({ id: 'proc-other', Inspector: null });
+			mockExistingProcedures([migrated, other]);
+
+			await saveManageList([toListAnswer(migrated), toListAnswer(other, { procedureStatusId: 'active' })]);
+
+			assertInspectorRemovalAndStatusChangeSaved(migrated.id, other.id);
+		});
+
+		it('should clear a migrated inspector on an unchanged case-officer procedure when another procedure is edited', async () => {
+			const migrated = buildExistingProcedure({
+				procedureTypeId: 'admin-in-house',
+				adminProcedureType: 'case-officer',
+				AdminProcedureType: { id: 'case-officer', displayName: 'Case officer' },
+				ProcedureType: { displayName: 'Admin (In house)' }
+			});
+			const other = buildExistingProcedure({ id: 'proc-other', Inspector: null });
+			mockExistingProcedures([migrated, other]);
+
+			await saveManageList([toListAnswer(migrated), toListAnswer(other, { procedureStatusId: 'active' })]);
+
+			assertInspectorRemovalAndStatusChangeSaved(migrated.id, other.id);
+		});
+
+		it('should remove and audit a migrated inspector via the inspector edit page', async () => {
+			const existing = buildExistingProcedure();
+			mockExistingProcedures([existing], { isManageList: false });
+
+			await removeInspectorViaDynamicSection(existing.id, false);
+
+			assertInspectorRemovalSaved(existing.id);
+		});
+
+		it('should remove and audit a migrated inspector via the remove button', async () => {
+			const existing = buildExistingProcedure();
+			mockExistingProcedures([existing], { isManageList: false });
+
+			await removeInspectorViaDynamicSection(existing.id, true);
+
+			assertInspectorRemovalSaved(existing.id);
+		});
+
 		it('should update procedures for dynamic section change', async () => {
 			const req = { params: { id: 'case-123' }, session: {} };
 			const data = {
@@ -1206,11 +1333,13 @@ describe('Update Case Controller', () => {
 						{
 							id: 'proc-123',
 							procedureTypeId: 'hearing',
+							inspectorId: 'not-allocated',
 							procedureStatusId: 'active'
 						},
 						{
 							id: 'proc-new',
 							procedureTypeId: 'hearing',
+							inspectorId: 'not-allocated',
 							procedureStatusId: 'active'
 						}
 					]
@@ -1249,6 +1378,240 @@ describe('Update Case Controller', () => {
 			assert.strictEqual(proceduresPayload.update.length, 1);
 			assert.ok(Array.isArray(proceduresPayload.delete));
 			assert.strictEqual(proceduresPayload.delete.length, 1);
+		});
+
+		for (const [description, inspector] of [
+			['omitted', {}],
+			['undefined', { inspectorId: undefined }],
+			['null', { inspectorId: null }],
+			['empty', { inspectorId: '' }],
+			['not allocated', { inspectorId: 'not-allocated' }],
+			['retained inspector', { inspectorId: 'user-123' }]
+		] as const) {
+			it(`should save and audit a new case-officer admin procedure without an inspector when the answer is ${description}`, async () => {
+				const req = { params: { id: 'case-123' }, session: {} };
+				const data = {
+					answers: {
+						procedureDetails: [
+							{
+								id: 'proc-new',
+								procedureTypeId: 'admin-in-house',
+								adminProcedureType: 'case-officer',
+								procedureStatusId: 'pending',
+								...inspector
+							}
+						]
+					}
+				};
+				mockDb.procedure.findMany.mock.mockImplementationOnce(() => []);
+				mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', Procedures: [] }) as any);
+				mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123' }) as any);
+
+				await buildUpdateCase(mockService as any)({ req: req as any, res: {} as any, data });
+
+				assert.strictEqual(mockUpdate.mock.callCount(), 1);
+				const created = mockUpdate.mock.calls[0].arguments[0].data.Procedures.create[0];
+				assert.strictEqual(created.Inspector, undefined);
+				assert.deepStrictEqual(created.AdminProcedureType, { connect: { id: 'case-officer' } });
+				const entries = mockService.audit.recordMany.mock.calls[0].arguments[0];
+				assert.ok(entries.some((entry) => entry.action === AUDIT_ACTIONS.PROCEDURE_ADDED));
+			});
+		}
+
+		const assertCaseOfficerSwitchRemovesInspector = async (
+			Inspector: Record<string, unknown>,
+			submittedInspectorId: string
+		) => {
+			const existing = buildExistingProcedure({
+				id: 'proc-123',
+				procedureTypeId: 'admin-in-house',
+				adminProcedureType: 'inspector',
+				Inspector,
+				ProcedureType: { displayName: 'Admin (In house)' }
+			});
+			mockExistingProcedures([existing]);
+
+			const submitted = toListAnswer(existing, {
+				adminProcedureType: 'case-officer',
+				inspectorId: submittedInspectorId
+			});
+			await saveManageList([submitted]);
+
+			const updated = mockUpdate.mock.calls[0].arguments[0].data.Procedures.update[0];
+			assert.deepStrictEqual(updated.data.Inspector, { disconnect: true });
+			assert.deepStrictEqual(updated.data.AdminProcedureType, { connect: { id: 'case-officer' } });
+			assert.strictEqual(submitted.inspectorId, submittedInspectorId);
+			const fieldNames = getAuditEntries().map((entry) => entry.metadata?.fieldName);
+			// the inspector removal is implied by the admin procedure type change
+			assert.deepStrictEqual(fieldNames, ['admin procedure type']);
+		};
+
+		it('should save inspector removal without auditing it when switching an admin procedure to a case officer', async () => {
+			await assertCaseOfficerSwitchRemovesInspector({ idpUserId: 'user-123', legacyId: null }, 'user-123');
+		});
+
+		it('should save migrated inspector removal without auditing it when switching an admin procedure to a case officer', async () => {
+			await assertCaseOfficerSwitchRemovesInspector(migratedInspector, 'not-allocated');
+		});
+
+		it('should not disconnect or audit an inspector when a case-officer admin procedure is already unassigned', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const existing = {
+				id: 'proc-123',
+				procedureTypeId: 'admin-in-house',
+				adminProcedureType: 'case-officer',
+				procedureStatusId: 'pending',
+				Inspector: null,
+				ProcedureType: { displayName: 'Admin (In house)' },
+				ProcedureStatus: { displayName: 'Pending' }
+			};
+			mockDb.procedure.findMany.mock.mockImplementationOnce(() => [existing]);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', Procedures: [existing] }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123' }) as any);
+
+			await buildUpdateCase(mockService as any)({
+				req: req as any,
+				res: {} as any,
+				data: {
+					answers: {
+						procedureDetails: [
+							{
+								id: 'proc-123',
+								procedureTypeId: 'admin-in-house',
+								adminProcedureType: 'case-officer',
+								procedureStatusId: 'active',
+								inspectorId: 'user-123'
+							}
+						]
+					}
+				}
+			});
+
+			const updated = mockUpdate.mock.calls[0].arguments[0].data.Procedures.update[0];
+			assert.strictEqual(updated.data.Inspector, undefined);
+			const entries = mockService.audit.recordMany.mock.calls[0].arguments[0];
+			assert.ok(!entries.some((entry) => entry.metadata?.fieldName === 'inspector'));
+		});
+
+		it('should clear a stale admin procedure type without auditing it when switching an admin procedure to a hearing', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const existing = {
+				id: 'proc-123',
+				procedureTypeId: 'admin-in-house',
+				adminProcedureType: 'case-officer',
+				procedureStatusId: 'pending',
+				Inspector: null,
+				ProcedureType: { displayName: 'Admin (In house)' },
+				ProcedureStatus: { displayName: 'Pending' },
+				AdminProcedureType: { id: 'case-officer', displayName: 'Case officer' }
+			};
+			mockDb.procedure.findMany.mock.mockImplementationOnce(() => [existing]);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', Procedures: [existing] }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123' }) as any);
+
+			await buildUpdateCase(mockService as any)({
+				req: req as any,
+				res: {} as any,
+				data: {
+					answers: {
+						procedureDetails: [
+							{
+								id: 'proc-123',
+								procedureTypeId: 'hearing',
+								adminProcedureType: 'case-officer',
+								procedureStatusId: 'pending',
+								inspectorId: 'user-123'
+							}
+						]
+					}
+				}
+			});
+
+			const updated = mockUpdate.mock.calls[0].arguments[0].data.Procedures.update[0];
+			assert.deepStrictEqual(updated.data.ProcedureType, { connect: { id: 'hearing' } });
+			assert.deepStrictEqual(updated.data.AdminProcedureType, { disconnect: true });
+			const entries = mockService.audit.recordMany.mock.calls[0].arguments[0];
+			assert.ok(entries.some((entry) => entry.metadata?.fieldName === 'type'));
+			assert.ok(!entries.some((entry) => entry.metadata?.fieldName === 'admin procedure type'));
+		});
+
+		it('should not save a stale admin procedure type when creating a hearing', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			mockDb.procedure.findMany.mock.mockImplementationOnce(() => []);
+			mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', Procedures: [] }) as any);
+			mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123' }) as any);
+
+			await buildUpdateCase(mockService as any)({
+				req: req as any,
+				res: {} as any,
+				data: {
+					answers: {
+						procedureDetails: [
+							{
+								id: 'proc-new',
+								procedureTypeId: 'hearing',
+								adminProcedureType: 'case-officer',
+								procedureStatusId: 'pending',
+								inspectorId: 'user-123'
+							}
+						]
+					}
+				}
+			});
+
+			const created = mockUpdate.mock.calls[0].arguments[0].data.Procedures.create[0];
+			assert.strictEqual(created.AdminProcedureType, undefined);
+			assert.deepStrictEqual(created.Inspector, {
+				connectOrCreate: { where: { idpUserId: 'user-123' }, create: { idpUserId: 'user-123' } }
+			});
+		});
+
+		for (const procedure of [
+			{ procedureTypeId: 'admin-in-house', adminProcedureType: 'inspector' },
+			{ procedureTypeId: 'hearing' }
+		]) {
+			it(`should retain the inspector when creating ${JSON.stringify(procedure)}`, async () => {
+				const req = { params: { id: 'case-123' }, session: {} };
+				mockDb.procedure.findMany.mock.mockImplementationOnce(() => []);
+				mockFindUnique.mock.mockImplementationOnce(() => ({ id: 'case-123', Procedures: [] }) as any);
+				mockUpdate.mock.mockImplementationOnce(() => ({ id: 'case-123' }) as any);
+
+				await buildUpdateCase(mockService as any)({
+					req: req as any,
+					res: {} as any,
+					data: {
+						answers: {
+							procedureDetails: [
+								{ id: 'proc-new', ...procedure, procedureStatusId: 'pending', inspectorId: 'user-123' }
+							]
+						}
+					}
+				});
+
+				const created = mockUpdate.mock.calls[0].arguments[0].data.Procedures.create[0];
+				assert.deepStrictEqual(created.Inspector, {
+					connectOrCreate: { where: { idpUserId: 'user-123' }, create: { idpUserId: 'user-123' } }
+				});
+			});
+		}
+
+		it('should reject a manage-list procedure without an inspector before saving', async () => {
+			const req = { params: { id: 'case-123' }, session: {} };
+			const data = {
+				answers: {
+					procedureDetails: [{ id: 'proc-123', procedureTypeId: 'hearing', procedureStatusId: 'active' }]
+				}
+			};
+			mockDb.procedure.findMany.mock.mockImplementationOnce(() => []);
+
+			const handler = buildUpdateCase(mockService as any);
+			await assert.rejects(
+				handler({ req: req as any, res: {} as any, data }),
+				/must include an inspectorId or not-allocated/
+			);
+
+			assert.strictEqual(mockUpdate.mock.callCount(), 0);
+			assert.strictEqual(mockService.audit.recordMany.mock.callCount(), 0);
 		});
 	});
 

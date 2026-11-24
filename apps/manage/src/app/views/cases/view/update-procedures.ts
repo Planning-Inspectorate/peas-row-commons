@@ -7,9 +7,11 @@ import type {
 	ProcedureUpdateWithWhereUniqueWithoutCaseInput
 } from '@pins/peas-row-commons-database/src/client/models.ts';
 import type { AddressUpsertWithoutHearingProcedureInput } from '@pins/peas-row-commons-database/src/client/models/Address.ts';
+import { PROCEDURES_ID } from '@pins/peas-row-commons-database/src/seed/static-data/ids/index.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
 import { mapAddressViewModelToDb } from '@pins/peas-row-commons-lib/util/address.ts';
 import { toDateOrNull } from '@pins/peas-row-commons-lib/util/dates.ts';
+import { isCaseOfficerAdminProcedure } from '@pins/peas-row-commons-lib/util/procedures.ts';
 import type { AddressItem } from '@pins/peas-row-commons-lib/util/types.ts';
 import { optionalWhere } from '@planning-inspectorate/core/util';
 
@@ -22,13 +24,65 @@ const manageListRelationFields: { key: ProcedureEditKeys; relation: ProcedureRel
 	{ key: 'siteVisitTypeId', relation: 'SiteVisitType' }
 ];
 
+function getManageListInspectorId(procedure: Record<string, unknown>): string | null {
+	// case-officer admin procedures never have an inspector, so clear any retained answer
+	if (isCaseOfficerAdminProcedure(procedure)) {
+		return null;
+	}
+
+	const inspectorId = procedure.inspectorId;
+
+	if (typeof inspectorId !== 'string' || !inspectorId) {
+		throw new TypeError('Manage-list procedure must include an inspectorId or not-allocated');
+	}
+
+	return inspectorId;
+}
+
+/**
+ * Normalise the procedures submitted by the manage list question into the edits to save (and audit).
+ * Throws if a procedure is malformed, so invalid edits are rejected before any database writes.
+ *
+ * Returns new objects, the submitted procedures are not mutated.
+ */
+export function normaliseManageListProcedureEdits(value: unknown): ManageListProcedureEdit[] {
+	if (!Array.isArray(value)) {
+		throw new TypeError('Manage-list procedures must be an array');
+	}
+
+	return value.map((procedure: unknown) => {
+		if (
+			typeof procedure !== 'object' ||
+			procedure === null ||
+			!('id' in procedure) ||
+			typeof procedure.id !== 'string' ||
+			!procedure.id
+		) {
+			throw new TypeError('Manage-list procedure must include a procedure id');
+		}
+		const edit: Record<string, unknown> & { id: string } = { ...procedure, id: procedure.id };
+		const inspectorId = getManageListInspectorId(edit);
+		if (edit.procedureTypeId !== PROCEDURES_ID.ADMIN_IN_HOUSE) {
+			delete edit.adminProcedureType;
+		}
+		return { ...edit, inspectorId };
+	});
+}
+
 /**
  * Handle edits to the procedures manage list question. This includes an array of all the procedures, where some may
  * have been removed, added, or edited. Edits can only change the manage list questions (not all procedure fields)
  *
  * Returns the database create, update, delete operations to apply (ProcedureUpdateManyWithoutCaseNestedInput)
  */
-export function handleProcedureManageListEdits(edits: ProcedureEdit[], existingProcedures: ExistingProcedures) {
+export function handleProcedureManageListEdits(
+	edits: ManageListProcedureEdit[],
+	existingProcedures: ExistingProcedures
+) {
+	for (const procedureEdit of edits) {
+		assertInspectorId(procedureEdit.inspectorId);
+	}
+
 	const existingIds = existingProcedures.map((e) => e.id);
 	const newIds = edits.map((e) => e.id);
 
@@ -41,16 +95,16 @@ export function handleProcedureManageListEdits(edits: ProcedureEdit[], existingP
 		const updates: ProcedureUpdateWithoutCaseInput = {};
 		for (const { key, relation } of manageListRelationFields) {
 			const newValue = procedureEdit[key];
-			if (existing[key] !== newValue) {
+			if ((existing[key] ?? null) !== (newValue ?? null)) {
 				// if a value did exist but is unset, use null
 				updates[relation] = newValue === undefined ? disconnect() : connectId(newValue);
 			}
 		}
 
 		// inspectorId maps to idpUserId (Entra ID)
-		const existingValue = existing.Inspector?.idpUserId;
-		if (existingValue !== procedureEdit.inspectorId) {
-			updates.Inspector = inspectorConnect(procedureEdit.inspectorId);
+		const inspectorChange = inspectorUpdate(existing.Inspector, procedureEdit.inspectorId);
+		if (inspectorChange) {
+			updates.Inspector = inspectorChange;
 		}
 
 		if (Object.keys(updates).length > 0) {
@@ -190,7 +244,8 @@ export function handleProcedureDynamicSectionEdits(procedureDetails: Record<stri
 			}
 		}
 		if ('inspectorId' in proc) {
-			procedureData.Inspector = inspectorConnect(proc.inspectorId as string);
+			assertInspectorId(proc.inspectorId);
+			procedureData.Inspector = inspectorConnect(proc.inspectorId);
 		}
 
 		const addresses = [
@@ -247,14 +302,50 @@ type ProcedureEdit = {
 	procedureTypeId?: string;
 	adminProcedureType?: string;
 	siteVisitTypeId?: string;
-	inspectorId?: string;
+	inspectorId?: string | null;
 	procedureStatusId?: string;
 };
 
+export type ManageListProcedureEdit = ProcedureEdit & { inspectorId: string | null };
+
 type ProcedureEditKeys = keyof Omit<ProcedureEdit, 'inspectorId'>;
 
-function inspectorConnect(inspectorId?: string, shouldDisconnect = true) {
-	if (inspectorId === undefined || inspectorId === PROCEDURE_CONSTANTS.NOT_ALLOCATED) {
+function assertInspectorId(value: unknown): asserts value is string | null {
+	if (value !== null && typeof value !== 'string') {
+		throw new TypeError('inspectorId must be a string or null');
+	}
+}
+
+function normaliseInspectorSelection(inspectorId: string | null): string | null {
+	if (!inspectorId || inspectorId === PROCEDURE_CONSTANTS.NOT_ALLOCATED) {
+		return null;
+	}
+	return inspectorId;
+}
+
+/**
+ * Work out the Inspector relation update for a manage-list edit, comparing against the existing relation.
+ * Returns undefined when no change is needed.
+ */
+function inspectorUpdate(existingInspector: { idpUserId: string | null } | null, inspectorId: string | null) {
+	const selected = normaliseInspectorSelection(inspectorId);
+	if (!existingInspector) {
+		return selected === null ? undefined : inspectorConnect(selected);
+	}
+	if (selected === null) {
+		return disconnect();
+	}
+	if (existingInspector.idpUserId === selected) {
+		return undefined;
+	}
+	return inspectorConnect(selected);
+}
+
+function inspectorConnect(inspectorId: string | null, shouldDisconnect = true) {
+	assertInspectorId(inspectorId);
+
+	const selected = normaliseInspectorSelection(inspectorId);
+	if (selected === null) {
 		if (shouldDisconnect) {
 			return disconnect();
 		}
@@ -262,8 +353,8 @@ function inspectorConnect(inspectorId?: string, shouldDisconnect = true) {
 	}
 	return {
 		connectOrCreate: {
-			where: { idpUserId: inspectorId },
-			create: { idpUserId: inspectorId }
+			where: { idpUserId: selected },
+			create: { idpUserId: selected }
 		}
 	};
 }

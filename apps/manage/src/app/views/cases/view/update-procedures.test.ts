@@ -2,7 +2,12 @@ import { SITE_VISITS_ID } from '@pins/peas-row-commons-database/src/seed/static-
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
 import assert from 'node:assert';
 import { describe, it } from 'node:test';
-import { handleProcedureDynamicSectionEdits, handleProcedureManageListEdits } from './update-procedures.ts';
+import {
+	handleProcedureDynamicSectionEdits,
+	handleProcedureManageListEdits,
+	normaliseManageListProcedureEdits
+} from './update-procedures.ts';
+import { mapProceduresToArray } from './view-model.ts';
 
 /** Build an edit procedure object with sensible defaults, used by the manage list tests */
 function buildProcedureEdit(overrides: Record<string, unknown> = {}) {
@@ -27,7 +32,236 @@ function buildProcedure(overrides: Record<string, unknown> = {}) {
 }
 
 describe('update-procedures', () => {
+	describe('normaliseManageListProcedureEdits', () => {
+		it('should clear a retained inspector for a case-officer admin procedure without mutating the answer', () => {
+			const procedures = [
+				{ id: 'proc-1', procedureTypeId: 'admin-in-house', adminProcedureType: 'case-officer', inspectorId: 'entra-1' }
+			];
+			assert.deepStrictEqual(normaliseManageListProcedureEdits(procedures), [{ ...procedures[0], inspectorId: null }]);
+			assert.strictEqual(procedures[0].inspectorId, 'entra-1', 'original answer should not be mutated');
+		});
+
+		it('should preserve inspectors for inspector-led admin and non-admin procedures', () => {
+			for (const procedure of [
+				{ id: 'proc-1', procedureTypeId: 'admin-in-house', adminProcedureType: 'inspector', inspectorId: 'entra-1' },
+				{ id: 'proc-1', procedureTypeId: 'hearing', inspectorId: 'entra-1' }
+			]) {
+				assert.deepStrictEqual(normaliseManageListProcedureEdits([procedure]), [procedure]);
+			}
+		});
+
+		it('should drop a stale admin procedure type from non-admin procedures without mutating the answer', () => {
+			for (const procedureTypeId of ['hearing', 'inquiry', 'written-reps']) {
+				const procedure = { id: 'proc-1', procedureTypeId, adminProcedureType: 'case-officer', inspectorId: 'entra-1' };
+				const original = { ...procedure };
+				const [result] = normaliseManageListProcedureEdits([procedure]);
+				assert.deepStrictEqual(result, { id: 'proc-1', procedureTypeId, inspectorId: 'entra-1' });
+				assert.ok(!('adminProcedureType' in result), 'key should be omitted, not set to undefined');
+				assert.deepStrictEqual(procedure, original, 'original answer should not be mutated');
+			}
+		});
+
+		it('should accept not-allocated', () => {
+			const procedures = [{ id: 'proc-1', inspectorId: PROCEDURE_CONSTANTS.NOT_ALLOCATED }];
+			assert.deepStrictEqual(normaliseManageListProcedureEdits(procedures), procedures);
+		});
+
+		it('should normalise empty inspectors for case-officer admin procedures without mutating answers', () => {
+			for (const inspector of [{}, { inspectorId: undefined }, { inspectorId: null }, { inspectorId: '' }]) {
+				const procedure = {
+					id: 'proc-1',
+					procedureTypeId: 'admin-in-house',
+					adminProcedureType: 'case-officer',
+					...inspector
+				};
+				const original = { ...procedure };
+				assert.deepStrictEqual(normaliseManageListProcedureEdits([procedure]), [{ ...procedure, inspectorId: null }]);
+				assert.deepStrictEqual(procedure, original);
+			}
+		});
+
+		it('should require an inspector for other procedure types and admin subtypes', () => {
+			for (const procedure of [
+				{ id: 'proc-1', procedureTypeId: 'admin-in-house', adminProcedureType: 'inspector' },
+				{ id: 'proc-1', procedureTypeId: 'admin-in-house' },
+				{ id: 'proc-1', procedureTypeId: 'hearing', adminProcedureType: 'case-officer' }
+			]) {
+				assert.throws(() => normaliseManageListProcedureEdits([procedure]), /must include an inspectorId/);
+			}
+		});
+
+		it('should reject missing or invalid inspectors', () => {
+			for (const procedure of [
+				{ id: 'proc-1' },
+				{ id: 'proc-1', inspectorId: undefined },
+				{ id: 'proc-1', inspectorId: null },
+				{ id: 'proc-1', inspectorId: '' },
+				{ id: 'proc-1', inspectorId: 123 }
+			]) {
+				assert.throws(() => normaliseManageListProcedureEdits([procedure]), /must include an inspectorId/);
+			}
+		});
+
+		it('should reject malformed procedure inputs', () => {
+			assert.throws(() => normaliseManageListProcedureEdits({}), /must be an array/);
+			for (const procedure of [null, 'proc-1', {}, { id: 123 }, { id: '' }]) {
+				assert.throws(() => normaliseManageListProcedureEdits([procedure]), /must include a procedure id/);
+			}
+		});
+	});
+
 	describe('handleProcedureManageListEdits', () => {
+		for (const inspectorId of [null, '', PROCEDURE_CONSTANTS.NOT_ALLOCATED]) {
+			it(`should omit an empty inspector on creation (${String(inspectorId)})`, () => {
+				const query = handleProcedureManageListEdits([buildProcedureEdit({ inspectorId })], []);
+				assert.strictEqual((query.create as any[])[0].Inspector, undefined);
+			});
+
+			it(`should disconnect an existing inspector when cleared (${String(inspectorId)})`, () => {
+				const query = handleProcedureManageListEdits([buildProcedureEdit({ inspectorId })], [buildProcedure()]);
+				assert.deepStrictEqual(query.update, [
+					{
+						where: { id: 'proc-1' },
+						data: { Inspector: { disconnect: true } }
+					}
+				]);
+			});
+
+			it(`should not update an already empty inspector (${String(inspectorId)})`, () => {
+				const query = handleProcedureManageListEdits(
+					[buildProcedureEdit({ inspectorId })],
+					[{ ...buildProcedure(), Inspector: null }]
+				);
+				assert.deepStrictEqual(query, {});
+			});
+
+			it(`should disconnect an existing inspector without an Entra ID when cleared (${String(inspectorId)})`, () => {
+				const query = handleProcedureManageListEdits(
+					[buildProcedureEdit({ inspectorId })],
+					[{ ...buildProcedure(), Inspector: { idpUserId: null } }]
+				);
+				assert.deepStrictEqual(query, {
+					update: [{ where: { id: 'proc-1' }, data: { Inspector: { disconnect: true } } }]
+				});
+			});
+		}
+
+		it('should clear a migrated inspector submitted as not allocated when a different procedure is edited', () => {
+			const existing = [
+				{
+					...buildProcedure({ procedureTypeId: 'hearing', adminProcedureType: undefined }),
+					Inspector: { idpUserId: null, legacyId: 'legacy-inspector' }
+				},
+				buildProcedure({ id: 'proc-2', procedureTypeId: 'hearing', adminProcedureType: undefined })
+			];
+			const mapped = mapProceduresToArray(existing);
+			assert.ok(mapped);
+			assert.strictEqual(mapped[0].inspectorId, PROCEDURE_CONSTANTS.NOT_ALLOCATED);
+			mapped[1].procedureStatusId = 'status-2';
+
+			const query = handleProcedureManageListEdits(normaliseManageListProcedureEdits(mapped), existing);
+			assert.deepStrictEqual(query, {
+				update: [
+					{ where: { id: 'proc-1' }, data: { Inspector: { disconnect: true } } },
+					{ where: { id: 'proc-2' }, data: { ProcedureStatus: { connect: { id: 'status-2' } } } }
+				]
+			});
+		});
+
+		it('should clear a migrated inspector submitted as not allocated when another field on that procedure changes', () => {
+			const query = handleProcedureManageListEdits(
+				[buildProcedureEdit({ inspectorId: PROCEDURE_CONSTANTS.NOT_ALLOCATED, procedureStatusId: 'status-2' })],
+				[{ ...buildProcedure(), Inspector: { idpUserId: null, legacyId: 'legacy-inspector' } }]
+			);
+			assert.deepStrictEqual(query, {
+				update: [
+					{
+						where: { id: 'proc-1' },
+						data: { ProcedureStatus: { connect: { id: 'status-2' } }, Inspector: { disconnect: true } }
+					}
+				]
+			});
+		});
+
+		for (const procedure of [
+			{ procedureTypeId: 'admin-in-house', adminProcedureType: 'inspector' },
+			{ procedureTypeId: 'hearing', adminProcedureType: undefined }
+		]) {
+			it(`should clear a migrated inspector when switching ${procedure.procedureTypeId} to a case-officer procedure`, () => {
+				const edits = normaliseManageListProcedureEdits([
+					buildProcedureEdit({
+						procedureTypeId: 'admin-in-house',
+						adminProcedureType: 'case-officer',
+						inspectorId: PROCEDURE_CONSTANTS.NOT_ALLOCATED
+					})
+				]);
+				const query = handleProcedureManageListEdits(edits, [
+					{ ...buildProcedure(procedure), Inspector: { idpUserId: null } }
+				]);
+				assert.ok(Array.isArray(query.update));
+				assert.deepStrictEqual(query.update[0].data.Inspector, { disconnect: true });
+			});
+		}
+
+		it('should clear a migrated inspector on an unchanged case-officer procedure', () => {
+			const procedure = {
+				procedureTypeId: 'admin-in-house',
+				adminProcedureType: 'case-officer',
+				inspectorId: PROCEDURE_CONSTANTS.NOT_ALLOCATED
+			};
+			const query = handleProcedureManageListEdits(normaliseManageListProcedureEdits([buildProcedureEdit(procedure)]), [
+				{ ...buildProcedure(procedure), Inspector: { idpUserId: null } }
+			]);
+			assert.deepStrictEqual(query, {
+				update: [{ where: { id: 'proc-1' }, data: { Inspector: { disconnect: true } } }]
+			});
+		});
+
+		it('should replace an existing inspector without an Entra ID when a new inspector is chosen', () => {
+			const query = handleProcedureManageListEdits(
+				[buildProcedureEdit({ inspectorId: 'inspector-2' })],
+				[{ ...buildProcedure(), Inspector: { idpUserId: null } }]
+			);
+			assert.deepStrictEqual(query.update, [
+				{
+					where: { id: 'proc-1' },
+					data: {
+						Inspector: {
+							connectOrCreate: { where: { idpUserId: 'inspector-2' }, create: { idpUserId: 'inspector-2' } }
+						}
+					}
+				}
+			]);
+		});
+
+		it('should connect a different inspector when changed', () => {
+			const query = handleProcedureManageListEdits(
+				[buildProcedureEdit({ inspectorId: 'inspector-2' })],
+				[buildProcedure()]
+			);
+			assert.deepStrictEqual(query.update, [
+				{
+					where: { id: 'proc-1' },
+					data: {
+						Inspector: {
+							connectOrCreate: { where: { idpUserId: 'inspector-2' }, create: { idpUserId: 'inspector-2' } }
+						}
+					}
+				}
+			]);
+		});
+
+		it('should reject an undefined inspector instead of treating it as cleared', () => {
+			assert.throws(
+				() =>
+					handleProcedureManageListEdits(
+						[buildProcedureEdit({ inspectorId: undefined })],
+						[{ ...buildProcedure(), Inspector: null }]
+					),
+				/inspectorId must be a string or null/
+			);
+		});
+
 		it('should return an empty query when there are no changes', () => {
 			const existing = [buildProcedure()];
 			const edits = [buildProcedureEdit()];
@@ -36,6 +270,48 @@ describe('update-procedures', () => {
 
 			assert.deepStrictEqual(query, {});
 		});
+
+		it('should not update database-null optional relations omitted by the view model', () => {
+			const existing = [
+				buildProcedure({ procedureTypeId: 'hearing', adminProcedureType: null, siteVisitTypeId: null })
+			];
+			const mapped = mapProceduresToArray(existing);
+			assert.ok(mapped);
+			assert.ok(!('adminProcedureType' in mapped[0]));
+			assert.ok(!('siteVisitTypeId' in mapped[0]));
+
+			const query = handleProcedureManageListEdits(normaliseManageListProcedureEdits(mapped), existing);
+
+			assert.deepStrictEqual(query, {});
+		});
+
+		it('should only update the changed status when database-null optional relations are omitted', () => {
+			const existing = [
+				buildProcedure({ procedureTypeId: 'hearing', adminProcedureType: null, siteVisitTypeId: null })
+			];
+			const mapped = mapProceduresToArray(existing);
+			assert.ok(mapped);
+			mapped[0].procedureStatusId = 'status-2';
+
+			const query = handleProcedureManageListEdits(normaliseManageListProcedureEdits(mapped), existing);
+
+			assert.deepStrictEqual(query, {
+				update: [{ where: { id: 'proc-1' }, data: { ProcedureStatus: { connect: { id: 'status-2' } } } }]
+			});
+		});
+
+		for (const { key, relation } of [
+			{ key: 'adminProcedureType', relation: 'AdminProcedureType' },
+			{ key: 'siteVisitTypeId', relation: 'SiteVisitType' }
+		]) {
+			it(`should disconnect a populated ${key} when cleared`, () => {
+				const query = handleProcedureManageListEdits([buildProcedureEdit({ [key]: undefined })], [buildProcedure()]);
+
+				assert.deepStrictEqual(query, {
+					update: [{ where: { id: 'proc-1' }, data: { [relation]: { disconnect: true } } }]
+				});
+			});
+		}
 
 		it('should create procedures which are not in the existing set', () => {
 			const existing = [buildProcedure({ id: 'proc-1' })];
@@ -171,6 +447,13 @@ describe('update-procedures', () => {
 			const updates = handleProcedureDynamicSectionEdits([{ id: 'proc-1', hearingPreparationTimeDays: '2' }]);
 
 			assert.strictEqual(updates[0].data.SiteVisitType, undefined);
+		});
+
+		it('should reject an explicitly undefined inspector in a dynamic edit', () => {
+			assert.throws(
+				() => handleProcedureDynamicSectionEdits([{ id: 'proc-1', inspectorId: undefined }]),
+				/inspectorId must be a string or null/
+			);
 		});
 
 		it('should map valid date fields to a Date and invalid/empty to null', () => {

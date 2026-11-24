@@ -120,7 +120,8 @@ function mapProcedure(
 		type: formatString(procedure.ProcedureType?.displayName) ?? '-',
 		status: formatString(procedure.ProcedureStatus?.displayName) ?? '-',
 		inspector: resolvedInspector,
-		adminType: formatString(procedure.AdminProcedureType?.displayName),
+		adminType:
+			typeId === PROCEDURES_ID.ADMIN_IN_HOUSE ? formatString(procedure.AdminProcedureType?.displayName) : undefined,
 		siteVisitType: formatString(procedure.SiteVisitType?.displayName),
 		siteVisitDate: formatDate(procedure.siteVisitDate),
 

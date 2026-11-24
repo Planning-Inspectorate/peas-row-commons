@@ -20,7 +20,8 @@
 4. The case is updated within a transaction. The previous state is captured for audit comparison.
 
 ## Key Handlers in update-case.ts
-- **`handleProcedureUpdates`** — applies create/update/delete operations for manage-list edits and targeted updates for Dynamic Section edits. Relation fields use connect/disconnect, and dates use `toDateOrNull` to handle empty form submissions.
+- **`handleProcedureUpdates`** — applies create/update/delete operations for manage-list edits and targeted updates for Dynamic Section edits. Relation fields use connect/disconnect, and dates use `toDateOrNull` to handle empty form submissions. Manage-list edits are first normalised by `normaliseManageListProcedureEdits` (update-procedures.ts), so the saved and audited procedures are the same. Normalising also drops any stale `adminProcedureType` answer from procedures that are not admin-in-house, which clears it on save without an audit entry.
+- Migrated inspector assignments without an Entra ID display as "Not allocated yet". Saving the manage list with this selection clears the assignment and audits the removal, just like other inspector assignments. Case-officer admin procedures also clear any retained inspector on save; when switching to this procedure type, the removal is implied by the type change and is not audited separately.
 - **`handleOutcomes`** — similar upsert pattern for case decisions.
 - **`handleContacts`** — shared handler for applicants, objectors, and generic contacts via `CONTACT_MAPPINGS`.
 - **`handleAbeyancePeriod`** — maps the composite date period field to individual start/end dates.

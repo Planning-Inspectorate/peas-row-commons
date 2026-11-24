@@ -24,10 +24,12 @@ import {
 import type { Logger } from 'pino';
 import { AUDIT_ACTIONS, type AuditAction, type AuditEntry, type AuditService } from '../../../audit/index.ts';
 import {
+	buildProcedureAuditInput,
 	type CaseToAddressWithAddress,
 	type ContactWithAddress,
 	type DecisionWithRelations,
 	type InspectorWithUser,
+	type ProcedureAuditInput,
 	type ProcedureWithRelations,
 	resolveContactAudits,
 	resolveFieldValues,
@@ -54,7 +56,8 @@ import {
 	type ExistingProcedures,
 	existingProceduresForCase,
 	handleProcedureDynamicSectionEdits,
-	handleProcedureManageListEdits
+	handleProcedureManageListEdits,
+	normaliseManageListProcedureEdits
 } from './update-procedures.ts';
 
 /**
@@ -109,6 +112,8 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false): Sa
 			// if not a dynamic section and `procedureDetails` has edits, this is the manage list question
 			// this requires syncing all procedures, as the manage list question can include create/update/delete changes
 			// but only for the manage list fields (5 of), not all procedure fields
+			// normalise first so the saved and audited edits are the same, and invalid edits fail before any reads/writes
+			rawAnswers.procedureDetails = normaliseManageListProcedureEdits(rawAnswers.procedureDetails);
 			existingProcedures = await existingProceduresForCase(db, id);
 		}
 
@@ -118,6 +123,10 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false): Sa
 		}
 
 		const answersSnapshot = { ...rawAnswers };
+		const procedureAuditInput =
+			answersSnapshot.procedureDetails === undefined
+				? undefined
+				: buildProcedureAuditInput(answersSnapshot.procedureDetails, existingProcedures !== undefined);
 
 		// Extracted here (before mapCasePayload mutates/removes linkedCaseDetails) because
 		// linked case relationships are written as direct CaseRelationship table writes
@@ -178,7 +187,7 @@ export function buildUpdateCase(service: ManageService, clearAnswer = false): Sa
 				linkedCasesReferenceMap,
 				logger,
 				result.finalLinkedCaseGroup,
-				existingProcedures
+				procedureAuditInput
 			);
 		}
 
@@ -841,7 +850,7 @@ async function recordAuditEntries(
 	linkedCasesReferenceMap: { id: string; reference: string }[],
 	logger: Logger,
 	finalLinkedCaseGroup?: FinalLinkedCaseGroup,
-	existingProcedures?: ExistingProcedures
+	procedureAuditInput?: ProcedureAuditInput
 ): Promise<void> {
 	try {
 		const allAuditEntries: AuditEntry[] = [];
@@ -997,15 +1006,14 @@ async function recordAuditEntries(
 			);
 		}
 
-		if (answersSnapshot.procedureDetails) {
+		if (procedureAuditInput) {
 			allAuditEntries.push(
 				...resolveProcedureAudits(
 					caseId,
 					userId,
 					(previousValues.Procedures as ProcedureWithRelations[]) ?? [],
-					answersSnapshot.procedureDetails as Record<string, unknown>[],
 					userDisplayNameMap,
-					existingProcedures !== undefined
+					procedureAuditInput
 				)
 			);
 		}
