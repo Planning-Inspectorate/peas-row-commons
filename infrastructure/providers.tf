@@ -31,3 +31,11 @@ provider "azurerm" {
   subscription_id = var.front_door_config.use_tooling == true ? var.tooling_config.subscription_id : null
   features {}
 }
+
+provider "azurerm" {
+  # either tooling or prod for shared FD instance
+  alias           = "odw_config"
+  subscription_id = var.odw_config.enabled_peering == true ? var.odw_config.subscription_id : null
+  features {}
+  resource_provider_registrations = "none"
+}
