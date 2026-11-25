@@ -8,7 +8,6 @@ export const caseListSelect = {
 	updatedDate: true,
 	receivedDate: true,
 	location: true,
-	linkedCases: true,
 	Dates: true,
 	Costs: true,
 	Abeyance: true,
