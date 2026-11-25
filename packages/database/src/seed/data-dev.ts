@@ -46,14 +46,21 @@ export async function seedDev(dbClient: PrismaClient) {
 
 		const siteAddressData = scenario.hasAddress
 			? {
-					SiteAddress: {
-						create: {
-							line1: `${i} High Street`,
-							line2: i % 3 === 0 ? 'Industrial Estate' : undefined,
-							townCity: location,
-							postcode: `BS${(i % 20) + 1} ${i % 9}AB`,
-							county: 'Somerset'
-						}
+					SiteAddresses: {
+						create: [
+							{
+								answerIndex: 0,
+								Address: {
+									create: {
+										line1: `${i} High Street`,
+										line2: i % 3 === 0 ? 'Industrial Estate' : undefined,
+										townCity: location,
+										postcode: `BS${(i % 20) + 1} ${i % 9}AB`,
+										county: 'Somerset'
+									}
+								}
+							}
+						]
 					}
 				}
 			: {};
