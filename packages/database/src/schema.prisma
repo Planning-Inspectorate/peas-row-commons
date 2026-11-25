@@ -48,8 +48,6 @@ model Case {
   location                 String?
   caseOfficerId            String?                       @db.UniqueIdentifier
   CaseOfficer              User?                         @relation("caseOfficer", fields: [caseOfficerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  /// TODO HRP-545 remove old linked cases structure
-  linkedCases              String?
   Dates                    CaseDates?
   /// Physical location of real-world files
   filesLocation            String?
@@ -91,9 +89,6 @@ model Case {
   Contacts                 Contact[]
   /// Related Cases to this case
   RelatedCases             RelatedCase[]
-  /// TODO HRP-545 remove old linked cases structure
-  /// Cases linked to this case
-  LinkedCases              LinkedCase[]
   /// Cases where this case is the parent
   ChildRelationships       CaseRelationship[]            @relation("ParentCase")
   /// Cases where this case is the child (one level only - child cases cannot have children)
@@ -641,15 +636,6 @@ model ObjectorStatus {
 model RelatedCase {
   id        String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
   reference String?
-  caseId    String  @db.UniqueIdentifier
-  Case      Case    @relation(fields: [caseId], references: [id])
-}
-
-/// TODO HRP-545 remove old linked cases structure
-model LinkedCase {
-  id        String  @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  reference String?
-  isLead    Boolean @default(false)
   caseId    String  @db.UniqueIdentifier
   Case      Case    @relation(fields: [caseId], references: [id])
 }
