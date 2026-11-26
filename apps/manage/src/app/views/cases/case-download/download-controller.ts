@@ -19,17 +19,12 @@ import type { Request, Response } from 'express';
 import nunjucks from 'nunjucks';
 import type { Logger } from 'pino';
 import { AUDIT_ACTIONS } from '../../../audit/index.ts';
-import {
-	fetchCaseForDownload,
-	generatePdf,
-	getOrLaunchBrowser,
-	mapCaseDetailsData,
-	mapContactListData,
-	mapDownloadableDocuments,
-	mapObjectorListData,
-	streamCaseZip
-} from './index.ts';
+import { getOrLaunchBrowser } from './browser-manager.ts';
+import { generatePdf } from './generate-pdf.ts';
+import { mapCaseDetailsData, mapContactListData, mapDownloadableDocuments, mapObjectorListData } from './mappers.ts';
 import type { CaseDownloadQueryResult } from './query.ts';
+import { fetchCaseForDownload } from './query.ts';
+import { streamCaseZip } from './zip-builder.ts';
 
 /**
  * Relative template paths from the configured Nunjucks views dir
