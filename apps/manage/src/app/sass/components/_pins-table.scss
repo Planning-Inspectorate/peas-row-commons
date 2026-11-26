@@ -5,17 +5,35 @@
 * so it doesn't fall out of sync with the actual sort order. The arrow is also hidden from screen readers as it is purely decorative.
 */
 .pins-table {
+	// column widths come from the header classes, not from the cell content
+	table-layout: fixed;
+
+	.govuk-table__cell {
+		// long unbroken values wrap instead of overflowing the fixed column
+		overflow-wrap: anywhere;
+	}
+
 	.govuk-table__header[aria-sort] > .govuk-link::after {
-		margin-left: 5px;
-		font-size: 0.8em;
+		// inline-block stops the link's underline applying to the arrow
+		display: inline-block;
+		width: 22px;
+		height: 22px;
+		vertical-align: middle;
+
+		// keeps the arrow visible in Windows High Contrast mode
+		forced-color-adjust: none;
 		content: '';
+		background-color: currentcolor;
+
+		// both arrows, joined by a zero-width line so they form one shape
+		clip-path: polygon(37% 43%, 50% 18%, 63% 43%, 37% 43%, 37% 55%, 63% 55%, 50% 80%, 37% 55%);
 	}
 
 	.govuk-table__header[aria-sort='ascending'] > .govuk-link::after {
-		content: '▲';
+		clip-path: polygon(50% 26%, 77% 74%, 23% 74%);
 	}
 
 	.govuk-table__header[aria-sort='descending'] > .govuk-link::after {
-		content: '▼';
+		clip-path: polygon(23% 26%, 77% 26%, 50% 74%);
 	}
 }
