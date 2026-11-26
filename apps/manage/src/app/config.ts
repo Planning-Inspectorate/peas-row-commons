@@ -138,7 +138,7 @@ export function loadConfig(): Config {
 		}
 
 		if (NODE_ENV === 'production' && BLOB_STORE_CONNECTION_STRING) {
-			throw new Error(BLOB_STORE_CONNECTION_STRING + ' must only be used for local development');
+			throw new Error('BLOB_STORE_CONNECTION_STRING must only be used for local development');
 		}
 	}
 
@@ -147,7 +147,7 @@ export function loadConfig(): Config {
 	 * it with a local path. Do not let this be overwritten on production servers.
 	 */
 	if (NODE_ENV === 'production' && CHROMIUM_LOCAL_PATH) {
-		throw new Error(CHROMIUM_LOCAL_PATH + ' must only be used for local development');
+		throw new Error('CHROMIUM_LOCAL_PATH must only be used for local development');
 	}
 
 	config = {

@@ -287,10 +287,6 @@ function checkDetailFieldChanges(
 				break;
 		}
 
-		if (field.type === 'datetime') {
-			console.log(oldRawVal, newRawVal, 'quackers');
-		}
-
 		if (oldVal !== newVal) {
 			entries.push({
 				caseId: ctx.caseId,

@@ -76,7 +76,7 @@ export function buildCreateCaseNote(service: ManageService): CommentBodyHandler 
 		const { comment } = req.body;
 		const userId = req?.session?.account?.localAccountId;
 
-		logger.info({ comment }, 'case note creation');
+		logger.info({ caseId: id }, 'case note creation');
 
 		await createCaseNote(id, comment, userId, db, logger);
 
@@ -89,7 +89,7 @@ export function buildCreateCaseNote(service: ManageService): CommentBodyHandler 
 			}
 		});
 
-		logger.info({ id }, 'case note created');
+		logger.info({ caseId: id }, 'case note created');
 
 		// Return back to case view page
 		const viewCaseUrl = req.baseUrl.replace(/\/case-notes\/?$/, '');
