@@ -8,7 +8,7 @@ export interface TableColumn {
 	header: string;
 	fieldName: string;
 	format?: (
-		// TODO HRP-707 this is still unknown at this stage - do we convert to a string before?
+		// TODO HRP-708 this is still unknown at this stage - do we convert to a string before?
 		value: string,
 		rowData: Record<string, unknown>,
 		params: { getQuestion: (fieldName: string) => Question | undefined; mockJourney: Journey }
@@ -129,7 +129,7 @@ export default class DefinedColumnsTableQuestion extends TableManageListQuestion
 	 * Priority: explicit custom formatter -> question's own formatter -> raw value
 	 */
 	private getFormattedColumnValue(col: TableColumn, item: Record<string, unknown>, linkedQuestion?: Question): string {
-		// @ts-expect-error -- TODO HRP-707 this is still unknown at this stage, need to handle that.
+		// @ts-expect-error -- TODO HRP-708 this is still unknown at this stage, need to handle that.
 		const rawValue: string = item[col.fieldName];
 
 		const mockJourney = new JourneyForDisplay(item);
