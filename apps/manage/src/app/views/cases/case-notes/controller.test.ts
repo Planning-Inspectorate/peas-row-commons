@@ -597,7 +597,7 @@ describe('Case Notes Controller', () => {
 			assert.deepStrictEqual(auditArgs.metadata, { caseNote: 'Audited note' });
 		});
 
-		it('should log info messages for creation', async () => {
+		it('should log only the case ID and event messages for creation', async () => {
 			const mockDb = createMockDb();
 			const logger = mockLogger();
 			const audit = createMockAudit();
@@ -626,15 +626,13 @@ describe('Case Notes Controller', () => {
 
 			await handler(req as any, res as any, mockNext);
 
-			assert.strictEqual(logger.info.mock.callCount(), 2);
-
-			const firstInfoCall = logger.info.mock.calls[0];
-			assert.deepStrictEqual(firstInfoCall.arguments[0], { comment: 'Log test note' });
-			assert.strictEqual(firstInfoCall.arguments[1], 'case note creation');
-
-			const secondInfoCall = logger.info.mock.calls[1];
-			assert.deepStrictEqual(secondInfoCall.arguments[0], { id: 'case-123' });
-			assert.strictEqual(secondInfoCall.arguments[1], 'case note created');
+			assert.deepStrictEqual(
+				logger.info.mock.calls.map((call) => call.arguments),
+				[
+					[{ caseId: 'case-123' }, 'case note creation'],
+					[{ caseId: 'case-123' }, 'case note created']
+				]
+			);
 		});
 
 		it('should throw error when case is not found in transaction', async () => {
