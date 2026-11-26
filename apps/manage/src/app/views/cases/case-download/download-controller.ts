@@ -22,8 +22,7 @@ import { AUDIT_ACTIONS } from '../../../audit/index.ts';
 import { getOrLaunchBrowser } from './browser-manager.ts';
 import { generatePdf } from './generate-pdf.ts';
 import { mapCaseDetailsData, mapContactListData, mapDownloadableDocuments, mapObjectorListData } from './mappers.ts';
-import type { CaseDownloadQueryResult } from './query.ts';
-import { fetchCaseForDownload } from './query.ts';
+import { type CaseDownloadQueryResult, fetchCaseForDownload } from './query.ts';
 import { streamCaseZip } from './zip-builder.ts';
 
 /**
