@@ -5,7 +5,8 @@ import {
 	PROCEDURES,
 	PROCEDURE_EVENT_FORMATS,
 	PROCEDURE_STATUSES,
-	SITE_VISITS
+	SITE_VISITS,
+	UNKNOWN_USER
 } from '@pins/peas-row-commons-database/src/seed/static-data/index.ts';
 import { PROCEDURE_CONSTANTS } from '@pins/peas-row-commons-lib/constants/procedures.ts';
 import {
@@ -14,6 +15,7 @@ import {
 	formatDateTime,
 	formatNumber
 } from '@pins/peas-row-commons-lib/util/audit-formatters.ts';
+import { isCaseOfficerAdminProcedure } from '@pins/peas-row-commons-lib/util/procedures.ts';
 import { AUDIT_ACTIONS } from '../actions.ts';
 import type { AuditEntry } from '../types.ts';
 
@@ -34,6 +36,62 @@ export type ProcedureWithRelations = Prisma.ProcedureGetPayload<{
 		SiteVisitType: true;
 	};
 }>;
+
+type ProcedureAuditEdit = Record<string, unknown> & { id: string };
+
+export type ProcedureAuditInput =
+	| {
+			isManageListEdit: true;
+			newProcedures: (ProcedureAuditEdit & { inspectorId: string | null })[];
+	  }
+	| {
+			isManageListEdit: false;
+			newProcedures: ProcedureAuditEdit[];
+	  };
+
+function isManageListAuditEdit(
+	procedure: ProcedureAuditEdit
+): procedure is ProcedureAuditEdit & { inspectorId: string | null } {
+	return procedure.inspectorId === null || typeof procedure.inspectorId === 'string';
+}
+
+/**
+ * Builds a ProcedureAuditInput from the (already normalised) procedure edits being saved.
+ * Validate it before any database writes, so invalid audit input cannot allow
+ * the update to succeed without an audit entry.
+ */
+export function buildProcedureAuditInput(value: unknown, isManageListEdit: boolean): ProcedureAuditInput {
+	if (!Array.isArray(value)) {
+		throw new TypeError('Procedure audit input must be an array');
+	}
+
+	const newProcedures = value.map((procedure: unknown) => {
+		if (
+			typeof procedure !== 'object' ||
+			procedure === null ||
+			!('id' in procedure) ||
+			typeof procedure.id !== 'string' ||
+			!procedure.id
+		) {
+			throw new TypeError('Procedure audit input must include a procedure id');
+		}
+		return { ...procedure, id: procedure.id };
+	});
+
+	if (isManageListEdit) {
+		return {
+			isManageListEdit: true,
+			newProcedures: newProcedures.map((procedure) => {
+				if (!isManageListAuditEdit(procedure)) {
+					throw new TypeError('Manage-list procedure audit input must have a string or null inspectorId');
+				}
+				return procedure;
+			})
+		};
+	}
+
+	return { isManageListEdit: false, newProcedures };
+}
 
 // ─── Field definitions ───────────────────────────────────────────────────────
 
@@ -169,6 +227,7 @@ function checkTypeChange(
 	newProc: Record<string, unknown>,
 	ctx: ProcedureAuditContext
 ): AuditEntry | null {
+	if (!('procedureTypeId' in newProc)) return null; // not edited
 	const oldTypeId = oldProc.procedureTypeId;
 	const newTypeId = newProc.procedureTypeId as string;
 
@@ -196,6 +255,7 @@ function checkStatusChange(
 	newProc: Record<string, unknown>,
 	ctx: ProcedureAuditContext
 ): AuditEntry | null {
+	if (!('procedureStatusId' in newProc)) return null; // not edited
 	const oldStatusId = oldProc.procedureStatusId;
 	const newStatusId = newProc.procedureStatusId as string;
 
@@ -217,7 +277,9 @@ function checkStatusChange(
 
 /**
  * Checks if the procedure inspector has changed.
- * Normalises the NOT_ALLOCATED constant to null to avoid false positives.
+ * Normalises empty/NOT_ALLOCATED values to null to avoid false positives.
+ * Compares relation presence as well as Entra ID, so removing an assigned user who has no
+ * Entra ID (possible for migrated data) is still audited.
  */
 function checkInspectorChange(
 	oldProc: ProcedureWithRelations,
@@ -225,11 +287,22 @@ function checkInspectorChange(
 	ctx: ProcedureAuditContext,
 	userDisplayNameMap: Map<string, string>
 ): AuditEntry | null {
-	const oldInspectorId = oldProc.Inspector?.idpUserId ?? null;
-	const rawNewInspectorId = (newProc.inspectorId as string | null) ?? null;
-	const newInspectorId = rawNewInspectorId === PROCEDURE_CONSTANTS.NOT_ALLOCATED ? null : rawNewInspectorId;
+	if (!('inspectorId' in newProc)) return null; // not edited
+	const oldInspector = oldProc.Inspector ?? null;
+	const oldInspectorId = oldInspector?.idpUserId ?? null;
+	const rawNewInspectorId = newProc.inspectorId as string | null | undefined;
+	const newInspectorId =
+		!rawNewInspectorId || rawNewInspectorId === PROCEDURE_CONSTANTS.NOT_ALLOCATED ? null : rawNewInspectorId;
 
-	if (oldInspectorId === newInspectorId) return null;
+	if (!oldInspector && newInspectorId === null) return null;
+	if (oldInspector && oldInspectorId !== null && oldInspectorId === newInspectorId) return null;
+
+	let oldValue: string = PROCEDURE_CONSTANTS.NOT_ALLOCATED_DISPLAY;
+	if (oldInspectorId) {
+		oldValue = userDisplayNameMap.get(oldInspectorId) ?? oldInspectorId;
+	} else if (oldInspector) {
+		oldValue = UNKNOWN_USER;
+	}
 
 	return {
 		caseId: ctx.caseId,
@@ -239,9 +312,7 @@ function checkInspectorChange(
 			procedureName: ctx.procedureName,
 			procedureStatus: ctx.procedureStatus,
 			fieldName: 'inspector',
-			oldValue: oldInspectorId
-				? (userDisplayNameMap.get(oldInspectorId) ?? oldInspectorId)
-				: PROCEDURE_CONSTANTS.NOT_ALLOCATED_DISPLAY,
+			oldValue,
 			newValue: newInspectorId
 				? (userDisplayNameMap.get(newInspectorId) ?? newInspectorId)
 				: PROCEDURE_CONSTANTS.NOT_ALLOCATED_DISPLAY
@@ -391,6 +462,14 @@ function checkVenueFieldChanges(
 	return entries;
 }
 
+/**
+ * Becoming a case-officer admin procedure always clears the inspector, so that removal is implied by
+ * the type change and is not audited separately.
+ */
+function shouldSkipInspectorAudit(oldProc: ProcedureWithRelations, newProc: Record<string, unknown>): boolean {
+	return isCaseOfficerAdminProcedure(newProc) && !isCaseOfficerAdminProcedure(oldProc);
+}
+
 // ─── Main resolver ───────────────────────────────────────────────────────────
 
 /**
@@ -415,17 +494,22 @@ export function resolveProcedureAudits(
 	caseId: string,
 	userId: string | undefined,
 	oldProcedures: ProcedureWithRelations[],
-	newProcedures: Record<string, unknown>[],
-	userDisplayNameMap: Map<string, string>
+	userDisplayNameMap: Map<string, string>,
+	{ newProcedures, isManageListEdit }: ProcedureAuditInput
 ): AuditEntry[] {
 	const entries: AuditEntry[] = [];
 
 	const oldById = new Map(oldProcedures.map((p) => [p.id, p]));
-	const newById = new Map(newProcedures.map((p) => [p.id as string, p]));
+	const newById = new Map(newProcedures.map((p) => [p.id, p]));
 
-	// Added — ID in new but not in old
-	for (const [id, newProc] of newById) {
-		if (!oldById.has(id)) {
+	if (isManageListEdit) {
+		// add and delete is only possible when editing the manage list
+
+		// Added — ID in new but not in old
+		for (const [id, newProc] of newById) {
+			if (oldById.has(id)) {
+				continue;
+			}
 			const typeName = PROCEDURES.find((p) => p.id === newProc.procedureTypeId)?.displayName ?? '-';
 			entries.push({
 				caseId,
@@ -434,11 +518,12 @@ export function resolveProcedureAudits(
 				metadata: { procedureName: typeName }
 			});
 		}
-	}
 
-	// Deleted — ID in old but not in new
-	for (const [id, oldProc] of oldById) {
-		if (!newById.has(id)) {
+		// Deleted — ID in old but not in new
+		for (const [id, oldProc] of oldById) {
+			if (newById.has(id)) {
+				continue;
+			}
 			const typeName = oldProc.ProcedureType?.displayName ?? '-';
 			entries.push({
 				caseId,
@@ -465,7 +550,9 @@ export function resolveProcedureAudits(
 		const headerChecks = [
 			checkTypeChange(oldProc, newProc, ctx),
 			checkStatusChange(oldProc, newProc, ctx),
-			checkInspectorChange(oldProc, newProc, ctx, userDisplayNameMap)
+			shouldSkipInspectorAudit(oldProc, newProc)
+				? null
+				: checkInspectorChange(oldProc, newProc, ctx, userDisplayNameMap)
 		];
 
 		for (const entry of headerChecks) {

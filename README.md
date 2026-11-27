@@ -6,7 +6,7 @@ This repository is for the PEAS / RoW (Horizon Replacement) service, and include
 ### Case Management (Edit Case)
 - [Case View (Edit Case)](apps/manage/src/app/views/cases/view/README.md) — loading, saving, session management, and audit trail for the case details page
 ### Procedures & Outcomes
-- [Procedure Section Builder](packages/lib/util/dynamic-sections/procedures-section/README.md) — dynamic procedure management, inspector allocation, and type-specific fields
+- [Procedures](apps/manage/src/app/views/cases/view/PROCEDURES.md) — dynamic procedure management, inspector allocation, and type-specific fields
 - [Dynamic Section Builder](packages/lib/util/dynamic-sections/README.md) — base class for generating summary sections from manage list data
 - [Outcome Section Builder](packages/lib/util/dynamic-sections/outcomes-section/README.md) — outcome-specific section generation with originator formatting
 ### File Management

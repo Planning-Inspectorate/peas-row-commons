@@ -336,7 +336,7 @@ describe('mappers', () => {
 						ProcedureStatus: { displayName: 'Active' },
 						Inspector: null,
 						SiteVisitType: null,
-						AdminProcedureType: { displayName: 'Case officer' },
+						AdminProcedureType: null,
 						siteVisitDate: null,
 						HearingFormat: null,
 						InquiryFormat: null,
@@ -354,7 +354,34 @@ describe('mappers', () => {
 
 			// Mapper now uses the website's wording: "Not allocated yet"
 			assert.strictEqual(result.procedures[0].inspector, 'Not allocated yet');
-			assert.strictEqual(result.procedures[0].adminType, 'Case officer');
+			assert.strictEqual(result.procedures[0].adminType, undefined);
+		});
+
+		it('should hide a stale admin procedure type for non-admin procedures', () => {
+			const caseData = createBaseCaseData({
+				Procedures: [
+					{
+						ProcedureType: { id: PROCEDURES_ID.HEARING, displayName: 'Hearing' },
+						ProcedureStatus: { displayName: 'Active' },
+						Inspector: null,
+						SiteVisitType: null,
+						AdminProcedureType: { displayName: 'Case officer' },
+						siteVisitDate: null,
+						HearingFormat: null,
+						InquiryFormat: null,
+						ConferenceFormat: null,
+						PreInquiryMeetingFormat: null,
+						InquiryOrConference: null,
+						HearingVenue: null,
+						InquiryVenue: null,
+						ConferenceVenue: null
+					}
+				]
+			});
+
+			const result = mapCaseDetailsData(caseData as any, undefined, new Map());
+
+			assert.strictEqual(result.procedures[0].adminType, undefined);
 		});
 
 		it('should hide inspector field for Admin In House procedures', () => {

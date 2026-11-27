@@ -4,7 +4,7 @@
 ## Architecture
 - Built on the `dynamic-forms` library's Journey/Section/Question pattern.
 - The journey is defined in `journey.ts` with sections: Overview, Case details, Team, Timetable, Key contacts, Outcome overview, Additional resource locations, and Invoicing.
-- Dynamic sections (Procedures, Outcomes) are generated at runtime by `ProcedureSectionBuilder` and `OutcomeSectionBuilder` and spliced into the journey between the static sections.
+- Dynamic sections are generated at runtime by `getDynamicProcedureSections` for [procedures](PROCEDURES.md) and `OutcomeSectionBuilder` for outcomes, and spliced into the journey between the static sections.
 
 ## Data Flow
 ### Loading (controller.ts)
@@ -15,12 +15,13 @@
 
 ### Saving (update-case.ts)
 1. `buildUpdateCase` receives the raw answers from the form submission.
-2. For procedure detail fields, flattened keys (e.g. `procedureDetails_0_hearingClosedDate`) are remapped back into the `procedureDetails` array using `remapFlattenedFieldsToArray`.
+2. For procedure detail fields, dynamic-section answers are wrapped into the `procedureDetails` array with the procedure ID.
 3. `mapCasePayload` routes each field to the correct handler — scalar fields go through the generic `parseDataToCorrectTable` path, while complex fields (procedures, outcomes, contacts, etc.) are handled by dedicated functions.
 4. The case is updated within a transaction. The previous state is captured for audit comparison.
 
 ## Key Handlers in update-case.ts
-- **`handleProcedureDetails`** — upserts procedures using frontend-generated GUIDs. Relation fields (formats, inspector) use connect/disconnect on update and connect-only on create. All dates use `toDateOrNull` to handle empty form submissions.
+- **`handleProcedureUpdates`** — applies create/update/delete operations for manage-list edits and targeted updates for Dynamic Section edits. Relation fields use connect/disconnect, and dates use `toDateOrNull` to handle empty form submissions. Manage-list edits are first normalised by `normaliseManageListProcedureEdits` (update-procedures.ts), so the saved and audited procedures are the same. Normalising also drops any stale `adminProcedureType` answer from procedures that are not admin-in-house, which clears it on save without an audit entry.
+- Migrated inspector assignments without an Entra ID display as "Not allocated yet". Saving the manage list with this selection clears the assignment and audits the removal, just like other inspector assignments. Case-officer admin procedures also clear any retained inspector on save; when switching to this procedure type, the removal is implied by the type change and is not audited separately.
 - **`handleOutcomes`** — similar upsert pattern for case decisions.
 - **`handleContacts`** — shared handler for applicants, objectors, and generic contacts via `CONTACT_MAPPINGS`.
 - **`handleAbeyancePeriod`** — maps the composite date period field to individual start/end dates.
@@ -28,8 +29,8 @@
 
 ## Remove and Save
 - Optional fields have a "Remove and save" button that clears the value.
-- The remove route (`/:section/:question/remove`) must be registered above the generic edit route to avoid being shadowed by Express route matching.
-- `clearAnswer` runs before the flattened field remap so nulled values flow through correctly.
+- The remove route (`/:section/:question/remove`) invokes the update handler with `clearAnswer` enabled.
+- `clearAnswer` runs before dynamic-section answers are wrapped so nulled values flow through correctly.
 
 ## Question Definitions (question-utils.ts)
 - Questions are grouped by section: `DATE_QUESTIONS`, `CASE_DETAILS_QUESTIONS`, `OVERVIEW_QUESTIONS`, `TEAM_QUESTIONS`, `OUTCOME_QUESTIONS`, `PROCEDURE_QUESTIONS`, `KEY_CONTACTS_QUESTIONS`, etc.

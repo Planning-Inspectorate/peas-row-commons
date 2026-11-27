@@ -9,4 +9,7 @@
 
 ## Extending
 - Override `getSectionTitle()` to customise section headings (default is "Item 1", "Item 2", etc.).
-- Override `buildSection()` for more control over which fields appear and how they behave — see `ProcedureSectionBuilder` and `OutcomeSectionBuilder` for examples.
+- Override `buildSection()` for more control over which fields appear and how they behave — see `OutcomeSectionBuilder` for an example.
+
+Procedure sections use dynamic-forms `DynamicSection` directly rather than this builder; see
+[Procedures](../../../../apps/manage/src/app/views/cases/view/PROCEDURES.md).
