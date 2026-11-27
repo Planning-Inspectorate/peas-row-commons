@@ -5,6 +5,7 @@ export { CASEWORK_AREAS } from './casework-areas.ts';
 export { CONTACT_TYPES } from './contact-types.ts';
 export { DECISION_MAKER_TYPES } from './decision-maker-types.ts';
 export { DECISION_TYPES } from './decision-type.ts';
+export { DOCUMENT_SCAN_STATUSES } from './document-scan-status.ts';
 export { INQUIRY_OR_CONFERENCES } from './inquiry-or-conference.ts';
 export { INSPECTOR_BANDS } from './inspector-bands.ts';
 export { INVOICE_STATUSES } from './invoices.ts';

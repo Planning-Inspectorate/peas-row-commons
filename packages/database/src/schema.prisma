@@ -318,22 +318,31 @@ model CasePriority {
 }
 
 model Document {
-  id            String         @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
-  fileName      String
-  uploadedDate  DateTime       @default(now())
-  size          BigInt         @default(0)
-  blobName      String
-  mimeType      String         @default("application/octet-stream")
-  deletedAt     DateTime?
-  caseId        String         @db.UniqueIdentifier
-  Case          Case           @relation(fields: [caseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  folderId      String         @db.UniqueIdentifier
-  Folder        Folder         @relation(fields: [folderId], references: [id], onDelete: Cascade)
-  UserDocuments UserDocument[]
+  id                 String             @id @default(dbgenerated("newid()")) @db.UniqueIdentifier
+  fileName           String
+  uploadedDate       DateTime           @default(now())
+  size               BigInt             @default(0)
+  blobName           String
+  mimeType           String             @default("application/octet-stream")
+  deletedAt          DateTime?
+  scanStatus         String             @default("pending")
+  DocumentScanStatus DocumentScanStatus @relation(fields: [scanStatus], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  caseId             String             @db.UniqueIdentifier
+  Case               Case               @relation(fields: [caseId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  folderId           String             @db.UniqueIdentifier
+  Folder             Folder             @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  UserDocuments      UserDocument[]
 
   // Note: A covering index with INCLUDE columns exists via custom migration
   // See migration: add_indexing_to_document_casenotes_and_folders
   @@index([deletedAt, folderId, caseId], map: "Document_deletedAt_folderId_caseId_idx")
+}
+
+model DocumentScanStatus {
+  /// Unique machine-readable scan status.
+  id          String     @id
+  displayName String?
+  Document    Document[]
 }
 
 /// Indicates a document that has been uploaded

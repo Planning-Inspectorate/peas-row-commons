@@ -11,6 +11,7 @@ import {
 	CONTACT_TYPES,
 	DECISION_MAKER_TYPES,
 	DECISION_TYPES,
+	DOCUMENT_SCAN_STATUSES,
 	INQUIRY_OR_CONFERENCES,
 	INSPECTOR_BANDS,
 	INVOICE_STATUSES,
@@ -65,6 +66,10 @@ export async function seedStaticData(dbClient: PrismaClient) {
 
 	for (const input of CASE_STATUSES) {
 		await upsertReferenceData({ delegate: dbClient.caseStatus, input });
+	}
+
+	for (const input of DOCUMENT_SCAN_STATUSES) {
+		await upsertReferenceData({ delegate: dbClient.documentScanStatus, input });
 	}
 
 	for (const input of CASEWORK_AREAS) {
