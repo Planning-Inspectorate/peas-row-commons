@@ -50,16 +50,13 @@
         }), rowItems) %}
 
         {% set statusHtml %}
-            {% if doc.isRead %}
-                {{ govukTag({ text: "Read", classes: "govuk-tag--green govuk-!-margin-bottom-3", attributes: { "data-cy": "status-read-" + doc.id } }) }}
-            {% else %}
-                {{ govukTag({ text: "Unread", classes: "govuk-tag--blue govuk-!-margin-bottom-3", attributes: { "data-cy": "status-unread-" + doc.id } }) }}
-            {% endif %}
-            
-            {% if doc.isFlagged %}
-                <br>
-                {{ govukTag({ text: "Flagged", classes: "govuk-tag--orange", attributes: { "data-cy": "status-flagged-" + doc.id } }) }}
-            {% endif %}
+            <ul class="govuk-list govuk-!-margin-bottom-0">
+                {% for tag in doc.statusTags %}
+                    <li{% if not loop.last %} class="govuk-!-margin-bottom-3"{% endif %}>
+                        {{ govukTag(tag) }}
+                    </li>
+                {% endfor %}
+            </ul>
         {% endset %}
 
         {% set rowItems = (rowItems.push({ html: statusHtml }), rowItems) %}

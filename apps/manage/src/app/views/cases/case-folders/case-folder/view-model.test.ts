@@ -1,3 +1,4 @@
+import { CLOSED_STATUSES } from '@pins/peas-row-commons-lib/constants/statuses.ts';
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
@@ -140,5 +141,66 @@ describe('createDocumentsViewModel', () => {
 
 		assert.strictEqual(result[2].isRead, true);
 		assert.strictEqual(result[2].isFlagged, true);
+	});
+
+	it('should build status tags for each read and flagged combination', () => {
+		const docs = [
+			createMockDoc({ id: '1', UserDocuments: [{ readStatus: false, flaggedStatus: false }] }),
+			createMockDoc({ id: '2', UserDocuments: [{ readStatus: true, flaggedStatus: false }] }),
+			createMockDoc({ id: '3', UserDocuments: [{ readStatus: false, flaggedStatus: true }] }),
+			createMockDoc({ id: '4', UserDocuments: [{ readStatus: true, flaggedStatus: true }] })
+		];
+
+		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
+		const unread = (id: string) => ({
+			text: 'Unread',
+			classes: 'govuk-tag--blue',
+			attributes: { 'data-cy': `status-unread-${id}` }
+		});
+		const read = (id: string) => ({
+			text: 'Read',
+			classes: 'govuk-tag--green',
+			attributes: { 'data-cy': `status-read-${id}` }
+		});
+		const flagged = (id: string) => ({
+			text: 'Flagged',
+			classes: 'govuk-tag--orange',
+			attributes: { 'data-cy': `status-flagged-${id}` }
+		});
+
+		assert.deepStrictEqual(result[0].statusTags, [unread('1')]);
+		assert.deepStrictEqual(result[1].statusTags, [read('2')]);
+		assert.deepStrictEqual(result[2].statusTags, [unread('3'), flagged('3')]);
+		assert.deepStrictEqual(result[3].statusTags, [read('4'), flagged('4')]);
+	});
+
+	it('should build tags using default status when no user document exists', () => {
+		const docs = [createMockDoc({ id: '1', UserDocuments: [] })];
+		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
+
+		assert.deepStrictEqual(result[0].statusTags, [
+			{
+				text: 'Unread',
+				classes: 'govuk-tag--blue',
+				attributes: { 'data-cy': 'status-unread-1' }
+			}
+		]);
+	});
+
+	it('should use the read default for closed migrated cases', () => {
+		const docs = [createMockDoc({ id: '1', UserDocuments: [] })];
+		const result = createDocumentsViewModel(
+			docs,
+			{ ...mockCase, legacyCaseId: 'legacy-1', statusId: CLOSED_STATUSES[0] },
+			PREVIEW_MIME_TYPES
+		);
+
+		assert.deepStrictEqual(result[0].statusTags, [
+			{
+				text: 'Read',
+				classes: 'govuk-tag--green',
+				attributes: { 'data-cy': 'status-read-1' }
+			}
+		]);
 	});
 });

@@ -6,6 +6,12 @@ import { determineDefaultStatuses } from '@pins/peas-row-commons-lib/util/user-d
 import { formatInTimeZone } from 'date-fns-tz';
 import type { PREVIEW_MIME_TYPES } from '../../upload/constants.ts';
 
+interface DocumentStatusTag {
+	text: string;
+	classes: string;
+	attributes: { 'data-cy': string };
+}
+
 export interface DocumentViewModel {
 	id: string;
 	fileName: string;
@@ -22,6 +28,7 @@ export interface DocumentViewModel {
 	};
 	isRead: boolean;
 	isFlagged: boolean;
+	statusTags: DocumentStatusTag[];
 }
 
 export type DocumentWithFolder = Prisma.DocumentGetPayload<{
@@ -59,6 +66,22 @@ export function createDocumentsViewModel(
 			statusId: caseRow.statusId,
 			closedStatuses: CLOSED_STATUSES
 		});
+		const isRead = userState ? userState.readStatus : defaultIsRead;
+		const isFlagged = userState ? userState.flaggedStatus : defaultIsFlagged;
+		const statusTags: DocumentStatusTag[] = [
+			{
+				text: isRead ? 'Read' : 'Unread',
+				classes: `govuk-tag--${isRead ? 'green' : 'blue'}`,
+				attributes: { 'data-cy': `status-${isRead ? 'read' : 'unread'}-${doc.id}` }
+			}
+		];
+		if (isFlagged) {
+			statusTags.push({
+				text: 'Flagged',
+				classes: 'govuk-tag--orange',
+				attributes: { 'data-cy': `status-flagged-${doc.id}` }
+			});
+		}
 
 		return {
 			id: doc.id,
@@ -75,8 +98,9 @@ export function createDocumentsViewModel(
 				id: doc.Folder.id,
 				displayName: stringToKebab(doc.Folder.displayName)
 			},
-			isRead: userState ? userState.readStatus : defaultIsRead,
-			isFlagged: userState ? userState.flaggedStatus : defaultIsFlagged
+			isRead,
+			isFlagged,
+			statusTags
 		};
 	});
 }
