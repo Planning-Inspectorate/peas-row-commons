@@ -1,4 +1,5 @@
 import { ManageService } from '#service';
+import { readSessionData } from '@planning-inspectorate/core/util';
 import assert from 'node:assert/strict';
 import { beforeEach, describe, it, mock } from 'node:test';
 import { buildDownloadDocument } from './controller.ts';
@@ -34,9 +35,12 @@ describe('buildDownloadDocument', () => {
 	const mockRes = () => {
 		const res = {
 			setHeader: mock.fn(),
+			redirect: mock.fn(),
 			destroy: mock.fn(),
 			on: mock.fn(),
-			emit: mock.fn()
+			emit: mock.fn(),
+			status: mock.fn(() => res),
+			render: mock.fn()
 		} as any;
 		return res;
 	};
@@ -72,6 +76,7 @@ describe('buildDownloadDocument', () => {
 		mockArchiveInstance.append.mock.resetCalls();
 		mockArchiveInstance.finalize.mock.resetCalls();
 		service.createZipArchive.mock.resetCalls();
+		service.audit.record.mock.resetCalls();
 	});
 
 	describe('Validation', () => {
@@ -83,6 +88,227 @@ describe('buildDownloadDocument', () => {
 				message: 'documentId param required for single downloads'
 			});
 		});
+
+		for (const scanStatus of ['fail', 'pending', 'not-a-real-status', undefined, null]) {
+			it(`should not download a file whose virus scan status is "${scanStatus}"`, async () => {
+				mockDb.document.findMany.mock.mockImplementation(() =>
+					Promise.resolve([
+						{
+							id: 'doc-123',
+							blobName: 'container/blob-uuid',
+							fileName: 'file-name.ext',
+							caseId: 'case-123',
+							folderId: 'folder-1',
+							Folder: { displayName: 'My Folder' },
+							scanStatus
+						}
+					])
+				);
+				mockBlobStore.downloadBlob.mock.mockImplementation(() =>
+					Promise.resolve({ readableStreamBody: mockBlobStream })
+				);
+
+				const req = mockReq({
+					params: {},
+					body: {
+						selectedFiles: ['doc-123'],
+						caseId: 'case-123',
+						returnUrl: '/cases/case-123/folder'
+					},
+					session: {}
+				});
+				const res = mockRes();
+
+				await buildDownloadDocument(service as any)(req, res);
+
+				assert.strictEqual(mockBlobStore.downloadBlob.mock.callCount(), 0);
+			});
+		}
+
+		it('should redirect with an error listing failed files and block the entire download', async () => {
+			mockDb.document.findMany.mock.mockImplementation(() =>
+				Promise.resolve([
+					{
+						id: 'doc-1',
+						caseId: 'case-123',
+						folderId: 'folder-1',
+						Folder: { displayName: 'My Folder' },
+						blobName: 'container/blob-uuid',
+						fileName: 'virus-file-1.ext',
+						scanStatus: 'fail'
+					},
+					{
+						id: 'doc-2',
+						caseId: 'case-123',
+						folderId: 'folder-1',
+						blobName: 'container/blob-uuid',
+						fileName: 'virus-file-2.ext',
+						scanStatus: 'fail'
+					},
+					{
+						id: 'doc-3',
+						caseId: 'case-123',
+						folderId: 'folder-1',
+						blobName: 'container/blob-uuid',
+						fileName: 'virus-file-3.ext',
+						scanStatus: 'pending'
+					},
+					{
+						id: 'doc-4',
+						caseId: 'case-123',
+						folderId: 'folder-1',
+						blobName: 'container/blob-uuid',
+						fileName: 'virus-file-bad-data.ext',
+						scanStatus: 'not-a-real-status'
+					},
+					{
+						id: 'doc-5',
+						caseId: 'case-123',
+						folderId: 'folder-1',
+						blobName: 'container/blob-uuid',
+						fileName: 'virus-file-undefined.ext',
+						scanStatus: undefined
+					},
+					{
+						id: 'doc-6',
+						caseId: 'case-123',
+						folderId: 'folder-1',
+						blobName: 'container/blob-uuid',
+						fileName: 'file-name.ext',
+						scanStatus: 'pass'
+					}
+				])
+			);
+
+			const req = mockReq({
+				params: {},
+				body: {
+					selectedFiles: ['doc-1', 'doc-2', 'doc-3', 'doc-4', 'doc-5', 'doc-6'],
+					caseId: 'wrong-case',
+					returnUrl: 'https://example.com'
+				},
+				session: {}
+			});
+			const res = mockRes();
+
+			await buildDownloadDocument(service as any)(req, res);
+
+			assert.deepStrictEqual(mockDb.document.findMany.mock.calls[0].arguments[0].where.id.in, [
+				'doc-1',
+				'doc-2',
+				'doc-3',
+				'doc-4',
+				'doc-5',
+				'doc-6'
+			]);
+			assert.deepStrictEqual(readSessionData(req, 'case-123', 'filesErrors', [], 'folder'), [
+				{
+					html:
+						'<p class="govuk-body">Scan failed for files in this folder:</p>' +
+						'<ul class="govuk-list govuk-list--bullet"><li>virus-file-1.ext</li><li>virus-file-2.ext</li><li>virus-file-3.ext</li><li>virus-file-bad-data.ext</li><li>virus-file-undefined.ext</li></ul>' +
+						'<p class="govuk-body">These files cannot be downloaded.</p>',
+					href: '#'
+				}
+			]);
+			assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/cases/case-123/case-folders/folder-1/my-folder');
+			assert.strictEqual(mockBlobStore.downloadBlob.mock.callCount(), 0);
+			assert.strictEqual(service.createZipArchive.mock.callCount(), 0);
+			assert.strictEqual(res.setHeader.mock.callCount(), 0);
+			assert.strictEqual(service.audit.record.mock.callCount(), 0);
+		});
+
+		it('should redirect direct links to the document folder with a scan error', async () => {
+			mockDb.document.findMany.mock.mockImplementation(() =>
+				Promise.resolve([
+					{
+						id: 'doc-123',
+						caseId: 'case-123',
+						folderId: 'folder-1',
+						Folder: { displayName: 'My Folder' },
+						blobName: 'container/blob-uuid',
+						fileName: 'virus-file.ext',
+						scanStatus: 'fail'
+					}
+				])
+			);
+
+			// No caseId or returnUrl in the body
+			const req = mockReq({ session: {} });
+			const res = mockRes();
+
+			await buildDownloadDocument(service as any)(req, res);
+
+			assert.strictEqual(res.redirect.mock.calls[0].arguments[0], '/cases/case-123/case-folders/folder-1/my-folder');
+			assert.deepStrictEqual(readSessionData(req, 'case-123', 'filesErrors', [], 'folder'), [
+				{
+					html:
+						'<p class="govuk-body">Scan failed for files in this folder:</p>' +
+						'<ul class="govuk-list govuk-list--bullet"><li>virus-file.ext</li></ul>' +
+						'<p class="govuk-body">These files cannot be downloaded.</p>',
+					href: '#'
+				}
+			]);
+
+			assert.strictEqual(mockBlobStore.downloadBlob.mock.callCount(), 0);
+			assert.strictEqual(res.setHeader.mock.callCount(), 0);
+			assert.strictEqual(service.audit.record.mock.callCount(), 0);
+		});
+
+		it('should escape HTML characters in filenames listed in the scan error', async () => {
+			mockDb.document.findMany.mock.mockImplementation(() =>
+				Promise.resolve([
+					{
+						id: 'doc-123',
+						caseId: 'case-123',
+						folderId: 'folder-1',
+						Folder: { displayName: 'My Folder' },
+						blobName: 'container/blob-uuid',
+						fileName: 'file<b>&.pdf',
+						scanStatus: 'fail'
+					}
+				])
+			);
+
+			const req = mockReq({
+				body: { caseId: 'case-123', returnUrl: '/cases/case-123/folder' },
+				session: {}
+			});
+			const res = mockRes();
+
+			await buildDownloadDocument(service as any)(req, res);
+
+			assert.deepStrictEqual(readSessionData(req, 'case-123', 'filesErrors', [], 'folder'), [
+				{
+					html:
+						'<p class="govuk-body">Scan failed for files in this folder:</p>' +
+						'<ul class="govuk-list govuk-list--bullet"><li>file&lt;b&gt;&amp;.pdf</li></ul>' +
+						'<p class="govuk-body">These files cannot be downloaded.</p>',
+					href: '#'
+				}
+			]);
+		});
+
+		for (const secondDocument of [
+			{ caseId: 'other-case', folderId: 'folder-1' },
+			{ caseId: 'case-123', folderId: 'other-folder' }
+		]) {
+			it(`should reject documents from different cases or folders: ${JSON.stringify(secondDocument)}`, async () => {
+				mockDb.document.findMany.mock.mockImplementation(() =>
+					Promise.resolve([
+						{ id: 'doc-1', caseId: 'case-123', folderId: 'folder-1', scanStatus: 'pass' },
+						{ id: 'doc-2', ...secondDocument, scanStatus: 'fail' }
+					])
+				);
+				const req = mockReq({ params: {}, body: { selectedFiles: ['doc-1', 'doc-2'] }, session: {} });
+				const res = mockRes();
+
+				await assert.rejects(() => buildDownloadDocument(service as any)(req, res), {
+					message: 'Selected documents must belong to the same case and folder'
+				});
+				assert.strictEqual(res.redirect.mock.callCount(), 0);
+				assert.strictEqual(mockBlobStore.downloadBlob.mock.callCount(), 0);
+			});
+		}
 	});
 
 	describe('Metadata Retrieval (Stage 1)', () => {
@@ -114,7 +340,8 @@ describe('buildDownloadDocument', () => {
 		const validDocument = {
 			id: 'doc-123',
 			blobName: 'container/blob-uuid',
-			fileName: 'test-file.pdf'
+			fileName: 'test-file.pdf',
+			scanStatus: 'pass'
 		};
 
 		const setupSuccessPath = () => {
@@ -202,7 +429,7 @@ describe('buildDownloadDocument', () => {
 	});
 
 	describe('Stream Error Handling', () => {
-		const validDocument = { id: 'doc-123', blobName: 'blob', fileName: 'file.pdf' };
+		const validDocument = { id: 'doc-123', blobName: 'blob', fileName: 'file.pdf', scanStatus: 'pass' };
 
 		beforeEach(() => {
 			mockDb.document.findMany.mock.mockImplementation(() => Promise.resolve([validDocument]));
@@ -296,7 +523,8 @@ describe('buildDownloadDocument', () => {
 						id: 'doc-123',
 						caseId: 'case-1',
 						blobName: 'container/blob-uuid',
-						fileName: 'report.pdf'
+						fileName: 'report.pdf',
+						scanStatus: 'pass'
 					}
 				])
 			);
@@ -344,15 +572,19 @@ describe('buildDownloadDocument', () => {
 			{
 				id: 'doc-1',
 				caseId: 'case-1',
+				folderId: 'folder-1',
 				blobName: 'blob-uuid-1',
 				fileName: 'test-1.pdf',
+				scanStatus: 'pass',
 				Case: { reference: 'test/123' }
 			},
 			{
 				id: 'doc-2',
 				caseId: 'case-1',
+				folderId: 'folder-1',
 				blobName: 'blob-uuid-2',
 				fileName: 'test-2.jpg',
+				scanStatus: 'pass',
 				Case: { reference: 'test/123/123' }
 			}
 		];

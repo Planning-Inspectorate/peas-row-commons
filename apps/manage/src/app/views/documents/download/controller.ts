@@ -2,7 +2,7 @@ import type { ManageService, ZipArchiveFactory } from '#service';
 import type { Document, PrismaClient } from '@pins/peas-row-commons-database/src/client/client.ts';
 import type { BlobStorageClient } from '@pins/peas-row-commons-lib/blob-store/blob-store-client.ts';
 import { generateUniqueFilename } from '@pins/peas-row-commons-lib/util/files.ts';
-import { stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
+import { escapeHtml, stringToKebab } from '@pins/peas-row-commons-lib/util/strings.ts';
 import type { AsyncRequestHandler } from '@planning-inspectorate/core/util';
 import { addSessionData, wrapPrismaError } from '@planning-inspectorate/core/util';
 import type { Request, Response } from 'express';
@@ -65,6 +65,37 @@ export function buildDownloadDocument(service: ManageService): AsyncRequestHandl
 
 		if (!documents || documents.length === 0) return;
 
+		const { caseId, folderId } = documents[0];
+		if (documents.some((doc) => doc.caseId !== caseId || doc.folderId !== folderId)) {
+			throw new Error('Selected documents must belong to the same case and folder');
+		}
+
+		if (documents.some((doc) => doc.scanStatus !== 'pass')) {
+			const failingFileNames = documents.filter((doc) => doc.scanStatus !== 'pass').map((doc) => doc.fileName);
+			const failingFileNamesHtml = failingFileNames.map((name) => `<li>${escapeHtml(name)}</li>`).join('');
+			const folderName = encodeURIComponent(stringToKebab(documents[0].Folder.displayName));
+			const returnUrl = `/cases/${encodeURIComponent(caseId)}/case-folders/${encodeURIComponent(folderId)}/${folderName}`;
+
+			addSessionData(
+				req,
+				caseId,
+				{
+					filesErrors: [
+						{
+							html:
+								'<p class="govuk-body">Scan failed for files in this folder:</p>' +
+								`<ul class="govuk-list govuk-list--bullet">${failingFileNamesHtml}</ul>` +
+								'<p class="govuk-body">These files cannot be downloaded.</p>',
+							href: '#'
+						}
+					]
+				},
+				'folder'
+			);
+
+			return res.redirect(returnUrl);
+		}
+
 		let zipFileName = '';
 
 		if (documents.length === 1) {
@@ -115,7 +146,8 @@ async function fetchDocumentsMetadata(db: PrismaClient, documentIds: string[], l
 					select: {
 						reference: true
 					}
-				}
+				},
+				Folder: { select: { displayName: true } }
 			}
 		});
 
