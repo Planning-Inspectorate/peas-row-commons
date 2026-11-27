@@ -16,12 +16,24 @@ describe('createDocumentsViewModel', () => {
 			folderId: 'folder-1',
 			mimeType: 'application/pdf',
 			Folder: { id: 'folder-1', displayName: 'My Folder' },
+			scanStatus: 'pending',
 			...overrides
 		}) as any;
 
 	const mockCase = {
 		id: 'case-1'
 	} as any;
+
+	const statusTag = (text: string, colour: string, dataCy: string) => ({
+		text,
+		classes: `govuk-tag--${colour}`,
+		attributes: { 'data-cy': dataCy }
+	});
+	const unreadTag = (id: string) => statusTag('Unread', 'blue', `status-unread-${id}`);
+	const readTag = (id: string) => statusTag('Read', 'green', `status-read-${id}`);
+	const flaggedTag = (id: string) => statusTag('Flagged', 'orange', `status-flagged-${id}`);
+	const scanningTag = (id: string) => statusTag('Virus scanning', 'yellow', `status-scanning-${id}`);
+	const virusFoundTag = (id: string) => statusTag('Virus found', 'red', `status-virus-found-${id}`);
 
 	it('should map Prisma documents to view models correctly', () => {
 		const inputDocs = [
@@ -145,62 +157,80 @@ describe('createDocumentsViewModel', () => {
 
 	it('should build status tags for each read and flagged combination', () => {
 		const docs = [
-			createMockDoc({ id: '1', UserDocuments: [{ readStatus: false, flaggedStatus: false }] }),
-			createMockDoc({ id: '2', UserDocuments: [{ readStatus: true, flaggedStatus: false }] }),
-			createMockDoc({ id: '3', UserDocuments: [{ readStatus: false, flaggedStatus: true }] }),
-			createMockDoc({ id: '4', UserDocuments: [{ readStatus: true, flaggedStatus: true }] })
+			createMockDoc({ id: '1', UserDocuments: [{ readStatus: false, flaggedStatus: false }], scanStatus: 'pass' }),
+			createMockDoc({ id: '2', UserDocuments: [{ readStatus: true, flaggedStatus: false }], scanStatus: 'pass' }),
+			createMockDoc({ id: '3', UserDocuments: [{ readStatus: false, flaggedStatus: true }], scanStatus: 'pass' }),
+			createMockDoc({ id: '4', UserDocuments: [{ readStatus: true, flaggedStatus: true }], scanStatus: 'pass' })
 		];
 
 		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
-		const unread = (id: string) => ({
-			text: 'Unread',
-			classes: 'govuk-tag--blue',
-			attributes: { 'data-cy': `status-unread-${id}` }
-		});
-		const read = (id: string) => ({
-			text: 'Read',
-			classes: 'govuk-tag--green',
-			attributes: { 'data-cy': `status-read-${id}` }
-		});
-		const flagged = (id: string) => ({
-			text: 'Flagged',
-			classes: 'govuk-tag--orange',
-			attributes: { 'data-cy': `status-flagged-${id}` }
-		});
 
-		assert.deepStrictEqual(result[0].statusTags, [unread('1')]);
-		assert.deepStrictEqual(result[1].statusTags, [read('2')]);
-		assert.deepStrictEqual(result[2].statusTags, [unread('3'), flagged('3')]);
-		assert.deepStrictEqual(result[3].statusTags, [read('4'), flagged('4')]);
+		assert.deepStrictEqual(result[0].statusTags, [unreadTag('1')]);
+		assert.deepStrictEqual(result[1].statusTags, [readTag('2')]);
+		assert.deepStrictEqual(result[2].statusTags, [unreadTag('3'), flaggedTag('3')]);
+		assert.deepStrictEqual(result[3].statusTags, [readTag('4'), flaggedTag('4')]);
+	});
+
+	it('should build a virus scanning tag when the document scan status is pending', () => {
+		const docs = [createMockDoc({ id: '1', scanStatus: 'pending' })];
+		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
+		assert.deepStrictEqual(result[0].statusTags, [scanningTag('1')]);
+	});
+
+	it('should build an unread tag when virus scanning is successful', () => {
+		const docs = [createMockDoc({ id: '1', scanStatus: 'pass' })];
+		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
+		assert.deepStrictEqual(result[0].statusTags, [unreadTag('1')]);
+	});
+
+	it('should build a virus found tag when virus scanning fails', () => {
+		const docs = [createMockDoc({ id: '1', scanStatus: 'fail' })];
+		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
+		assert.deepStrictEqual(result[0].statusTags, [virusFoundTag('1')]);
+	});
+
+	it('should append flagged after the scan tag regardless of read status', () => {
+		const docs = [
+			createMockDoc({ id: '1', scanStatus: 'pending', UserDocuments: [{ readStatus: true, flaggedStatus: true }] }),
+			createMockDoc({ id: '2', scanStatus: 'pending', UserDocuments: [{ readStatus: false, flaggedStatus: true }] }),
+			createMockDoc({ id: '3', scanStatus: 'fail', UserDocuments: [{ readStatus: true, flaggedStatus: true }] }),
+			createMockDoc({ id: '4', scanStatus: 'fail', UserDocuments: [{ readStatus: false, flaggedStatus: true }] })
+		];
+		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
+		const expectedScanTags = [scanningTag('1'), scanningTag('2'), virusFoundTag('3'), virusFoundTag('4')];
+
+		for (const [index, doc] of docs.entries()) {
+			assert.deepStrictEqual(result[index].statusTags, [expectedScanTags[index], flaggedTag(doc.id)]);
+		}
+	});
+
+	it('should build a virus scanning tag when no scan status is passed', () => {
+		const docs = [createMockDoc({ id: '1', scanStatus: undefined })];
+		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
+		assert.deepStrictEqual(result[0].statusTags, [scanningTag('1')]);
+	});
+
+	it('should build a virus scanning tag when bad scan status is passed', () => {
+		const docs = [createMockDoc({ id: '1', scanStatus: 'not-a-real-status' })];
+		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
+		assert.deepStrictEqual(result[0].statusTags, [scanningTag('1')]);
 	});
 
 	it('should build tags using default status when no user document exists', () => {
-		const docs = [createMockDoc({ id: '1', UserDocuments: [] })];
+		const docs = [createMockDoc({ id: '1', UserDocuments: [], scanStatus: 'pass' })];
 		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
 
-		assert.deepStrictEqual(result[0].statusTags, [
-			{
-				text: 'Unread',
-				classes: 'govuk-tag--blue',
-				attributes: { 'data-cy': 'status-unread-1' }
-			}
-		]);
+		assert.deepStrictEqual(result[0].statusTags, [unreadTag('1')]);
 	});
 
 	it('should use the read default for closed migrated cases', () => {
-		const docs = [createMockDoc({ id: '1', UserDocuments: [] })];
+		const docs = [createMockDoc({ id: '1', UserDocuments: [], scanStatus: 'pass' })];
 		const result = createDocumentsViewModel(
 			docs,
 			{ ...mockCase, legacyCaseId: 'legacy-1', statusId: CLOSED_STATUSES[0] },
 			PREVIEW_MIME_TYPES
 		);
 
-		assert.deepStrictEqual(result[0].statusTags, [
-			{
-				text: 'Read',
-				classes: 'govuk-tag--green',
-				attributes: { 'data-cy': 'status-read-1' }
-			}
-		]);
+		assert.deepStrictEqual(result[0].statusTags, [readTag('1')]);
 	});
 });

@@ -66,22 +66,10 @@ export function createDocumentsViewModel(
 			statusId: caseRow.statusId,
 			closedStatuses: CLOSED_STATUSES
 		});
+
 		const isRead = userState ? userState.readStatus : defaultIsRead;
 		const isFlagged = userState ? userState.flaggedStatus : defaultIsFlagged;
-		const statusTags: DocumentStatusTag[] = [
-			{
-				text: isRead ? 'Read' : 'Unread',
-				classes: `govuk-tag--${isRead ? 'green' : 'blue'}`,
-				attributes: { 'data-cy': `status-${isRead ? 'read' : 'unread'}-${doc.id}` }
-			}
-		];
-		if (isFlagged) {
-			statusTags.push({
-				text: 'Flagged',
-				classes: 'govuk-tag--orange',
-				attributes: { 'data-cy': `status-flagged-${doc.id}` }
-			});
-		}
+		const statusTags = getStatusTags({ docId: doc.id, isRead, isFlagged, scanStatus: doc.scanStatus });
 
 		return {
 			id: doc.id,
@@ -103,6 +91,61 @@ export function createDocumentsViewModel(
 			statusTags
 		};
 	});
+}
+
+function getStatusTags({
+	docId,
+	isRead,
+	isFlagged,
+	scanStatus
+}: {
+	docId: string;
+	isRead: boolean;
+	isFlagged: boolean;
+	scanStatus: string;
+}): DocumentStatusTag[] {
+	const tags = [getPrimaryStatusTag(docId, isRead, scanStatus)];
+	// Other tags can be shown even if the virus scan does not pass
+	if (isFlagged) {
+		tags.push({
+			text: 'Flagged',
+			classes: 'govuk-tag--orange',
+			attributes: { 'data-cy': `status-flagged-${docId}` }
+		});
+	}
+	return tags;
+}
+
+/**
+ * Return the primary status tag for a document.
+ * Virus scan status should always take precedence over any other status here.
+ */
+function getPrimaryStatusTag(docId: string, isRead: boolean, scanStatus: string): DocumentStatusTag {
+	if (scanStatus === 'fail') {
+		return {
+			text: 'Virus found',
+			classes: 'govuk-tag--red',
+			attributes: { 'data-cy': `status-virus-found-${docId}` }
+		};
+	}
+
+	if (scanStatus === 'pass') {
+		return getReadStatusTag(docId, isRead);
+	}
+
+	return {
+		text: 'Virus scanning',
+		classes: 'govuk-tag--yellow',
+		attributes: { 'data-cy': `status-scanning-${docId}` }
+	};
+}
+
+function getReadStatusTag(docId: string, isRead: boolean): DocumentStatusTag {
+	return {
+		text: isRead ? 'Read' : 'Unread',
+		classes: `govuk-tag--${isRead ? 'green' : 'blue'}`,
+		attributes: { 'data-cy': `status-${isRead ? 'read' : 'unread'}-${docId}` }
+	};
 }
 
 function getFileExtension(fileName: string): string {
