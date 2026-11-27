@@ -233,4 +233,20 @@ describe('createDocumentsViewModel', () => {
 
 		assert.deepStrictEqual(result[0].statusTags, [readTag('1')]);
 	});
+
+	it('should build downloadHref if the scan status is pass', () => {
+		const docs = [createMockDoc({ id: '1', scanStatus: 'pass' })];
+		const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
+
+		assert.strictEqual(result[0].downloadHref, `/documents/${docs[0].id}/download`);
+	});
+
+	for (const scanStatus of ['fail', 'pending', undefined, null, 'not-a-real-status']) {
+		it(`should not build downloadHref if the scan status is ${scanStatus}`, () => {
+			const docs = [createMockDoc({ id: '1', scanStatus })];
+			const result = createDocumentsViewModel(docs, mockCase, PREVIEW_MIME_TYPES);
+
+			assert.strictEqual(result[0].downloadHref, undefined, `scan status: ${scanStatus}`);
+		});
+	}
 });

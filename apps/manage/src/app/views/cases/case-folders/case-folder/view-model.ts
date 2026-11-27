@@ -70,6 +70,7 @@ export function createDocumentsViewModel(
 		const isRead = userState ? userState.readStatus : defaultIsRead;
 		const isFlagged = userState ? userState.flaggedStatus : defaultIsFlagged;
 		const statusTags = getStatusTags({ docId: doc.id, isRead, isFlagged, scanStatus: doc.scanStatus });
+		const isDownloadable = doc.scanStatus === 'pass';
 
 		return {
 			id: doc.id,
@@ -79,7 +80,7 @@ export function createDocumentsViewModel(
 			sizeSort: sizeNum,
 			date: formatInTimeZone(doc.uploadedDate, 'Europe/London', 'dd MMM yyyy'),
 			dateSort: dateObj.getTime(),
-			downloadHref: `/documents/${doc.id}/download`,
+			downloadHref: isDownloadable ? `/documents/${doc.id}/download` : undefined,
 			isPreview: previewMimeTypes.includes(doc.mimeType),
 			caseId: doc.caseId,
 			folder: {

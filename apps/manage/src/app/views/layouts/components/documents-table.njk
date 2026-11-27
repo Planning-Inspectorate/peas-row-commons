@@ -25,7 +25,7 @@
         {% endif %}
 
         {% set fileLinkHtml %}
-            {% if doc.isPreview %}
+            {% if doc.isPreview and doc.downloadHref %}
                 <a id="row-{{ doc.id }}" class="govuk-link govuk-!-font-weight-bold" href="{{ doc.downloadHref }}?preview=true" target="_blank" data-cy="file-link-{{ doc.id }}">
                     {{ doc.fileName }}
                 </a>
@@ -64,17 +64,19 @@
         {% set actionsHtml %}
             <ul class="govuk-list govuk-!-margin-bottom-0">
             {% if not showFolderLink %}
-                <li class="govuk-!-margin-bottom-2">
-                    <button
-                        type="submit"
-                        form="inline-action-form"
-                        name="markReadToggle"
-                        value="{{ doc.id }}"
-                        class="govuk-button-as-link"
-                        data-cy="action-read-{{ doc.id }}">
-                        {% if doc.isRead %}Unread{% else %}Read{% endif %}
-                    </button>
-                </li>
+                {% if doc.downloadHref %}
+                    <li class="govuk-!-margin-bottom-2">
+                        <button
+                            type="submit"
+                            form="inline-action-form"
+                            name="markReadToggle"
+                            value="{{ doc.id }}"
+                            class="govuk-button-as-link"
+                            data-cy="action-read-{{ doc.id }}">
+                            {% if doc.isRead %}Unread{% else %}Read{% endif %}
+                        </button>
+                    </li>
+                {% endif %}
 
                 <li class="govuk-!-margin-bottom-2">
                     <button
@@ -94,9 +96,11 @@
                 <a class='govuk-link' href="/cases/{{ doc.caseId }}/case-folders/{{ doc.folder.id }}/{{ doc.folder.displayName }}/{{ doc.id }}/rename-file" data-cy="rename-file-{{ doc.id }}">Rename</a>
             </li>
 
-            <li class="{% if showFolderLink %}govuk-!-margin-bottom-2{% endif %}">
-                <a class='govuk-link' href="{{ doc.downloadHref }}" data-cy="download-file-{{ doc.id }}">Download</a>
-            </li>
+            {% if doc.downloadHref %}
+                <li class="{% if showFolderLink %}govuk-!-margin-bottom-2{% endif %}">
+                    <a class='govuk-link' href="{{ doc.downloadHref }}" data-cy="download-file-{{ doc.id }}">Download</a>
+                </li>
+            {% endif %}
 
             {% if showFolderLink %}
                 <li>
